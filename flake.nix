@@ -21,6 +21,7 @@
           packages = [
             nodejs
             pkgs.git
+            pkgs.gh
             # @hakit/core ships a `hakit-sync-types` CLI that reads a .env; jq is handy
             # for poking at the generated Home Assistant type/locale JSON.
             pkgs.jq
