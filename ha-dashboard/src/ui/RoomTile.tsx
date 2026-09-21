@@ -50,19 +50,29 @@ export function RoomTile({ area, icon = 'mdi:sofa', colSpan, rowSpan }: RoomTile
   const unavailable = main?.unavailable ?? false;
   const temperature = areaTemperature(area);
 
-  // The slider is optimistic while dragging: Home Assistant round-trips take
-  // long enough that a slider snapping back under the finger feels broken.
-  // Tracking the live value alongside the drag lets us drop the optimistic
-  // value during render once Home Assistant confirms, with no effect and no
-  // cascading re-render.
+  // The optimistic drag state lives in `Slider`, which owns the gesture and
+  // the commit. This only mirrors what the slider reports so the caption
+  // tracks the finger; it falls back to the live value between drags.
   const live = brightnessPercent(main);
-  const [drag, setDrag] = useState<{ value: number; from: number } | null>(null);
-  const shown = drag && drag.from === live ? drag.value : live;
+  const [dragged, setDragged] = useState<{ value: number; from: number } | null>(null);
+  const shown = dragged && dragged.from === live ? dragged.value : live;
+
+  // Adjusting the slider must not also open the tile's long-press modal over
+  // the control being used -- see the note in `Slider`. The tile's modal is
+  // disarmed for as long as a slider gesture is in progress.
+  const [sliding, setSliding] = useState(false);
 
   const fg = onSurfaceFor({ active, unavailable });
 
   return (
-    <Tile entity={main} active={active} colSpan={colSpan} rowSpan={rowSpan} onClick={() => main && actions.toggle(main)}>
+    <Tile
+      entity={main}
+      active={active}
+      colSpan={colSpan}
+      rowSpan={rowSpan}
+      disableModal={sliding}
+      onClick={() => main && actions.toggle(main)}
+    >
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: t.space.sm }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: t.space.sm, color: fg }}>
           <Icon name={icon} size={30} />
@@ -82,11 +92,12 @@ export function RoomTile({ area, icon = 'mdi:sofa', colSpan, rowSpan }: RoomTile
             <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: t.space.sm }}>
               <div style={{ flex: 1, minWidth: 0 }} onClick={e => e.stopPropagation()}>
                 <Slider
-                  value={shown}
+                  value={live}
                   disabled={!main}
-                  onChange={v => setDrag({ value: v, from: live })}
+                  onInteracting={setSliding}
+                  onChange={v => setDragged({ value: v, from: live })}
                   onChangeApplied={v => {
-                    setDrag({ value: v, from: live });
+                    setDragged({ value: v, from: live });
                     if (main) actions.setBrightness(main, v);
                   }}
                 />
