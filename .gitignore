@@ -3,3 +3,13 @@
 .agents
 
 skills-lock.json
+
+# secrets — never commit
+.env
+.env.*
+!.env.example
+
+# node
+node_modules
+dist
+.npm-global
