@@ -6,5 +6,6 @@
  * types -- every component and screen keeps compiling.
  */
 export type { Area, AreaId, Domain, Entity, EntityId, Label } from './types';
+export { KNOWN_AREA_IDS, KNOWN_LABELS, type KnownAreaId, type KnownLabel } from './generated/manifest';
 export { useAreas, useByLabel, useEntities, useEntityState, pickMain, isUnavailableState } from './registry';
 export { useActions, type Actions } from './actions';
