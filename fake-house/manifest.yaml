@@ -1,0 +1,408 @@
+# Casa Carina — fake house manifest
+#
+# The single source of truth for the unwired house. Every entity the real
+# Casa Carina will expose is declared here once, with the Area it belongs to
+# and any Labels it carries. `scripts/generate.py` turns this into Home
+# Assistant packages; `scripts/apply-registry.py` assigns Area and Labels.
+#
+# Entity ids are taken verbatim from the existing Casa Carina Lovelace
+# dashboard, so that swapping fakes for real devices is a no-op.
+#
+# kind:  light | switch | lock | alarm | vacuum | select | sensor |
+#        binary_sensor | climate | media_player | camera | siren
+# area:  an area_id from HA's area registry, or null for a Singleton
+# labels: see CONTEXT.md label vocabulary
+
+areas:
+  - id: ingresso
+    name: Ingresso
+    icon: mdi:door-sliding-open
+  - id: corridoio
+    name: Corridoio
+    icon: mdi:walk
+  - id: salone
+    name: Salone
+    icon: mdi:sofa
+  - id: camera_chri
+    name: Camera Chri
+    icon: mdi:bed
+  - id: esterno
+    name: Esterno
+    icon: mdi:border-outside
+  - id: giardino
+    name: Giardino
+    icon: mdi:leaf-circle
+
+labels:
+  - id: main
+    name: main
+    icon: mdi:star
+  - id: vision
+    name: vision
+    icon: mdi:cctv
+  - id: gate
+    name: gate
+    icon: mdi:gate
+  - id: security
+    name: security
+    icon: mdi:shield-home
+  - id: multiroom
+    name: multiroom
+    icon: mdi:speaker-multiple
+  - id: ignored
+    name: ignored
+    icon: mdi:eye-off
+
+entities:
+  # ---------------- lights ----------------
+  - id: light.luci_salone
+    name: Luci Salone
+    kind: light
+    area: salone
+    labels: [main]
+    aggregate_of:
+      - light.ingresso_interruttore_ing_salone_lampadario
+      - light.ingresso_interruttore_ing_salone_luci_sala_2
+      - light.soggiorno_luce_sala_3
+      - light.soggiorno_luce_sala_4
+  - id: light.ingresso_interruttore_ing_salone_lampadario
+    name: Lampadario
+    kind: light
+    area: salone
+  - id: light.ingresso_interruttore_ing_salone_luci_sala_2
+    name: Luci Sala 2
+    kind: light
+    area: salone
+  - id: light.soggiorno_luce_sala_3
+    name: Luce Sala 3
+    kind: light
+    area: salone
+  - id: light.soggiorno_luce_sala_4
+    name: Luce Sala 4
+    kind: light
+    area: salone
+
+  - id: light.luci_cucina
+    name: Luci Cucina
+    kind: light
+    area: salone
+    labels: [main]
+    aggregate_of:
+      - light.luce_cucina
+      - light.cucina_faretti_cucina
+      - light.led_cucina
+  - id: light.luce_cucina
+    name: Luce Cucina
+    kind: light
+    area: salone
+  - id: light.cucina_faretti_cucina
+    name: Faretti Cucina
+    kind: light
+    area: salone
+  - id: light.led_cucina
+    name: LED Cucina
+    kind: light
+    area: salone
+    supports_color: true
+
+  - id: light.ingresso_interruttore_ing_salone_luce_ingresso
+    name: Luce Ingresso
+    kind: light
+    area: ingresso
+    labels: [main]
+  - id: light.luce_corridoio
+    name: Luce Corridoio
+    kind: light
+    area: corridoio
+    labels: [main]
+  - id: light.luce_camera_chri
+    name: Luce Camera Chri
+    kind: light
+    area: camera_chri
+    labels: [main]
+  - id: light.esterno_luce_casetta_2
+    name: Luce Casetta
+    kind: light
+    area: giardino
+    labels: [main]
+
+  # ---------------- gates ----------------
+  - id: lock.esterno_cancello
+    name: Cancello
+    kind: lock
+    area: esterno
+    labels: [gate, main]
+  - id: lock.esterno_cancelletto
+    name: Cancelletto
+    kind: lock
+    area: esterno
+    labels: [gate]
+
+  # ---------------- security ----------------
+  - id: alarm_control_panel.ezviz_alarm
+    name: Allarme
+    kind: alarm
+    area: null
+    labels: [security, main]
+  - id: siren.telecamera_cancello_sirena
+    name: Sirena Cancello
+    kind: siren
+    area: esterno
+    labels: [security]
+  - id: siren.telecamera_esterno_giardino_sirena
+    name: Sirena Giardino
+    kind: siren
+    area: giardino
+    labels: [security]
+
+  # ---------------- cameras ----------------
+  - id: camera.telecamera_cancello
+    name: Telecamera Cancello
+    kind: camera
+    area: esterno
+    labels: [vision]
+  - id: camera.telecamera_cancelletto
+    name: Telecamera Cancelletto
+    kind: camera
+    area: esterno
+    labels: [vision]
+  - id: camera.telecamera_esterno_giardino
+    name: Telecamera Giardino
+    kind: camera
+    area: giardino
+    labels: [vision]
+
+  # ---------------- climate ----------------
+  - id: climate.corridoio_termostato
+    name: Termostato
+    kind: climate
+    area: corridoio
+    labels: [main]
+  - id: sensor.corridoio_termostato_umidita
+    name: Umidita Termostato
+    kind: sensor
+    area: corridoio
+    device_class: humidity
+    unit: '%'
+    initial: 47
+
+  # ---------------- media ----------------
+  - id: media_player.ovunque
+    name: Ovunque
+    kind: media_player
+    area: null
+    labels: [multiroom, main]
+  - id: media_player.echo_di_christian
+    name: Echo di Christian
+    kind: media_player
+    area: camera_chri
+    labels: [main]
+  - id: media_player.echo_show_di_christian
+    name: Echo Show di Christian
+    kind: media_player
+    area: salone
+  - id: media_player.echo_spot_di_christian
+    name: Echo Spot di Christian
+    kind: media_player
+    area: ingresso
+    labels: [main]
+  - id: media_player.echo_pop_di_christian
+    name: Echo Pop di Christian
+    kind: media_player
+    area: corridoio
+    labels: [main]
+  - id: media_player.christian_s_echo_auto
+    name: Echo Auto
+    kind: media_player
+    area: esterno
+  - id: media_player.christian_s_lg_webos_2021_tv
+    name: TV Salone
+    kind: media_player
+    area: salone
+
+  # ---------------- vacuum ----------------
+  - id: vacuum.roborock_s5_max
+    name: Roborock S5 Max
+    kind: vacuum
+    area: salone
+    labels: [main]
+  - id: select.roborock_s5_max_mappa_selezionata
+    name: Mappa Selezionata
+    kind: select
+    area: salone
+    options: [Piano Terra, Primo Piano]
+    initial: Piano Terra
+  - id: select.roborock_s5_max_modalita_panno
+    name: Modalita Panno
+    kind: select
+    area: salone
+    options: [Off, Basso, Medio, Alto]
+    initial: Medio
+  - id: select.soggiorno_roborock_s5_max_cleaning_mode
+    name: Modalita Pulizia
+    kind: select
+    area: salone
+    options: [Silenzioso, Bilanciato, Turbo, Max]
+    initial: Bilanciato
+  - id: sensor.roborock_s5_max_batteria
+    name: Batteria Roborock
+    kind: sensor
+    area: salone
+    device_class: battery
+    unit: '%'
+    initial: 86
+  - id: binary_sensor.roborock_s5_max_panno_attaccato
+    name: Panno Attaccato
+    kind: binary_sensor
+    area: salone
+    initial: 'on'
+  - id: binary_sensor.soggiorno_roborock_s5_max_mancanza_d_acqua
+    name: Mancanza Acqua
+    kind: binary_sensor
+    area: salone
+    device_class: problem
+    initial: 'off'
+
+  # ---------------- dishwasher ----------------
+  - id: binary_sensor.cucina_lavastoviglie_door_status
+    name: Sportello Lavastoviglie
+    kind: binary_sensor
+    area: salone
+    device_class: door
+    initial: 'off'
+  - id: binary_sensor.cucina_lavastoviglie_salt
+    name: Sale Lavastoviglie
+    kind: binary_sensor
+    area: salone
+    device_class: problem
+    initial: 'off'
+  - id: binary_sensor.cucina_lavastoviglie_rinse_aid
+    name: Brillantante Lavastoviglie
+    kind: binary_sensor
+    area: salone
+    device_class: problem
+    initial: 'on'
+
+  # ---------------- doors & motion ----------------
+  - id: binary_sensor.portone_ingresso
+    name: Portone Ingresso
+    kind: binary_sensor
+    area: ingresso
+    device_class: door
+    initial: 'off'
+    labels: [main]
+  - id: binary_sensor.porta_verandina
+    name: Porta Verandina
+    kind: binary_sensor
+    area: giardino
+    device_class: door
+    initial: 'off'
+  - id: binary_sensor.telecamera_cancello_movimento
+    name: Movimento Cancello
+    kind: binary_sensor
+    area: esterno
+    device_class: motion
+    initial: 'off'
+  - id: binary_sensor.telecamera_cancelletto_movimento
+    name: Movimento Cancelletto
+    kind: binary_sensor
+    area: esterno
+    device_class: motion
+    initial: 'off'
+  - id: binary_sensor.telecamera_esterno_giardino_movimento
+    name: Movimento Giardino
+    kind: binary_sensor
+    area: giardino
+    device_class: motion
+    initial: 'off'
+  - id: binary_sensor.echo_di_christian_movimento
+    name: Movimento Echo Camera
+    kind: binary_sensor
+    area: camera_chri
+    device_class: motion
+    initial: 'off'
+  - id: binary_sensor.ingresso_echo_spot_di_christian_movimento
+    name: Movimento Echo Ingresso
+    kind: binary_sensor
+    area: ingresso
+    device_class: motion
+    initial: 'off'
+
+  # ---------------- power ----------------
+  - id: switch.generale_quadro_sonoff_100285d3f0_1
+    name: Quadro Generale
+    kind: switch
+    area: ingresso
+  - id: sensor.generale_quadro_sonoff_100285d3f0_energy_month
+    name: Energia Mensile
+    kind: sensor
+    area: ingresso
+    device_class: energy
+    unit: kWh
+    initial: 143.2
+    state_class: total_increasing
+
+  # ---------------- diagnostics (ignored) ----------------
+  - id: sensor.echo_di_christian_temperatura
+    name: Temperatura Echo
+    kind: sensor
+    area: camera_chri
+    device_class: temperature
+    unit: "°C"
+    initial: 21.5
+  - id: sensor.portone_ingresso_batteria
+    name: Batteria Portone
+    kind: sensor
+    area: ingresso
+    device_class: battery
+    unit: '%'
+    initial: 78
+    labels: [ignored]
+  - id: sensor.portone_ingresso_sonoff_acc800b914_battery
+    name: Batteria Portone Sonoff
+    kind: sensor
+    area: ingresso
+    device_class: battery
+    unit: '%'
+    initial: 91
+    labels: [ignored]
+  - id: sensor.porta_finestra_verandina_sonoff_acc80139a2_battery
+    name: Batteria Verandina
+    kind: sensor
+    area: giardino
+    device_class: battery
+    unit: '%'
+    initial: 64
+    labels: [ignored]
+  - id: sensor.pulsante_cancelletto_sonoff_acc800a92a_battery
+    name: Batteria Pulsante Cancelletto
+    kind: sensor
+    area: esterno
+    device_class: battery
+    unit: '%'
+    initial: 55
+    labels: [ignored]
+  - id: sensor.pulsante_cancelletto_2_sonoff_acc800a92e_battery
+    name: Batteria Pulsante Cancelletto 2
+    kind: sensor
+    area: esterno
+    device_class: battery
+    unit: '%'
+    initial: 12
+    labels: [ignored]
+  - id: sensor.valerio_battery_level
+    name: Batteria Valerio
+    kind: sensor
+    area: null
+    device_class: battery
+    unit: '%'
+    initial: 42
+    labels: [ignored]
+  - id: sensor.pixel_9_pro_battery_level
+    name: Batteria Pixel 9 Pro
+    kind: sensor
+    area: null
+    device_class: battery
+    unit: '%'
+    initial: 88
+    labels: [ignored]

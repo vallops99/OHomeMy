@@ -15,6 +15,9 @@
         # ha-component-kit needs node >= 20 / npm >= 10; nixpkgs 26.05 defaults to node 24,
         # which bundles npm 11. npm comes with the nodejs derivation, no separate package.
         nodejs = pkgs.nodejs;
+        # fake-house/scripts/*.py generate Home Assistant packages from the manifest
+        # and talk to HA's websocket registry API.
+        python = pkgs.python3.withPackages (ps: [ ps.pyyaml ps.aiohttp ]);
       in
       {
         devShells.default = pkgs.mkShell {
@@ -25,6 +28,7 @@
             # @hakit/core ships a `hakit-sync-types` CLI that reads a .env; jq is handy
             # for poking at the generated Home Assistant type/locale JSON.
             pkgs.jq
+            python
           ];
 
           shellHook = ''
