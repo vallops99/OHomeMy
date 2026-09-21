@@ -15,4 +15,6 @@ export { RoomTile, type RoomTileProps } from './RoomTile';
 export { GateSlab, type GateSlabProps } from './GateSlab';
 export { StatusPanel, type StatusPanelProps } from './StatusPanel';
 export { FaultTile, type FaultTileProps } from './FaultTile';
+export { HakitTheme } from './HakitTheme';
+export { stateLabel } from './stateLabel';
 export { t, surfaceFor, onSurfaceFor } from './theme';

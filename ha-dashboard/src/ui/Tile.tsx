@@ -12,6 +12,7 @@
 import { CardBase } from '@hakit/components';
 import type { ReactNode } from 'react';
 import type { Entity } from '../ha';
+import { stateLabel } from './stateLabel';
 import { surfaceFor, t } from './theme';
 
 export type TileProps = {
@@ -56,6 +57,10 @@ export function Tile({
       entity={(entity?.id ?? 'unknown') as 'unknown'}
       onlyFunctionality
       disableModal={disableModal || unavailable}
+      // @hakit title-cases the raw state for the modal's headline ("Locked")
+      // instead of localising it. `stateTitle` wins over that, so the modal
+      // says what the tile says. See src/ui/stateLabel.ts.
+      modalProps={entity ? { stateTitle: stateLabel(entity) } : undefined}
       disableActiveState
       disableColumns
       onClick={() => onClick?.()}

@@ -71,12 +71,19 @@ export function buildTokens(k: Knobs = KNOBS) {
       fault: hsl(k.faultHue, 74, 55),
       faultSurface: hsl(k.faultHue, 40, 13),
       border: hsl(k.groundHue, 6, 20),
+      /** Dims the panel behind a modal, so the dialog reads as the focus. */
+      backdrop: hsl(k.groundHue, k.groundSat, 2, 0.72),
     },
     /**
      * Two tiers, per the tablet research: glanceable content must read at 1-2 m,
      * interactive content at 0.5-0.7 m.
      */
     font: {
+      /**
+       * The system stack, not a webfont: the panel boots offline-first and a
+       * font request that stalls would leave the house unlabelled.
+       */
+      family: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
       glanceXL: 56, // the one number you read on approach
       glanceL: 34,
       glanceM: 22,

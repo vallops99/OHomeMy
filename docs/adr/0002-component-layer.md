@@ -41,6 +41,37 @@ whole-house state map is available in one store subscription via
 `useHass(s => s.entities)` -- which is what `src/ha/registry.ts` uses, because
 a hook per tile would mean a subscription per tile.
 
+## Amendment (2026-09-21): @hakit's own surfaces
+
+`onlyFunctionality` means our tokens own every pixel *we* render — but @hakit
+also renders surfaces we never author. The long-press entity modal is mounted
+into `<body>` by @hakit itself, and it came up in stock navy-and-orange with
+Roboto over our dark-neutral green panel. The original verification checked
+that the modal *opens*, never what it looked like.
+
+Two corrections, both in `src/ui/` so the seam holds:
+
+- **`HakitTheme.tsx`** drives `ThemeProvider` from our tokens. @hakit derives
+  its whole ~700-variable palette from a few roots (`--ha-h/s/l` plus the `A`
+  scale), so overriding those retints everything downstream instead of
+  restyling components one at a time. What the roots cannot reach is corrected
+  in `globalStyles`, keyed to @hakit's own class names.
+
+- **`stateLabel.ts`** supplies Italian state text. @hakit renders the modal's
+  headline as `startCase(lowerCase(state))` — the raw state, title-cased,
+  never passed through its own `localize`, so a locked gate read "Locked"
+  while the tile beneath said "Chiuso". Setting `options={{ locale: 'it' }}`
+  on `HassConnect` fixes @hakit's *own* strings ("Mostra attributi", "58
+  minuti fa") but not this one. The modal accepts a `stateTitle` that takes
+  precedence, so the seam supplies it, and tiles read from the same table —
+  a state is worded once and the modal cannot disagree with the tile that
+  opened it.
+
+The general lesson for the seam: wrapping a component controls what *it*
+renders, not what it *mounts elsewhere*. Any future @hakit component that
+portals to `<body>` needs the same treatment, and a visual check rather than
+an "it opens" check.
+
 ## Consequences
 
 - **`@iconify/react` is now a direct dependency.** It was transitive through

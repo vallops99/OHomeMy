@@ -7,6 +7,7 @@
  */
 import { useActions, type Entity } from '../ha';
 import { Icon } from './Icon';
+import { stateLabel } from './stateLabel';
 import { Tile } from './Tile';
 import { onSurfaceFor, t } from './theme';
 
@@ -47,7 +48,7 @@ export function GateSlab({ entity, colSpan, rowSpan }: GateSlabProps) {
       >
         <Icon name={unavailable ? 'mdi:alert-circle' : open ? 'mdi:gate-open' : 'mdi:gate'} size={44} />
         <span style={{ fontSize: t.font.glanceM, fontWeight: 600, textAlign: 'center' }}>{entity.name}</span>
-        <span style={{ fontSize: t.font.body, opacity: 0.9 }}>{unavailable ? 'Non disponibile' : open ? 'Aperto' : 'Chiuso'}</span>
+        <span style={{ fontSize: t.font.body, opacity: 0.9 }}>{stateLabel(entity)}</span>
       </div>
     </Tile>
   );
