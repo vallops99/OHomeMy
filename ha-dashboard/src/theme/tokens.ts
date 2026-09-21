@@ -94,8 +94,23 @@ export function buildTokens(k: Knobs = KNOBS) {
     radius: { tile: k.radius, pill: 999, sm: Math.round(k.radius / 2) },
     /** 64 px minimum for primary controls, 44 px absolute floor (research §2.3) */
     touch: { primary: 64, floor: 44 },
-    /** 4x2 grid of 303x180 tiles at 1280x800 (research §2.4) */
-    grid: { cols: 4, rows: 2, tileW: 303, tileH: 180 },
+    /**
+     * The panel grid at 1280x800 (#8).
+     *
+     * Four columns of 303 px, and four rows whose heights are NOT uniform:
+     * the entrance panel has three jobs with different appetites, so the rows
+     * are sized to them rather than to each other.
+     *
+     *   status  180  the glance layer, read on approach from 2 m
+     *   tile    227  two rows of room and gate tiles, the touched layer
+     *   strip    96  media and navigation, a 64 px control plus padding
+     *
+     * 14 + (180 + 227 + 227 + 96) + 4x14 gaps = 800 exactly. An earlier 4x2 of
+     * 180 px rows filled only 402 px of the 800 and left the bottom half of the
+     * panel empty: the original figure fixed the column width, which does divide
+     * 1280, and never checked the height.
+     */
+    grid: { cols: 4, tileW: 303, rowStatus: 180, rowTile: 227, rowStrip: 96 },
   };
 }
 

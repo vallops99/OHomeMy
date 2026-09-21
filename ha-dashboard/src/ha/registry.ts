@@ -42,10 +42,31 @@ const rank = (domain: string) => DOMAIN_RANK[domain] ?? 50;
 /** Home Assistant's two ways of saying "I cannot reach this". */
 export const isUnavailableState = (state: string | undefined) => state === 'unavailable' || state === 'unknown';
 
+/**
+ * One entry of Home Assistant's `entitiesRegistryDisplay`, as @hakit hands it
+ * over.
+ *
+ * Home Assistant sends this registry compressed (`ei`, `ai`, `lb`, `hn`) and
+ * @hakit expands the keys before we see them, so these are the long
+ * spellings. Verified against the running instance rather than assumed: the
+ * compressed names match nothing here.
+ *
+ * One expansion gap is worth knowing about. Home Assistant's `hn` -- "hidden
+ * in the UI" -- is NOT re-expanded, so `hidden` would arrive undefined for
+ * every entity and cannot be honoured. The `ignored` Label is the working
+ * equivalent, and it is the one CONTEXT.md documents.
+ */
 type RegistryEntry = {
   entity_id?: string;
   area_id?: string | null;
   labels?: string[];
+  /**
+   * Home Assistant's own marker for plumbing: `config` or `diagnostic`. It
+   * sits on firmware-update buttons, device restart switches and the sun
+   * integration's diagnostic timestamps -- things that belong on a device
+   * page, never on a wall panel.
+   */
+  entity_category?: 'config' | 'diagnostic' | null;
 };
 
 /**
@@ -70,6 +91,14 @@ export function useEntities(): Map<EntityId, Entity> {
 
       const domain = id.split('.')[0];
       if (DENYLIST.has(domain)) return;
+
+      // `config` and `diagnostic` are Home Assistant's own marker for
+      // plumbing that belongs on a device page rather than a dashboard:
+      // firmware buttons, restart switches, the sun integration's six
+      // diagnostic timestamps. Honouring the marker is the backend-driven
+      // rule again -- Home Assistant has already classified these, so the
+      // denylist does not have to grow a rule per integration.
+      if (entry.entity_category) return;
 
       const labels = (entry.labels ?? []) as Label[];
       if (labels.includes('ignored')) return;
@@ -141,6 +170,15 @@ export function useAreas(): Area[] {
 export function pickMain(area: Area, domain: string): Entity | null {
   const inDomain = area.entities.filter(e => e.domain === domain);
   return inDomain.find(e => e.labels.includes('main')) ?? inDomain[0] ?? null;
+}
+
+/** Every entity of a Domain, wherever it lives. For screens that place a whole Domain. */
+export function useByDomain(domain: string): Entity[] {
+  const entities = useEntities();
+  return useMemo(
+    () => [...entities.values()].filter(e => e.domain === domain).sort((a, b) => a.id.localeCompare(b.id)),
+    [entities, domain]
+  );
 }
 
 /** Every entity carrying a Label, wherever it lives. Singletons are found this way. */

@@ -13,11 +13,18 @@ import { onSurfaceFor, t } from './theme';
 
 export type GateSlabProps = {
   entity: Entity;
+  /**
+   * The gate this panel is mostly about. Two gates rendered identically are
+   * ambiguous at arm's length (#8) -- reaching for "the gate" should not
+   * require reading. The primary one gets the larger icon and type; the
+   * secondary stays a full control, just visibly the lesser of the two.
+   */
+  primary?: boolean;
   colSpan?: number;
   rowSpan?: number;
 };
 
-export function GateSlab({ entity, colSpan, rowSpan }: GateSlabProps) {
+export function GateSlab({ entity, primary, colSpan, rowSpan }: GateSlabProps) {
   const actions = useActions();
   // `unlocked` is the state worth shouting about: a gate left open.
   const open = entity.state === 'unlocked';
@@ -46,8 +53,8 @@ export function GateSlab({ entity, colSpan, rowSpan }: GateSlabProps) {
           color: fg,
         }}
       >
-        <Icon name={unavailable ? 'mdi:alert-circle' : open ? 'mdi:gate-open' : 'mdi:gate'} size={44} />
-        <span style={{ fontSize: t.font.glanceM, fontWeight: 600, textAlign: 'center' }}>{entity.name}</span>
+        <Icon name={unavailable ? 'mdi:alert-circle' : open ? 'mdi:gate-open' : 'mdi:gate'} size={primary ? 64 : 40} />
+        <span style={{ fontSize: primary ? t.font.glanceL : t.font.glanceM, fontWeight: 600, textAlign: 'center' }}>{entity.name}</span>
         <span style={{ fontSize: t.font.body, opacity: 0.9 }}>{stateLabel(entity)}</span>
       </div>
     </Tile>

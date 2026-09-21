@@ -98,7 +98,6 @@ export function Slider({ value, onChange, onChangeApplied, disabled, thickness, 
     onChange?.(v);
   };
 
-
   // @hakit's ControlSlider has an intrinsic width that ignores its container
   // -- it renders ~320px regardless, overflowing any narrower tile. Wrapping
   // it in a constrained box and forcing the inner element to 100% is what

@@ -60,9 +60,20 @@ def main() -> int:
         return 1
 
     def union(name: str, const: str, doc: str, ids: list[str]) -> list[str]:
-        out = [f"/** {doc} */", f"export type {name} ="]
-        for i, v in enumerate(ids):
-            out.append(f"  | '{v}'" + (";" if i == len(ids) - 1 else ""))
+        out = [f"/** {doc} */"]
+        # Emit what prettier would: the repo runs `prettier --write .` on
+        # every build (package.json `prebuild`), so a generator that emits a
+        # differently-wrapped union produces a file that is rewritten the
+        # moment anyone builds -- and `--check` then reports drift forever,
+        # against a manifest nobody touched. Match printWidth 140 here so the
+        # guard only fires on real drift.
+        one_line = f"export type {name} = " + " | ".join(f"'{v}'" for v in ids) + ";"
+        if len(one_line) <= 140:
+            out.append(one_line)
+        else:
+            out.append(f"export type {name} =")
+            for i, v in enumerate(ids):
+                out.append(f"  | '{v}'" + (";" if i == len(ids) - 1 else ""))
         out.append("")
         joined = ", ".join(f"'{v}'" for v in ids)
         out.append(f"/** Every {name}, in manifest order. */")

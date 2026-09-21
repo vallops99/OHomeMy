@@ -60,7 +60,38 @@ export type Slot =
   | (Base & { kind: 'room'; area: KnownAreaId; icon?: string })
   | (Base & { kind: 'group'; label: KnownLabel })
   | (Base & { kind: 'single'; label: KnownLabel; index?: number })
-  | (Base & { kind: 'status' });
+  | (Base & { kind: 'status' })
+  /**
+   * The gates, ranked. `primary` names the one the panel is mostly about, by
+   * its position among the entities carrying the Label -- not by entity id,
+   * so the house still decides how many gates there are (#8).
+   */
+  | (Base & { kind: 'gates'; label: KnownLabel; primary?: number })
+  /** The alarm, placed by Label. A Singleton (CONTEXT.md). */
+  | (Base & { kind: 'alarm'; label: KnownLabel })
+  /** Every camera carrying the Label, collapsed to a motion glance. */
+  | (Base & { kind: 'cameras'; label: KnownLabel })
+  /**
+   * The media strip. Contextual: it shows whatever is playing across every
+   * media player in the house, and says so quietly when nothing is.
+   */
+  | (Base & { kind: 'media' })
+  /** The bottom navigation bar. Destinations are declared on the screen. */
+  | (Base & { kind: 'nav'; destinations: NavSlotDestination[] });
+
+/**
+ * One navigation destination, as a screen declares it.
+ *
+ * `screen` is absent while that view has not been built -- the bar renders it
+ * visibly disabled rather than as a button that silently does nothing (#8).
+ * It is a plain name rather than a route: there is no router yet, and
+ * inventing one before a second screen exists would be guessing.
+ */
+export type NavSlotDestination = {
+  label: string;
+  icon: string;
+  screen?: string;
+};
 
 /** A screen: an ordered list of placements. */
 export type Screen = Slot[];

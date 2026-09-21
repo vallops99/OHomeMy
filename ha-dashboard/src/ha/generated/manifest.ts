@@ -16,25 +16,13 @@
  */
 
 /** An Area id declared in the manifest. */
-export type KnownAreaId =
-  | 'ingresso'
-  | 'corridoio'
-  | 'salone'
-  | 'camera_chri'
-  | 'esterno'
-  | 'giardino';
+export type KnownAreaId = 'ingresso' | 'corridoio' | 'salone' | 'camera_chri' | 'esterno' | 'giardino';
 
 /** Every KnownAreaId, in manifest order. */
 export const KNOWN_AREA_IDS = ['ingresso', 'corridoio', 'salone', 'camera_chri', 'esterno', 'giardino'] as const;
 
 /** A Label declared in the manifest, for composing screens. */
-export type KnownLabel =
-  | 'main'
-  | 'vision'
-  | 'gate'
-  | 'security'
-  | 'multiroom'
-  | 'ignored';
+export type KnownLabel = 'main' | 'vision' | 'gate' | 'security' | 'multiroom' | 'ignored';
 
 /** Every KnownLabel, in manifest order. */
 export const KNOWN_LABELS = ['main', 'vision', 'gate', 'security', 'multiroom', 'ignored'] as const;

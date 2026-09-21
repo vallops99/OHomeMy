@@ -20,3 +20,20 @@ The 42% floor is load-bearing, not taste: below it the colour sits in a band whe
 - Adding a colour means adding a derivation, not a hex value. This is the point.
 - Icons are MDI (`@mdi/js` raw paths) rather than emoji, because MDI tints with `currentColor`: a fault icon turns red, an icon on an active surface takes the active foreground. Names mirror the HA area registry (`mdi:sofa`, `mdi:stove`), so the registry-driven pipeline resolves them rather than a hardcoded map.
 - The type scale (112 px hero, 22 px row labels, 17 px body) is extrapolated from the tablet research's 1–2 m guidance and has **not** been validated on physical hardware. It is the most likely part of this ADR to need revising once a panel is mounted.
+
+## Amendment (2026-09-21): the grid was never height-checked (#8)
+
+The "4x2 grid of 303x180 tiles at 1280x800" above is superseded by
+[ADR-0004](0004-home-screen-layout.md). The column figure is right — 303 px
+divides 1280 exactly — but the row figure was never checked against the 800 px
+height: `4 rows of 180 + gaps` fills only 402 px, and the first real screen
+rendered with its bottom quarter empty and a third row it had not planned for.
+
+The grid is now four rows of **deliberately unequal** height (180 / 227 / 227 /
+96), because the panel has three jobs with different appetites and sizing the
+rows to each other is what wasted the space. They are tokens like everything
+else, so hardware revalidation stays a KNOBS edit.
+
+The lesson generalises beyond this number: **a dimension derived for one axis
+is not a layout.** Both axes have to be checked against the real viewport, and
+the cheapest way to find out is to render it and measure.

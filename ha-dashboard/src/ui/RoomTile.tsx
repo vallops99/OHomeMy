@@ -13,6 +13,7 @@
  */
 import { useState } from 'react';
 import { pickMain, useActions, type Area, type Entity } from '../ha';
+import { AreaBadges } from './AreaBadges';
 import { Icon } from './Icon';
 import { Slider } from './Slider';
 import { Tile } from './Tile';
@@ -89,6 +90,11 @@ export function RoomTile({ area, icon = 'mdi:sofa', colSpan, rowSpan }: RoomTile
           </div>
         ) : (
           <>
+            {/* The tile is 227 px tall (#8); without this the space between
+                the title and the slider was simply empty. Badges appear only
+                when the Area has something to report. */}
+            <AreaBadges area={area} color={fg} />
+
             <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: t.space.sm }}>
               <div style={{ flex: 1, minWidth: 0 }} onClick={e => e.stopPropagation()}>
                 <Slider
