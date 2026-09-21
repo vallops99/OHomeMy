@@ -35,8 +35,7 @@ export const KNOBS: Knobs = {
   radius: 10,
 };
 
-const hsl = (h: number, s: number, l: number, a = 1) =>
-  a === 1 ? `hsl(${h} ${s}% ${l}%)` : `hsl(${h} ${s}% ${l}% / ${a})`;
+const hsl = (h: number, s: number, l: number, a = 1) => (a === 1 ? `hsl(${h} ${s}% ${l}%)` : `hsl(${h} ${s}% ${l}% / ${a})`);
 
 export function buildTokens(k: Knobs = KNOBS) {
   return {

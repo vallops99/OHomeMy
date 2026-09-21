@@ -21,6 +21,7 @@
     "@fullcalendar/react": "6.1.21",
     "@hakit/components": "^6.0.2",
     "@hakit/core": "^6.0.2",
+    "@iconify/react": "^6.0.2",
     "fullcalendar": "6.1.21",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"

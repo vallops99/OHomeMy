@@ -3,6 +3,35 @@
   "plugins": ["react", "typescript", "oxc"],
   "rules": {
     "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+    "react/only-export-components": [
+      "warn",
+      {
+        "allowConstantExport": true
+      }
+    ],
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "@hakit/components",
+            "message": "@hakit is confined to src/ha and src/ui (see docs/adr/0002). Import from '../ui' instead -- its licence forbids modification, so a break means replacement, and the seam is what keeps that affordable."
+          },
+          {
+            "name": "@hakit/core",
+            "message": "@hakit is confined to src/ha and src/ui (see docs/adr/0002). Import from '../ha' instead."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/ha/*.ts", "src/ui/*.tsx", "src/ui/*.ts", "src/App.tsx"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "ignorePatterns": ["supported-types.d.ts"]
 }
