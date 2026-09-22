@@ -6,7 +6,7 @@
  * ADR-0001 requires for filled controls that must be picked out at 2 m.
  */
 import { useActions, type Entity } from '../ha';
-import { Icon } from './Icon';
+import { entityIcon, Icon } from './Icon';
 import { stateLabel } from './stateLabel';
 import { Tile } from './Tile';
 import { onSurfaceFor, t } from './theme';
@@ -18,11 +18,12 @@ export type GateSlabProps = {
    * ambiguous at arm's length (#8) -- reaching for "the gate" should not
    * require reading.
    *
-   * The primary one is told apart by its **icon**, not by its type size:
-   * every gate's name is set at the same size, so a longer name is not a
-   * smaller name. Sizing type per gate made "Cancelletto" read as the lesser
-   * control because it is the longer word, which is the opposite of what the
-   * ranking means.
+   * The ranking is carried by **how much of the column the slab takes**, not
+   * by type or icon size. Both of those were tried and both were wrong for
+   * the same reason: they shrink the secondary gate, so "Cancelletto" read as
+   * a smaller control rather than a lesser one, and a longer name made it
+   * look smaller still. Height ranks without shrinking -- every gate keeps
+   * the same glyph, the same type and a full-size touch target.
    */
   primary?: boolean;
 };
@@ -36,7 +37,17 @@ export function GateSlab({ entity, primary }: GateSlabProps) {
   const fg = onSurfaceFor({ active: true, unavailable, strong: true });
 
   return (
-    <Tile entity={entity} active={open} strong alwaysFilled onClick={() => (open ? actions.lock(entity) : actions.unlock(entity))}>
+    <Tile
+      entity={entity}
+      active={open}
+      strong
+      alwaysFilled
+      // The primary gate takes twice the share of the sidebar's remaining
+      // height. Both stay well above `touch.primary`, so this is weight, not
+      // a smaller target (ADR-0001).
+      style={{ flex: primary ? 2 : 1, minHeight: t.touch.primary }}
+      onClick={() => (open ? actions.lock(entity) : actions.unlock(entity))}
+    >
       <div
         style={{
           display: 'flex',
@@ -48,7 +59,17 @@ export function GateSlab({ entity, primary }: GateSlabProps) {
           color: fg,
         }}
       >
-        <Icon name={unavailable ? 'mdi:alert-circle' : open ? 'mdi:gate-open' : 'mdi:gate'} size={primary ? 64 : 40} />
+        {/*
+          The glyph Home Assistant itself shows for this entity, not a
+          hardcoded gate: a gate is a `lock`, and Home Assistant draws a lock.
+          Showing something else means the panel and the app the owner already
+          uses disagree about the same control.
+
+          One size for both gates, like the label. Ranking by icon size made
+          the secondary gate look like a smaller control rather than a lesser
+          one; the primary is told apart by its brighter surface instead.
+        */}
+        <Icon name={unavailable ? 'mdi:alert-circle' : entityIcon(entity)} size={56} />
         {/*
           One size for every gate, however long its name: a longer word must
           not read as a smaller control. The label grows horizontally instead

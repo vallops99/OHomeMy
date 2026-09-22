@@ -97,6 +97,12 @@ export function Tile({ entity, active, strong, alwaysFilled, row, onClick, disab
       disableActiveState
       disableColumns
       onClick={() => onClick?.()}
+      // No `height: 100%` on the card. That was right under the old grid,
+      // where the cell defined the box, but in the panel's flex columns it
+      // makes every tile claim the whole column -- the camera glance took
+      // the entire sidebar and left the gates below it with nothing. A tile
+      // is now as tall as its content, or as tall as the flex its caller
+      // gives it, with `minHeight` keeping it a touch target.
       cssStyles={`
         display: ${row ? 'flex' : 'block'};
         ${row ? 'align-items: center;' : ''}
@@ -123,7 +129,6 @@ export function Tile({ entity, active, strong, alwaysFilled, row, onClick, disab
         }`
             : ''
         }
-        height: 100%;
         box-sizing: border-box;
         border: 1px solid ${unavailable ? t.color.fault : t.color.border};
         border-radius: ${t.radius.tile}px;

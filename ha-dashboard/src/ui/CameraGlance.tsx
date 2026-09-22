@@ -46,7 +46,16 @@ export function CameraGlance({ cameras, areas }: CameraGlanceProps) {
   const fg = faulted.length > 0 ? t.color.fault : onSurfaceFor({ active, strong: true });
 
   return (
-    <Tile entity={primary} active={active} strong alwaysFilled={active}>
+    <Tile
+      entity={primary}
+      active={active}
+      strong
+      alwaysFilled={active}
+      // Intrinsic height: the sidebar's spare room belongs to the gates
+      // below, which are the panel's primary affordance (CONTEXT.md). Left
+      // as a default flex child this stretched and pushed them off-screen.
+      style={{ flex: '0 0 auto' }}
+    >
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: t.space.xs, color: fg }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: t.space.sm }}>
           <Icon name={faulted.length > 0 ? 'mdi:cctv-off' : active ? 'mdi:motion-sensor' : 'mdi:cctv'} size={32} />

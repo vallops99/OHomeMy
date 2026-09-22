@@ -117,7 +117,16 @@ export function RoomRow({ area, icon = 'mdi:sofa' }: RoomRowProps) {
         // (t.space.md), so no second padding is added here -- see the report
         // note on the conflict this raised.
         background: unavailable ? t.color.faultSurface : t.color.surface,
-        borderLeft: `6px solid ${unavailable ? t.color.fault : active ? t.color.active : 'transparent'}`,
+        // The state marker is painted INSIDE the row, not as a left border.
+        //
+        // A 6 px `borderLeft` replaces `Tile`'s own 1 px border on that edge,
+        // so an inactive row -- whose marker is transparent -- lost the left
+        // side of its outline against the rounded corner, and the card read
+        // as broken. As a gradient the marker sits within the padding box and
+        // all four sides keep the same 1 px border.
+        backgroundImage: `linear-gradient(to right, ${
+          unavailable ? t.color.fault : active ? t.color.active : 'transparent'
+        } 0 6px, transparent 6px)`,
       }}
     >
       <span style={{ width: 34, display: 'flex', justifyContent: 'center', color: unavailable ? t.color.fault : t.color.textSecondary }}>

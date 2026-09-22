@@ -40,9 +40,7 @@ export function Hero({ temperature, humidity }: HeroProps) {
         entirely when nothing reports one.
       */}
       {humidity != null && (
-        <div style={{ fontSize: t.font.glanceM, color: t.color.textSecondary, marginTop: t.space.sm }}>
-          {Math.round(humidity)}% umidità
-        </div>
+        <div style={{ fontSize: t.font.glanceM, color: t.color.textSecondary, marginTop: t.space.sm }}>{Math.round(humidity)}% umidità</div>
       )}
     </div>
   );
