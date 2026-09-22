@@ -33,9 +33,17 @@ export function Hero({ temperature, humidity }: HeroProps) {
       >
         {temperature != null ? Math.round(temperature) : '--'}°
       </div>
-      <div style={{ fontSize: t.font.glanceM, color: t.color.textSecondary, marginTop: t.space.sm }}>
-        interno{humidity != null ? ` · ${Math.round(humidity)}% umidità` : ''}
-      </div>
+      {/*
+        No "interno" label: the entrance panel's hero is the house's own
+        temperature, and saying so is stating the obvious in the largest
+        type on the screen. Humidity stands alone, and the line disappears
+        entirely when nothing reports one.
+      */}
+      {humidity != null && (
+        <div style={{ fontSize: t.font.glanceM, color: t.color.textSecondary, marginTop: t.space.sm }}>
+          {Math.round(humidity)}% umidità
+        </div>
+      )}
     </div>
   );
 }
