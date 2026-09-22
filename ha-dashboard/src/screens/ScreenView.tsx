@@ -109,7 +109,26 @@ function SlotView({ slot, areas }: { slot: Slot; areas: Area[] }) {
       // Singletons belong to no Area and would be invisible to an Area walk.
       const report = houseReport([...entities.values()]);
       const alarm = byLabel.find(e => e.domain === 'alarm_control_panel') ?? null;
-      return <ChipRow report={report} alarm={alarm} />;
+      // The chip row is the part of the sidebar that yields. Everything below
+      // it -- the camera glance and the gates -- is pinned to the foot of the
+      // panel and must not move when a chip spawns, so once the flexible gap
+      // above the glance is used up the chips scroll within their own row
+      // rather than pushing the controls off the bottom of a panel that has
+      // no more room. `minHeight: 0` is what lets a flex child shrink at all.
+      return (
+        <div
+          style={{
+            minHeight: 0,
+            overflowY: 'auto',
+            // A chip is a whole row of its own, so scrolling snaps to one:
+            // the row never rests showing half a chip, which at 2 m reads as
+            // a rendering fault rather than as "there is more below".
+            scrollSnapType: 'y mandatory',
+          }}
+        >
+          <ChipRow report={report} alarm={alarm} />
+        </div>
+      );
     }
 
     case 'room': {
@@ -138,14 +157,11 @@ function SlotView({ slot, areas }: { slot: Slot; areas: Area[] }) {
       // the house still decides how many exist.
       const primary = slot.primary ?? 0;
       return (
-        // The gates take the sidebar's remaining height and share it between
-        // themselves; `CameraGlance` above them keeps its intrinsic size, so
-        // the primary affordance is what grows when the column has room.
-        // The gates sit at the foot of the sidebar at a fixed height each.
-        // `marginTop: auto` is what anchors them: the spare room collects
-        // above the group as one flexible gap, so a chip appearing in the
-        // row above takes space from the gap rather than from the controls.
-        <div style={{ display: 'flex', flexDirection: 'column', gap: t.space.md, marginTop: 'auto', flexShrink: 0 }}>
+        // Fixed height each, and the group does not grow. What anchors it to
+        // the foot of the sidebar is the flexible gap above the camera glance
+        // -- see the `cameras` case -- so everything from the cameras down is
+        // one pinned block and a chip appearing above moves none of it.
+        <div style={{ display: 'flex', flexDirection: 'column', gap: t.space.md, flexShrink: 0 }}>
           {byLabel.map((entity, i) => (
             <GateSlab key={entity.id} entity={entity} primary={i === primary} />
           ))}
@@ -156,7 +172,15 @@ function SlotView({ slot, areas }: { slot: Slot; areas: Area[] }) {
     case 'cameras': {
       const cameras = byLabel.filter(e => e.domain === 'camera');
       if (cameras.length === 0) return <FaultTile label={`Nessuna camera: ${slot.label}`} />;
-      return <CameraGlance cameras={cameras} areas={areas} />;
+      // `marginTop: auto` collects every spare pixel in the sidebar into one
+      // gap directly above this card. Everything below -- the glance and the
+      // gates -- is pinned to the foot of the panel, so a chip spawning in
+      // the row above consumes the gap instead of pushing the controls down.
+      return (
+        <div style={{ marginTop: 'auto', flexShrink: 0 }}>
+          <CameraGlance cameras={cameras} areas={areas} />
+        </div>
+      );
     }
 
     case 'media':

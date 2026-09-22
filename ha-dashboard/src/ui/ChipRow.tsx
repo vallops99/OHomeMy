@@ -39,7 +39,10 @@ const LEVEL_ICON: Record<Health['level'], string> = {
 export function ChipRow({ report, alarm }: ChipRowProps) {
   const concerns = [report.verdict, ...report.also];
   return (
-    <div style={{ display: 'flex', gap: t.space.sm, flexWrap: 'wrap' }}>
+    // `scrollSnapAlign` on each chip, because the row may be scrolled by its
+    // container when the sidebar runs out of room (see ScreenView): a chip is
+    // the unit, so the row rests on whole chips rather than on half of one.
+    <div style={{ display: 'flex', gap: t.space.sm, flexWrap: 'wrap', scrollSnapAlign: 'start' }}>
       {concerns.map((health, i) => (
         <Chip key={i} health={health} />
       ))}
