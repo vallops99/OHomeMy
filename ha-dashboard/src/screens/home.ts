@@ -54,7 +54,7 @@ export const home: Screen = [
   { kind: 'room', region: 'main', area: 'cucina', icon: 'mdi:stove' },
   { kind: 'room', region: 'main', area: 'ingresso', icon: 'mdi:door-open' },
   { kind: 'room', region: 'main', area: 'corridoio', icon: 'mdi:door-sliding' },
-  { kind: 'room', region: 'main', area: 'camera', icon: 'mdi:bed'},
+  { kind: 'room', region: 'main', area: 'camera', icon: 'mdi:bed' },
   { kind: 'room', region: 'main', area: 'camera_chri', icon: 'mdi:bed' },
 
   // The strip, along the floor. Media only speaks when something is playing.

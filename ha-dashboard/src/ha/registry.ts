@@ -139,6 +139,11 @@ export function useEntityState(id: EntityId | null | undefined): Entity | null {
  *
  * Area contents are Derived, never Composed: a new light in Giardino appears
  * here with no code change, which is the whole point of #3.
+ *
+ * Unlike the entity display registry, the area registry arrives uncompressed
+ * and @hakit stores `config/area_registry/list` verbatim -- so `labels` needs
+ * no re-expansion and is carried straight through (#12). It holds label ids,
+ * which are Home Assistant's slugified spelling of the label name.
  */
 export function useAreas(): Area[] {
   const areasRegistry = useRegistryData('areas');
@@ -154,10 +159,15 @@ export function useAreas(): Area[] {
     });
 
     return Object.entries(areasRegistry ?? {}).map(([id, raw]) => {
-      const area = raw as { area_id?: string; name?: string };
+      const area = raw as { area_id?: string; name?: string; labels?: string[] };
       const list = byArea.get(area.area_id ?? id) ?? [];
       list.sort((a, b) => rank(a.domain) - rank(b.domain) || a.id.localeCompare(b.id));
-      return { id: area.area_id ?? id, name: area.name ?? id, entities: list };
+      return {
+        id: area.area_id ?? id,
+        name: area.name ?? id,
+        labels: (area.labels ?? []) as Label[],
+        entities: list,
+      };
     });
   }, [areasRegistry, entities]);
 }

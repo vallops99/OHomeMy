@@ -45,6 +45,13 @@ export type Entity = {
 export type Area = {
   id: AreaId;
   name: string;
+  /**
+   * Labels applied to the Area itself, carrying half of every Placement
+   * (#12). These are label *ids*, not names: Home Assistant slugifies a
+   * label's name into its id, so the protocol's `page:main` is registered
+   * under `page_main` and arrives here in that spelling.
+   */
+  labels: Label[];
   /** Every entity registered to this Area, denylist already applied. */
   entities: Entity[];
 };
