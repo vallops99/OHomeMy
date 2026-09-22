@@ -213,9 +213,9 @@ entities:
     device_class: humidity
     unit: '%'
     initial: 47
+    labels: [page:main, region:glance]
 
   # ---------------- media ----------------
-    labels: [page:main, region:glance]
   - id: media_player.ovunque
     name: Ovunque
     kind: media_player
@@ -378,9 +378,9 @@ entities:
     unit: W
     initial: 320
     state_class: measurement
+    labels: [page:main, region:glance]
 
   # ---------------- diagnostics (ignored) ----------------
-    labels: [page:main, region:glance]
   - id: sensor.echo_di_christian_temperatura
     name: Temperatura Echo
     kind: sensor

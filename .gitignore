@@ -13,3 +13,6 @@ skills-lock.json
 node_modules
 dist
 .npm-global
+
+# Python bytecode from the fake-house scripts.
+__pycache__/
