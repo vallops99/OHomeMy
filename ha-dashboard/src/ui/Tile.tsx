@@ -27,9 +27,16 @@ export type TileProps = {
    * whether open or closed, so they do not fade into the inactive surface.
    */
   alwaysFilled?: boolean;
-  /** Columns and rows of the 4x2 grid this tile occupies (ADR-0001 grid). */
-  colSpan?: number;
-  rowSpan?: number;
+  /**
+   * Lay the tile out as a single horizontal row (variant D's room list, #6).
+   *
+   * A named shape rather than something a caller imposes with inline styles:
+   * the surface styling below is an emotion class, which beats an inline
+   * `display`, so a caller passing `display: flex` in `style` would silently
+   * get a block and stack its children. Anything the tile must be, it must
+   * be able to say here.
+   */
+  row?: boolean;
   onClick?: () => void;
   /** Suppress the long-press modal, for tiles that own their whole surface. */
   disableModal?: boolean;
@@ -37,26 +44,52 @@ export type TileProps = {
   style?: React.CSSProperties;
 };
 
-export function Tile({
-  entity,
-  active,
-  strong,
-  alwaysFilled,
-  colSpan = 1,
-  rowSpan = 1,
-  onClick,
-  disableModal,
-  children,
-  style,
-}: TileProps) {
+export function Tile({ entity, active, strong, alwaysFilled, row, onClick, disableModal, children, style }: TileProps) {
   const unavailable = entity?.unavailable ?? false;
+
+  const surface = {
+    boxSizing: 'border-box' as const,
+    border: `1px solid ${unavailable ? t.color.fault : t.color.border}`,
+    borderRadius: t.radius.tile,
+    background: surfaceFor({ active: active || alwaysFilled, unavailable, strong }),
+    padding: t.space.md,
+    overflow: 'hidden',
+    minHeight: t.touch.primary,
+  };
+
+  // No entity: render the surface ourselves rather than handing @hakit a card.
+  //
+  // @hakit's `unknown` sentinel is documented as a no-op, but `CardBase`
+  // still mounts its modal subtree, which throws on `null.state` and takes
+  // the panel down through the error boundary -- `disableModal` does not
+  // prevent the mount. There is nothing to press anyway, so the press
+  // behaviour we would be keeping is behaviour for a control that does not
+  // exist. Found by placing a `room` slot on an Area with no light.
+  if (!entity) {
+    return (
+      <div
+        style={{
+          ...surface,
+          ...(row ? { display: 'flex', alignItems: 'center', gap: t.space.md, width: '100%' } : { display: 'block', width: '100%' }),
+          ...style,
+        }}
+      >
+        {children}
+      </div>
+    );
+  }
 
   return (
     <CardBase
       // `unknown` is @hakit's documented no-op entity sentinel.
       entity={(entity?.id ?? 'unknown') as 'unknown'}
       onlyFunctionality
-      disableModal={disableModal || unavailable}
+      // No entity means no modal: @hakit's `unknown` sentinel still opens one,
+      // and its contents throw on `null.state`, taking the panel down with an
+      // error boundary. Found by placing a `room` slot on an Area with no
+      // light (Esterno) -- which ADR-0004 says not to do, but a screen that
+      // does it should render a quiet row, not crash.
+      disableModal={disableModal || unavailable || !entity}
       // @hakit title-cases the raw state for the modal's headline ("Locked")
       // instead of localising it. `stateTitle` wins over that, so the modal
       // says what the tile says. See src/ui/stateLabel.ts.
@@ -65,8 +98,31 @@ export function Tile({
       disableColumns
       onClick={() => onClick?.()}
       cssStyles={`
-        display: block;
+        display: ${row ? 'flex' : 'block'};
+        ${row ? 'align-items: center;' : ''}
         width: 100%;
+        ${
+          // @hakit nests the children three levels down -- `.ripple-parent`,
+          // `.ripple-inner`, then `.contents`, which is the element that
+          // actually holds them and is `display: block`. Styling the card
+          // alone leaves a row's contents stacked inside it. The nesting is
+          // not in @hakit's types; it was found by walking the rendered DOM,
+          // which is the only way to see it. If a future @hakit changes these
+          // class names the row will stack again -- visibly, not silently.
+          row
+            ? `& .ripple-parent, & .ripple-inner {
+          width: 100%;
+          height: 100%;
+        }
+        & .contents {
+          display: flex;
+          align-items: center;
+          gap: ${t.space.md}px;
+          width: 100%;
+          height: 100%;
+        }`
+            : ''
+        }
         height: 100%;
         box-sizing: border-box;
         border: 1px solid ${unavailable ? t.color.fault : t.color.border};
@@ -77,8 +133,9 @@ export function Tile({
         cursor: ${unavailable ? 'not-allowed' : 'pointer'};
       `}
       style={{
-        gridColumn: `span ${colSpan}`,
-        gridRow: `span ${rowSpan}`,
+        // No grid spans: the panel's regions are flows, and the one part
+        // that tiles (the bottom strip) places its children itself. A tile
+        // fills whatever box it is given.
         minHeight: t.touch.primary,
         ...style,
       }}

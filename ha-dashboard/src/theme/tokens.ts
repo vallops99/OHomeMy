@@ -84,6 +84,13 @@ export function buildTokens(k: Knobs = KNOBS) {
        * font request that stalls would leave the house unlabelled.
        */
       family: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+      /**
+       * The hero temperature, read on approach from 2 m. Variant D sets this
+       * as the one number the panel leads with (#6); it is a token rather
+       * than a literal so ADR-0001's rule holds -- nothing downstream
+       * hardcodes a font size.
+       */
+      hero: 112,
       glanceXL: 56, // the one number you read on approach
       glanceL: 34,
       glanceM: 22,
@@ -95,22 +102,28 @@ export function buildTokens(k: Knobs = KNOBS) {
     /** 64 px minimum for primary controls, 44 px absolute floor (research §2.3) */
     touch: { primary: 64, floor: 44 },
     /**
-     * The panel grid at 1280x800 (#8).
+     * The panel layout at 1280x800: variant D, "Arrivo calmo" (#6).
      *
-     * Four columns of 303 px, and four rows whose heights are NOT uniform:
-     * the entrance panel has three jobs with different appetites, so the rows
-     * are sized to them rather than to each other.
+     * Two regions side by side, not a uniform grid. The sidebar is the glance
+     * layer -- the hero temperature, the house's concerns as chips, what the
+     * cameras see, and the gates -- at a fixed width so the hero's 112 px
+     * number has a column it can live in. The main region is the touched
+     * layer: one row per Area, then a strip of secondary controls.
      *
-     *   status  180  the glance layer, read on approach from 2 m
-     *   tile    227  two rows of room and gate tiles, the touched layer
-     *   strip    96  media and navigation, a 64 px control plus padding
+     *   sidebar  420  fixed; the arrival column
+     *   main     rest; room rows over a bottom strip
      *
-     * 14 + (180 + 227 + 227 + 96) + 4x14 gaps = 800 exactly. An earlier 4x2 of
-     * 180 px rows filled only 402 px of the 800 and left the bottom half of the
-     * panel empty: the original figure fixed the column width, which does divide
-     * 1280, and never checked the height.
+     * The regions size their contents intrinsically rather than by row
+     * arithmetic. An earlier 4x4 grid (#8) computed four unequal rows that
+     * filled 800 px exactly, which is a real property this layout gives up:
+     * fit here is a matter of measurement, not of adding the rows up. That
+     * was the trade accepted when variant D was restored -- see the
+     * amendment on ADR-0004.
+     *
+     *   rowRoom  the height of one Area row: a 64 px control plus padding
+     *   strip    the bottom strip, matching the old grid's secondary row
      */
-    grid: { cols: 4, tileW: 303, rowStatus: 180, rowTile: 227, rowStrip: 96 },
+    layout: { sidebarW: 420, rowRoom: 76, rowStrip: 96, gateSlab: 96 },
   };
 }
 

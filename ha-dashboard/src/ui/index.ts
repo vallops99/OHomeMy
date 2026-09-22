@@ -8,13 +8,15 @@
  * import inside this directory is what makes that remedy affordable.
  */
 export { Tile, type TileProps } from './Tile';
-export { Grid } from './Grid';
+export { Panel, type PanelProps } from './Panel';
+export { Strip, type StripProps } from './Strip';
 export { Slider, type SliderProps } from './Slider';
 export { Icon, DOMAIN_ICON, type IconProps } from './Icon';
-export { RoomTile, type RoomTileProps } from './RoomTile';
-export { AreaBadges, type AreaBadgesProps } from './AreaBadges';
+export { RoomRow, type RoomRowProps } from './RoomRow';
 export { GateSlab, type GateSlabProps } from './GateSlab';
-export { StatusPanel, type StatusPanelProps } from './StatusPanel';
+export { Hero, type HeroProps } from './Hero';
+export { Stats, type StatsProps } from './Stats';
+export { ChipRow, type ChipRowProps } from './ChipRow';
 export { AlarmTile, type AlarmTileProps } from './AlarmTile';
 export { CameraGlance, type CameraGlanceProps } from './CameraGlance';
 export { MediaBar, type MediaBarProps } from './MediaBar';
@@ -22,4 +24,5 @@ export { NavBar, type NavBarProps, type NavDestination } from './NavBar';
 export { FaultTile, type FaultTileProps } from './FaultTile';
 export { HakitTheme } from './HakitTheme';
 export { stateLabel } from './stateLabel';
+export { alarmIcon, isArmed, isTriggered } from './alarmState';
 export { t, surfaceFor, onSurfaceFor } from './theme';

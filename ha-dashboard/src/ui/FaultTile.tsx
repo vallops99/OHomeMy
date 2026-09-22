@@ -18,16 +18,14 @@ import { t } from './theme';
 
 export type FaultTileProps = {
   label: string;
-  colSpan?: number;
-  rowSpan?: number;
 };
 
-export function FaultTile({ label, colSpan = 1, rowSpan = 1 }: FaultTileProps) {
+export function FaultTile({ label }: FaultTileProps) {
   return (
     <div
       style={{
-        gridColumn: `span ${colSpan}`,
-        gridRow: `span ${rowSpan}`,
+        flex: 1,
+        minWidth: 0,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',

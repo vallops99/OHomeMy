@@ -20,11 +20,9 @@ export type GateSlabProps = {
    * secondary stays a full control, just visibly the lesser of the two.
    */
   primary?: boolean;
-  colSpan?: number;
-  rowSpan?: number;
 };
 
-export function GateSlab({ entity, primary, colSpan, rowSpan }: GateSlabProps) {
+export function GateSlab({ entity, primary }: GateSlabProps) {
   const actions = useActions();
   // `unlocked` is the state worth shouting about: a gate left open.
   const open = entity.state === 'unlocked';
@@ -33,15 +31,7 @@ export function GateSlab({ entity, primary, colSpan, rowSpan }: GateSlabProps) {
   const fg = onSurfaceFor({ active: true, unavailable, strong: true });
 
   return (
-    <Tile
-      entity={entity}
-      active={open}
-      strong
-      alwaysFilled
-      colSpan={colSpan}
-      rowSpan={rowSpan}
-      onClick={() => (open ? actions.lock(entity) : actions.unlock(entity))}
-    >
+    <Tile entity={entity} active={open} strong alwaysFilled onClick={() => (open ? actions.lock(entity) : actions.unlock(entity))}>
       <div
         style={{
           display: 'flex',

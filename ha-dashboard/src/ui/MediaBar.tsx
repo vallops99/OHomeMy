@@ -18,8 +18,6 @@ import { onSurfaceFor, t } from './theme';
 export type MediaBarProps = {
   /** Every media player the screen placed here. The playing one wins. */
   entities: Entity[];
-  colSpan?: number;
-  rowSpan?: number;
 };
 
 /** What is worth showing: something actually making sound. */
@@ -33,7 +31,7 @@ function nowPlaying(entity: Entity): string {
   return title ?? 'In riproduzione';
 }
 
-export function MediaBar({ entities, colSpan = 1, rowSpan = 1 }: MediaBarProps) {
+export function MediaBar({ entities }: MediaBarProps) {
   const actions = useActions();
   const playing = playingOf(entities);
 
@@ -41,8 +39,8 @@ export function MediaBar({ entities, colSpan = 1, rowSpan = 1 }: MediaBarProps) 
     return (
       <div
         style={{
-          gridColumn: `span ${colSpan}`,
-          gridRow: `span ${rowSpan}`,
+          flex: 1,
+          minWidth: 0,
           display: 'flex',
           alignItems: 'center',
           gap: t.space.sm,
@@ -63,7 +61,7 @@ export function MediaBar({ entities, colSpan = 1, rowSpan = 1 }: MediaBarProps) 
   const fg = onSurfaceFor({ active: true, strong: true });
 
   return (
-    <Tile entity={playing} active strong alwaysFilled colSpan={colSpan} rowSpan={rowSpan} disableModal>
+    <Tile entity={playing} active strong alwaysFilled disableModal>
       <div style={{ display: 'flex', alignItems: 'center', gap: t.space.md, height: '100%', color: fg }}>
         <Icon name='mdi:music' size={32} />
         <div style={{ flex: 1, minWidth: 0 }}>

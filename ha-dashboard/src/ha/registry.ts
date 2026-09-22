@@ -182,6 +182,32 @@ export function useByDomain(domain: string): Entity[] {
 }
 
 /** Every entity carrying a Label, wherever it lives. Singletons are found this way. */
+/**
+ * What the house is drawing right now, in watts.
+ *
+ * Derived like everything else: it asks for the `power` device_class rather
+ * than naming the electrical panel's sensor, so the reading follows the house
+ * if the meter is replaced. Returns null when nothing reports one -- the
+ * panel then shows no consumption stat at all rather than a fake zero, which
+ * on a wall panel would read as "the house is drawing nothing".
+ *
+ * Deliberately instantaneous, not the cumulative kWh counter beside it: a
+ * month-to-date total is not something anyone can act on while standing at
+ * the door.
+ */
+export function usePower(): number | null {
+  const entities = useEntities();
+  return useMemo(() => {
+    for (const e of entities.values()) {
+      if (e.domain !== 'sensor' || e.unavailable) continue;
+      if (e.attributes.device_class !== 'power') continue;
+      const value = Number(e.state);
+      if (!Number.isNaN(value)) return value;
+    }
+    return null;
+  }, [entities]);
+}
+
 export function useByLabel(label: Label): Entity[] {
   const entities = useEntities();
   return useMemo(

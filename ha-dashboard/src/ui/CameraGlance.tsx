@@ -20,8 +20,6 @@ export type CameraGlanceProps = {
   cameras: Entity[];
   /** Every Area, to find the motion sensors sitting alongside them. */
   areas: Area[];
-  colSpan?: number;
-  rowSpan?: number;
 };
 
 /** Motion sensors in the Areas the cameras watch, currently detecting. */
@@ -36,7 +34,7 @@ function movingAreas(cameras: Entity[], areas: Area[]): string[] {
   return out;
 }
 
-export function CameraGlance({ cameras, areas, colSpan, rowSpan }: CameraGlanceProps) {
+export function CameraGlance({ cameras, areas }: CameraGlanceProps) {
   const moving = movingAreas(cameras, areas);
   const faulted = cameras.filter(c => c.unavailable);
   const active = moving.length > 0;
@@ -48,7 +46,7 @@ export function CameraGlance({ cameras, areas, colSpan, rowSpan }: CameraGlanceP
   const fg = faulted.length > 0 ? t.color.fault : onSurfaceFor({ active, strong: true });
 
   return (
-    <Tile entity={primary} active={active} strong alwaysFilled={active} colSpan={colSpan} rowSpan={rowSpan}>
+    <Tile entity={primary} active={active} strong alwaysFilled={active}>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: t.space.xs, color: fg }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: t.space.sm }}>
           <Icon name={faulted.length > 0 ? 'mdi:cctv-off' : active ? 'mdi:motion-sensor' : 'mdi:cctv'} size={32} />

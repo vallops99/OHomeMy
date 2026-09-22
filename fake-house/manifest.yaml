@@ -341,6 +341,14 @@ entities:
     unit: kWh
     initial: 143.2
     state_class: total_increasing
+  - id: sensor.generale_quadro_sonoff_100285d3f0_power
+    name: Potenza Attuale
+    kind: sensor
+    area: ingresso
+    device_class: power
+    unit: W
+    initial: 320
+    state_class: measurement
 
   # ---------------- diagnostics (ignored) ----------------
   - id: sensor.echo_di_christian_temperatura
@@ -350,6 +358,11 @@ entities:
     device_class: temperature
     unit: "°C"
     initial: 21.5
+    # An Echo's own chip temperature, not the room's. It sits in this
+    # "ignored" section but never carried the Label, so it still reached the
+    # dashboard and won Camera Chri's temperature scan (#8's fault, found
+    # again on the room rows).
+    labels: [ignored]
   - id: sensor.portone_ingresso_batteria
     name: Batteria Portone
     kind: sensor

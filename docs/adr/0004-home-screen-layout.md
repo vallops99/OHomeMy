@@ -134,3 +134,102 @@ three so the tile stays readable at 2 m. A quiet room shows none.
   to need the same once a panel is mounted.
 - **The ambient/idle state is not built.** The ticket lists it; wake-on-approach
   is a #2 concern and there is no hardware to wake. Left as fog.
+
+## Amendment (2026-09-22): the grid superseded variant D without arguing it
+
+The layout decided above is reverted. The panel is variant D — the layout
+[#6](https://github.com/vallops99/homeassistant-frontend/issues/6) chose after
+building and judging four candidates at 1280x800 — and this ADR's four-row
+grid is superseded.
+
+### What happened
+
+#6 closed by choosing variant D, "Arrivo calmo": a 420 px sidebar (hero
+temperature, stats, fault chips, gate slabs) beside a column of full-width
+room **rows**. It recorded two rejections that matter here:
+
+- **Variant A was rejected for being a room grid** — "closest to the
+  reference image, but ~250 px of dead vertical space".
+- **Variant B as originally built was rejected** because "a bordered card
+  flooded red for one unreachable light", and D's outline **fault chip** was
+  the fix.
+
+This ADR then built a room grid whose glance layer was a bordered card that
+floods red. Both rejected forms came back. Neither this ADR nor #8 mentions
+variant D anywhere: the reversal was never argued, it happened by omission
+while fixing a real and separate bug — the 402 px grid that filled half the
+panel. D was drawn before the alarm, cameras, media strip and nav bar
+existed, so nothing in it contradicted the new components; it simply was not
+consulted.
+
+The lesson is narrow and worth stating: **a decision recorded only in a
+closed ticket is a decision that can be lost.** The grid arithmetic lived in
+an ADR and survived; the layout choice lived in #6's closing comment and did
+not. What is chosen deserves the same durability as what is computed.
+
+### What is kept from this ADR
+
+The reversal is of the *layout*, not of what building it found. All of this
+survives:
+
+- **`houseReport`'s ranking** (`fault > open > lit > ok`), unchanged, and its
+  rule that a fault must not silence an open gate. Only the *presentation*
+  returns to D: the verdict renders as chips, and `also` concerns render as
+  further chips.
+- **The temperature comes from a `climate` entity's `current_temperature`.**
+  The room rows initially reintroduced the Echo bug — a naive scan for a
+  `temperature` sensor put an Amazon Echo's self-heating chip on the wall as
+  Camera Chri's reading. `RoomRow` now prefers a thermostat, and the Echo
+  sensor finally carries the `ignored` Label its own manifest section claimed
+  for it.
+- **The fault-counting rule**: a fault is reportable only if the dashboard
+  renders the thing at all.
+- **Cameras as a motion glance, media as contextual, nav as a bottom bar**
+  with visibly-disabled destinations. D's sketch had four *static* shortcuts
+  there; those were a placeholder drawn before the live components existed,
+  not a decision against them. The live components are placed into D's
+  regions instead — `CameraGlance` filling what #6 explicitly left as dead
+  space in the sidebar.
+
+### What the panel gives up
+
+**Sixteen cells that summed to 800 px exactly.** The grid's four unequal rows
+were arithmetic: `14 + (180+227+227+96) + 4 gaps = 800`, provable without
+rendering. D's regions size intrinsically, so fit is now a thing to measure.
+That trade was made knowingly, and the measurement was done: the panel fills
+1280x800 with no scroll in either axis, and the room rows share the column by
+`flex: 1` above a `t.layout.rowRoom` floor, so a sixth Area shrinks the rows
+(124 → 102 px, verified) rather than pushing the strip off a panel that
+cannot scroll.
+
+### ADR-0003 is narrowed
+
+`Span` no longer carries a `row`, and it appears only on the slot kinds that
+sit in the bottom strip — the one part of the panel that tiles. The sidebar
+and the room list are flows, so a `span` there would be a field that lies.
+The `phone` fallback survives unchanged, still unexercised.
+
+`Slot` gains a required `region`. A flat `Slot[]` with a tag was chosen over
+a nested `{ sidebar: [], main: [] }` so ADR-0003's edits all still hold:
+moving a row is moving a line, and moving something between columns is
+changing one word.
+
+### Three faults found by building it, again
+
+- **@hakit nests children three levels deep.** `CardBase` renders
+  `.ripple-parent` → `.ripple-inner` → `.contents`, and it is `.contents`
+  that holds the children. Styling the card alone left every row's contents
+  stacked vertically inside a horizontal row. The nesting is not in @hakit's
+  types; it was found by walking the rendered DOM. `Tile` now takes a named
+  `row` shape rather than leaving callers to fight the emotion class with
+  inline styles — which cannot win, silently.
+- **A `Tile` with no entity crashed the panel.** @hakit's `unknown` sentinel
+  is documented as a no-op, but `CardBase` still mounts a modal subtree that
+  throws on `null.state`, and `disableModal` does not prevent the mount.
+  `Tile` now renders the surface itself when there is no entity. Found by
+  placing a `room` slot on Esterno, which has no light — something this ADR
+  says not to do, but which should render a quiet row rather than take the
+  wall panel down.
+- **The seam's rule held under both.** Every fix landed in `src/ui/`; no
+  screen changed, and nothing above the seam learned that @hakit has a
+  `.contents` div.

@@ -26,16 +26,14 @@ export type NavDestination = {
 
 export type NavBarProps = {
   destinations: NavDestination[];
-  colSpan?: number;
-  rowSpan?: number;
 };
 
-export function NavBar({ destinations, colSpan = 1, rowSpan = 1 }: NavBarProps) {
+export function NavBar({ destinations }: NavBarProps) {
   return (
     <div
       style={{
-        gridColumn: `span ${colSpan}`,
-        gridRow: `span ${rowSpan}`,
+        flex: 1,
+        minWidth: 0,
         display: 'flex',
         gap: t.space.sm,
         padding: t.space.sm,

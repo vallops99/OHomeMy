@@ -11,6 +11,7 @@
  * standing at it has not already defeated.
  */
 import { useActions, type Entity } from '../ha';
+import { alarmIcon, isArmed, isTriggered } from './alarmState';
 import { Icon } from './Icon';
 import { stateLabel } from './stateLabel';
 import { Tile } from './Tile';
@@ -18,17 +19,14 @@ import { onSurfaceFor, t } from './theme';
 
 export type AlarmTileProps = {
   entity: Entity;
-  colSpan?: number;
-  rowSpan?: number;
 };
 
 /** Every state Home Assistant reports as "this alarm is watching". */
-const ARMED = new Set(['armed_home', 'armed_away', 'armed_night', 'armed_vacation', 'armed_custom_bypass']);
 
-export function AlarmTile({ entity, colSpan, rowSpan }: AlarmTileProps) {
+export function AlarmTile({ entity }: AlarmTileProps) {
   const actions = useActions();
-  const armed = ARMED.has(entity.state);
-  const triggered = entity.state === 'triggered';
+  const armed = isArmed(entity);
+  const triggered = isTriggered(entity);
   const unavailable = entity.unavailable;
 
   // A triggered alarm is the loudest thing the panel can say, so it borrows
@@ -42,8 +40,6 @@ export function AlarmTile({ entity, colSpan, rowSpan }: AlarmTileProps) {
       active={armed}
       strong
       alwaysFilled={!triggered}
-      colSpan={colSpan}
-      rowSpan={rowSpan}
       style={triggered ? { background: t.color.faultSurface, borderColor: t.color.fault } : undefined}
       onClick={() => actions.call('alarm_control_panel', armed ? 'alarm_disarm' : 'alarm_arm_away', entity.id)}
     >
@@ -58,10 +54,7 @@ export function AlarmTile({ entity, colSpan, rowSpan }: AlarmTileProps) {
           color: fg,
         }}
       >
-        <Icon
-          name={unavailable ? 'mdi:alert-circle' : triggered ? 'mdi:bell-ring' : armed ? 'mdi:shield-lock' : 'mdi:shield-off-outline'}
-          size={40}
-        />
+        <Icon name={alarmIcon(entity)} size={40} />
         <span style={{ fontSize: t.font.glanceM, fontWeight: 600, textAlign: 'center' }}>{entity.name}</span>
         <span style={{ fontSize: t.font.body, opacity: 0.9 }}>{stateLabel(entity)}</span>
       </div>

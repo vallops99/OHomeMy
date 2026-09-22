@@ -43,6 +43,26 @@ _Avoid_: Single, atomic, leaf
 Something house-wide with no meaningful Area, addressed by Label instead — the alarm panel, the multiroom speaker. Composed onto screens explicitly.
 _Avoid_: Global, house-level, standalone
 
+**Slot**:
+One placement on a Screen: what goes there, not what fills it. A Slot names an Area or a Label and leaves the entities to be Derived.
+_Avoid_: Widget, card, item
+
+**Screen**:
+An ordered list of Slots making up one view of the panel. Screens are Composed.
+_Avoid_: Page, layout, dashboard
+
+**Region**:
+One of the panel's two columns, each with its own job: the glance layer read on approach, and the touched layer. Every Slot belongs to exactly one.
+_Avoid_: Column, pane, section
+
+**Verdict**:
+The house's state as a single ranked judgement — a fault, an open way in, a lit zone, or nothing to report — rather than a list of readings. What the glance layer answers.
+_Avoid_: Status, summary, overview
+
+**Fault**:
+An Unavailable entity the dashboard would actually render. Narrower than Unavailable: Home Assistant's own housekeeping goes unreachable routinely, and a panel that counted it would cry wolf. Only a Fault is reportable.
+_Avoid_: Error, problem, issue
+
 **Unavailable**:
 The visible state of an entity Home Assistant cannot reach. Always rendered, never hidden, so that a real fault in the house is visible to whoever is standing at the panel.
 _Avoid_: Offline, missing, error, dead
