@@ -17,21 +17,26 @@ areas:
   - id: ingresso
     name: Ingresso
     icon: mdi:door-sliding-open
+    labels: [page:main, region:entities-right]
   - id: corridoio
     name: Corridoio
     icon: mdi:walk
+    labels: [page:main, region:entities-right]
   - id: salone
     name: Soggiorno
     icon: mdi:sofa
+    labels: [page:main, region:entities-right]
   - id: camera_chri
     name: Cameretta
     icon: mdi:bed
+    labels: [page:main, region:entities-right]
   - id: esterno
     name: Esterno
     icon: mdi:garage
   - id: cucina
     name: Cucina
     icon: mdi:stove
+    labels: [page:main, region:entities-right]
   - id: camera
     name: Camera
     icon: mdi:bed
@@ -58,6 +63,23 @@ labels:
   - id: ignored
     name: ignored
     icon: mdi:eye-off
+
+  # --- Placement (docs/protocol.md). A thing needs one of each to render. ---
+  - id: page:main
+    name: page:main
+    icon: mdi:home
+  - id: region:glance
+    name: region:glance
+    icon: mdi:eye-outline
+  - id: region:entities-left
+    name: region:entities-left
+    icon: mdi:dock-left
+  - id: region:entities-right
+    name: region:entities-right
+    icon: mdi:dock-right
+  - id: region:footer
+    name: region:footer
+    icon: mdi:dock-bottom
 
 entities:
   # ---------------- lights ----------------
@@ -91,7 +113,7 @@ entities:
   - id: light.luci_cucina
     name: Luci Cucina
     kind: light
-    area: salone
+    area: cucina
     labels: [main]
     aggregate_of:
       - light.luce_cucina
@@ -100,15 +122,15 @@ entities:
   - id: light.luce_cucina
     name: Luce Cucina
     kind: light
-    area: salone
+    area: cucina
   - id: light.cucina_faretti_cucina
     name: Faretti Cucina
     kind: light
-    area: salone
+    area: cucina
   - id: light.led_cucina
     name: LED Cucina
     kind: light
-    area: salone
+    area: cucina
     supports_color: true
 
   - id: light.ingresso_interruttore_ing_salone_luce_ingresso
@@ -137,19 +159,19 @@ entities:
     name: Cancello
     kind: lock
     area: esterno
-    labels: [gate, main]
+    labels: [gate, main, page:main, region:entities-left]
   - id: lock.esterno_cancelletto
     name: Cancelletto
     kind: lock
     area: esterno
-    labels: [gate]
+    labels: [gate, page:main, region:entities-left]
 
   # ---------------- security ----------------
   - id: alarm_control_panel.ezviz_alarm
     name: Allarme
     kind: alarm
     area: null
-    labels: [security, main]
+    labels: [security, main, page:main, region:glance]
   - id: siren.telecamera_cancello_sirena
     name: Sirena Cancello
     kind: siren
@@ -166,24 +188,24 @@ entities:
     name: Telecamera Cancello
     kind: camera
     area: esterno
-    labels: [vision]
+    labels: [vision, page:main, region:entities-left]
   - id: camera.telecamera_cancelletto
     name: Telecamera Cancelletto
     kind: camera
     area: esterno
-    labels: [vision]
+    labels: [vision, page:main, region:entities-left]
   - id: camera.telecamera_esterno_giardino
     name: Telecamera Giardino
     kind: camera
     area: esterno
-    labels: [vision]
+    labels: [vision, page:main, region:entities-left]
 
   # ---------------- climate ----------------
   - id: climate.corridoio_termostato
     name: Termostato
     kind: climate
     area: corridoio
-    labels: [main]
+    labels: [main, page:main, region:glance]
   - id: sensor.corridoio_termostato_umidita
     name: Umidita Termostato
     kind: sensor
@@ -193,11 +215,12 @@ entities:
     initial: 47
 
   # ---------------- media ----------------
+    labels: [page:main, region:glance]
   - id: media_player.ovunque
     name: Ovunque
     kind: media_player
     area: null
-    labels: [multiroom, main]
+    labels: [multiroom, main, page:main, region:footer]
   - id: media_player.echo_di_christian
     name: Echo di Christian
     kind: media_player
@@ -273,19 +296,19 @@ entities:
   - id: binary_sensor.cucina_lavastoviglie_door_status
     name: Sportello Lavastoviglie
     kind: binary_sensor
-    area: salone
+    area: cucina
     device_class: door
     initial: 'off'
   - id: binary_sensor.cucina_lavastoviglie_salt
     name: Sale Lavastoviglie
     kind: binary_sensor
-    area: salone
+    area: cucina
     device_class: problem
     initial: 'off'
   - id: binary_sensor.cucina_lavastoviglie_rinse_aid
     name: Brillantante Lavastoviglie
     kind: binary_sensor
-    area: salone
+    area: cucina
     device_class: problem
     initial: 'on'
 
@@ -357,6 +380,7 @@ entities:
     state_class: measurement
 
   # ---------------- diagnostics (ignored) ----------------
+    labels: [page:main, region:glance]
   - id: sensor.echo_di_christian_temperatura
     name: Temperatura Echo
     kind: sensor

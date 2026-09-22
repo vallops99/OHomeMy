@@ -1,8 +1,20 @@
 # ADR-0004: The home screen is four unequal rows, and the glance layer is a verdict
 
-**Status:** accepted
+**Status:** layout superseded by [ADR-0005](0005-placement-protocol.md) (2026-09-22); its findings stand
 **Date:** 2026-09-21
 **Ticket:** [#8](https://github.com/vallops99/homeassistant-frontend/issues/8)
+
+> **The region model is superseded twice over.** The four-row grid below was
+> reverted to variant D by the amendment at the foot of this file; variant D's
+> two intrinsically-sized columns are in turn superseded by
+> [ADR-0005](0005-placement-protocol.md)'s 2x2, whose regions are declared in
+> Home Assistant rather than composed here.
+>
+> **What this ADR found still holds**: `houseReport`'s ranking and its rule
+> that a fault must not silence an open gate; temperature from a `climate`
+> entity rather than a `temperature` sensor scan; a fault being reportable only
+> if the dashboard renders the thing at all; cameras as a motion glance and
+> media as contextual. Those are about the house, not about the layout.
 
 ## Context
 

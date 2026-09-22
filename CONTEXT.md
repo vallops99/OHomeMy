@@ -1,90 +1,132 @@
 # Casa Carina Dashboard
 
-A custom Home Assistant dashboard for a private Italian house, rendered on a wall panel at the entrance. The frontend is **backend-driven**: what exists in the house is declared in Home Assistant's own registries, and the dashboard derives what it renders from them rather than from hardcoded entity ids.
+A Home Assistant panel renderer, built for and running on a wall panel at the
+entrance of a private Italian house. The frontend holds **no layout**: what
+appears, on which page, in which region, is declared in Home Assistant with
+labels, and the frontend renders whatever it is told. See
+[the placement protocol](docs/protocol.md) for the grammar and
+[ADR-0005](docs/adr/0005-placement-protocol.md) for why.
+
+The house it was built for is an example throughout, never a definition. The
+renderer knows nothing about which Areas exist or what they are called.
 
 ## Language
 
 ### Structure
 
 **Area**:
-A room or zone of the house, as registered in Home Assistant's area registry. The six areas are Ingresso, Corridoio, Salone, Camera Chri, Esterno, Giardino. The dashboard never invents areas; the registry is the source of truth.
+A room or zone of a house, as registered in Home Assistant's area registry. The
+dashboard never invents Areas and holds no list of them; the registry is the
+source of truth. _In this house, at the time of writing_: Ingresso, Corridoio,
+Salone, Camera Chri, Esterno, Cucina, Camera, Ufficio.
 _Avoid_: Room, zone, space
 
 **Domain**:
-The Home Assistant entity class an entity belongs to, taken from the part of its entity id before the dot — `light`, `lock`, `camera`, `climate`. Used with Area as the two coordinates that address anything renderable.
+The Home Assistant entity class an entity belongs to, taken from the part of
+its entity id before the dot -- `light`, `lock`, `camera`, `climate`.
 _Avoid_: Type, category, kind
 
 **Label**:
-A tag applied to an **entity** in Home Assistant, used to express what Area and Domain alone cannot. Home Assistant also permits labels on devices and areas; this project uses entity-level labels only, because a device carries many entities across many Domains and cannot disambiguate between them. Labels are maintained in Home Assistant, not in the frontend, so adding one never requires a code change.
+A tag applied to an **entity** or an **Area** in Home Assistant, used to
+express what Area and Domain alone cannot. Labels carry every placement
+decision, so rearranging the panel never requires a code change or a rebuild.
 _Avoid_: Tag, marker, flag
 
-**Manifest**:
-The set of Areas, Domains and Labels the dashboard expects to find. It describes shape, never instances: it says an Area may contain lights, never that Giardino contains three of them.
-_Avoid_: Config, schema, entity list
+**Prefixed Label**:
+A Label whose value is structured as `prefix:value` -- `page:main`,
+`region:footer`. Home Assistant's labels are flat strings with no values of
+their own, so the protocol reads structure out of the name.
+_Avoid_: Namespaced label, key-value label
 
-### Rendering
+### Placement
 
-**Derived**:
-Rendered from a registry query, with entity identity never named in code. An Area's contents are always derived.
+**Placement**:
+The pair of Prefixed Labels that puts something on the panel: a `page:` and a
+`region:`, both required. An Area or entity carrying both is **Placed**;
+carrying one or neither, it renders nowhere. Absence of Placement is the
+ordinary way to keep something off the panel.
+_Avoid_: Assignment, mapping, binding
 
-**Composed**:
-Assembled from explicit declaration — which Areas appear on a screen, in what order, alongside which singleton zones. Screen structure is composed; Area contents are not.
-_Avoid_: Hardcoded, manual, static
-
-**Aggregate**:
-A Home Assistant group entity standing for every entity of one Domain within one Area — `light.tutte_luci_cucina` for all of the kitchen's lights. It is an ordinary entity carrying the `main` Label, so the frontend renders and controls it exactly like any other; all aggregation semantics (combined state, brightness, what a press does) belong to Home Assistant, never to the frontend.
-_Avoid_: Summary, rollup, composite
-
-**Individual**:
-One entity's own control, reached by drilling into an Area rather than shown on the home screen.
-_Avoid_: Single, atomic, leaf
-
-**Singleton**:
-Something house-wide with no meaningful Area, addressed by Label instead — the alarm panel, the multiroom speaker. Composed onto screens explicitly.
-_Avoid_: Global, house-level, standalone
-
-**Slot**:
-One placement on a Screen: what goes there, not what fills it. A Slot names an Area or a Label and leaves the entities to be Derived.
-_Avoid_: Widget, card, item
-
-**Screen**:
-An ordered list of Slots making up one view of the panel. Screens are Composed.
-_Avoid_: Page, layout, dashboard
+**Page**:
+One view of the panel, named by a `page:` Label. Open-ended: a Page exists
+because something is labelled for it, and the renderer knows no list of them.
+`page:main` is the home screen by convention.
+_Avoid_: Screen, view, route
 
 **Region**:
-One of the panel's two columns, each with its own job: the glance layer read on approach, and the touched layer. Every Slot belongs to exactly one.
-_Avoid_: Column, pane, section
+One of the panel's four areas -- `glance`, `entities-left`, `entities-right`,
+`footer` -- named by a `region:` Label. Closed: an unrecognised value places
+nothing.
+_Avoid_: Column, pane, quadrant, section
+
+**Rendering contract**:
+What a Region promises to make of whatever is Placed in it. A Region decides
+the *shape* of a component, not only its position: an Area in
+`region:entities-right` is a full row with a slider, while the same Area in
+`region:footer` is a block that opens that Area's Page. This is why the panel
+needs no separate navigation concept.
+_Avoid_: Renderer, variant, presentation mode
+
+**Row**:
+An Area rendered in an entity Region: its name, how many of its lights are on,
+a brightness slider, its temperature. The one component that collapses an Area
+rather than standing for a single entity.
+_Avoid_: Tile, card, area widget
+
+**Derived**:
+Resolved from a registry query at render time rather than declared. Only one
+Derived rule survives the protocol: a Row consults the `main` Label to find the
+light its slider drives and the entity its temperature comes from. Everything
+else is Placed explicitly.
+_Avoid_: Automatic, implicit, inferred
+
+### State
 
 **Verdict**:
-The house's state as a single ranked judgement — a fault, an open way in, a lit zone, or nothing to report — rather than a list of readings. What the glance layer answers.
+The house's state as a single ranked judgement -- a fault, an open way in, a
+lit zone, or nothing to report -- rather than a list of readings. What the
+`glance` Region answers.
 _Avoid_: Status, summary, overview
 
 **Fault**:
-An Unavailable entity the dashboard would actually render. Narrower than Unavailable: Home Assistant's own housekeeping goes unreachable routinely, and a panel that counted it would cry wolf. Only a Fault is reportable.
+An Unavailable entity the dashboard would actually render. Narrower than
+Unavailable: Home Assistant's own housekeeping goes unreachable routinely, and
+a panel that counted it would cry wolf. Only a Fault is reportable.
 _Avoid_: Error, problem, issue
 
 **Unavailable**:
-The visible state of an entity Home Assistant cannot reach. Always rendered, never hidden, so that a real fault in the house is visible to whoever is standing at the panel.
+The visible state of an entity Home Assistant cannot reach. Always rendered,
+never hidden, so that a real fault in the house is visible to whoever is
+standing at the panel.
 _Avoid_: Offline, missing, error, dead
 
 ## Label vocabulary
 
-Maintained in Home Assistant's label registry. The frontend reads these; it does not define them.
+Maintained in Home Assistant's label registry. The frontend reads these; it
+does not define them. The normative grammar is in
+[docs/protocol.md](docs/protocol.md).
+
+**page:NAME**:
+Half of a Placement: which Page the thing appears on. Any value; the renderer
+validates nothing.
+
+**region:NAME**:
+The other half: which Region, and therefore which Rendering contract. One of
+`glance`, `entities-left`, `entities-right`, `footer`.
 
 **main**:
-Marks the one entity that represents its Domain within its Area when collapsed to a home-screen tile — usually an Aggregate group entity. Applied to entities, never to devices, since its whole job is picking a single one.
-
-**vision**:
-A camera. Distinguishes the three EZVIZ cameras from other Esterno and Giardino entities.
-
-**gate**:
-An outdoor gate (`lock.esterno_cancello`, `lock.esterno_cancelletto`), as opposed to a door lock. Gates are the most-touched control while arriving or leaving.
-
-**security**:
-The alarm panel and the two sirens, which are house-wide rather than belonging to an Area.
-
-**multiroom**:
-A media player addressing the whole house (`media_player.ovunque`) rather than one Area's speaker.
+Marks the entity a Row collapses its Area to -- the light its slider drives,
+the entity its temperature reads. Places nothing on its own; consulted only
+when an Area renders as a Row.
 
 **ignored**:
-Marks an entity the dashboard must not render, whatever its Area and Domain. The escape hatch that keeps rendering permissive: every Domain outside the denylist renders by default, and anything unwanted is silenced from Home Assistant rather than by a code change.
+A **mute**. Overrides a valid Placement, so something can be taken off the
+panel for a while and put back by removing one Label, with its Placement intact
+underneath. Not a denylist: under the protocol an unlabelled thing is already
+invisible.
+
+**gate**, **vision**, **security**, **multiroom**:
+Descriptive Labels naming what a thing *is* -- an outdoor gate as opposed to a
+door lock, a camera, the alarm panel and sirens, a house-wide media player.
+They carry no Placement; a thing is on the panel because it is Placed, not
+because it is one of these.
