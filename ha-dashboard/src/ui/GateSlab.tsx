@@ -28,6 +28,20 @@ export type GateSlabProps = {
   primary?: boolean;
 };
 
+/** The glyph size, and the floor the slab may not shrink below. */
+const ICON = 56;
+
+/**
+ * The height a slab needs to show everything it contains.
+ *
+ * The icon, the name's line box, the state line, two gaps and the tile's own
+ * padding. A slab shorter than this crushes its contents rather than
+ * scrolling -- flex children shrink by default and `Tile` clips what spills,
+ * which is how a 659 px viewport sliced "Cancello" through the middle and
+ * made "Cancelletto" vanish entirely.
+ */
+const SLAB_MIN = ICON + 40 + 24 + 2 * 4 + 2 * 14;
+
 export function GateSlab({ entity, primary }: GateSlabProps) {
   const actions = useActions();
   // `unlocked` is the state worth shouting about: a gate left open.
@@ -43,9 +57,10 @@ export function GateSlab({ entity, primary }: GateSlabProps) {
       strong
       alwaysFilled
       // The primary gate takes twice the share of the sidebar's remaining
-      // height. Both stay well above `touch.primary`, so this is weight, not
-      // a smaller target (ADR-0001).
-      style={{ flex: primary ? 2 : 1, minHeight: t.touch.primary }}
+      // height -- weight, not a smaller target (ADR-0001). `SLAB_MIN` is the
+      // floor: on a short viewport the slabs stop shrinking and the panel
+      // overflows visibly rather than clipping the gate's own name.
+      style={{ flex: primary ? 2 : 1, minHeight: SLAB_MIN }}
       onClick={() => (open ? actions.lock(entity) : actions.unlock(entity))}
     >
       <div
@@ -57,6 +72,11 @@ export function GateSlab({ entity, primary }: GateSlabProps) {
           height: '100%',
           gap: t.space.xs,
           color: fg,
+          // Nothing in here shrinks. As plain flex children the icon was
+          // squeezed 56 -> 16 px and the name's line box 40 -> 12 px, which
+          // slices the glyphs horizontally instead of hiding them -- a
+          // failure that looks like a rendering bug rather than a tight fit.
+          minHeight: 0,
         }}
       >
         {/*
@@ -69,7 +89,9 @@ export function GateSlab({ entity, primary }: GateSlabProps) {
           the secondary gate look like a smaller control rather than a lesser
           one; the primary is told apart by its brighter surface instead.
         */}
-        <Icon name={unavailable ? 'mdi:alert-circle' : entityIcon(entity)} size={56} />
+        <span style={{ flexShrink: 0, display: 'flex' }}>
+          <Icon name={unavailable ? 'mdi:alert-circle' : entityIcon(entity)} size={ICON} />
+        </span>
         {/*
           One size for every gate, however long its name: a longer word must
           not read as a smaller control. The label grows horizontally instead
@@ -92,11 +114,12 @@ export function GateSlab({ entity, primary }: GateSlabProps) {
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             maxWidth: '100%',
+            flexShrink: 0,
           }}
         >
           {entity.name}
         </span>
-        <span style={{ fontSize: t.font.body, opacity: 0.9 }}>{stateLabel(entity)}</span>
+        <span style={{ fontSize: t.font.body, opacity: 0.9, flexShrink: 0 }}>{stateLabel(entity)}</span>
       </div>
     </Tile>
   );

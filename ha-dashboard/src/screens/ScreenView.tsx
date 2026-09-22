@@ -141,7 +141,11 @@ function SlotView({ slot, areas }: { slot: Slot; areas: Area[] }) {
         // The gates take the sidebar's remaining height and share it between
         // themselves; `CameraGlance` above them keeps its intrinsic size, so
         // the primary affordance is what grows when the column has room.
-        <div style={{ display: 'flex', flexDirection: 'column', gap: t.space.md, flex: 1, minHeight: 0 }}>
+        // `minHeight: 'auto'`, not 0: the column must not shrink below what
+        // its slabs need, or the squeeze lands inside them and clips a gate's
+        // own name. A panel too short for its gates overflows visibly here
+        // instead (see Panel), which is a fault someone can see and fix.
+        <div style={{ display: 'flex', flexDirection: 'column', gap: t.space.md, flex: 1, minHeight: 'auto' }}>
           {byLabel.map((entity, i) => (
             <GateSlab key={entity.id} entity={entity} primary={i === primary} />
           ))}
