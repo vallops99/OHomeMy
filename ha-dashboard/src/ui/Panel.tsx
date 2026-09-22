@@ -34,8 +34,13 @@ export function Panel({ sidebar, main }: PanelProps) {
         height: '100vh',
         boxSizing: 'border-box',
         background: t.color.ground,
-        // The panel is a fixed 1280x800 pane on a wall; nothing scrolls.
-        overflow: 'hidden',
+        // The panel is a fixed 1280x800 pane on a wall, so nothing scrolls in
+        // the designed case. `auto` rather than `hidden` because a viewport
+        // shorter than the content is a real condition -- below about 744 px
+        // the second gate does not fit -- and a control silently cut off the
+        // bottom edge is exactly the kind of invisible failure this panel is
+        // supposed to avoid. A scrollbar says so; clipping does not.
+        overflow: 'auto',
       }}
     >
       {/*

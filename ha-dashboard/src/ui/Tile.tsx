@@ -130,6 +130,14 @@ export function Tile({ entity, active, strong, alwaysFilled, row, onClick, disab
             : ''
         }
         box-sizing: border-box;
+        /*
+         * @hakit clips the ripple to its own box, and that box is flush with
+         * the tile's content edge -- so a glyph that bears left of its origin
+         * (a capital N, an italic) is sliced down its left side. Letting the
+         * ripple layers overflow puts the clip back on the card, which has a
+         * radius and padding, instead of on the text.
+         */
+        & .ripple-parent, & .ripple-inner { overflow: visible !important; }
         border: 1px solid ${unavailable ? t.color.fault : t.color.border};
         border-radius: ${t.radius.tile}px;
         background: ${surfaceFor({ active: active || alwaysFilled, unavailable, strong })};

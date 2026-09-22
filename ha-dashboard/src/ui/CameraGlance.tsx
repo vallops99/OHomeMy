@@ -51,12 +51,17 @@ export function CameraGlance({ cameras, areas }: CameraGlanceProps) {
       active={active}
       strong
       alwaysFilled={active}
-      // Intrinsic height: the sidebar's spare room belongs to the gates
-      // below, which are the panel's primary affordance (CONTEXT.md). Left
-      // as a default flex child this stretched and pushed them off-screen.
-      style={{ flex: '0 0 auto' }}
+      // Intrinsic height: the sidebar's spare room belongs to the flexible
+      // gap below (see ScreenView), not to this tile. Left as a default flex
+      // child it stretched and pushed the gates off-screen.
+      //
+      // `minHeight: 'auto'` rather than the tile's usual touch-target floor:
+      // this is a glance, not a control, and at 64 px the second line's
+      // descenders were clipped -- "Nessun movimento" lost the tail of its
+      // g. The tile is as tall as its two lines need.
+      style={{ flex: '0 0 auto', minHeight: 'auto', paddingInline: t.space.lg }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: t.space.xs, color: fg }}>
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: t.space.xs, color: fg }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: t.space.sm }}>
           <Icon name={faulted.length > 0 ? 'mdi:cctv-off' : active ? 'mdi:motion-sensor' : 'mdi:cctv'} size={32} />
           <span style={{ fontSize: t.font.glanceM, fontWeight: 600 }}>

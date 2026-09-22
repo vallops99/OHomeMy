@@ -14,16 +14,17 @@ import { onSurfaceFor, t } from './theme';
 export type GateSlabProps = {
   entity: Entity;
   /**
-   * The gate this panel is mostly about. Two gates rendered identically are
-   * ambiguous at arm's length (#8) -- reaching for "the gate" should not
-   * require reading.
+   * The gate this panel is mostly about (#8).
    *
-   * The ranking is carried by **how much of the column the slab takes**, not
-   * by type or icon size. Both of those were tried and both were wrong for
-   * the same reason: they shrink the secondary gate, so "Cancelletto" read as
-   * a smaller control rather than a lesser one, and a longer name made it
-   * look smaller still. Height ranks without shrinking -- every gate keeps
-   * the same glyph, the same type and a full-size touch target.
+   * Every ranking that changed a slab's *size* was wrong, and three were
+   * tried: type size, icon size and slab height each made the secondary gate
+   * read as a smaller control rather than a lesser one -- and with type, a
+   * longer name made it look smaller still. Gates are now identical in every
+   * dimension, so this currently changes nothing visually.
+   *
+   * It is kept because the screen still expresses the ranking and the house
+   * still decides how many gates exist; whatever marks the primary next --
+   * position, a label, an outline -- is a change here and nowhere else.
    */
   primary?: boolean;
 };
@@ -32,17 +33,19 @@ export type GateSlabProps = {
 const ICON = 56;
 
 /**
- * The height a slab needs to show everything it contains.
+ * Every gate slab is exactly this tall.
  *
  * The icon, the name's line box, the state line, two gaps and the tile's own
- * padding. A slab shorter than this crushes its contents rather than
- * scrolling -- flex children shrink by default and `Tile` clips what spills,
- * which is how a 659 px viewport sliced "Cancello" through the middle and
- * made "Cancelletto" vanish entirely.
+ * padding -- what the contents need, and nothing more. A fixed height rather
+ * than a minimum: the slabs must not grow into the sidebar's spare room, or
+ * a chip appearing above would resize the controls under someone's thumb.
  */
 const SLAB_MIN = ICON + 40 + 24 + 2 * 4 + 2 * 14;
 
-export function GateSlab({ entity, primary }: GateSlabProps) {
+// `primary` is deliberately not destructured: the prop is part of the
+// component's contract (see its doc above) but nothing in the rendering reads
+// it while every gate is identical.
+export function GateSlab({ entity }: GateSlabProps) {
   const actions = useActions();
   // `unlocked` is the state worth shouting about: a gate left open.
   const open = entity.state === 'unlocked';
@@ -56,11 +59,11 @@ export function GateSlab({ entity, primary }: GateSlabProps) {
       active={open}
       strong
       alwaysFilled
-      // The primary gate takes twice the share of the sidebar's remaining
-      // height -- weight, not a smaller target (ADR-0001). `SLAB_MIN` is the
-      // floor: on a short viewport the slabs stop shrinking and the panel
-      // overflows visibly rather than clipping the gate's own name.
-      style={{ flex: primary ? 2 : 1, minHeight: SLAB_MIN }}
+      // Every gate is the same height, and none of them grows: the sidebar's
+      // spare room goes to the flexible gap above (see ScreenView), so the
+      // slabs stay anchored at the foot of the panel and a chip appearing
+      // above cannot resize them.
+      style={{ flex: '0 0 auto', height: SLAB_MIN }}
       onClick={() => (open ? actions.lock(entity) : actions.unlock(entity))}
     >
       <div
