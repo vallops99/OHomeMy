@@ -21,17 +21,23 @@ areas:
     name: Corridoio
     icon: mdi:walk
   - id: salone
-    name: Salone
+    name: Soggiorno
     icon: mdi:sofa
   - id: camera_chri
-    name: Camera Chri
+    name: Cameretta
     icon: mdi:bed
   - id: esterno
     name: Esterno
-    icon: mdi:border-outside
-  - id: giardino
-    name: Giardino
-    icon: mdi:leaf-circle
+    icon: mdi:garage
+  - id: cucina
+    name: Cucina
+    icon: mdi:stove
+  - id: camera
+    name: Camera
+    icon: mdi:bed
+  - id: ufficio
+    name: Ufficio
+    icon: mdi:microsoft-office
 
 labels:
   - id: main

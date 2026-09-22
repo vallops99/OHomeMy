@@ -15,9 +15,14 @@
  *   main     the touched layer: one row per Area, then a strip of secondary
  *            controls along the floor of the panel
  *
- * Esterno is deliberately absent as a `room`: it has no light, so a RoomRow
- * there would render an empty control. It is on the panel as its gates and
- * its cameras, which is what that Area actually is.
+ * Esterno is deliberately absent as a `room`: it is on the panel as its gates
+ * and its cameras, which is what that Area actually is. Giardino was folded
+ * into it in Home Assistant, so the outside is now one Area, told by what it
+ * has rather than by a row.
+ *
+ * Camera and Ufficio are absent for a different reason: they exist in the
+ * registry but hold no entities, so a RoomRow there would render an empty
+ * control. They get a line here when the house puts something in them.
  */
 import type { Screen } from './slots';
 
@@ -46,10 +51,11 @@ export const home: Screen = [
   // --- The main column: one row per Area, then the bottom strip. ---
 
   { kind: 'room', region: 'main', area: 'salone', icon: 'mdi:sofa' },
+  { kind: 'room', region: 'main', area: 'cucina', icon: 'mdi:stove' },
   { kind: 'room', region: 'main', area: 'ingresso', icon: 'mdi:door-open' },
   { kind: 'room', region: 'main', area: 'corridoio', icon: 'mdi:door-sliding' },
+  { kind: 'room', region: 'main', area: 'camera', icon: 'mdi:bed'},
   { kind: 'room', region: 'main', area: 'camera_chri', icon: 'mdi:bed' },
-  { kind: 'room', region: 'main', area: 'giardino', icon: 'mdi:flower' },
 
   // The strip, along the floor. Media only speaks when something is playing.
   { kind: 'media', region: 'main', span: { tablet: { col: 2 } } },
