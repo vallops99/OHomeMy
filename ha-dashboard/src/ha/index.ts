@@ -10,3 +10,4 @@ export { KNOWN_AREA_IDS, KNOWN_LABELS, type KnownAreaId, type KnownLabel } from 
 export { useAreas, useByLabel, useByDomain, useEntities, useEntityState, usePower, pickMain, isUnavailableState } from './registry';
 export { houseReport, houseTemperature, houseHumidity, type Health, type HealthLevel, type HouseReport } from './health';
 export { useActions, type Actions } from './actions';
+export { usePage, resolvePage, type Region, type Placed, type PageLayout } from './placement';
