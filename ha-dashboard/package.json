@@ -11,8 +11,7 @@
     "prettier": "prettier --write .",
     "sync": "npx tsx scripts/sync-types.ts",
     "prebuild": "npm run prettier",
-    "deploy": "npx tsx scripts/deploy.ts",
-    "gen:manifest": "python ../fake-house/scripts/generate-area-types.py"
+    "deploy": "npx tsx scripts/deploy.ts"
   },
   "dependencies": {
     "@fullcalendar/core": "6.1.21",

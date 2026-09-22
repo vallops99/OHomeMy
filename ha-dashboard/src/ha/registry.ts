@@ -159,13 +159,17 @@ export function useAreas(): Area[] {
     });
 
     return Object.entries(areasRegistry ?? {}).map(([id, raw]) => {
-      const area = raw as { area_id?: string; name?: string; labels?: string[] };
+      const area = raw as { area_id?: string; name?: string; labels?: string[]; icon?: string | null };
       const list = byArea.get(area.area_id ?? id) ?? [];
       list.sort((a, b) => rank(a.domain) - rank(b.domain) || a.id.localeCompare(b.id));
       return {
         id: area.area_id ?? id,
         name: area.name ?? id,
         labels: (area.labels ?? []) as Label[],
+        // Uncompressed, arrives alongside `labels` in the same registry
+        // payload (#13) -- no re-expansion needed, unlike the entity display
+        // registry's compressed keys noted above.
+        icon: area.icon ?? null,
         entities: list,
       };
     });

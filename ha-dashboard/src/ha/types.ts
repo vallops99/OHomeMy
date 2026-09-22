@@ -52,6 +52,16 @@ export type Area = {
    * under `page_main` and arrives here in that spelling.
    */
   labels: Label[];
+  /**
+   * The MDI icon Home Assistant's own area registry has for this Area (#13),
+   * or null when the registry has none set. `RoomRow` falls back to a generic
+   * glyph when this is null -- see its own default. Carried through exactly
+   * like `labels` above: the area registry already has the right answer
+   * (`cucina` -> `mdi:stove`, `camera_chri` -> `mdi:bed`, ...), so a
+   * `PlacementView`-owned hardcoded map would just be restating what the
+   * house already declares, one Area at a time, forever out of sync with it.
+   */
+  icon: string | null;
   /** Every entity registered to this Area, denylist already applied. */
   entities: Entity[];
 };

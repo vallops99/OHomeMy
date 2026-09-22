@@ -122,8 +122,26 @@ export function buildTokens(k: Knobs = KNOBS) {
      *
      *   rowRoom  the height of one Area row: a 64 px control plus padding
      *   strip    the bottom strip, matching the old grid's secondary row
+     *
+     * #13 replaces the two-region layout above with the protocol's 2x2
+     * (docs/protocol.md, ADR-0005): `glance` top-left, `entities-left`
+     * bottom-left, `entities-right` the full-height right column, `footer`
+     * along the floor. `leftColW` reuses `sidebarW`'s value rather than a new
+     * number -- 420 px was already the arrival column's measured width and
+     * nothing about the 2x2 changes what a comfortable left column is.
+     *
+     * The 2x2 inherits variant D's obligation (ADR-0004's amendment): these
+     * are starting sizes, not a row/column arithmetic that is claimed to sum
+     * to 800 -- fit is measured, not added up. `footerH` was first set to
+     * the old `rowStrip` (96), then measured down to exactly `touch.primary`
+     * (64): at 1280x800 with `glance` on, the left column's fixed content
+     * (two `GateSlab`s, a `CameraGlance`, `Hero`, `Stats`, and `ChipRow`'s own
+     * minimum) needed those 32 px back, and nothing in the footer --
+     * `MediaBar`, `AreaOpenerBlock` -- needs more than the ADR-0001 touch
+     * floor to remain a full touch target. Measured, not guessed: see the
+     * #13 agent's report for the harness output.
      */
-    layout: { sidebarW: 420, rowRoom: 76, rowStrip: 96, gateSlab: 96 },
+    layout: { sidebarW: 420, rowRoom: 76, rowStrip: 96, gateSlab: 96, leftColW: 420, footerH: 64 },
   };
 }
 

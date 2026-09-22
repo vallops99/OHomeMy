@@ -22,6 +22,7 @@ export { CameraGlance, type CameraGlanceProps } from './CameraGlance';
 export { MediaBar, type MediaBarProps } from './MediaBar';
 export { NavBar, type NavBarProps, type NavDestination } from './NavBar';
 export { FaultTile, type FaultTileProps } from './FaultTile';
+export { PlacementView } from './PlacementView';
 export { HakitTheme } from './HakitTheme';
 export { stateLabel } from './stateLabel';
 export { alarmIcon, isArmed, isTriggered } from './alarmState';
