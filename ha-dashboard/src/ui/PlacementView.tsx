@@ -399,7 +399,7 @@ function GlanceView({ placed }: { placed: Placed[] }) {
       <div style={{ flexShrink: 0 }}>
         <Stats lightsOn={lightsOn} watts={placedWatts ?? watts} />
       </div>
-      <div style={{ flexShrink: 0, 'padding-top': '10px' }}>
+      <div style={{ flexShrink: 0, paddingTop: 10 }}>
         <ChipRow report={report} alarm={alarm} />
       </div>
     </div>
