@@ -4,8 +4,10 @@ A Home Assistant panel renderer, built for and running on a wall panel at the
 entrance of a private Italian house. The frontend holds **no layout**: what
 appears, on which page, in which region, is declared in Home Assistant with
 labels, and the frontend renders whatever it is told. See
-[the placement protocol](docs/protocol.md) for the grammar and
-[ADR-0005](docs/adr/0005-placement-protocol.md) for why.
+[the placement protocol](docs/protocol.md) for the grammar,
+[ADR-0005](docs/adr/0005-placement-protocol.md) for why, and
+[ADR-0008](docs/adr/0008-fused-placement-labels.md) for why one label carries a
+whole Placement.
 
 The house it was built for is an example throughout, never a definition. The
 renderer knows nothing about which Areas exist or what they are called.
@@ -32,44 +34,48 @@ express what Area and Domain alone cannot. Labels carry every placement
 decision, so rearranging the panel never requires a code change or a rebuild.
 _Avoid_: Tag, marker, flag
 
-**Prefixed Label**:
-A Label whose value is structured as `prefix:value` -- `page:main`,
-`region:footer`. Home Assistant's labels are flat strings with no values of
-their own, so the protocol reads structure out of the name.
-_Avoid_: Namespaced label, key-value label
+**Placement Label**:
+The Label that spells one Placement, structured as `page:<page>:<region>` --
+`page:main:footer`. Home Assistant's labels are flat strings with no values of
+their own, so the protocol reads both coordinates out of the one name; two
+separate labels could not stay bound to each other.
+_Avoid_: Prefixed label, namespaced label, coordinate, key-value label
 
 ### Placement
 
 **Placement**:
-The pair of Prefixed Labels that puts something on the panel: a `page:` and a
-`region:`, both required. An Area or entity carrying both is **Placed**;
-carrying one or neither, it renders nowhere. Absence of Placement is the
-ordinary way to keep something off the panel.
+One appearance of something on the panel: a Page and a Region together, spelled
+by one Placement Label. An Area or entity carrying one is **Placed**, and it may
+carry several -- the same Area is a Row on one Page and a footer block on
+another. Absence of Placement is the ordinary way to keep something off the
+panel.
 _Avoid_: Assignment, mapping, binding
 
 **Page**:
-One view of the panel, named by a `page:` Label. Open-ended: a Page exists
-because something is labelled for it, and the renderer knows no list of them.
+One view of the panel, named by the first half of a Placement Label.
+Open-ended: a Page exists because something is labelled for it, and the renderer
+knows no list of them.
 `page:main` is the home screen by convention: where the panel rests, and
 where it returns to after a period idle elsewhere.
 _Avoid_: Screen, view, route
 
 **Region**:
-One of the panel's four areas -- `glance`, `entities-left`, `entities-right`,
-`footer` -- named by a `region:` Label. Closed: an unrecognised value places
-nothing.
+One of the panel's four areas -- `glance`, `left`, `right`, `footer` -- named by
+the second half of a Placement Label. Closed: an unrecognised value places
+nothing. No Region name contains an underscore, which is what lets the Region be
+read back off a slugified Label.
 _Avoid_: Column, pane, quadrant, section
 
 **Rendering contract**:
 What a Region promises to make of whatever is Placed in it. A Region decides
-the *shape* of a component, not only its position: an Area in
-`region:entities-right` is a full row with a slider, while the same Area in
-`region:footer` is a block that opens that Area's Page. This is why the panel
-needs no separate navigation concept.
+the *shape* of a component, not only its position: an Area in `right` is a full
+row with a slider, while the same Area in `footer` is a block that opens that
+Area's Page. This is why the panel needs no separate navigation concept, and why
+one Area with two Placements can be both at once.
 _Avoid_: Renderer, variant, presentation mode
 
 **Row**:
-An Area rendered in an entity Region: its name, how many of its lights are on,
+An Area rendered in `left` or `right`: its name, how many of its lights are on,
 a brightness slider, its temperature. The one component that collapses an Area
 rather than standing for a single entity.
 _Avoid_: Tile, card, area widget
@@ -107,13 +113,11 @@ Maintained in Home Assistant's label registry. The frontend reads these; it
 does not define them. The normative grammar is in
 [docs/protocol.md](docs/protocol.md).
 
-**page:NAME**:
-Half of a Placement: which Page the thing appears on. Any value; the renderer
-validates nothing.
-
-**region:NAME**:
-The other half: which Region, and therefore which Rendering contract. One of
-`glance`, `entities-left`, `entities-right`, `footer`.
+**page:PAGE:REGION**:
+A whole Placement in one Label: which Page the thing appears on, and which
+Region -- and therefore which Rendering contract -- it takes there. The Page is
+any value and the renderer validates nothing; the Region is one of `glance`,
+`left`, `right`, `footer`. A thing carries one per Placement.
 
 **main**:
 Marks the entity a Row collapses its Area to -- the light its slider drives,
@@ -121,10 +125,11 @@ the entity its temperature reads. Places nothing on its own; consulted only
 when an Area renders as a Row.
 
 **ignored**:
-A **mute**. Overrides a valid Placement, so something can be taken off the
-panel for a while and put back by removing one Label, with its Placement intact
-underneath. Not a denylist: under the protocol an unlabelled thing is already
-invisible.
+A **mute** on a whole thing, every Placement at once. Overrides valid
+Placements, so something can be taken off the panel for a while and put back by
+removing one Label, with its Placements intact underneath. Not a denylist: under
+the protocol an unlabelled thing is already invisible. To drop a single
+appearance, delete that one Placement Label instead.
 
 **gate**, **vision**, **security**, **multiroom**:
 Descriptive Labels naming what a thing *is* -- an outdoor gate as opposed to a
