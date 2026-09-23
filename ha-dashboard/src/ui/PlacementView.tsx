@@ -23,10 +23,10 @@
  *     `screens/ScreenView.tsx`'s function of the same name: `lock` ->
  *     `GateSlab`, `alarm_control_panel` -> `AlarmTile`, `camera` -> folded
  *     into a `CameraGlance` (see the camera note below), `media_player` ->
- *     `MediaBar`. A Domain with no dedicated component falls through to a
- *     visible `FaultTile` rather than rendering nothing -- a Page asking for
- *     something unrenderable is a bug worth seeing, same reasoning
- *     `ScreenView.tsx` used.
+ *     `MediaBar`, `light` and `switch` -> `ToggleTile` (#16). A Domain with
+ *     no dedicated component falls through to a visible `FaultTile` rather
+ *     than rendering nothing -- a Page asking for something unrenderable is a
+ *     bug worth seeing, same reasoning `ScreenView.tsx` used.
  *
  * `footer`:
  *   - an Area -> a tappable block that opens that Area's Page (`page:<area
@@ -93,6 +93,7 @@ import { RoomRow } from './RoomRow';
 import { Stats } from './Stats';
 import { t } from './theme';
 import { Tile } from './Tile';
+import { ToggleTile } from './ToggleTile';
 
 /**
  * An entity placed in `left`, `right` or the footer, dispatched by Domain --
@@ -121,6 +122,9 @@ function entitySlot(entity: Entity) {
   }
   if (entity.domain === 'media_player') {
     return <MediaBar key={entity.id} entities={[entity]} />;
+  }
+  if (entity.domain === 'light' || entity.domain === 'switch') {
+    return <ToggleTile key={entity.id} entity={entity} />;
   }
   return <FaultTile key={entity.id} label={`Nessun componente: ${entity.domain}`} />;
 }

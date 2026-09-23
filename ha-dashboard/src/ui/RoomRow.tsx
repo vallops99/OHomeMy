@@ -12,19 +12,14 @@
  * draggable so the row never changes shape as the house changes state, and a
  * long press opens the entity's detail modal.
  */
-import { useState } from 'react';
-import { pickMain, useActions, type Area, type Entity } from '../ha';
+import { pickMain, useActions, type Area } from '../ha';
 import { Icon } from './Icon';
+import { brightnessPercent } from './lightState';
+import { rowStyle, useRowSlider } from './rowShape';
 import { Slider } from './Slider';
+import { stateLabel } from './stateLabel';
 import { Tile } from './Tile';
 import { t } from './theme';
-
-/** Brightness 0-255 as Home Assistant reports it, as a 0-100 percentage. */
-function brightnessPercent(entity: Entity | null): number {
-  const raw = entity?.attributes.brightness;
-  if (typeof raw !== 'number') return 0;
-  return Math.round((raw / 255) * 100);
-}
 
 /**
  * The Area's temperature: what the room is, not what a device in it is.
@@ -84,50 +79,16 @@ export function RoomRow({ area, icon = 'mdi:sofa' }: RoomRowProps) {
   const temperature = areaTemperature(area);
   const counts = lightCount(area);
 
-  // The optimistic drag state lives in `Slider`, which owns the gesture and
-  // the commit. This only mirrors what the slider reports so the row's own
-  // notion of "current brightness" tracks the finger; the `from === live`
-  // guard falls it back to the live value the instant a drag ends, rather
-  // than staying pinned to a stale optimistic number (RoomTile, #7).
-  const live = brightnessPercent(main);
-  const [dragged, setDragged] = useState<{ value: number; from: number } | null>(null);
-  const shown = dragged && dragged.from === live ? dragged.value : live;
-
-  // Adjusting the slider must not also open the row's long-press modal over
-  // the control being used -- see the note in `Slider`. The row's modal is
-  // disarmed for as long as a slider gesture is in progress.
-  const [sliding, setSliding] = useState(false);
+  const slider = useRowSlider(brightnessPercent(main));
 
   return (
     <Tile
       row
       entity={main}
       active={active}
-      disableModal={sliding}
+      disableModal={slider.sliding}
       onClick={() => main && actions.toggle(main)}
-      style={{
-        // Share the column with the other rows rather than taking a fixed
-        // height: five Areas fill the panel, six share it, and the floor
-        // below keeps a row readable at 2 m either way.
-        flex: 1,
-        minHeight: t.layout.rowRoom,
-        borderRadius: t.radius.tile,
-        gap: t.space.md,
-        // `Tile` already applies its own horizontal padding via `cssStyles`
-        // (t.space.md), so no second padding is added here -- see the report
-        // note on the conflict this raised.
-        background: unavailable ? t.color.faultSurface : t.color.surface,
-        // The state marker is painted INSIDE the row, not as a left border.
-        //
-        // A 6 px `borderLeft` replaces `Tile`'s own 1 px border on that edge,
-        // so an inactive row -- whose marker is transparent -- lost the left
-        // side of its outline against the rounded corner, and the card read
-        // as broken. As a gradient the marker sits within the padding box and
-        // all four sides keep the same 1 px border.
-        backgroundImage: `linear-gradient(to right, ${
-          unavailable ? t.color.fault : active ? t.color.active : 'transparent'
-        } 0 6px, transparent 6px)`,
-      }}
+      style={rowStyle({ active, unavailable })}
     >
       <span style={{ width: 34, display: 'flex', justifyContent: 'center', color: unavailable ? t.color.fault : t.color.textSecondary }}>
         <Icon name={icon} size={26} />
@@ -137,7 +98,7 @@ export function RoomRow({ area, icon = 'mdi:sofa' }: RoomRowProps) {
       {unavailable ? (
         // Never hidden, always visibly faulted (map Notes): the owner
         // standing at the panel must see that this room is unreachable.
-        <span style={{ fontSize: t.font.body, color: t.color.fault, fontWeight: 700 }}>NON DISPONIBILE</span>
+        <span style={{ fontSize: t.font.body, color: t.color.fault, fontWeight: 700 }}>{stateLabel(main).toUpperCase()}</span>
       ) : (
         <>
           {counts && (
@@ -148,12 +109,12 @@ export function RoomRow({ area, icon = 'mdi:sofa' }: RoomRowProps) {
 
           <div style={{ width: 200, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
             <Slider
-              value={shown}
+              value={slider.shown}
               disabled={!main}
-              onInteracting={setSliding}
-              onChange={v => setDragged({ value: v, from: live })}
+              onInteracting={slider.setSliding}
+              onChange={slider.track}
               onChangeApplied={v => {
-                setDragged({ value: v, from: live });
+                slider.track(v);
                 if (main) actions.setBrightness(main, v);
               }}
             />
