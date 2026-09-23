@@ -6,7 +6,7 @@
  * Regions' ordered `Placed[]` -- it says *what* is in each Region, in what
  * order, and nothing about how it looks. This file is the other half: given
  * a `Placed` and the Region it came from, decide the component. The same
- * Area renders as a `RoomRow` in `entities-left`/`entities-right` and as a
+ * Area renders as a `RoomRow` in `left`/`right` and as a
  * tappable Page-opener in `footer` -- CONTEXT.md's "Rendering contract" --
  * because the Region, not the kind of thing, decides the shape.
  *
@@ -16,7 +16,7 @@
  *
  * ## Per-Region rendering contracts
  *
- * `entities-left` / `entities-right`:
+ * `left` / `right`:
  *   - an Area -> `RoomRow`, unchanged from variant D (#6): name, lights-on
  *     count, slider, temperature, all Derived from the Area's own entities.
  *   - an entity -> dispatched by Domain, in `entitySlot` below, mirroring
@@ -46,7 +46,7 @@
  *     the house's owner, so the control has to be discoverable and
  *     unambiguous without a hidden gesture, and it must not overload a tile
  *     whose press already toggles a light.
- *   - an entity -> the same `entitySlot` dispatch as the entity Regions
+ *   - an entity -> the same `entitySlot` dispatch as `left` and `right`
  *     (`media_player` -> `MediaBar`, docs/protocol.md's worked example places
  *     `media_player.ovunque` in the footer directly). An entity is never an
  *     Area and has no Area Page of its own, so #14 invents no navigation for
@@ -95,7 +95,7 @@ import { t } from './theme';
 import { Tile } from './Tile';
 
 /**
- * An entity placed in an entity Region or the footer, dispatched by Domain --
+ * An entity placed in `left`, `right` or the footer, dispatched by Domain --
  * the same table `screens/ScreenView.tsx`'s `entitySlot` used, carried
  * forward unchanged because the Domain-to-component mapping is not a layout
  * decision the protocol touches.
@@ -109,7 +109,7 @@ import { Tile } from './Tile';
  * `CameraGlance` in the position the first camera would otherwise have taken
  * -- ordering (docs/protocol.md: Areas first, then entities, each in
  * registry order) is preserved for what is left, and the fixture's own
- * layout (three cameras placed together in `entities-left`, per the ticket)
+ * layout (three cameras placed together in `left`, per the ticket)
  * is exactly this shape. A camera therefore never reaches `entitySlot`.
  */
 function entitySlot(entity: Entity) {
@@ -223,7 +223,7 @@ function AreaOpenerBlock({ area }: { area: Area }) {
  *
  * It does not violate docs/protocol.md's ordering rule ("Areas first, then
  * entities, each in registry order"): that rule governs *Placed* things, and
- * this block is not Placed -- it carries no `page:`/`region:` Label pair, is
+ * this block is not Placed -- it carries no Placement Label, is
  * not read from any registry, and does not appear in the `Placed[]`
  * `usePage` hands to `PlacementView`. It is prepended in
  * `PlacementView`'s render below, outside and before the ordered list, which
@@ -359,7 +359,7 @@ function GlanceView({ placed }: { placed: Placed[] }) {
     // on screen to say so.
     //
     // `Panel` now pins this block (`flex: '0 0 auto'`) and gives the column's
-    // spare room -- and the job of yielding -- to `entities-left`, which
+    // spare room -- and the job of yielding -- to `left`, which
     // scrolls discretely and only when a house has actually placed more than
     // fits. `scripts/measure-panel.ts` asserts that this block always gets
     // the height it asks for at every supported viewport, so "it never
@@ -453,7 +453,7 @@ export function PlacementView({ region, placed }: { region: Region; placed: Plac
           if (region === 'footer') {
             return <AreaOpenerBlock key={item.area.id} area={item.area} />;
           }
-          // entities-left / entities-right: the Row, unchanged from variant D.
+          // left / right: the Row, unchanged from variant D.
           // The icon comes from Home Assistant's own area registry (#13) --
           // `useAreas()` now carries it alongside `labels` -- rather than
           // from a hardcoded per-Area map the way `screens/home.ts` used to
@@ -479,8 +479,8 @@ export function PlacementView({ region, placed }: { region: Region; placed: Plac
  *
  * This is deliberately not treated as malformed Placement. docs/protocol.md's
  * "malformed placement renders nothing" rule is about Labels the renderer
- * cannot honour -- an unrecognised `region:` value, a doubled `page:` Label,
- * a half-pair -- and its consequence (a silent gap, found by noticing
+ * cannot honour -- an unrecognised Region, a Placement Label with no Region
+ * half, an extra coordinate -- and its consequence (a silent gap, found by noticing
  * something missing) is accepted there specifically because those are typos
  * in an otherwise-working system. A Page that resolves cleanly to four empty
  * Regions is not a typo: every Label on it parsed and matched exactly as

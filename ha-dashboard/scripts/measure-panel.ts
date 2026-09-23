@@ -84,7 +84,7 @@ const VIEWPORTS = [
  * The fixture's own content, as markup.
  *
  * Not arbitrary sample text: these are the entities `fake-house/manifest.yaml`
- * places in `glance` and `entities-left` on `page:main`, with the strings the
+ * places in `glance` and `left` on `page:main`, with the strings the
  * panel actually renders ("Un guasto" is `houseReport`'s fault headline,
  * "Nessun movimento" is `CameraGlance`'s quiet state). Two chips rather than
  * one because that is what the house reports today, and the chip row's height
@@ -99,7 +99,7 @@ type ChipSpec = { text: string; fault: boolean };
  * third concern that exposed the width defect: `ChipRow`'s chips are
  * `nowrap`, so their combined intrinsic width became the left column's
  * `min-width: auto` floor and widened the column from 420 to 440 px,
- * shoving `entities-right` sideways. House state must change what the panel
+ * shoving `right` sideways. House state must change what the panel
  * *says*, never the geometry it says it in -- which is ADR-0007's property
  * for the column's height, asserted here for its width too.
  */
@@ -155,7 +155,7 @@ function leftColumn(chips: ChipSpec[]): string {
     <!--
       glance: holds its measured height and never scrolls (ADR-0007's
       inversion) -- flex:0 0 auto, so it takes what its contents need and the
-      column's spare room goes to entities-left instead. Panel.tsx is the
+      column's spare room goes to left instead. Panel.tsx is the
       source of this shape; keep the two in step.
     -->
     <div id="glance" style="flex:0 0 auto; min-height:0; display:flex; flex-direction:column; gap:${t.space.sm}px">
@@ -190,11 +190,11 @@ function leftColumn(chips: ChipSpec[]): string {
     </div>
 
     <!--
-      entities-left: the region that yields (ADR-0007). It is the scroller when
+      left: the region that yields (ADR-0007). It is the scroller when
       the column overflows, which is why the overflow assertion below exempts
       it and asserts the fade affordance instead.
     -->
-    <div id="entities-left" style="
+    <div id="left" style="
       flex:0 1 auto; margin-top:auto; min-height:0; overflow-y:auto;
       display:flex; flex-direction:column; gap:${t.space.sm}px;
     ">
@@ -223,7 +223,7 @@ function panel(chips: ChipSpec[]): string {
     ">
       <div style="display:flex; flex:1; gap:${t.space.lg}px; min-height:0">
         ${leftColumn(chips)}
-        <div id="entities-right" style="flex:1; min-height:0; overflow:auto"></div>
+        <div id="right" style="flex:1; min-height:0; overflow:auto"></div>
       </div>
       <div id="footer" style="flex-shrink:0; min-height:${t.layout.footerH}px"></div>
     </div>
@@ -235,7 +235,7 @@ type Failure = { viewport: string; rule: string; detail: string };
 /**
  * The two assertions, run in the page.
  *
- * `entities-left` is deliberately exempt from the scroll rule: it is the
+ * `left` is deliberately exempt from the scroll rule: it is the
  * region that yields by design (ADR-0007), so it scrolling is the intended
  * behaviour rather than the defect. Everything else in the column scrolling
  * means the column does not fit.
@@ -249,7 +249,7 @@ const probe = `(() => {
 
   // Rule 1: nothing in the left column scrolls, except the region that yields.
   for (const el of [col, ...col.querySelectorAll('*')]) {
-    if (el.id === 'entities-left' || el.id === 'chips') continue;
+    if (el.id === 'left' || el.id === 'chips') continue;
     const over = el.scrollHeight - el.clientHeight;
     if (over > OVERLAP_TOLERANCE) {
       const what = el.id !== '' ? '#' + el.id : el.tagName.toLowerCase() + '.' + el.className;
@@ -320,14 +320,14 @@ const probe = `(() => {
  */
 const headroom = `(() => {
   const glance = document.getElementById('glance');
-  const eleft = document.getElementById('entities-left');
-  if (glance === null || eleft === null) return null;
+  const leftEl = document.getElementById('left');
+  if (glance === null || leftEl === null) return null;
   return {
     glanceNeeds: glance.scrollHeight,
     glanceHas: glance.clientHeight,
     slack: glance.clientHeight - glance.scrollHeight,
-    entitiesLeftNeeds: eleft.scrollHeight,
-    entitiesLeftHas: eleft.clientHeight,
+    leftNeeds: leftEl.scrollHeight,
+    leftHas: leftEl.clientHeight,
   };
 })()`;
 
@@ -352,8 +352,8 @@ for (const { w, h, why } of VIEWPORTS) {
     glanceNeeds: number;
     glanceHas: number;
     slack: number;
-    entitiesLeftNeeds: number;
-    entitiesLeftHas: number;
+    leftNeeds: number;
+    leftHas: number;
   } | null;
   const label = `${w}x${h} ${setName}`;
 
@@ -366,7 +366,7 @@ for (const { w, h, why } of VIEWPORTS) {
   if (space !== null) {
     console.log(
       `        glance needs ${space.glanceNeeds} / has ${space.glanceHas} (${space.slack >= 0 ? '+' : ''}${space.slack}px slack)` +
-        `, entities-left needs ${space.entitiesLeftNeeds} / has ${space.entitiesLeftHas}`
+        `, left needs ${space.leftNeeds} / has ${space.leftHas}`
     );
   }
   await page.close();

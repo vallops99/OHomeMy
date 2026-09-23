@@ -6,6 +6,9 @@ Home Assistant's registries, not in YAML. This script reconciles the registries
 with fake-house/manifest.yaml over the websocket API:
 
   * creates any missing Area and Label,
+  * deletes any Label the manifest does not declare, so a retired one (the
+    old `region:*` Labels, ADR-0008) cannot linger in the phone picker
+    looking assignable and placing nothing,
   * assigns each Area its own Labels, and each entity its Area and Labels,
   * renames entities whose generated id differs from the manifest id
     (siren.* fakes are built as template switches; see generate.py),
@@ -63,8 +66,8 @@ def slug(entity_id: str) -> str:
 def label_slug(name: str) -> str:
     """Home Assistant's own rule for turning a Label's name into its id.
 
-    The manifest writes Prefixed Labels by name -- `page:main`,
-    `region:entities-right` -- but the registry keys everything on the id HA
+    The manifest writes Placement Labels by name -- `page:main:right` --
+    but the registry keys everything on the id HA
     derived from that name when the Label was created: lowercase, with every
     run of non-alphanumeric characters (both `:` and `-`) collapsed to a
     single `_`. Comparing or writing a manifest label anywhere other than
@@ -119,13 +122,14 @@ async def run(url: str, token: str, dry_run: bool) -> int:
 
             # ---- labels ----
             # The registry keys labels on the id HA slugified from the name at
-            # creation time (`page:main` -> `page_main`), not on the manifest's
+            # creation time (`page:main:right` -> `page_main_right`), not on the manifest's
             # own `id:` spelling -- the two only coincide for the plain labels
             # (`main`, `gate`, ...). Comparing against `l["id"]` unslugged made
-            # every Prefixed Label look permanently missing and recreated it on
+            # every Placement Label look permanently missing and recreated it on
             # every run; see the trap recorded at the top of this file.
             res = await c.cmd(type="config/label_registry/list")
             have = {l["label_id"] for l in res["result"]}
+            declared = {label_slug(l["id"]) for l in manifest["labels"]}
             for l in manifest["labels"]:
                 want_id = label_slug(l["id"])
                 if want_id in have:
@@ -136,10 +140,28 @@ async def run(url: str, token: str, dry_run: bool) -> int:
                     await c.cmd(type="config/label_registry/create",
                                 name=l["name"], icon=l.get("icon"))
 
+            # ---- label prune ----
+            # The manifest is the whole label vocabulary, so a registry Label
+            # it does not declare is one the house has retired. Left behind it
+            # would still show in the phone picker, looking assignable and
+            # placing nothing (ADR-0008 retired every `region:*` this way).
+            # Home Assistant strips a deleted Label from every Area and entity
+            # carrying it, so the assignment loops below see it gone.
+            for l in res["result"]:
+                if l["label_id"] in declared:
+                    continue
+                print(f"- label {l['name']}")
+                changes += 1
+                if not dry_run:
+                    r = await c.cmd(type="config/label_registry/delete",
+                                    label_id=l["label_id"])
+                    if not r.get("success"):
+                        print(f"  ! {r.get('error')}", file=sys.stderr)
+
             # ---- area labels ----
-            # Half of every Area's Placement (docs/protocol.md) lives here, not
-            # on any entity -- `area salone: [page:main, region:entities-right]`
-            # is only real once the Area itself carries those Labels. #12 spent
+            # An Area's Placements (docs/protocol.md) live here, not on any
+            # entity -- `area salone: [page:main:right]` is only real once the
+            # Area itself carries that Label. #12 spent
             # its whole life establishing that Home Assistant does deliver Area
             # labels to the frontend; this loop is what actually puts them
             # there, and until now nothing did -- every Area in the live
@@ -244,7 +266,7 @@ async def run(url: str, token: str, dry_run: bool) -> int:
             # ---- glance toggle ----
             # docs/protocol.md: `glance` is the one region whose presence is
             # not purely a matter of Labels -- it is gated by an HA helper
-            # toggle, changeable from a phone, and with it off `entities-right`
+            # toggle, changeable from a phone, and with it off `right`
             # takes the panel's width. `input_boolean` has no config-flow form
             # for bootstrap-helpers.py to write into `core.config_entries`; it
             # is an editable-storage helper created with its own websocket

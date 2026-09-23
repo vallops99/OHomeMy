@@ -22,5 +22,6 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "supported-types.d.ts"]
+  "include": ["src", "supported-types.d.ts"],
+  "exclude": ["src/**/*.test.ts"]
 }

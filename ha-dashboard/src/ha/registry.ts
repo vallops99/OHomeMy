@@ -4,9 +4,14 @@
  * This is the ONLY module that imports @hakit/core. Everything above it speaks
  * the plain types in `./types`. The #3 rules -- denylist, `ignored` label,
  * Domain ranking -- live here so no screen or component restates them.
+ *
+ * `usePage` lives here too, as the hook over the pure `resolvePage`
+ * (`./placement`): keeping every React and @hakit import in this file is what
+ * lets the placement resolver run under plain Node in its tests.
  */
 import { useHass, useRegistryData } from '@hakit/core';
 import { useMemo } from 'react';
+import { resolvePage, type PageLayout } from './placement';
 import type { Area, AreaId, Entity, EntityId, Label } from './types';
 
 /**
@@ -228,4 +233,16 @@ export function useByLabel(label: Label): Entity[] {
     () => [...entities.values()].filter(e => e.labels.includes(label)).sort((a, b) => a.id.localeCompare(b.id)),
     [entities, label]
   );
+}
+
+/**
+ * One Page's layout from the live Areas and entities, memoized against the
+ * registries and the Page name. The resolving itself is `resolvePage`
+ * (`./placement`), which stays free of React and @hakit so it can be tested
+ * under plain Node; this hook is the thin wrapper that feeds it.
+ */
+export function usePage(page: string): PageLayout {
+  const areas = useAreas();
+  const entities = useEntities();
+  return useMemo(() => resolvePage(areas, entities, page), [areas, entities, page]);
 }

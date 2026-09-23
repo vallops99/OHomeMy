@@ -88,7 +88,7 @@ function Dashboard() {
   // The *second*, independent way the quadrant collapses (#14, decision 3;
   // docs/protocol.md, "The glance region collapses -- two ways"): `glance`
   // resolves per Page like every other Region, so a Page with nothing Placed
-  // in it has no glance quadrant at all and `entities-right` takes the
+  // in it has no glance quadrant at all and `right` takes the
   // panel's width.
   //
   // This has to be decided here rather than inside `GlanceView`, because
@@ -168,7 +168,7 @@ function Dashboard() {
 
   // Well-formed Placement, nothing Placed (#14, decision 6): every Region
   // resolved cleanly and all four came back empty. Not the same condition as
-  // `region:top-left`/a doubled Label -- see `EmptyPageMessage`'s own
+  // `page:main:rigth`/a Label with no Region half -- see `EmptyPageMessage`'s own
   // comment for why this is deliberately not routed through
   // docs/protocol.md's "malformed placement renders nothing" rule.
   const isEmpty = Object.values(page).every(placed => placed.length === 0);
@@ -177,8 +177,8 @@ function Dashboard() {
     <NavigationProvider value={{ page: currentPage, openPage }}>
       <Panel
         glance={glanceOn && glancePlaced ? <PlacementView region='glance' placed={page.glance} /> : undefined}
-        entitiesLeft={<PlacementView region='entities-left' placed={page['entities-left']} />}
-        entitiesRight={isEmpty ? <EmptyPageMessage /> : <PlacementView region='entities-right' placed={page['entities-right']} />}
+        left={<PlacementView region='left' placed={page.left} />}
+        right={isEmpty ? <EmptyPageMessage /> : <PlacementView region='right' placed={page.right} />}
         // The footer is never swapped for the empty-Page message, even when
         // `isEmpty` is true: `PlacementView` already renders the `HomeBlock`
         // for any non-main Page regardless of what is Placed in `footer`

@@ -17,30 +17,30 @@ areas:
   - id: ingresso
     name: Ingresso
     icon: mdi:door-sliding-open
-    labels: [page:main, region:entities-right]
+    labels: [page:main:right]
   - id: corridoio
-    # In the footer, not entities-right: a footer block opens that Area's
-    # own Page (#14, docs/protocol.md's worked example places exactly this
-    # Area here). The same Area in entities-right would be a Row instead --
-    # the region decides the shape.
+    # In the footer, not `right`: a footer block opens that Area's own Page
+    # (#14, docs/protocol.md's worked example places exactly this Area here).
+    # The same Area in `right` would be a Row instead -- the region decides
+    # the shape.
     name: Corridoio
     icon: mdi:walk
-    labels: [page:main, region:footer]
+    labels: [page:main:footer]
   - id: salone
     name: Soggiorno
     icon: mdi:sofa
-    labels: [page:main, region:entities-right]
+    labels: [page:main:right]
   - id: camera_chri
     name: Cameretta
     icon: mdi:bed
-    labels: [page:main, region:entities-right]
+    labels: [page:main:right]
   - id: esterno
     name: Esterno
     icon: mdi:garage
   - id: cucina
     name: Cucina
     icon: mdi:stove
-    labels: [page:main, region:entities-right]
+    labels: [page:main:right]
   - id: camera
     name: Camera
     icon: mdi:bed
@@ -68,29 +68,28 @@ labels:
     name: ignored
     icon: mdi:eye-off
 
-  # --- Placement (docs/protocol.md). A thing needs one of each to render. ---
-  - id: page:main
-    name: page:main
-    icon: mdi:home
-  # A second Page, reached from the footer (#14). `page:` is open-ended, so a
-  # Page exists purely because something is labelled for it -- but the Label
-  # itself still has to exist in Home Assistant's label registry before it can
-  # be assigned, which is why it is declared here alongside page:main.
-  - id: page:corridoio
-    name: page:corridoio
-    icon: mdi:walk
-  - id: region:glance
-    name: region:glance
+  # --- Placement (docs/protocol.md): `page:<page>:<region>`, one label per
+  # Placement. `page:` is open-ended, so a Page exists purely because something
+  # is labelled for it -- but each Label still has to exist in Home Assistant's
+  # label registry before it can be assigned, so every page x region
+  # combination the house uses is declared here, and only those: a registry
+  # label that places nothing just clutters the picker (ADR-0008).
+  - id: page:main:glance
+    name: page:main:glance
     icon: mdi:eye-outline
-  - id: region:entities-left
-    name: region:entities-left
+  - id: page:main:left
+    name: page:main:left
     icon: mdi:dock-left
-  - id: region:entities-right
-    name: region:entities-right
+  - id: page:main:right
+    name: page:main:right
     icon: mdi:dock-right
-  - id: region:footer
-    name: region:footer
+  - id: page:main:footer
+    name: page:main:footer
     icon: mdi:dock-bottom
+  # A second Page, reached from the corridoio footer block (#14).
+  - id: page:corridoio:right
+    name: page:corridoio:right
+    icon: mdi:walk
 
 entities:
   # ---------------- lights ----------------
@@ -156,7 +155,7 @@ entities:
     # Placed on corridoio's own Page, which is what the footer block above
     # opens -- docs/protocol.md's worked example, verbatim. `main` still
     # marks it as the Area's primary light.
-    labels: [main, page:corridoio, region:entities-right]
+    labels: [main, page:corridoio:right]
   - id: light.luce_camera_chri
     name: Luce Camera Chri
     kind: light
@@ -173,19 +172,19 @@ entities:
     name: Cancello
     kind: lock
     area: esterno
-    labels: [gate, main, page:main, region:entities-left]
+    labels: [gate, main, page:main:left]
   - id: lock.esterno_cancelletto
     name: Cancelletto
     kind: lock
     area: esterno
-    labels: [gate, page:main, region:entities-left]
+    labels: [gate, page:main:left]
 
   # ---------------- security ----------------
   - id: alarm_control_panel.ezviz_alarm
     name: Allarme
     kind: alarm
     area: null
-    labels: [security, main, page:main, region:glance]
+    labels: [security, main, page:main:glance]
   - id: siren.telecamera_cancello_sirena
     name: Sirena Cancello
     kind: siren
@@ -202,24 +201,24 @@ entities:
     name: Telecamera Cancello
     kind: camera
     area: esterno
-    labels: [vision, page:main, region:entities-left]
+    labels: [vision, page:main:left]
   - id: camera.telecamera_cancelletto
     name: Telecamera Cancelletto
     kind: camera
     area: esterno
-    labels: [vision, page:main, region:entities-left]
+    labels: [vision, page:main:left]
   - id: camera.telecamera_esterno_giardino
     name: Telecamera Giardino
     kind: camera
     area: esterno
-    labels: [vision, page:main, region:entities-left]
+    labels: [vision, page:main:left]
 
   # ---------------- climate ----------------
   - id: climate.corridoio_termostato
     name: Termostato
     kind: climate
     area: corridoio
-    labels: [main, page:main, region:glance]
+    labels: [main, page:main:glance]
   - id: sensor.corridoio_termostato_umidita
     name: Umidita Termostato
     kind: sensor
@@ -227,14 +226,14 @@ entities:
     device_class: humidity
     unit: '%'
     initial: 47
-    labels: [page:main, region:glance]
+    labels: [page:main:glance]
 
   # ---------------- media ----------------
   - id: media_player.ovunque
     name: Ovunque
     kind: media_player
     area: null
-    labels: [multiroom, main, page:main, region:footer]
+    labels: [multiroom, main, page:main:footer]
   - id: media_player.echo_di_christian
     name: Echo di Christian
     kind: media_player
@@ -392,7 +391,7 @@ entities:
     unit: W
     initial: 320
     state_class: measurement
-    labels: [page:main, region:glance]
+    labels: [page:main:glance]
 
   # ---------------- diagnostics (ignored) ----------------
   - id: sensor.echo_di_christian_temperatura

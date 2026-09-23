@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
+    "test": "npx tsx --test 'src/**/*.test.ts'",
     "preview": "vite preview",
     "prettier": "prettier --write .",
     "sync": "npx tsx scripts/sync-types.ts",

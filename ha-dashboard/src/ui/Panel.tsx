@@ -3,17 +3,17 @@
  *
  * Layout stops being a decision this repo makes at all. What used to be
  * variant D's two hand-composed regions (sidebar / main, #6) is now a fixed
- * shape the protocol names -- `glance`, `entities-left`, `entities-right`,
+ * shape the protocol names -- `glance`, `left`, `right`,
  * `footer` -- and Home Assistant labels decide what lands in each one. This
  * component only knows the shape:
  *
  * ```
  * +---------------------+--------------------------------+
  * |  glance             |                                |
- * |                     |  entities-right                |
+ * |                     |  right                         |
  * +---------------------+                                |
  * |                     |                                |
- * |  entities-left      |                                |
+ * |  left               |                                |
  * |                     |                                |
  * +---------------------+--------------------------------+
  * |  footer                                              |
@@ -22,14 +22,14 @@
  *
  * `glance` is optional in the type on purpose: docs/protocol.md says the
  * region "collapses" when its Home Assistant helper toggle is off, and at
- * that point `entities-right` takes the panel's whole width. Making `glance`
+ * that point `right` takes the panel's whole width. Making `glance`
  * an optional prop is what lets that be expressed in TypeScript rather than
  * as a runtime `if` the type system cannot see -- the caller (whatever reads
  * the toggle) simply omits the prop, and the left column disappears along
- * with it, `entities-left` included: with no glance to sit above it, a left
- * column holding only `entities-left` would be a second, smaller sidebar the
+ * with it, `left` included: with no glance to sit above it, a left
+ * column holding only `left` would be a second, smaller sidebar the
  * protocol never described. Neither ADR-0005 nor docs/protocol.md says what
- * happens to `entities-left` when `glance` collapses, so this is a judgement
+ * happens to `left` when `glance` collapses, so this is a judgement
  * call, recorded here rather than left implicit: the two-column split is a
  * `glance`-driven shape, so when there is no `glance` there is no split.
  *
@@ -46,7 +46,7 @@ import { t } from './theme';
  * Is this element scrolled short of its end? Drives the fade below.
  *
  * A `ResizeObserver` rather than a one-off measurement, because what makes
- * `entities-left` overflow is a house adding a card -- a change in content,
+ * `left` overflow is a house adding a card -- a change in content,
  * not in viewport -- and a one-off read at mount would miss it. It observes
  * the scroller *and* its children, since the overflow condition changes when a
  * child resizes even though the scroller itself does not.
@@ -85,16 +85,16 @@ export type PanelProps = {
   /** The top-left quadrant. Absent when the glance toggle is off -- see above. */
   glance?: ReactNode;
   /** The bottom-left quadrant. Only ever shown alongside `glance`. */
-  entitiesLeft: ReactNode;
+  left: ReactNode;
   /** The right column, full height. Takes the whole width when `glance` is absent. */
-  entitiesRight: ReactNode;
+  right: ReactNode;
   /** The strip along the floor. */
   footer: ReactNode;
 };
 
-export function Panel({ glance, entitiesLeft, entitiesRight, footer }: PanelProps) {
-  const entitiesLeftRef = useRef<HTMLDivElement>(null);
-  const entitiesLeftHasMore = useHasMoreBelow(entitiesLeftRef);
+export function Panel({ glance, left, right, footer }: PanelProps) {
+  const leftRef = useRef<HTMLDivElement>(null);
+  const leftHasMore = useHasMoreBelow(leftRef);
 
   return (
     <div
@@ -119,8 +119,8 @@ export function Panel({ glance, entitiesLeft, entitiesRight, footer }: PanelProp
       }}
     >
       {/*
-        The top block: the left column (glance over entities-left) beside the
-        full-height entities-right. `minHeight: 0` on every flex child that
+        The top block: the left column (`glance` over `left`) beside the
+        full-height `right`. `minHeight: 0` on every flex child that
         must be able to shrink -- carried forward from variant D's Panel and
         from ScreenView's chip row, per the ticket's explicit instruction.
         Without it, a Region that grows past its share (a sixth Area's worth
@@ -136,7 +136,7 @@ export function Panel({ glance, entitiesLeft, entitiesRight, footer }: PanelProp
           // for its content (the 112 px hero, the chip row), not sized against
           // the right column's Area rows.
           //
-          // `entities-left` (today: the gates, then the camera glance) is
+          // `left` (today: the gates, then the camera glance) is
           // pinned at its own full, fixed size and anchored to the foot of
           // the column with `marginTop: auto` -- the same trick
           // `screens/ScreenView.tsx`'s `cameras` case used ("everything from
@@ -146,11 +146,11 @@ export function Panel({ glance, entitiesLeft, entitiesRight, footer }: PanelProp
           // fixed; within it, `PlacementView`'s `GlanceView` makes `ChipRow`
           // the part that actually yields (scrolls its own concerns) while
           // `Hero` and `Stats` hold their size. This is deliberately the
-          // opposite of giving `entities-left` the flexible box: the gates
+          // opposite of giving `left` the flexible box: the gates
           // are the primary affordance (CONTEXT.md) and must never be the
           // thing that shrinks or clips to make room for a chip.
           //
-          // An earlier version instead gave `entities-left` its own
+          // An earlier version instead gave `left` its own
           // `flex: 1; overflow: auto` sub-box sized to "whatever is left
           // after glance" -- which measured clean at the *document* level
           // (`overflowX/Y: false`) while quietly clipping the camera glance
@@ -168,7 +168,7 @@ export function Panel({ glance, entitiesLeft, entitiesRight, footer }: PanelProp
               // minimum, and that floor beats the basis. `ChipRow` is a row
               // of `nowrap` chips, so its intrinsic minimum is the sum of
               // every chip -- a third concern widened this column from 420
-              // to 440 px and shoved `entities-right` sideways, which is
+              // to 440 px and shoved `right` sideways, which is
               // house state changing the panel's geometry, the exact class
               // of defect ADR-0007 removed from the column's *height*.
               // `minWidth: 0` lets the basis actually hold; the chip row
@@ -182,7 +182,7 @@ export function Panel({ glance, entitiesLeft, entitiesRight, footer }: PanelProp
               // need every spare pixel the column had -- see the note on
               // `footerH` in theme/tokens.ts for the sibling adjustment, and
               // the matching `sm` gap inside `PlacementView`'s `GlanceView`
-              // and below on `entitiesLeft`'s own wrapper.
+              // and below on `left`'s own wrapper.
               gap: t.space.sm,
               minHeight: 0,
             }}
@@ -195,7 +195,7 @@ export function Panel({ glance, entitiesLeft, entitiesRight, footer }: PanelProp
 
               This is the reverse of what this column did before ADR-0007,
               and the reversal is the point. `glance` used to be the flexible
-              box and `entities-left` the pinned one, on the reasoning that
+              box and `left` the pinned one, on the reasoning that
               the gates are the primary affordance and must never be what
               shrinks. The reasoning was right about the ranking and wrong
               about the mechanism: making `glance` flexible made its
@@ -207,11 +207,11 @@ export function Panel({ glance, entitiesLeft, entitiesRight, footer }: PanelProp
             */}
             <div style={{ flex: '0 0 auto', minHeight: 0 }}>{glance}</div>
             {/*
-              `entities-left` is the region that yields (ADR-0007), and it
+              `left` is the region that yields (ADR-0007), and it
               yields *discretely*: `flex: '0 1 auto'` with `overflowY: auto`
               means it is at full size whenever the column can afford it --
               which, with the fixture's content, is always -- and becomes a
-              scroller only when a house adds enough to `entities-left` to
+              scroller only when a house adds enough to `left` to
               overflow the column. Nothing degrades until something has to,
               and then exactly one named region does, visibly.
 
@@ -219,7 +219,7 @@ export function Panel({ glance, entitiesLeft, entitiesRight, footer }: PanelProp
               column, so the gates stay where the hand expects them.
             */}
             <div
-              ref={entitiesLeftRef}
+              ref={leftRef}
               style={{
                 flex: '0 1 auto',
                 marginTop: 'auto',
@@ -243,23 +243,21 @@ export function Panel({ glance, entitiesLeft, entitiesRight, footer }: PanelProp
                 // other way. `maskImage` rather than a gradient overlay so it
                 // costs no extra element and cannot intercept a tap meant for
                 // the gate underneath it.
-                maskImage: entitiesLeftHasMore ? 'linear-gradient(to bottom, #000 calc(100% - 40px), transparent)' : undefined,
+                maskImage: leftHasMore ? 'linear-gradient(to bottom, #000 calc(100% - 40px), transparent)' : undefined,
               }}
             >
-              {entitiesLeft}
+              {left}
             </div>
           </div>
         )}
 
         {/*
-          entities-right: full height, and the whole width when `glance` (and
+          `right`: full height, and the whole width when `glance` (and
           so the left column) is absent -- `flex: 1` does that with no
           conditional styling needed here, since it is the only remaining
           flex item in the row at that point.
         */}
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: t.space.sm, overflow: 'auto' }}>
-          {entitiesRight}
-        </div>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: t.space.sm, overflow: 'auto' }}>{right}</div>
       </div>
 
       {/*

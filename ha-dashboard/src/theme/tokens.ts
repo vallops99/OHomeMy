@@ -124,8 +124,8 @@ export function buildTokens(k: Knobs = KNOBS) {
      *   strip    the bottom strip, matching the old grid's secondary row
      *
      * #13 replaces the two-region layout above with the protocol's 2x2
-     * (docs/protocol.md, ADR-0005): `glance` top-left, `entities-left`
-     * bottom-left, `entities-right` the full-height right column, `footer`
+     * (docs/protocol.md, ADR-0005): `glance` top-left, `left`
+     * bottom-left, `right` the full-height right column, `footer`
      * along the floor. `leftColW` reuses `sidebarW`'s value rather than a new
      * number -- 420 px was already the arrival column's measured width and
      * nothing about the 2x2 changes what a comfortable left column is.
@@ -173,7 +173,7 @@ export function buildTokens(k: Knobs = KNOBS) {
      * allowing the second line the one-line row refused.
      *
      * Two rather than three, and the budget is why: the left column has
-     * 48 px spare at 1280x768 once `glance` and `entities-left` have taken
+     * 48 px spare at 1280x768 once `glance` and `left` have taken
      * theirs, and a second chip line costs exactly 48 (`chipRowFloor` plus
      * the `space.sm` gap). It fits at the floor with nothing left over; a
      * third line does not fit at all. The room came from `gateSlab` dropping
