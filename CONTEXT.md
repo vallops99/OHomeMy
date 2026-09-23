@@ -50,7 +50,8 @@ _Avoid_: Assignment, mapping, binding
 **Page**:
 One view of the panel, named by a `page:` Label. Open-ended: a Page exists
 because something is labelled for it, and the renderer knows no list of them.
-`page:main` is the home screen by convention.
+`page:main` is the home screen by convention: where the panel rests, and
+where it returns to after a period idle elsewhere.
 _Avoid_: Screen, view, route
 
 **Region**:

@@ -10,6 +10,10 @@
 > The format below did what it was asked; the requirement changed. Read this
 > ADR for *why* compiler-checked names were worth having, because ADR-0005
 > gives them up knowingly and records what that costs.
+>
+> This ADR also left routing out, on the grounds that inventing one before a
+> second screen existed would be guessing. [ADR-0006](0006-navigation-is-state-not-a-router.md)
+> is that guess, made once a second Page existed in principle to force it.
 
 ## Context
 

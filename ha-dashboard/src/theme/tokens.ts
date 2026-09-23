@@ -140,8 +140,64 @@ export function buildTokens(k: Knobs = KNOBS) {
      * `MediaBar`, `AreaOpenerBlock` -- needs more than the ADR-0001 touch
      * floor to remain a full touch target. Measured, not guessed: see the
      * #13 agent's report for the harness output.
+     *
+     * `gateSlab` (ADR-0007) was a lie for the whole life of this file.
+     * Nothing read it: `GateSlab.tsx` computed its own height locally
+     * (`ICON + 40 + 24 + 2 * 4 + 2 * 14` = 156), so the token said 96 while
+     * the slab rendered at 156 -- ADR-0001's single source of sizing wrong by
+     * 60 px and unread, which is how every budget above could be computed
+     * carefully and still be computed against a slab that does not exist.
+     * `GateSlab.tsx` now reads this token (and re-exports it as
+     * `GATE_SLAB_H`), so the two cannot drift again.
+     *
+     * 100 is the mockup's height, and it fits with room to spare: the
+     * measurement is committed this time:
+     * `scripts/measure-panel.ts`. With the Hero's negative margins gone
+     * (ADR-0007: they pulled 26 px of real ink outside the element's box, and
+     * the "blank metrics" they claimed to reclaim do not exist -- a Range over
+     * the glyphs measures 130 px of ink in a 128.8 px box), the glance block
+     * needs 274 px. The largest slab that still fits at 1280x768 is 128; 100
+     * leaves 64 px spare at 768 and 96 px at 800. The slab used to be 120 and
+     * a vertical stack; the row layout (icon beside the name, ADR-0008) says
+     * what a gate is in less height, so the extra 20 px goes back to the
+     * column as headroom -- ADR-0007 chooses headroom over presence, and 100
+     * is still far above `touch.primary` (64). Re-derive with `npm run
+     * measure` rather than assuming this number survives a change to the
+     * column's contents.
+     *
+     * `chipRowLines` (2) is how many rows of chips the box holds, and with
+     * `chipRowFloor` it is the box's whole height: two lines plus the
+     * `space.sm` between them. The row wraps within that box and scrolls
+     * vertically past it, so house state changes which chips are *visible*
+     * and never how tall the column is -- ADR-0007's property, kept while
+     * allowing the second line the one-line row refused.
+     *
+     * Two rather than three, and the budget is why: the left column has
+     * 48 px spare at 1280x768 once `glance` and `entities-left` have taken
+     * theirs, and a second chip line costs exactly 48 (`chipRowFloor` plus
+     * the `space.sm` gap). It fits at the floor with nothing left over; a
+     * third line does not fit at all. The room came from `gateSlab` dropping
+     * 120 -> 100 in the same pass -- two slabs, 20 px each. If the slab
+     * grows back, this must return to one line: re-derive with
+     * `npm run measure` rather than assuming the second line still fits.
+     *
+     * `chipRowFloor` (panel layout defect pass, following #14): `ChipRow`
+     * was the left column's one flexible element -- `flex: 1; minHeight: 0`
+     * in `GlanceView` -- so it silently absorbed whatever the rest of the
+     * column did not use, down to a measured 8 px at 1280x768 while a real
+     * chip ("Un guasto") is 40 px tall. A chip sliced to 8 px is unreadable,
+     * which is a worse failure than the column needing to scroll. 40 is not
+     * a guess: it is `chip.getBoundingClientRect().height` read directly off
+     * the rendered "Un guasto" chip at 1280x800 (`ChipRow.tsx`'s `Chip`:
+     * `body` text at `space.sm` padding top and bottom, `alignItems: center`
+     * against a 20 px icon) -- close to but deliberately not reusing
+     * `touch.floor` (44), because that is a touch-target minimum for
+     * controls and a chip is not pressable; the two numbers coinciding would
+     * be a coincidence this token does not want to depend on. If a future
+     * chip's contents change height, remeasure and update this number rather
+     * than assume it still matches.
      */
-    layout: { sidebarW: 420, rowRoom: 76, rowStrip: 96, gateSlab: 96, leftColW: 420, footerH: 64 },
+    layout: { sidebarW: 420, rowRoom: 76, rowStrip: 96, gateSlab: 100, leftColW: 420, footerH: 64, chipRowFloor: 40, chipRowLines: 2 },
   };
 }
 

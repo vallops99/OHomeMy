@@ -19,9 +19,13 @@ areas:
     icon: mdi:door-sliding-open
     labels: [page:main, region:entities-right]
   - id: corridoio
+    # In the footer, not entities-right: a footer block opens that Area's
+    # own Page (#14, docs/protocol.md's worked example places exactly this
+    # Area here). The same Area in entities-right would be a Row instead --
+    # the region decides the shape.
     name: Corridoio
     icon: mdi:walk
-    labels: [page:main, region:entities-right]
+    labels: [page:main, region:footer]
   - id: salone
     name: Soggiorno
     icon: mdi:sofa
@@ -68,6 +72,13 @@ labels:
   - id: page:main
     name: page:main
     icon: mdi:home
+  # A second Page, reached from the footer (#14). `page:` is open-ended, so a
+  # Page exists purely because something is labelled for it -- but the Label
+  # itself still has to exist in Home Assistant's label registry before it can
+  # be assigned, which is why it is declared here alongside page:main.
+  - id: page:corridoio
+    name: page:corridoio
+    icon: mdi:walk
   - id: region:glance
     name: region:glance
     icon: mdi:eye-outline
@@ -142,7 +153,10 @@ entities:
     name: Luce Corridoio
     kind: light
     area: corridoio
-    labels: [main]
+    # Placed on corridoio's own Page, which is what the footer block above
+    # opens -- docs/protocol.md's worked example, verbatim. `main` still
+    # marks it as the Area's primary light.
+    labels: [main, page:corridoio, region:entities-right]
   - id: light.luce_camera_chri
     name: Luce Camera Chri
     kind: light

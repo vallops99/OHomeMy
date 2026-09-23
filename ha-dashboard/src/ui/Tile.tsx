@@ -62,15 +62,43 @@ export function Tile({ entity, active, strong, alwaysFilled, row, onClick, disab
   // @hakit's `unknown` sentinel is documented as a no-op, but `CardBase`
   // still mounts its modal subtree, which throws on `null.state` and takes
   // the panel down through the error boundary -- `disableModal` does not
-  // prevent the mount. There is nothing to press anyway, so the press
-  // behaviour we would be keeping is behaviour for a control that does not
-  // exist. Found by placing a `room` slot on an Area with no light.
+  // prevent the mount. Found by placing a `room` slot on an Area with no
+  // light.
+  //
+  // What this branch loses with `CardBase` is the press *behaviour*: ripples,
+  // press scaling, and the long-press modal. The modal is exactly what must
+  // not mount here, and the rest is decoration -- but `onClick` is not
+  // decoration, and an earlier version of this comment ("there is nothing to
+  // press anyway") stopped being true the moment #14 gave the footer an
+  // entity-less tappable block. An Area is not an entity, so `AreaOpenerBlock`
+  // and `HomeBlock` land in this branch; dropping their `onClick` here made
+  // both render as perfectly convincing buttons that did nothing at all when
+  // tapped -- the precise "dead control that looks live" failure the footer's
+  // own comments cite the deleted NavBar.tsx for. So the handler is wired to
+  // the div, and the div is given the button semantics that come free with
+  // `CardBase` on the other path: a role, keyboard operability, and a focus
+  // ring, since a bare div with an onClick is invisible to a keyboard.
   if (!entity) {
+    const pressable = onClick !== undefined && !unavailable;
     return (
       <div
+        {...(pressable
+          ? {
+              role: 'button',
+              tabIndex: 0,
+              onClick: () => onClick(),
+              onKeyDown: (e: React.KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onClick();
+                }
+              },
+            }
+          : {})}
         style={{
           ...surface,
           ...(row ? { display: 'flex', alignItems: 'center', gap: t.space.md, width: '100%' } : { display: 'block', width: '100%' }),
+          ...(pressable ? { cursor: 'pointer' } : {}),
           ...style,
         }}
       >

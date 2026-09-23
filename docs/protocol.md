@@ -35,9 +35,17 @@ page:salone      an Area's own page
 page:clima       whatever you decide it is
 ```
 
+A `page:` label is open-ended in this protocol, but Home Assistant's label
+registry is not: the label has to **exist** there before you can put it on
+anything. Creating `page:clima` in Home Assistant's label UI is the first step
+of making that page; labelling something with a page that was never created
+leaves it carrying only a `region:`, which is a half-pair and renders nothing.
+
 `page:main` is the panel's home screen by convention: it is what the renderer
-shows at rest. Every other page is reached by placing something in the footer
-that opens it (see `region:footer`).
+shows at rest, and what it returns to — the panel comes back to `page:main` on
+its own after 240 seconds idle on any other page (see "Getting back", below).
+Every other page is reached by placing something in the footer that opens it
+(see `region:footer`).
 
 ## `region:`
 
@@ -64,7 +72,7 @@ right, and a strip along the floor.
 | `glance` | the top-left quadrant: temperature, humidity, lights on, consumption, and the house's concerns as chips. Read on approach from 2 m. |
 | `entities-left` | the bottom-left quadrant. |
 | `entities-right` | the right column. On `page:main` this is mostly Areas; on other pages it is whatever the page is about. |
-| `footer` | the strip along the floor: media, and the blocks that open other pages. |
+| `footer` | the strip along the floor: media, the blocks that open other pages, and — on every page but `page:main` — a renderer-supplied block back home. |
 
 ### The region decides the shape
 
@@ -78,15 +86,50 @@ different regions produces two different components:
 | `region:footer` | a single tappable block that opens that Area's page |
 
 So the footer is the navigation. There is no separate nav concept: a page
-button is an Area (or an entity) placed in `region:footer`, and tapping it
-opens `page:<that area>`.
+button is an **Area** placed in `region:footer`, and tapping it opens
+`page:<that area's id>` — the id from Home Assistant's area registry, not the
+display name, so `area salone` (named "Soggiorno") opens `page:salone`.
 
-### The glance region collapses
+Only an Area navigates. An entity in the footer renders as its own component
+and opens nothing: an entity is not an Area, so there is no
+`page:<that entity>` for it to open. `media_player.ovunque` in the footer is
+the transport strip, not a page button.
 
-`glance` is the one region whose presence is not purely a matter of labels. It
-is gated by a Home Assistant helper entity — a toggle, changeable from a phone
-without rebuilding the frontend. With the toggle off, the glance quadrant is
-not rendered and `entities-right` takes the width of the panel.
+Navigation is flat: any page's footer opens any page, directly, with no
+hierarchy and no back stack. Going from one Area page to another is always
+"go to page X" — there is no notion of a path you retrace.
+
+### Getting back
+
+You do not label a way home. On every page except `page:main`, the renderer
+prepends a "Casa" block to the footer, in front of whatever you placed there.
+Tapping it returns to `page:main`. `page:main` itself never gets one — it has
+nowhere to go back to.
+
+This is the one piece of the panel's layout that is not declared by a label:
+every page needs a way out, and a page whose house-editor forgot to label a
+way home would otherwise be a dead end. So the renderer supplies it,
+unconditionally, on every page but the one that doesn't need it.
+
+The panel also returns to `page:main` by itself: after 240 seconds with no
+touch on a page other than `page:main`, it navigates home on its own. The
+panel sits at the entrance, and its resting state is meant to be readable by
+whoever walks up to it next — not whatever page the last person left it on.
+
+### The glance region collapses — two ways
+
+`glance` resolves per page, exactly like every other region: it is whatever
+is placed into `page:<current>, region:glance`. A page with nothing placed in
+`glance` has no glance quadrant, and `entities-right` takes the width of the
+panel — the same collapse the helper toggle below produces. If you want the
+house's verdict — temperature, alarm, faults — visible on a page other than
+`page:main`, label those entities into that page's `glance` too; nothing
+carries over automatically.
+
+`glance` is *also* gated by a Home Assistant helper entity — a toggle,
+changeable from a phone without rebuilding the frontend. With the toggle off,
+the glance quadrant is not rendered on any page, regardless of what is
+labelled into it, and `entities-right` takes the width of the panel.
 
 ## Ordering
 
@@ -130,6 +173,23 @@ something is missing from the panel.** This is a deliberate choice and it has a
 cost: `region:top-left` is not a region, and a thing labelled with it will
 simply never appear.
 
+## An empty page renders a message
+
+This is a different case from malformed placement, above. A page can be
+perfectly well-formed — reached by a valid footer block, correctly opened —
+and still have nothing placed on it, because nothing has been labelled with
+that `page:` value yet. That page renders an explicit Italian message instead
+of four empty regions.
+
+The footer block that opens it still renders and still works; only the page
+on the other side of the tap is empty. It still gets the "Casa" block
+described above, the same as any other page — a page with nothing on it is
+exactly the page you least want to be stuck on.
+
+You will hit this within minutes of creating a new page: label one Area's
+footer block to open `page:clima` before anything else carries `page:clima`,
+and tapping it shows the message rather than a blank panel.
+
 ## Worked example
 
 Casa Carina's home screen, as the protocol expresses it:
@@ -156,6 +216,12 @@ area corridoio:         [page:main, region:footer]   # tap -> page:corridoio
 
 # An Area's own page shows what is explicitly placed on it.
 light.luce_corridoio:   [page:corridoio, region:entities-right]
+
+# corridoio's own footer: nothing labelled here opens another page, so
+# tapping the renderer-supplied "Casa" block is the only way off this page.
+# If corridoio should also reach page:clima directly, that is one more footer
+# block -- and it has to be an *Area*, because only an Area block navigates:
+# area clima: [page:corridoio, region:footer]   # tap -> page:clima
 ```
 
 ## What this costs

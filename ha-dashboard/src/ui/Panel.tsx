@@ -39,8 +39,47 @@
  * decides what that content is). `PlacementView` (`src/ui/PlacementView.tsx`)
  * is what turns a Region's `Placed[]` into the nodes passed in here.
  */
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { t } from './theme';
+
+/**
+ * Is this element scrolled short of its end? Drives the fade below.
+ *
+ * A `ResizeObserver` rather than a one-off measurement, because what makes
+ * `entities-left` overflow is a house adding a card -- a change in content,
+ * not in viewport -- and a one-off read at mount would miss it. It observes
+ * the scroller *and* its children, since the overflow condition changes when a
+ * child resizes even though the scroller itself does not.
+ */
+function useHasMoreBelow(ref: React.RefObject<HTMLDivElement | null>): boolean {
+  const [more, setMore] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (el === null) return;
+
+    const measure = () => {
+      // A 1 px tolerance: sub-pixel layout routinely leaves scrollHeight a
+      // fraction above clientHeight on an element that visually fits, and a
+      // fade over nothing is the same lie in the other direction.
+      const hidden = el.scrollHeight - el.clientHeight - el.scrollTop;
+      setMore(hidden > 1);
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    for (const child of el.children) observer.observe(child);
+    el.addEventListener('scroll', measure, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      el.removeEventListener('scroll', measure);
+    };
+  });
+
+  return more;
+}
 
 export type PanelProps = {
   /** The top-left quadrant. Absent when the glance toggle is off -- see above. */
@@ -54,6 +93,9 @@ export type PanelProps = {
 };
 
 export function Panel({ glance, entitiesLeft, entitiesRight, footer }: PanelProps) {
+  const entitiesLeftRef = useRef<HTMLDivElement>(null);
+  const entitiesLeftHasMore = useHasMoreBelow(entitiesLeftRef);
+
   return (
     <div
       style={{
@@ -121,6 +163,17 @@ export function Panel({ glance, entitiesLeft, entitiesRight, footer }: PanelProp
           <div
             style={{
               flex: `0 0 ${t.layout.leftColW}px`,
+              // `flex: 0 0 <w>` is not rigid on its own: a flex item's
+              // `min-width` defaults to `auto`, which is its *content's*
+              // minimum, and that floor beats the basis. `ChipRow` is a row
+              // of `nowrap` chips, so its intrinsic minimum is the sum of
+              // every chip -- a third concern widened this column from 420
+              // to 440 px and shoved `entities-right` sideways, which is
+              // house state changing the panel's geometry, the exact class
+              // of defect ADR-0007 removed from the column's *height*.
+              // `minWidth: 0` lets the basis actually hold; the chip row
+              // handles its own overflow within it.
+              minWidth: 0,
               display: 'flex',
               flexDirection: 'column',
               // `sm`, not `lg`: measured down from the sidebar's original gap
@@ -134,8 +187,65 @@ export function Panel({ glance, entitiesLeft, entitiesRight, footer }: PanelProp
               minHeight: 0,
             }}
           >
-            <div style={{ flex: 1, minHeight: 0 }}>{glance}</div>
-            <div style={{ flexShrink: 0, marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: t.space.sm }}>
+            {/*
+              `glance` holds its measured height and never scrolls (ADR-0007).
+              `flex: '0 0 auto'`, not `flex: 1`: it takes exactly what its
+              contents need, and `scripts/measure-panel.ts` asserts that the
+              column always has that much to give at every supported viewport.
+
+              This is the reverse of what this column did before ADR-0007,
+              and the reversal is the point. `glance` used to be the flexible
+              box and `entities-left` the pinned one, on the reasoning that
+              the gates are the primary affordance and must never be what
+              shrinks. The reasoning was right about the ranking and wrong
+              about the mechanism: making `glance` flexible made its
+              degradation *continuous*, so the column silently compressed the
+              house's Verdict a few pixels at every viewport until `Stats`
+              was sliced in half at 1280x768 with nothing to announce it. A
+              glance you have to scroll is not a glance (CONTEXT.md: read on
+              approach from 2 m).
+            */}
+            <div style={{ flex: '0 0 auto', minHeight: 0 }}>{glance}</div>
+            {/*
+              `entities-left` is the region that yields (ADR-0007), and it
+              yields *discretely*: `flex: '0 1 auto'` with `overflowY: auto`
+              means it is at full size whenever the column can afford it --
+              which, with the fixture's content, is always -- and becomes a
+              scroller only when a house adds enough to `entities-left` to
+              overflow the column. Nothing degrades until something has to,
+              and then exactly one named region does, visibly.
+
+              `marginTop: 'auto'` still pins the block to the foot of the
+              column, so the gates stay where the hand expects them.
+            */}
+            <div
+              ref={entitiesLeftRef}
+              style={{
+                flex: '0 1 auto',
+                marginTop: 'auto',
+                minHeight: 0,
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: t.space.sm,
+                // The fade that admits there is more below (ADR-0007). A
+                // scrollbar is not an affordance on this hardware: Fully
+                // Kiosk hides them, and at 2 m a 4 px track is invisible
+                // anyway -- so a gate cut off by an unannounced scroll
+                // boundary is content that exists with no sign that it does.
+                // That is the deleted NavBar.tsx's own principle, quoted
+                // twice in ADR-0006: "a dead control that looks live is worse
+                // than one that admits it is not there."
+                //
+                // Conditional, never permanent: `useHasMoreBelow` turns it on
+                // only while something is actually hidden, because a fade
+                // over a column that fits would be the same lie pointing the
+                // other way. `maskImage` rather than a gradient overlay so it
+                // costs no extra element and cannot intercept a tap meant for
+                // the gate underneath it.
+                maskImage: entitiesLeftHasMore ? 'linear-gradient(to bottom, #000 calc(100% - 40px), transparent)' : undefined,
+              }}
+            >
               {entitiesLeft}
             </div>
           </div>

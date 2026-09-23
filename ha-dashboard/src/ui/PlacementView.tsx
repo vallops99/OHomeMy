@@ -30,15 +30,31 @@
  *
  * `footer`:
  *   - an Area -> a tappable block that opens that Area's Page (`page:<area
- *     id>`, per docs/protocol.md's worked example). Wiring the tap to an
- *     actual router is #14, out of scope here, so this follows `NavBar.tsx`'s
- *     precedent (see its header comment): the block is visibly present and
- *     looks tappable -- it just does not navigate yet. A `title` attribute
- *     says so on hover/long-press, the same admission `NavBar` makes for its
- *     four unbuilt destinations.
+ *     id>`, per docs/protocol.md's worked example), wired for real as of
+ *     #14: `AreaOpenerBlock`'s `onClick` calls `openPage(area.id)` from
+ *     `NavigationContext`. Before #14 this block rendered enabled-looking but
+ *     inert, admitting as much through its `title`; that admission is gone
+ *     because it is no longer true, but the principle behind it survives
+ *     unchanged and now governs two other decisions in this file: see
+ *     `HomeBlock` and `EmptyPageMessage` below for where it resurfaces. That
+ *     principle, inherited from the deleted `NavBar.tsx`
+ *     (#8) and worth restating here since nothing points at that file any
+ *     more: **a dead control that looks live is worse than one that admits
+ *     it is not there.** The deleted `NavBar.tsx` chose a bottom bar over an edge gesture
+ *     or drill-in tiles for the same reason a footer block does now -- the
+ *     panel is used standing, often one-handed, often by someone who is not
+ *     the house's owner, so the control has to be discoverable and
+ *     unambiguous without a hidden gesture, and it must not overload a tile
+ *     whose press already toggles a light.
  *   - an entity -> the same `entitySlot` dispatch as the entity Regions
  *     (`media_player` -> `MediaBar`, docs/protocol.md's worked example places
- *     `media_player.ovunque` in the footer directly).
+ *     `media_player.ovunque` in the footer directly). An entity is never an
+ *     Area and has no Area Page of its own, so #14 invents no navigation for
+ *     it here -- a `media_player` in the footer stays exactly the transport
+ *     strip it already was, Placement and Rendering contract both unchanged.
+ *   - additionally, on every Page that is not `page:main`: a `HomeBlock`,
+ *     prepended before anything Placed. See its own comment below for why it
+ *     exists and why it sits outside the Areas-then-entities order.
  *
  * `glance`:
  *   - **Judgement call, since neither docs/protocol.md nor ADR-0005 specifies
@@ -53,9 +69,12 @@
  *     recognised Region with no defined answer, which is closer to
  *     `ScreenView.tsx`'s "a screen asking for something unrenderable" case
  *     than to a typo. So it renders a visible `FaultTile` rather than being
- *     silently dropped -- `NavBar.tsx`'s and `FaultTile.tsx`'s shared
- *     precedent that an admission beats a silent gap. If a future protocol
- *     revision defines Area-in-glance, this is the one line to change.
+ *     silently dropped -- the same "admit it, don't fake it" precedent as
+ *     `footer` above and `FaultTile.tsx`'s own header comment. If a future
+ *     protocol revision defines Area-in-glance, this is the one line to
+ *     change. #14 leaves `glance` itself otherwise untouched: it resolves
+ *     per-Page like every other Region (decision 3), with no Page-specific
+ *     special case here or in `Dashboard.tsx`.
  *   - an entity -> by Domain, feeding the existing glance components
  *     (`Hero`, `Stats`, `ChipRow`) rather than being rendered as its own
  *     tile. See `GlanceView` below for the reasoning in full.
@@ -69,6 +88,7 @@ import { GateSlab } from './GateSlab';
 import { Hero } from './Hero';
 import { Icon } from './Icon';
 import { MediaBar } from './MediaBar';
+import { useNavigation } from './NavigationContext';
 import { RoomRow } from './RoomRow';
 import { Stats } from './Stats';
 import { t } from './theme';
@@ -106,44 +126,49 @@ function entitySlot(entity: Entity) {
 }
 
 /**
- * The footer's Area block: a tappable surface that will open `page:<area
- * id>` once #14 wires up a router. Built and styled here per the ticket,
- * rather than as a fifth exported `src/ui/` component, because it has
- * exactly one caller and no state of its own -- `RoomRow`, `GateSlab` and
- * the rest earned their own files by being reused across Regions; this is
- * not.
+ * The footer's Area block: a tappable surface that opens `page:<area id>`
+ * (#14). Built and styled here rather than as a fifth exported `src/ui/`
+ * component, because it has exactly one caller and no state of its own --
+ * `RoomRow`, `GateSlab` and the rest earned their own files by being reused
+ * across Regions; this is not.
  *
  * Modelled on `GateSlab`'s slab shape (full tappable surface, icon over
  * name) rather than on `RoomRow`'s row shape, because the footer is a strip
  * of equal-weight blocks (docs/protocol.md: "media, and the blocks that open
- * other pages"), not a vertical list -- the same reason `NavBar`'s
- * destinations are also slabs in a row, not rows in a list.
+ * other pages"), not a vertical list -- the same reason the deleted
+ * `NavBar.tsx`'s destinations were also slabs in a row, not rows in a list.
+ *
+ * The Page it opens is `area.id`, not `area.name` -- the fixture that proves
+ * why: `id: salone, name: Soggiorno` (fake-house/manifest.yaml). Home
+ * Assistant's own label slugifying (#12) is what makes `openPage(area.id)`
+ * line up with a Label typed as `page:salone` in Home Assistant's UI --
+ * `usePage`/`resolvePage` slugify *both* the stored Label and the requested
+ * Page name with the same `slugify()` (`src/ha/placement.ts`) before
+ * comparing, so passing the id here is what docs/protocol.md's worked
+ * example means by "tap -> page:corridoio": the Area's registry id is the
+ * Page name, by construction of the protocol, not a separate mapping this
+ * file has to maintain.
  */
 function AreaOpenerBlock({ area }: { area: Area }) {
-  // `title` carries the "not wired yet" admission (see below). `Tile`'s own
-  // props have no `title` -- it is not this ticket's place to add one for a
-  // single caller -- so the attribute sits on a plain wrapping `div`, which
-  // is transparent to `Tile`'s `flex: 1` sizing (`display: 'contents'` would
-  // drop the title's hoverable box; a flex passthrough keeps both).
+  const { openPage } = useNavigation();
   return (
-    <div title={`Apri ${area.name} (navigazione: #14)`} style={{ display: 'flex', flex: 1, minWidth: 0 }}>
-      <Tile
-        disableModal
-        style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
-        // No `onClick`: opening the Page is #14's router, not this ticket's
-        // concern. `NavBar.tsx`'s header comment sets the precedent this
-        // follows -- "a destination whose screen has not been built renders
-        // visibly disabled rather than as a button that does nothing when
-        // pressed" -- but an Area block is not a fixed, known-unbuilt
-        // destination the way NavBar's four are: the Area's own Page may
-        // already have content once #14 lands, so this renders as an
-        // ordinary, *enabled*-looking tappable block (full colour, pointer
-        // cursor, the wrapper's `title` naming what a tap will do) rather
-        // than dimmed. The honesty NavBar insists on -- do not look live if
-        // you are not -- is carried by that `title` text alone, since
-        // dimming an Area that is fully configured and simply not yet wired
-        // would misstate whose fault the gap is.
-      >
+    // `flex: '0 0 auto'`, not `flex: 1`: a page button is a control sized to
+    // its own label, not a Region claiming a share of the floor. Measured at
+    // 1280x800 -- with `flex: 1` the single Corridoio block took 591 px, half
+    // the panel, purely because it was the only other flex item beside the
+    // media strip. The footer's *remaining* width belongs to `MediaBar`,
+    // which is a transport strip and genuinely wants it.
+    <div title={`Apri ${area.name}`} style={{ display: 'flex', flex: '0 0 auto', minWidth: 0 }}>
+      {/*
+        `paddingBlock` overrides `Tile`'s own `md` padding, which is sized for
+        a tile with a state line under a title, not for a compact footer slab.
+        The arithmetic that matters (measured, not assumed): 26 icon + 4 gap +
+        16 label = 46 of content, so anything over 18 px of vertical padding
+        puts the block past `layout.footerH` (64) -- and because `footerH` is
+        a `minHeight`, content winning there silently steals the left column's
+        pixels rather than scrolling the footer.
+      */}
+      <Tile disableModal style={{ minWidth: 0, paddingBlock: t.space.sm }} onClick={() => openPage(area.id)}>
         <div
           style={{
             display: 'flex',
@@ -160,10 +185,77 @@ function AreaOpenerBlock({ area }: { area: Area }) {
             RoomRow now reads) -- recognisable as "that room" rather than as
             a generic nav glyph. The arrow-box is the fallback for an Area
             with no icon set, keeping the "this is a doorway to somewhere"
-            reading `NavBar`'s icons give its own destinations.
+            reading the deleted `NavBar.tsx`'s icons gave its own
+            destinations.
+
+            26 over `caption`, not 32 over `glanceM`: the larger pair made
+            this block 91 px tall, which overrode `layout.footerH` (a
+            `minHeight`, so content wins) and took back the exact 32 px the
+            token comment says were measured *out* of the footer to give the
+            left column -- clipping ChipRow's fault chip against the gates.
+            These are the proportions the deleted `NavBar.tsx` used for the
+            same slab in the same strip, and they leave the block inside 64 px.
           */}
-          <Icon name={area.icon ?? 'mdi:arrow-right-bold-box-outline'} size={32} />
-          <span style={{ fontSize: t.font.glanceM, fontWeight: 600, textAlign: 'center' }}>{area.name}</span>
+          <Icon name={area.icon ?? 'mdi:arrow-right-bold-box-outline'} size={26} />
+          <span style={{ fontSize: t.font.caption, fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>{area.name}</span>
+        </div>
+      </Tile>
+    </div>
+  );
+}
+
+/**
+ * The renderer-supplied home block (#14, decision 2): not Placed by any
+ * Label, prepended to the footer of every Page except `page:main` itself.
+ *
+ * Why this is the one exception to "the frontend holds no layout"
+ * (CONTEXT.md, ADR-0005): every other Page exists because an Area or entity
+ * was labelled `page:<name>`, but nothing symmetric labels a way *back*.
+ * Without this block, each new Page is a dead end the moment someone taps
+ * into it unless whoever is labelling the house remembers to also place a
+ * `page:main` block pointing at it -- and forgetting one traps whoever is
+ * standing at the panel next, on a wall-mounted pane with no back gesture
+ * (#8 ruled that out for the same discoverability reason the deleted `NavBar.tsx`
+ * originally chose a bar) and no address bar to type their way out of.
+ * Decision 5 (flat navigation, no history stack) makes "go home" the only
+ * universal escape, so the renderer supplies it itself rather than trust it
+ * to be labelled correctly on every Page, forever.
+ *
+ * It does not violate docs/protocol.md's ordering rule ("Areas first, then
+ * entities, each in registry order"): that rule governs *Placed* things, and
+ * this block is not Placed -- it carries no `page:`/`region:` Label pair, is
+ * not read from any registry, and does not appear in the `Placed[]`
+ * `usePage` hands to `PlacementView`. It is prepended in
+ * `PlacementView`'s render below, outside and before the ordered list, which
+ * is why it can sit before every Area block without bending the order those
+ * blocks are in.
+ *
+ * Styled as the same kind of thing as `AreaOpenerBlock` (a tappable slab in
+ * the footer strip) but visually distinguishable as *home* rather than as
+ * another Area: `mdi:home` where an Area block shows the Area's own registry
+ * icon or the generic arrow-box, and the Italian "Casa" rather than an Area
+ * name, since the house is Italian and its UI copy is Italian throughout
+ * (map Notes).
+ */
+function HomeBlock() {
+  const { openPage } = useNavigation();
+  return (
+    <div title='Torna alla pagina principale' style={{ display: 'flex', flex: '0 0 auto', minWidth: 0 }}>
+      {/* Same padding treatment as `AreaOpenerBlock` -- see its note. */}
+      <Tile disableModal style={{ minWidth: 0, paddingBlock: t.space.sm }} onClick={() => openPage('main')}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            gap: t.space.xs,
+            color: t.color.textPrimary,
+          }}
+        >
+          <Icon name='mdi:home' size={26} />
+          <span style={{ fontSize: t.font.caption, fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>Casa</span>
         </div>
       </Tile>
     </div>
@@ -254,22 +346,46 @@ function GlanceView({ placed }: { placed: Placed[] }) {
   const report = houseReport([...entities.values()]);
 
   return (
-    // `minHeight: 0` so this whole block can be *compressed* by whatever
-    // flex height `Panel` gives it -- see `Panel`'s left column, which pins
-    // `entities-left` (the gates, the camera glance) at their full fixed
-    // size and gives `glance` the space left over rather than the reverse.
-    // Within that space, `Hero` and `Stats` hold their own height
-    // (`flexShrink: 0` below) and `ChipRow` is the one element that yields:
-    // it scrolls its own concerns rather than being cut, restoring the
-    // precedent `screens/ScreenView.tsx`'s `chips` case set ("the chip row
-    // is the part of the sidebar that yields") for the same reason -- a
-    // fault chip appearing must not be able to push a gate off the panel,
-    // and the gates must not be what shrinks to make room for it.
-    // `sm`, not `md`: measured down alongside the other gaps in `Panel`'s
-    // left column once the ChipRow's own minimum turned out to need every
-    // spare pixel available -- see the note on `footerH` in
-    // `theme/tokens.ts` for the sibling adjustment and the reasoning.
-    <div style={{ display: 'flex', flexDirection: 'column', gap: t.space.sm, minHeight: 0, height: '100%' }}>
+    // The glance block holds its own height and never scrolls (ADR-0007).
+    //
+    // It used to do the opposite: `minHeight: 0` plus `overflowY: auto`, so
+    // `Panel`'s left column could compress it and it would scroll rather than
+    // clip. That was the wrong end of the trade. `glance` is the house's
+    // Verdict, read on approach from 2 m without touching anything
+    // (CONTEXT.md) -- a Verdict you have to drag into view is not one. Worse,
+    // making this block compressible made its failure *continuous*: the
+    // column quietly took a few pixels at every viewport, and at 1280x768
+    // `Stats` ended up sliced in half by the gate slab below it with nothing
+    // on screen to say so.
+    //
+    // `Panel` now pins this block (`flex: '0 0 auto'`) and gives the column's
+    // spare room -- and the job of yielding -- to `entities-left`, which
+    // scrolls discretely and only when a house has actually placed more than
+    // fits. `scripts/measure-panel.ts` asserts that this block always gets
+    // the height it asks for at every supported viewport, so "it never
+    // scrolls" is a checked property rather than a hope.
+    //
+    // Hero, ChipRow and Stats are therefore all plain `flexShrink: 0` boxes,
+    // and the scroll-snapping that used to live here is gone along with the
+    // scroller it existed to tame. `ChipRow` keeps its own *horizontal*
+    // snapping, which is a different mechanism for a different overflow --
+    // more concerns than fit on one line (see ChipRow.tsx).
+    //
+    // The order stays Hero -> ChipRow -> Stats, which was variant D's
+    // hero/stats/chips reversed when this block became a scroller ("whatever
+    // is lowest is what starts out of view, and the verdict outranks the
+    // stats"). That justification is gone with the scroll -- nothing is out
+    // of view now -- so the order is a free choice, and it is kept because
+    // ADR-0004's ranking still describes what matters most: the chip that
+    // says something is wrong with the house belongs directly under the
+    // number you read on approach, not below the watts.
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: t.space.sm,
+      }}
+    >
       <div style={{ flexShrink: 0 }}>
         <Hero temperature={temperature} humidity={humidity} />
       </div>
@@ -283,19 +399,7 @@ function GlanceView({ placed }: { placed: Placed[] }) {
       <div style={{ flexShrink: 0 }}>
         <Stats lightsOn={lightsOn} watts={placedWatts ?? watts} />
       </div>
-      <div
-        style={{
-          flex: 1,
-          minHeight: 0,
-          overflowY: 'auto',
-          // A chip is a whole row of its own, so scrolling snaps to one --
-          // ChipRow.tsx's own children already carry `scrollSnapAlign`, this
-          // is the scrolling ancestor `scroll-snap-type` needs to pair it
-          // with (the same treatment `screens/ScreenView.tsx`'s `chips` case
-          // used).
-          scrollSnapType: 'y mandatory',
-        }}
-      >
+      <div style={{ flexShrink: 0, 'padding-top': '10px' }}>
         <ChipRow report={report} alarm={alarm} />
       </div>
     </div>
@@ -314,10 +418,13 @@ function GlanceView({ placed }: { placed: Placed[] }) {
  * `entitySlot` above. `useAreas()` is called unconditionally (hooks cannot be
  * conditional) to give `CameraGlance` the Areas it needs for motion lookup;
  * it is cheap, the same whole-house subscription every other hook here reads
- * (`src/ha/registry.ts`), not a second one.
+ * (`src/ha/registry.ts`), not a second one. `useNavigation()` (#14) is read
+ * the same way, unconditionally, to know the current Page name -- needed
+ * only to decide whether the `footer` Region also gets a `HomeBlock`.
  */
 export function PlacementView({ region, placed }: { region: Region; placed: Placed[] }) {
   const areas = useAreas();
+  const { page } = useNavigation();
 
   if (region === 'glance') {
     return <GlanceView placed={placed} />;
@@ -332,6 +439,15 @@ export function PlacementView({ region, placed }: { region: Region; placed: Plac
 
   return (
     <>
+      {/*
+        The home block, prepended before anything Placed -- see `HomeBlock`'s
+        own comment for why it exists and why sitting outside the ordered
+        `placed.map` below does not violate docs/protocol.md's ordering rule.
+        `page !== 'main'` is decision 2's stated exception: `page:main` is
+        already home, so a block that opens it there would be a control
+        pointing at the screen already on screen.
+      */}
+      {region === 'footer' && page !== 'main' && <HomeBlock key='home' />}
       {placed.map((item, i) => {
         if (item.kind === 'area') {
           if (region === 'footer') {
@@ -354,5 +470,60 @@ export function PlacementView({ region, placed }: { region: Region; placed: Plac
         return entitySlot(item.entity);
       })}
     </>
+  );
+}
+
+/**
+ * What a Page with nothing Placed on it shows, instead of a blank panel
+ * (#14, decision 6).
+ *
+ * This is deliberately not treated as malformed Placement. docs/protocol.md's
+ * "malformed placement renders nothing" rule is about Labels the renderer
+ * cannot honour -- an unrecognised `region:` value, a doubled `page:` Label,
+ * a half-pair -- and its consequence (a silent gap, found by noticing
+ * something missing) is accepted there specifically because those are typos
+ * in an otherwise-working system. A Page that resolves cleanly to four empty
+ * Regions is not a typo: every Label on it parsed and matched exactly as
+ * written, and the Page is *well-formed* -- it simply has no contents yet,
+ * which is a true and different fact about the house, not a mistake in this
+ * renderer.
+ *
+ * The distinction is the same one the deleted `NavBar.tsx` drew between an
+ * unbuilt destination and a broken one, and its surviving principle applies
+ * again here for the same reason `AreaOpenerBlock` and `HomeBlock` cite it: a
+ * dead control that looks live is worse than one that admits it is not
+ * there. Four silent, empty Regions would look like a rendering failure --
+ * indistinguishable from the panel being broken -- while this message is the
+ * renderer admitting, in Italian, that there is nothing here yet. A blank
+ * panel looks broken; a message is an admission.
+ *
+ * `Dashboard.tsx` decides *when* to show this (all four Regions empty) and
+ * is responsible for making sure the footer -- home block included -- still
+ * renders around it: the footer's own `Placed[]` for this Page is part of
+ * "all four Regions empty" too, but the `HomeBlock` is not Placed (see its
+ * own comment) and so is unaffected by the Page having nothing Placed on it.
+ * Every non-main Page therefore keeps its way home even when it has nothing
+ * else -- exactly the trap decision 2 exists to prevent, and the reason this
+ * message does not substitute for the footer, only for the four Regions'
+ * absent content above it.
+ */
+export function EmptyPageMessage() {
+  return (
+    <div
+      style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: t.space.sm,
+        height: '100%',
+        color: t.color.textSecondary,
+        textAlign: 'center',
+      }}
+    >
+      <Icon name='mdi:image-off-outline' size={48} color={t.color.textSecondary} />
+      <span style={{ fontSize: t.font.glanceM, fontWeight: 600 }}>Non c&apos;è ancora niente su questa pagina</span>
+    </div>
   );
 }

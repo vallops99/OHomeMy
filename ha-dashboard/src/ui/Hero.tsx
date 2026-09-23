@@ -26,7 +26,32 @@ export function Hero({ temperature, humidity }: HeroProps) {
         style={{
           fontSize: t.font.hero,
           fontWeight: 200,
-          lineHeight: 0.92,
+          // `1.15`, and nothing else. Below about 1.13 this box reports
+          // `scrollHeight` greater than `clientHeight` at 112 px / weight 200
+          // in the system-ui stack -- measured in 0.01 steps: 0.92 -> 13 px
+          // over, 1.0 -> 9, 1.1 -> 3, 1.13 -> 1, 1.15 -> 0. It does so with
+          // "21" alone, no degree sign, so it is the font's own line box, not
+          // a glyph problem.
+          //
+          // An earlier version kept 1.15 and pulled the extra 26 px back off
+          // with `marginTop/Bottom: -13`, on the reasoning that the reserve
+          // was empty space -- "blank font metrics costing the panel a real
+          // scrollbar". That reasoning was wrong, and ADR-0007 records how it
+          // was caught: a `Range` over this element's own text measures
+          // **130 px of ink in a 128.8 px box**, flush at both edges (1 px
+          // above, 0.2 px below). There is no empty reserve. The negative
+          // margins were not reclaiming dead space, they were making this
+          // element *claim* 103 px while painting 129 -- so 26 px of the
+          // number rendered outside its own box and over whatever sat next to
+          // it. At 1280x768 that was `Stats`, sliced horizontally by the gate
+          // slab below it, which is the defect ADR-0007 exists to fix.
+          //
+          // The honest box is what the layout is now measured against
+          // (`scripts/measure-panel.ts`), and the 26 px it costs is paid out
+          // of `t.layout.gateSlab` rather than by lying about this element's
+          // height. `fontSize` is untouched: "Arrivo calmo" (ADR-0001, #6)
+          // reads exactly as large as it always did.
+          lineHeight: 1.15,
           letterSpacing: -3,
           color: t.color.textPrimary,
         }}

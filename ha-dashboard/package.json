@@ -11,7 +11,8 @@
     "prettier": "prettier --write .",
     "sync": "npx tsx scripts/sync-types.ts",
     "prebuild": "npm run prettier",
-    "deploy": "npx tsx scripts/deploy.ts"
+    "deploy": "npx tsx scripts/deploy.ts",
+    "measure": "npx tsx scripts/measure-panel.ts"
   },
   "dependencies": {
     "@fullcalendar/core": "6.1.21",

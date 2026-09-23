@@ -29,18 +29,32 @@ export type GateSlabProps = {
   primary?: boolean;
 };
 
-/** The glyph size, and the floor the slab may not shrink below. */
-const ICON = 56;
+/**
+ * The glyph size.
+ *
+ * 48 rather than the stack layout's 56: the icon now sits beside the name
+ * rather than above it, so it is read against the cap height of a 34 px word
+ * instead of standing alone. At 56 it out-weighed the name it labels.
+ */
+const ICON = 48;
 
 /**
  * Every gate slab is exactly this tall.
  *
- * The icon, the name's line box, the state line, two gaps and the tile's own
- * padding -- what the contents need, and nothing more. A fixed height rather
- * than a minimum: the slabs must not grow into the sidebar's spare room, or
- * a chip appearing above would resize the controls under someone's thumb.
+ * A fixed height rather than a minimum: the slabs must not grow into the
+ * column's spare room, or a chip appearing above would resize the controls
+ * under someone's thumb.
+ *
+ * The number comes from `t.layout.gateSlab`, not from arithmetic over the
+ * contents. It used to be the latter -- `ICON + 40 + 24 + 2 * 4 + 2 * 14`,
+ * i.e. 156 -- while `tokens.ts` carried `gateSlab: 96` that nothing read: the
+ * token ADR-0001 designates as the single source of sizing was wrong by 60 px
+ * and unread, so every budget reasoned against it was reasoning about a slab
+ * that does not exist (ADR-0007). `scripts/measure-panel.ts` asserts the
+ * column against this same token, so the harness and the slab cannot disagree
+ * about how tall a gate is.
  */
-const SLAB_MIN = ICON + 40 + 24 + 2 * 4 + 2 * 14;
+const GATE_SLAB_H = t.layout.gateSlab;
 
 // `primary` is deliberately not destructured: the prop is part of the
 // component's contract (see its doc above) but nothing in the rendering reads
@@ -63,20 +77,27 @@ export function GateSlab({ entity }: GateSlabProps) {
       // spare room goes to the flexible gap above (see ScreenView), so the
       // slabs stay anchored at the foot of the panel and a chip appearing
       // above cannot resize them.
-      style={{ flex: '0 0 auto', height: SLAB_MIN }}
+      style={{ flex: '0 0 auto', height: GATE_SLAB_H }}
       onClick={() => (open ? actions.lock(entity) : actions.unlock(entity))}
     >
       <div
         style={{
+          // The name is centred on the *slab*, and the icon hangs at a fixed
+          // left inset beside it -- not the two centred together as a pair.
+          // Centring the pair was measurably wrong against the mockup: it
+          // put the name at 58.3% of the slab's width instead of 49.8%, and
+          // it slid the icon rightward as the name grew, so a column of
+          // gates had its glyphs in a different place on every slab. A
+          // `relative` box with the icon taken out of flow is what pins the
+          // glyph while leaving the name centred in the full width.
+          position: 'relative',
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           height: '100%',
-          gap: t.space.xs,
           color: fg,
           // Nothing in here shrinks. As plain flex children the icon was
-          // squeezed 56 -> 16 px and the name's line box 40 -> 12 px, which
+          // squeezed 48 -> 16 px and the name's line box 40 -> 12 px, which
           // slices the glyphs horizontally instead of hiding them -- a
           // failure that looks like a rendering bug rather than a tight fit.
           minHeight: 0,
@@ -92,37 +113,87 @@ export function GateSlab({ entity }: GateSlabProps) {
           the secondary gate look like a smaller control rather than a lesser
           one; the primary is told apart by its brighter surface instead.
         */}
-        <span style={{ flexShrink: 0, display: 'flex' }}>
+        <span
+          style={{
+            // Out of flow, so the name's width cannot move it: measured at
+            // 47 px from the slab's edge in the mockup, which is the tile's
+            // own `space.md` padding plus `space.xl` here. A token pair
+            // rather than a 33 px literal -- ADR-0001 keeps sizing in
+            // `tokens.ts`, and this lands within a pixel of the mockup.
+            position: 'absolute',
+            left: t.space.xl,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            display: 'flex',
+          }}
+        >
           <Icon name={unavailable ? 'mdi:alert-circle' : entityIcon(entity)} size={ICON} />
         </span>
         {/*
-          One size for every gate, however long its name: a longer word must
-          not read as a smaller control. The label grows horizontally instead
-          -- `nowrap` keeps it on one line, and the slab's own width is the
-          safe bound. Measured at 34 px: names up to about sixteen characters
-          ("Cancello Carraio") render in full.
-          
-          Past that it ellipsises rather than clipping. A name cut off mid-
-          word with no mark looks like the house named the gate that way;
-          an ellipsis says the panel is the one running out of room. `title`
-          carries the full name for anyone who needs it.
+          Name over state, centred on the slab. Hanging the state under the
+          name keeps the pair reading as one label rather than two rows of a
+          table, and centring it on the whole slab -- not on the space left
+          over beside the icon -- is what holds the name in the same place
+          from gate to gate.
+
+          It is padded clear of the icon on *both* sides, so the centring
+          stays true: padding only on the left would re-centre the text in
+          the remaining width and push it right again, which is the defect
+          this layout replaced. The reserved width is the icon's own inset
+          plus its size.
+
+          `minWidth: 0` is what lets the name's ellipsis below actually fire.
+          Without it this flex child takes its content's intrinsic width and
+          simply overflows the slab, so a long name is clipped by the tile's
+          own `overflow: hidden` with no mark at all -- the failure the
+          ellipsis exists to avoid.
         */}
-        <span
-          title={entity.name}
+        <div
           style={{
-            fontSize: t.font.glanceL,
-            fontWeight: 600,
-            textAlign: 'center',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            maxWidth: '100%',
-            flexShrink: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            minWidth: 0,
+            width: '100%',
+            paddingLeft: t.space.xl + ICON,
+            paddingRight: t.space.xl + ICON,
+            boxSizing: 'border-box',
           }}
         >
-          {entity.name}
-        </span>
-        <span style={{ fontSize: t.font.body, opacity: 0.9, flexShrink: 0 }}>{stateLabel(entity)}</span>
+          {/*
+            One size for every gate, however long its name: a longer word must
+            not read as a smaller control. The label grows horizontally instead
+            -- `nowrap` keeps it on one line, and the slab's own width less the
+            icon is the safe bound.
+
+            Past that it ellipsises rather than clipping. A name cut off mid-
+            word with no mark looks like the house named the gate that way;
+            an ellipsis says the panel is the one running out of room. `title`
+            carries the full name for anyone who needs it.
+          */}
+          <span
+            title={entity.name}
+            style={{
+              fontSize: t.font.glanceL,
+              fontWeight: 600,
+              // The line box must contain the glyphs, not crop them. With
+              // `overflow: hidden` here (which the ellipsis needs), a line
+              // box shorter than the font's own line height makes this span
+              // a 1 px scroller -- `scripts/measure-panel.ts` fails on it,
+              // and on the panel it is a hairline shaved off the descenders.
+              // 1.2 is the smallest that clears the 34 px face; tighten it
+              // only with a `npm run measure` run to back the new number.
+              lineHeight: 1.2,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: '100%',
+            }}
+          >
+            {entity.name}
+          </span>
+          <span style={{ fontSize: t.font.body, opacity: 0.9, flexShrink: 0 }}>{stateLabel(entity)}</span>
+        </div>
       </div>
     </Tile>
   );
