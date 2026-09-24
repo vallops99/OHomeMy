@@ -30,6 +30,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePage, useEntityState } from './ha';
 import { EmptyPageMessage, NavigationProvider, Panel, PlacementView } from './ui';
+// PROTOTYPE (#25): the camera Page variants. Throwaway, see src/ui/FeedPrototype.tsx.
+import { FeedPrototypeProvider, useProtoPage } from './ui/FeedPrototype';
 
 /** The Page the panel opens on, and the one Page the idle timer below never fires on. */
 const MAIN_PAGE = 'main';
@@ -76,7 +78,7 @@ const GLANCE_TOGGLE = 'input_boolean.panel_glance';
 
 function Dashboard() {
   const [currentPage, setCurrentPage] = useState(MAIN_PAGE);
-  const page = usePage(currentPage);
+  const page = useProtoPage(currentPage, usePage(currentPage));
   const toggle = useEntityState(GLANCE_TOGGLE);
 
   // Absent from the registry entirely means the helper has not been created
@@ -175,17 +177,19 @@ function Dashboard() {
 
   return (
     <NavigationProvider value={{ page: currentPage, openPage }}>
-      <Panel
-        glance={glanceOn && glancePlaced ? <PlacementView region='glance' placed={page.glance} /> : undefined}
-        left={<PlacementView region='left' placed={page.left} />}
-        right={isEmpty ? <EmptyPageMessage /> : <PlacementView region='right' placed={page.right} />}
-        // The footer is never swapped for the empty-Page message, even when
-        // `isEmpty` is true: `PlacementView` already renders the `HomeBlock`
-        // for any non-main Page regardless of what is Placed in `footer`
-        // (it is not Placed itself, see PlacementView.tsx), so the way home
-        // survives exactly the situation decision 6 exists to guard against.
-        footer={<PlacementView region='footer' placed={page.footer} />}
-      />
+      <FeedPrototypeProvider>
+        <Panel
+          glance={glanceOn && glancePlaced ? <PlacementView region='glance' placed={page.glance} /> : undefined}
+          left={<PlacementView region='left' placed={page.left} />}
+          right={isEmpty ? <EmptyPageMessage /> : <PlacementView region='right' placed={page.right} />}
+          // The footer is never swapped for the empty-Page message, even when
+          // `isEmpty` is true: `PlacementView` already renders the `HomeBlock`
+          // for any non-main Page regardless of what is Placed in `footer`
+          // (it is not Placed itself, see PlacementView.tsx), so the way home
+          // survives exactly the situation decision 6 exists to guard against.
+          footer={<PlacementView region='footer' placed={page.footer} />}
+        />
+      </FeedPrototypeProvider>
     </NavigationProvider>
   );
 }

@@ -20,6 +20,8 @@ export type CameraGlanceProps = {
   cameras: Entity[];
   /** Every Area, to find the motion sensors sitting alongside them. */
   areas: Area[];
+  /** PROTOTYPE (#25): opens the camera Page. */
+  onClick?: () => void;
 };
 
 /** Motion sensors in the Areas the cameras watch, currently detecting. */
@@ -34,7 +36,7 @@ function movingAreas(cameras: Entity[], areas: Area[]): string[] {
   return out;
 }
 
-export function CameraGlance({ cameras, areas }: CameraGlanceProps) {
+export function CameraGlance({ cameras, areas, onClick }: CameraGlanceProps) {
   const moving = movingAreas(cameras, areas);
   const faulted = cameras.filter(c => c.unavailable);
   const active = moving.length > 0;
@@ -48,6 +50,8 @@ export function CameraGlance({ cameras, areas }: CameraGlanceProps) {
   return (
     <Tile
       entity={primary}
+      onClick={onClick}
+      disableModal={onClick !== undefined}
       active={active}
       strong
       alwaysFilled={active}

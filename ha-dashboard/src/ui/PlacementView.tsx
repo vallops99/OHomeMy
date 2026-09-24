@@ -94,6 +94,8 @@ import { Stats } from './Stats';
 import { t } from './theme';
 import { Tile } from './Tile';
 import { ToggleTile } from './ToggleTile';
+// PROTOTYPE (#25). Throwaway.
+import { FeedsProto, LeftFeedProto, PROTO_PAGE, useLeftFeedOn } from './FeedPrototype';
 
 /**
  * An entity placed in `left`, `right` or the footer, dispatched by Domain --
@@ -428,7 +430,8 @@ function GlanceView({ placed }: { placed: Placed[] }) {
  */
 export function PlacementView({ region, placed }: { region: Region; placed: Placed[] }) {
   const areas = useAreas();
-  const { page } = useNavigation();
+  const { page, openPage } = useNavigation();
+  const leftFeed = useLeftFeedOn();
 
   if (region === 'glance') {
     return <GlanceView placed={placed} />;
@@ -469,7 +472,11 @@ export function PlacementView({ region, placed }: { region: Region; placed: Plac
           // Every camera renders once, together, as one `CameraGlance` --
           // the rest are skipped here, having already been folded into it.
           if (i !== firstCameraIndex) return null;
-          return <CameraGlance key='cameras' cameras={cameras.map(c => c.entity)} areas={areas} />;
+          // PROTOTYPE (#25): Feeds on the camera Page; elsewhere the glance
+          // opens it, or `?left=feed` shows one Feed in `left`.
+          if (page === PROTO_PAGE) return <FeedsProto key='cameras' cameras={cameras.map(c => c.entity)} />;
+          if (region === 'left' && leftFeed) return <LeftFeedProto key='cameras' camera={cameras[0].entity} />;
+          return <CameraGlance key='cameras' cameras={cameras.map(c => c.entity)} areas={areas} onClick={() => openPage(PROTO_PAGE)} />;
         }
         return entitySlot(item.entity);
       })}
