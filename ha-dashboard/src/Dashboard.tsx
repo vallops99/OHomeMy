@@ -30,6 +30,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePage, useEntityState } from './ha';
 import { EmptyPageMessage, NavigationProvider, Panel, PlacementView } from './ui';
+// PROTOTYPE (#24): how a Popup looks. Throwaway, see src/ui/PopupPrototype.tsx.
+import { PopupPrototype } from './ui/PopupPrototype';
 
 /** The Page the panel opens on, and the one Page the idle timer below never fires on. */
 const MAIN_PAGE = 'main';
@@ -186,6 +188,7 @@ function Dashboard() {
         // survives exactly the situation decision 6 exists to guard against.
         footer={<PlacementView region='footer' placed={page.footer} />}
       />
+      {import.meta.env.DEV && <PopupPrototype />}
     </NavigationProvider>
   );
 }
