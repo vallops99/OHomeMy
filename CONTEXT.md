@@ -80,6 +80,19 @@ a brightness slider, its temperature. The one component that collapses an Area
 rather than standing for a single entity.
 _Avoid_: Tile, card, area widget
 
+**Popup**:
+A Page presented as an overlay on top of whatever Page is current, opened and
+closed by Home Assistant rather than by a tap on the panel. Its contents are
+Placed like any other Page's; "popup" names how the Page is shown, not a Page.
+Closes only on its close button or when Home Assistant closes it.
+_Avoid_: Modal (that is @hakit's entity dialog), dialog, overlay, alert
+
+**Feed**:
+A camera rendered as its live picture, which is what a camera becomes in
+`left` or `right`. In `glance`, cameras stay a motion glance, and tapping it
+opens the Page where those same cameras are Placed as Feeds.
+_Avoid_: Stream (the transport, not the thing on the panel), video, snapshot
+
 **Derived**:
 Resolved from a registry query at render time rather than declared. Only one
 Derived rule survives the protocol: a Row consults the `main` Label to find the
