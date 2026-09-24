@@ -18,6 +18,7 @@ import { useDrag } from '@use-gesture/react';
 import { useRef, useState } from 'react';
 import { pickMain, useActions, type Area } from '../ha';
 import { Icon } from './Icon';
+import { isPhone } from './device';
 import { brightnessPercent } from './lightState';
 import { useNavigation } from './NavigationContext';
 import { rowBox, rowStyle, useRowSlider } from './rowShape';
@@ -201,51 +202,103 @@ export function RoomRow({ area, icon = 'mdi:sofa' }: RoomRowProps) {
           onClick={() => main && actions.toggle(main)}
           style={rowStyle({ active, unavailable })}
         >
-          <span
-            style={{ width: 34, display: 'flex', justifyContent: 'center', color: unavailable ? t.color.fault : t.color.textSecondary }}
-          >
-            <Icon name={icon} size={26} />
-          </span>
-          <span style={{ flex: 1, fontSize: t.font.glanceM, fontWeight: 600, color: t.color.textPrimary }}>{area.name}</span>
-
-          {unavailable ? (
-            // Never hidden, always visibly faulted (map Notes): the owner
-            // standing at the panel must see that this room is unreachable.
-            <span style={{ fontSize: t.font.body, color: t.color.fault, fontWeight: 700 }}>{stateLabel(main).toUpperCase()}</span>
+          {isPhone ? (
+            // The phone Row (ADR-0011): the wall Row's fixed columns (count
+            // 120, slider 200, temperature 78) sum past a phone's width on
+            // their own, so the Row folds in two -- the reading on one line,
+            // the slider the full width under it, where a thumb can use it.
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: t.space.xs }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: t.space.sm, minWidth: 0 }}>
+                <span style={{ display: 'flex', color: unavailable ? t.color.fault : t.color.textSecondary }}>
+                  <Icon name={icon} size={24} />
+                </span>
+                <span
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    fontSize: t.font.glanceM,
+                    fontWeight: 600,
+                    color: t.color.textPrimary,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {area.name}
+                </span>
+                {unavailable ? (
+                  <span style={{ fontSize: t.font.body, color: t.color.fault, fontWeight: 700 }}>{stateLabel(main).toUpperCase()}</span>
+                ) : (
+                  counts && (
+                    <span style={{ fontSize: t.font.body, color: t.color.textSecondary, flexShrink: 0 }}>
+                      {counts.on}/{counts.total}
+                    </span>
+                  )
+                )}
+                <span style={{ fontSize: t.font.glanceM, color: t.color.textPrimary, flexShrink: 0 }}>{temperature ?? '--'}</span>
+              </div>
+              {!unavailable && (
+                <div style={{ minWidth: 0 }} onClick={e => e.stopPropagation()}>
+                  <Slider
+                    value={slider.shown}
+                    disabled={!main}
+                    onChange={slider.track}
+                    onChangeApplied={v => {
+                      slider.track(v);
+                      if (main) actions.setBrightness(main, v);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           ) : (
             <>
-              {counts && (
-                <span style={{ fontSize: t.font.body, color: t.color.textSecondary, width: 120, flexShrink: 0 }}>
-                  {counts.on}/{counts.total} luci
-                </span>
+              <span
+                style={{ width: 34, display: 'flex', justifyContent: 'center', color: unavailable ? t.color.fault : t.color.textSecondary }}
+              >
+                <Icon name={icon} size={26} />
+              </span>
+              <span style={{ flex: 1, fontSize: t.font.glanceM, fontWeight: 600, color: t.color.textPrimary }}>{area.name}</span>
+
+              {unavailable ? (
+                // Never hidden, always visibly faulted (map Notes): the owner
+                // standing at the panel must see that this room is unreachable.
+                <span style={{ fontSize: t.font.body, color: t.color.fault, fontWeight: 700 }}>{stateLabel(main).toUpperCase()}</span>
+              ) : (
+                <>
+                  {counts && (
+                    <span style={{ fontSize: t.font.body, color: t.color.textSecondary, width: 120, flexShrink: 0 }}>
+                      {counts.on}/{counts.total} luci
+                    </span>
+                  )}
+
+                  <div style={{ width: 200, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                    <Slider
+                      value={slider.shown}
+                      disabled={!main}
+                      onChange={slider.track}
+                      onChangeApplied={v => {
+                        slider.track(v);
+                        if (main) actions.setBrightness(main, v);
+                      }}
+                    />
+                  </div>
+                </>
               )}
 
-              <div style={{ width: 200, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-                <Slider
-                  value={slider.shown}
-                  disabled={!main}
-                  onChange={slider.track}
-                  onChangeApplied={v => {
-                    slider.track(v);
-                    if (main) actions.setBrightness(main, v);
-                  }}
-                />
-              </div>
+              <span
+                style={{
+                  fontSize: t.font.glanceM,
+                  color: t.color.textPrimary,
+                  width: 78,
+                  flexShrink: 0,
+                  textAlign: 'right',
+                }}
+              >
+                {temperature ?? '--'}
+              </span>
             </>
           )}
-
-          <span
-            style={{
-              fontSize: t.font.glanceM,
-              color: t.color.textPrimary,
-              width: 78,
-              flexShrink: 0,
-              textAlign: 'right',
-            }}
-          >
-            {temperature ?? '--'}
-          </span>
-
           {/*
             The swipe's single-tap alternative (WCAG 2.5.1, ADR-0010). Its
             click and key presses stop here, like the slider's, so opening

@@ -7,6 +7,11 @@
  * #14, a Page is therefore not a route at all: it is a name held in React
  * state, and "navigating" is calling `setState` with a different one.
  *
+ * A phone is the exception (ADR-0011): it has a back gesture, so there
+ * `PhoneShell` owns this context instead, with a stack per tab and one
+ * history entry for the gesture to consume. Consumers cannot tell the
+ * difference -- they still only call `openPage`.
+ *
  * Where that state lives is its own question, because it is neither of
  * ADR-0002's two things. It is not Home Assistant data -- no registry knows
  * "which Page is currently open", that fact exists only on this panel, in
@@ -33,7 +38,10 @@ import { createContext, useContext } from 'react';
 export type Navigation = {
   /** The currently open Page name, e.g. `'main'` or an Area's id. */
   page: string;
-  /** Open a Page by name. Flat, no history stack (#14, decision 5). */
+  /**
+   * Open a Page by name. Flat on the wall, no history stack (ADR-0006,
+   * decision 5); on a phone, pushed inside the current tab (ADR-0011).
+   */
   openPage: (page: string) => void;
 };
 

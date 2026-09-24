@@ -31,6 +31,7 @@ import { Icon } from './Icon';
 import { NavigationProvider, useNavigation, type Navigation } from './NavigationContext';
 import { EmptyPageMessage, PlacementView } from './PlacementView';
 import { activityGate, popupShape, popupTitle, slotKey } from './popup';
+import { isPhone } from './device';
 import { t } from './theme';
 
 /** How often, at most, a touch is reported to Home Assistant (#23, decision 10). */
@@ -127,7 +128,17 @@ export function Popup({ page, onClose, onActivity }: PopupProps) {
             only once the picture behind is live, so the header never claims
             a live picture that is not there.
           */}
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: t.space.md, minWidth: 0, color: t.color.textPrimary }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: t.space.md,
+              minWidth: 0,
+              color: t.color.textPrimary,
+              // A phone's header cannot hold the title, the status and the close button on one line.
+              ...(isPhone ? { flexWrap: 'wrap', rowGap: 0 } : {}),
+            }}
+          >
             <span style={{ alignSelf: 'center', display: 'flex' }}>
               <Icon name={title.icon} size={Math.round(t.font.glanceL * 1.1)} />
             </span>
@@ -166,6 +177,9 @@ export function Popup({ page, onClose, onActivity }: PopupProps) {
               justifyContent: 'safe center',
               alignItems: 'flex-end',
               overflowX: 'auto',
+              // On a phone the slots stack, full width: side by side, two
+              // gates cut each other's names down to a letter (ADR-0011).
+              ...(isPhone ? { flexDirection: 'column', alignItems: 'stretch' } : {}),
               background: `linear-gradient(to top, ${SCRIM}, transparent)`,
             }}
           >
@@ -174,7 +188,12 @@ export function Popup({ page, onClose, onActivity }: PopupProps) {
                 key={slotKey(slot)}
                 // A gate's width each, shrinking when more share the row
                 // (`popupSlotW`, measured -- see tokens.ts).
-                style={{ flex: `0 1 ${t.layout.popupSlotW}px`, minWidth: 0, display: 'flex', flexDirection: 'column' }}
+                style={{
+                  flex: isPhone ? '0 0 auto' : `0 1 ${t.layout.popupSlotW}px`,
+                  minWidth: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
               >
                 <PlacementView region={slot.region} placed={slot.placed} home={false} />
               </div>

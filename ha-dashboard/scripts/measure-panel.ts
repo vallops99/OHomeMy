@@ -135,12 +135,12 @@ function leftColumn(chips: ChipSpec[]): string {
       color:${t.color.onActiveStrong};
     ">
       <span style="
-        position:absolute; left:${t.space.xl}px; top:50%; transform:translateY(-50%);
+        position:absolute; left:${t.layout.gateInset}px; top:50%; transform:translateY(-50%);
         width:48px;height:48px;display:block;background:currentColor;border-radius:4px
       "></span>
       <div style="
         display:flex;flex-direction:column;align-items:center;min-width:0;
-        width:100%; padding-left:${t.space.xl + 48}px; padding-right:${t.space.xl + 48}px;
+        width:100%; padding-left:${t.layout.gateInset + 48}px; padding-right:${t.layout.gateInset + 48}px;
         box-sizing:border-box;
       ">
         <span style="font-size:${t.font.glanceL}px;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${name}</span>

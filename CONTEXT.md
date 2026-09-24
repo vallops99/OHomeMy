@@ -66,6 +66,12 @@ nothing. No Region name contains an underscore, which is what lets the Region be
 read back off a slugified Label.
 _Avoid_: Column, pane, quadrant, section
 
+**Tab**:
+On a phone, one of the three destinations `page:main`'s Regions become:
+Casa (`glance` and `left`), Stanze (`right`), Altro (`footer`). A Page opened
+from a Tab opens inside it (ADR-0011). The wall panel has none.
+_Avoid_: Screen, section
+
 **Rendering contract**:
 What a Region promises to make of whatever is Placed in it. A Region decides
 the *shape* of a component, not only its position: an Area in `right` is a full

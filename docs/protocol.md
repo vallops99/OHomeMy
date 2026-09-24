@@ -167,12 +167,14 @@ button is the way out (see "Popups", below).
 This is the one piece of the panel's layout that is not declared by a label:
 every page needs a way out, and a page whose house-editor forgot to label a
 way home would otherwise be a dead end. So the renderer supplies it,
-unconditionally, on every page but the one that doesn't need it.
+unconditionally, on every page but the one that doesn't need it. (On a phone
+there is no "Casa" block: see "On a phone", below.)
 
 The panel also returns to `page:main` by itself: after 240 seconds with no
 touch on a page other than `page:main`, it navigates home on its own. The
 panel sits at the entrance, and its resting state is meant to be readable by
 whoever walks up to it next — not whatever page the last person left it on.
+A phone doesn't do this.
 
 ### The glance region collapses — two ways
 
@@ -514,6 +516,31 @@ This was run against Home Assistant 2026.9 with the fake house's doorbell:
 `page:citofono`. To open the Popup by hand, set `input_text.panel_popup` to
 `citofono`. To ring, press `input_button.fake_fire_event_campanello_ding`, or
 use **Run actions** on the automation.
+
+## On a phone
+
+On a narrow screen (under 700 px wide, or under 500 px tall) the panel does not
+draw the 2x2. `page:main`'s Regions become three tabs along the bottom, and
+nothing about labelling changes:
+
+| Tab | Regions |
+|---|---|
+| Casa | `glance`, then `left` |
+| Stanze | `right` |
+| Altro | `footer` |
+
+A tab with nothing placed in its Regions on `page:main` is not shown.
+
+Tapping a Row's chevron, swiping it, or tapping a footer block opens that Page
+*inside the tab you are on*, with a back arrow at the top. It shows all the
+Page's Regions in one column: `glance`, `left`, `right`, `footer`. There is no
+"Casa" block on a phone. The back arrow, the phone's back gesture and the tab
+bar are the way home. Each tab keeps its own place, and tapping the tab you
+are on goes back to its root. The phone does not return to `page:main` by
+itself after 240 seconds. Popups open on a phone too.
+
+So the order you give things within a Region is also the order they scroll in
+on a phone. See [ADR-0011](adr/0011-the-panel-on-a-phone.md) for why.
 
 ## What this costs
 

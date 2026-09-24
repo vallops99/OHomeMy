@@ -4,6 +4,11 @@ status: accepted
 
 # Navigation is state, not a router, and the renderer supplies the way home
 
+> **Amended for phones by [ADR-0011](0011-the-panel-on-a-phone.md).** On a
+> phone, a Page opens inside a tab with a back arrow, the back gesture pops one
+> level through a single history entry, and there is no idle return. The wall
+> panel is unchanged.
+
 Pages are a piece of React state, not a URL. There is no router library, no
 `history` API, no hash routing. A footer block changes which Page is current;
 nothing else about the panel's shape changes. On top of that: every Page but

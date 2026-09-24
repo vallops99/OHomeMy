@@ -37,7 +37,48 @@ export const KNOBS: Knobs = {
 
 const hsl = (h: number, s: number, l: number, a = 1) => (a === 1 ? `hsl(${h} ${s}% ${l}%)` : `hsl(${h} ${s}% ${l}% / ${a})`);
 
-export function buildTokens(k: Knobs = KNOBS) {
+/**
+ * Which reading distance the tokens are sized for (#15, ADR-0011). `wall` is
+ * the designed target: the 1280x800 panel read at 1-2 m. `arm` is a phone,
+ * held at arm's length.
+ */
+export type Scale = 'wall' | 'arm';
+
+export function buildTokens(k: Knobs = KNOBS, scale: Scale = 'wall') {
+  const wall = buildWallTokens(k);
+  return scale === 'wall' ? wall : armTokens(wall);
+}
+
+/**
+ * The phone's sizes, as changes to the wall's. Only size changes; colour and
+ * touch sizing do not (a thumb is not smaller than a finger at a wall).
+ *
+ * The display sizes shrink by about a third: they were extrapolated for 1-2 m,
+ * and a 112 px hero at 40 cm is a third of the screen for one number. Body
+ * text barely moves: 17 was already the phone platforms' own body size (iOS
+ * 17 pt, Android 16 sp), so the wall's "readable at 2 m" floor was never a
+ * wall-sized number. Picked on the #15 prototype, not measured on hardware.
+ */
+function armTokens(wall: ReturnType<typeof buildWallTokens>): ReturnType<typeof buildWallTokens> {
+  return {
+    ...wall,
+    font: { ...wall.font, hero: 72, glanceXL: 40, glanceL: 26, glanceM: 19, body: 16, caption: 13 },
+    layout: {
+      ...wall.layout,
+      // Sized against the wall's hero, which shrank.
+      gateSlab: 84,
+      // The icon's inset from the slab's edge, which the name is padded clear
+      // of on both sides (GateSlab.tsx). At the wall's 34 a phone-wide slab
+      // left "Cancelletto" ~170 px and cut it off.
+      gateInset: 14,
+      // A phone Row is two lines, the slider under the name (RoomRow.tsx):
+      // 64 px of slider plus a 28 px line plus the card's padding.
+      tileMaxH: 140,
+    },
+  };
+}
+
+function buildWallTokens(k: Knobs) {
   return {
     color: {
       /** the page itself */
@@ -221,6 +262,8 @@ export function buildTokens(k: Knobs = KNOBS) {
       rowRoom: 76,
       rowStrip: 96,
       gateSlab: 100,
+      /** A GateSlab icon's inset from the slab's edge. */
+      gateInset: 34,
       leftColW: 420,
       footerH: 64,
       chipRowFloor: 40,

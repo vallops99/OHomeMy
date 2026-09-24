@@ -117,11 +117,11 @@ export function GateSlab({ entity }: GateSlabProps) {
           style={{
             // Out of flow, so the name's width cannot move it: measured at
             // 47 px from the slab's edge in the mockup, which is the tile's
-            // own `space.md` padding plus `space.xl` here. A token pair
-            // rather than a 33 px literal -- ADR-0001 keeps sizing in
-            // `tokens.ts`, and this lands within a pixel of the mockup.
+            // own `space.md` padding plus `layout.gateInset` (34) here. A
+            // token rather than a literal -- ADR-0001 keeps sizing in
+            // `tokens.ts` -- and one the phone scale narrows (ADR-0011).
             position: 'absolute',
-            left: t.space.xl,
+            left: t.layout.gateInset,
             top: '50%',
             transform: 'translateY(-50%)',
             display: 'flex',
@@ -155,8 +155,8 @@ export function GateSlab({ entity }: GateSlabProps) {
             alignItems: 'center',
             minWidth: 0,
             width: '100%',
-            paddingLeft: t.space.xl + ICON,
-            paddingRight: t.space.xl + ICON,
+            paddingLeft: t.layout.gateInset + ICON,
+            paddingRight: t.layout.gateInset + ICON,
             boxSizing: 'border-box',
           }}
         >

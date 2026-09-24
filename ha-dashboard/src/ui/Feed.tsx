@@ -16,6 +16,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Entity, Feed } from '../ha';
 import { TONE_COLOR, feedPhase, feedStatus, secondsLeft, type FeedPhase } from './feeds';
+import { isPhone } from './device';
 import { Icon } from './Icon';
 import { t } from './theme';
 
@@ -50,7 +51,8 @@ export function FeedFrame({ camera, feed, size }: FeedFrameProps) {
           position: 'relative',
           borderRadius: t.radius.tile,
           border: `1px solid ${fault ? t.color.fault : t.color.border}`,
-          ...(size === 'big' ? { flex: 1, minHeight: 0 } : { aspectRatio: '16 / 9' }),
+          // A phone's column scrolls, so there is no height to fill: the big Feed takes 16:9 too.
+          ...(size === 'big' && !isPhone ? { flex: 1, minHeight: 0 } : { aspectRatio: '16 / 9' }),
         };
 
   return (
@@ -173,11 +175,16 @@ export function FeedCaption({ camera, phase, moving, big }: { camera: Entity; ph
         padding: `${t.space.xs}px ${t.space.xs}px 0`,
         fontWeight: 600,
         flexShrink: 0,
+        // A phone's thumbnails are half its width: the status goes under the
+        // name rather than cut every "Telecamera ..." to "Teleca...", the
+        // part that says which camera it is.
+        ...(isPhone ? { flexWrap: 'wrap', rowGap: 0 } : {}),
       }}
     >
       <span
         style={{
           fontSize: big ? t.font.glanceM : t.font.caption,
+          minWidth: 0,
           color: phase === 'unavailable' ? t.color.fault : t.color.textPrimary,
           whiteSpace: 'nowrap',
           overflow: 'hidden',

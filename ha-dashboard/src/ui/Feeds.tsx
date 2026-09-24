@@ -19,6 +19,7 @@ import { useState } from 'react';
 import { cameraMoving, useEntities, useFeed, type Entity } from '../ha';
 import { FeedCaption, FeedFrame } from './Feed';
 import { bigCamera, feedPhase } from './feeds';
+import { isPhone } from './device';
 import { t } from './theme';
 
 export type FeedsProps = {
@@ -37,6 +38,28 @@ export function Feeds({ cameras }: FeedsProps) {
   );
   const strip = cameras.filter(c => c.id !== big);
   const n = cameras.length;
+
+  // On a phone the strip goes under the big Feed, two thumbnails a line: a
+  // 300 px strip beside it would leave the big one a sliver (ADR-0011).
+  if (isPhone) {
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', columnGap: t.space.sm, rowGap: t.space.md }}>
+        {[...cameras.filter(c => c.id === big), ...strip].map(camera => {
+          const isBig = camera.id === big;
+          return (
+            <FeedCell
+              key={camera.id}
+              camera={camera}
+              moving={moving.get(camera.id) ?? false}
+              big={isBig}
+              onTap={isBig ? undefined : () => setTapped(camera.id)}
+              place={isBig ? { gridColumn: '1 / -1' } : {}}
+            />
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <div

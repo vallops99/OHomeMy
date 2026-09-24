@@ -5,9 +5,11 @@
  * retuning KNOBS stays a single edit in `theme/tokens.ts` (ADR-0001) and no
  * component ever hardcodes a colour, size or radius.
  */
-import { buildTokens } from '../theme/tokens';
+import { buildTokens, KNOBS } from '../theme/tokens';
+import { isPhone } from './device';
 
-export const t = buildTokens();
+/** Sized for the wall, or, on a phone, for arm's length (ADR-0011). */
+export const t = buildTokens(KNOBS, isPhone ? 'arm' : 'wall');
 export type { Tokens } from '../theme/tokens';
 
 /** Surface colour for a tile, given what it is doing. */

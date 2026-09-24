@@ -29,7 +29,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useActions, usePage, useEntityState } from './ha';
-import { EmptyPageMessage, NavigationProvider, Panel, PlacementView, Popup, popupPage } from './ui';
+import { EmptyPageMessage, isPhone, NavigationProvider, Panel, PhoneShell, PlacementView, Popup, popupPage } from './ui';
 
 /** The Page the panel opens on, and the one Page the idle timer below never fires on. */
 const MAIN_PAGE = 'main';
@@ -196,6 +196,21 @@ function Dashboard() {
   // docs/protocol.md's "malformed placement renders nothing" rule.
   const isEmpty = Object.values(page).every(placed => placed.length === 0);
 
+  // Over the Page, not instead of it: the Page underneath stays mounted
+  // and running, and the idle return above keeps its own clock -- if it
+  // fires, the panel goes home under the Popup, which stays on top. A
+  // touch in the Popup is a touch on the panel like any other, so it
+  // restarts that clock too: someone is standing here.
+  // Keyed by the Page so a new value in the helper is a new Popup.
+  // On a phone too (ADR-0011): the helper is house state, every screen shows it.
+  const popupLayer = popup !== null && <Popup key={popup} page={popup} onClose={closePopup} onActivity={reportPopupActivity} />;
+
+  // A phone gets the same Pages as tabs (ADR-0011). It keeps its own
+  // navigation, so `currentPage` above stays on `main` there and the idle
+  // return never arms: it is for the next person at the entrance, and a
+  // phone has none.
+  if (isPhone) return <PhoneShell glanceOn={glanceOn}>{popupLayer}</PhoneShell>;
+
   return (
     <NavigationProvider value={{ page: currentPage, openPage }}>
       <Panel
@@ -209,15 +224,7 @@ function Dashboard() {
         // survives exactly the situation decision 6 exists to guard against.
         footer={<PlacementView region='footer' placed={page.footer} />}
       />
-      {/*
-        Over the Page, not instead of it: the Page underneath stays mounted
-        and running, and the idle return above keeps its own clock -- if it
-        fires, the panel goes home under the Popup, which stays on top. A
-        touch in the Popup is a touch on the panel like any other, so it
-        restarts that clock too: someone is standing here.
-        Keyed by the Page so a new value in the helper is a new Popup.
-      */}
-      {popup !== null && <Popup key={popup} page={popup} onClose={closePopup} onActivity={reportPopupActivity} />}
+      {popupLayer}
     </NavigationProvider>
   );
 }

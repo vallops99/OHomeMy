@@ -14,6 +14,7 @@
  * a dead control that looks live (see `supportsBrightness`).
  */
 import { useActions, type Entity } from '../ha';
+import { isPhone } from './device';
 import { entityIcon, Icon } from './Icon';
 import { brightnessPercent, supportsBrightness } from './lightState';
 import { rowStyle, useRowSlider } from './rowShape';
@@ -34,6 +35,21 @@ export function ToggleTile({ entity }: ToggleTileProps) {
 
   const slider = useRowSlider(brightnessPercent(entity));
 
+  const sliderEl = (
+    <Slider
+      value={slider.shown}
+      onInteracting={slider.setSliding}
+      onChange={slider.track}
+      onChangeApplied={v => {
+        slider.track(v);
+        actions.setBrightness(entity, v);
+      }}
+    />
+  );
+  // On a phone the 200 px slider leaves the name a few letters; it folds
+  // under the name, full width, as a phone Row's does (ADR-0011).
+  const folded = isPhone && dimmable && !unavailable;
+
   return (
     <Tile
       row
@@ -43,43 +59,50 @@ export function ToggleTile({ entity }: ToggleTileProps) {
       onClick={() => actions.toggle(entity)}
       style={rowStyle({ active, unavailable })}
     >
-      <span style={{ width: 34, display: 'flex', justifyContent: 'center', color: unavailable ? t.color.fault : t.color.textSecondary }}>
-        <Icon name={unavailable ? 'mdi:alert-circle' : entityIcon(entity)} size={26} />
-      </span>
-      <span
-        title={entity.name}
+      <div
         style={{
           flex: 1,
           minWidth: 0,
-          fontSize: t.font.glanceM,
-          fontWeight: 600,
-          color: t.color.textPrimary,
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
+          display: 'flex',
+          flexDirection: folded ? 'column' : 'row',
+          alignItems: folded ? 'stretch' : 'center',
+          gap: folded ? t.space.xs : t.space.md,
         }}
       >
-        {entity.name}
-      </span>
-
-      {unavailable ? (
-        // Always rendered, never hidden (CONTEXT.md, Unavailable).
-        <span style={{ fontSize: t.font.body, color: t.color.fault, fontWeight: 700 }}>{stateLabel(entity).toUpperCase()}</span>
-      ) : dimmable ? (
-        <div style={{ width: 200, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-          <Slider
-            value={slider.shown}
-            onInteracting={slider.setSliding}
-            onChange={slider.track}
-            onChangeApplied={v => {
-              slider.track(v);
-              actions.setBrightness(entity, v);
+        <div style={{ flex: folded ? undefined : 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: t.space.md }}>
+          <span
+            style={{ width: 34, display: 'flex', justifyContent: 'center', color: unavailable ? t.color.fault : t.color.textSecondary }}
+          >
+            <Icon name={unavailable ? 'mdi:alert-circle' : entityIcon(entity)} size={26} />
+          </span>
+          <span
+            title={entity.name}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              fontSize: t.font.glanceM,
+              fontWeight: 600,
+              color: t.color.textPrimary,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
             }}
-          />
+          >
+            {entity.name}
+          </span>
         </div>
-      ) : (
-        <span style={{ fontSize: t.font.body, color: t.color.textSecondary, flexShrink: 0 }}>{stateLabel(entity)}</span>
-      )}
+
+        {unavailable ? (
+          // Always rendered, never hidden (CONTEXT.md, Unavailable).
+          <span style={{ fontSize: t.font.body, color: t.color.fault, fontWeight: 700 }}>{stateLabel(entity).toUpperCase()}</span>
+        ) : dimmable ? (
+          <div style={folded ? { minWidth: 0 } : { width: 200, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+            {sliderEl}
+          </div>
+        ) : (
+          <span style={{ fontSize: t.font.body, color: t.color.textSecondary, flexShrink: 0 }}>{stateLabel(entity)}</span>
+        )}
+      </div>
     </Tile>
   );
 }
