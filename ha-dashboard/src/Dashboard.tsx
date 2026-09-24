@@ -29,7 +29,9 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useActions, usePage, useEntityState } from './ha';
-import { EmptyPageMessage, NavigationProvider, Panel, PlacementView, Popup, popupPage } from './ui';
+import { EmptyPageMessage, NavigationProvider, PlacementView, Popup, popupPage } from './ui';
+// PROTOTYPE (#15): the phone layouts. Throwaway, see src/ui/PhonePrototype.tsx.
+import { PhoneLayout } from './ui/PhonePrototype';
 
 /** The Page the panel opens on, and the one Page the idle timer below never fires on. */
 const MAIN_PAGE = 'main';
@@ -198,7 +200,7 @@ function Dashboard() {
 
   return (
     <NavigationProvider value={{ page: currentPage, openPage }}>
-      <Panel
+      <PhoneLayout
         glance={glanceOn && glancePlaced ? <PlacementView region='glance' placed={page.glance} /> : undefined}
         left={<PlacementView region='left' placed={page.left} />}
         right={isEmpty ? <EmptyPageMessage /> : <PlacementView region='right' placed={page.right} />}
