@@ -17,8 +17,9 @@
  * ## Per-Region rendering contracts
  *
  * `left` / `right`:
- *   - an Area -> `RoomRow`, unchanged from variant D (#6): name, lights-on
- *     count, slider, temperature, all Derived from the Area's own entities.
+ *   - an Area -> `RoomRow`, variant D's row (#6): name, lights-on count,
+ *     slider, temperature, all Derived from the Area's own entities. Since
+ *     #27 it also opens the Area's Page, on a swipe or its chevron.
  *   - an entity -> dispatched by Domain, in `entitySlot` below, mirroring
  *     `screens/ScreenView.tsx`'s function of the same name: `lock` ->
  *     `GateSlab`, `alarm_control_panel` -> `AlarmTile`, `camera` -> folded

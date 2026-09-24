@@ -6,15 +6,25 @@
 import { useState, type CSSProperties } from 'react';
 import { t } from './theme';
 
+/**
+ * The row's box in its Region: its share of the height, and its corners.
+ *
+ * Share the Region with the other rows rather than taking a fixed height:
+ * five Areas fill the panel, six share it, and the floor below keeps a row
+ * readable at 2 m either way. A bare row (`ToggleTile`) is this box itself; a
+ * Row is wrapped by its swipe surface, which takes the box instead, and the
+ * card inside fills it.
+ */
+export const rowBox = {
+  flex: 1,
+  minHeight: t.layout.rowRoom,
+  borderRadius: t.radius.tile,
+} satisfies CSSProperties;
+
 /** The row's surface and state marker, for a `Tile` laid out as a `row`. */
 export function rowStyle({ active, unavailable }: { active: boolean; unavailable: boolean }): CSSProperties {
   return {
-    // Share the column with the other rows rather than taking a fixed
-    // height: five Areas fill the panel, six share it, and the floor
-    // below keeps a row readable at 2 m either way.
-    flex: 1,
-    minHeight: t.layout.rowRoom,
-    borderRadius: t.radius.tile,
+    ...rowBox,
     gap: t.space.md,
     // `Tile` already applies its own horizontal padding via `cssStyles`
     // (t.space.md), so no second padding is added here.
@@ -31,7 +41,7 @@ export function rowStyle({ active, unavailable }: { active: boolean; unavailable
 }
 
 /**
- * The value a row's slider shows, and the row's long-press disarm.
+ * The value a row's slider shows, and a `ToggleTile`'s long-press disarm.
  *
  * The optimistic drag state lives in `Slider`, which owns the gesture and
  * the commit. This only mirrors what the slider reports so the row's own
@@ -40,8 +50,9 @@ export function rowStyle({ active, unavailable }: { active: boolean; unavailable
  * than staying pinned to a stale optimistic number (RoomTile, #7).
  *
  * Adjusting the slider must not also open the row's long-press modal over
- * the control being used -- see the note in `Slider`. `sliding` is what the
- * row passes as `disableModal` for as long as a gesture is in progress.
+ * the control being used -- see the note in `Slider`. `sliding` is what a
+ * `ToggleTile` passes as `disableModal` for as long as a gesture is in
+ * progress. A Row has no modal to disarm (ADR-0010) and ignores it.
  */
 export function useRowSlider(live: number) {
   const [dragged, setDragged] = useState<{ value: number; from: number } | null>(null);

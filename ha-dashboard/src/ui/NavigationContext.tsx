@@ -13,19 +13,19 @@
  * this browser tab -- so it does not belong in `src/ha/`. It is also not a
  * component. It is UI *state*, and the two things that need to read or write
  * it (`Dashboard`, which owns it and runs the idle-return timer against it,
- * and `PlacementView`'s footer blocks, which are the only things that ever
- * call `openPage`) are both under `src/ui/`, so a `src/ui/` context is the
+ * and the things that call `openPage` -- `PlacementView`'s footer blocks and,
+ * since #27, `RoomRow`) are all under `src/ui/`, so a `src/ui/` context is the
  * honest home for it -- it never crosses ADR-0002's seam in either
  * direction.
  *
  * A context rather than prop-threading `openPage` through `PlacementView`
- * into `entitySlot` and every per-Region branch: only two of those branches
- * (`AreaOpenerBlock` and the home block, both footer-only) ever call it, and
+ * into `entitySlot` and every per-Region branch: only a few components
+ * (`AreaOpenerBlock`, the home block, and `RoomRow`) ever call it, and
  * `PlacementView` itself does not otherwise need to know navigation exists.
  * Threading a callback prop through `PlacementView` -> the `footer` render
  * branch -> `AreaOpenerBlock` would put a `openPage` parameter on every
  * region and on `entitySlot`, which is dispatched by Domain and has nothing
- * to do with Pages. A context confines the plumbing to the two components
+ * to do with Pages. A context confines the plumbing to the components
  * that actually use it.
  */
 import { createContext, useContext } from 'react';
@@ -33,7 +33,7 @@ import { createContext, useContext } from 'react';
 export type Navigation = {
   /** The currently open Page name, e.g. `'main'` or an Area's id. */
   page: string;
-  /** Open a Page by name. The footer's only means of navigating (#14, decision 5: flat, no history stack). */
+  /** Open a Page by name. Flat, no history stack (#14, decision 5). */
   openPage: (page: string) => void;
 };
 

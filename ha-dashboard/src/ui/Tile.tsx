@@ -135,7 +135,7 @@ export function Tile({ entity, active, strong, alwaysFilled, row, onClick, disab
         display: ${row ? 'flex' : 'block'};
         ${row ? 'align-items: center;' : ''}
         width: 100%;
-        max-height: 100px;
+        max-height: ${t.layout.tileMaxH}px;
         ${
           // @hakit nests the children three levels down -- `.ripple-parent`,
           // `.ripple-inner`, then `.contents`, which is the element that

@@ -205,6 +205,11 @@ export function buildTokens(k: Knobs = KNOBS) {
      * or a wider gap brings the ellipsis back. `popupClose` is the Popup's
      * round close button (#24): over `touch.primary` because it is the only
      * way out, reached for from a step back.
+     *
+     * `tileMaxH` is the cap `Tile` puts on every card built on `CardBase`. A
+     * Row's swipe wrapper (#27) takes the same cap, or it grows past the
+     * card with the Region and the label it reveals shows below the row
+     * (measured on the real app at 1280x800: 162 px wrapper, 100 px card).
      */
     layout: {
       sidebarW: 420,
@@ -217,6 +222,7 @@ export function buildTokens(k: Knobs = KNOBS) {
       chipRowLines: 2,
       popupSlotW: 412,
       popupClose: 80,
+      tileMaxH: 100,
     },
   };
 }

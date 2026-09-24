@@ -22,9 +22,9 @@ export type SliderProps = {
   /** Track height. Defaults to the ADR-0001 primary touch target, 64 px. */
   thickness?: number;
   /**
-   * Called when a touch/press starts on the track and when it ends. The tile
-   * around the slider uses this to disarm its long-press while the slider is
-   * in use -- see the note on `handleDown`.
+   * Called when a touch/press starts on the track and when it ends. A tile
+   * that keeps its long-press modal uses this to disarm it while the slider
+   * is in use -- see the note on `handleDown`.
    */
   onInteracting?: (active: boolean) => void;
 };
@@ -106,8 +106,14 @@ export function Slider({ value, onChange, onChangeApplied, disabled, thickness, 
   // These handlers only listen; they never stop propagation. The slider is
   // driven by @use-gesture, which binds through React's synthetic events, so
   // stopping the pointer sequence here would freeze the control itself.
+  //
+  // `data-gesture-owner` claims every gesture that starts on the track: an
+  // ancestor that swipes (a Row, #27) sees the mark and leaves the gesture
+  // alone, so a drag here is always the slider's. The slider itself needs to
+  // know nothing about who swipes.
   return (
     <div
+      data-gesture-owner
       style={{ width: '100%', overflow: 'hidden', display: 'flex' }}
       onPointerDown={handleDown}
       onTouchStart={handleDown}

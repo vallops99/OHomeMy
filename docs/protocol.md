@@ -69,7 +69,8 @@ because those clutter the very picker you are labelling from.
 `page:main` is the panel's home screen by convention: it is what the renderer
 shows at rest, and what it returns to — the panel comes back to `page:main` on
 its own after 240 seconds idle on any other page (see "Getting back", below).
-Every other page is reached by placing an Area in some footer (see `footer`).
+Every other page is an Area's page, reached from anywhere that Area is placed:
+its block in a footer, or its row in `left` or `right` (see "The region").
 
 ## The region
 
@@ -118,10 +119,13 @@ different regions produces two different components:
 | `right` | a full row — the Area's name, how many of its lights are on, a brightness slider, its temperature |
 | `footer` | a single tappable block that opens that Area's page |
 
-So the footer is the navigation. There is no separate nav concept: a page
+So the Areas are the navigation. There is no separate nav concept: a page
 button is an **Area** placed in a footer, and tapping it opens
 `page:<that area's id>` — the id from Home Assistant's area registry, not the
-display name, so `area salone` (named "Soggiorno") opens `page:salone`.
+display name, so `area salone` (named "Soggiorno") opens `page:salone`. A row
+leads to the same page: swipe it right, or tap the chevron at its end. Tapping
+the row itself still toggles its light. Neither route checks that the page has
+anything on it; an empty page says so (see "An empty page renders a message").
 
 Only an Area navigates. An entity in the footer renders as its own component
 and opens nothing: an entity is not an Area, so there is no

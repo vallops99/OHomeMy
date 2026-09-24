@@ -77,7 +77,9 @@ _Avoid_: Renderer, variant, presentation mode
 **Row**:
 An Area rendered in `left` or `right`: its name, how many of its lights are on,
 a brightness slider, its temperature. The one component that collapses an Area
-rather than standing for a single entity.
+rather than standing for a single entity. Tapping it toggles the Area's `main`
+light; swiping it right, or tapping its trailing chevron, opens the Area's Page
+-- the same Page its footer block opens. Holding it does nothing.
 _Avoid_: Tile, card, area widget
 
 **Popup**:

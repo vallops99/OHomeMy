@@ -19,6 +19,26 @@ Run `npm run build` and it will build the files for you, you can then upload the
 2. To automatically deploy to your home assistant instance, you can run `npm run deploy` after you've retrieved the SSH information specified [here](https://shannonhochkins.github.io/ha-component-kit/?path=/docs/introduction-deploying--docs), NOTE! The script has already been created for you, you just need to run it after you've updated the .env values.
 3. The `VITE_FOLDER_NAME` is the folder that will be created on your home assistant instance, this is where the files will be uploaded to.
 
+## The tablet (Fully Kiosk Browser)
+
+A Row opens its Area's Page when it is swiped right (#27). Several Fully Kiosk
+and Android features claim horizontal swipes or vertical pulls for themselves,
+and have to be turned off on the panel, or the swipe (or a Region's scroll)
+does something else. Why each one matters is in
+`docs/research/row-swipe-gesture.md`, section 5.
+
+- **Web Browsing → Swipe to Navigate**: off. A swipe right would be history-back.
+- **Web Browsing → Swipe To Change Tabs**: off.
+- **Web Browsing → Enable Pull to refresh**: off. It competes with scrolling a Region.
+- **Web Zoom → Enable Zoom**: off.
+- **Kiosk Mode → Kiosk Exit Gesture**: anything but *Swipe from Left*, e.g.
+  *Fast 5 Taps*. A Row in `left` starts near the screen's left edge.
+- **Android system navigation**: prefer 3-button navigation to gesture
+  navigation, whose edge swipe is system Back and can't be refused by a web page.
+
+Still to check on the real device: how wide Fully's left-edge zone is, and the
+tablet's actual touch slop (the swipe assumes Android's default 8 dp).
+
 ## Folder name & Vite
 The `VITE_FOLDER_NAME` is the folder that will be created on your home assistant instance, this is where the files will be uploaded to. If you change the `VITE_FOLDER_NAME` variable, it will also update the `vite.config.ts` value named `base` to the same value so that when deployed using the deployment script the pathname's are correct.
 
