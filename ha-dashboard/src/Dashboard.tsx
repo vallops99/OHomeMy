@@ -31,7 +31,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useActions, usePage, useEntityState } from './ha';
 import { EmptyPageMessage, NavigationProvider, PlacementView, Popup, popupPage } from './ui';
 // PROTOTYPE (#15): the phone layouts. Throwaway, see src/ui/PhonePrototype.tsx.
-import { PhoneLayout } from './ui/PhonePrototype';
+import { OWNS_NAVIGATION, PhoneLayout, PhoneNav } from './ui/PhonePrototype';
 
 /** The Page the panel opens on, and the one Page the idle timer below never fires on. */
 const MAIN_PAGE = 'main';
@@ -200,17 +200,21 @@ function Dashboard() {
 
   return (
     <NavigationProvider value={{ page: currentPage, openPage }}>
-      <PhoneLayout
-        glance={glanceOn && glancePlaced ? <PlacementView region='glance' placed={page.glance} /> : undefined}
-        left={<PlacementView region='left' placed={page.left} />}
-        right={isEmpty ? <EmptyPageMessage /> : <PlacementView region='right' placed={page.right} />}
-        // The footer is never swapped for the empty-Page message, even when
-        // `isEmpty` is true: `PlacementView` already renders the `HomeBlock`
-        // for any non-main Page regardless of what is Placed in `footer`
-        // (it is not Placed itself, see PlacementView.tsx), so the way home
-        // survives exactly the situation decision 6 exists to guard against.
-        footer={<PlacementView region='footer' placed={page.footer} />}
-      />
+      {OWNS_NAVIGATION ? (
+        <PhoneNav glanceOn={glanceOn} />
+      ) : (
+        <PhoneLayout
+          glance={glanceOn && glancePlaced ? <PlacementView region='glance' placed={page.glance} /> : undefined}
+          left={<PlacementView region='left' placed={page.left} />}
+          right={isEmpty ? <EmptyPageMessage /> : <PlacementView region='right' placed={page.right} />}
+          // The footer is never swapped for the empty-Page message, even when
+          // `isEmpty` is true: `PlacementView` already renders the `HomeBlock`
+          // for any non-main Page regardless of what is Placed in `footer`
+          // (it is not Placed itself, see PlacementView.tsx), so the way home
+          // survives exactly the situation decision 6 exists to guard against.
+          footer={<PlacementView region='footer' placed={page.footer} />}
+        />
+      )}
       {/*
         Over the Page, not instead of it: the Page underneath stays mounted
         and running, and the idle return above keeps its own clock -- if it
