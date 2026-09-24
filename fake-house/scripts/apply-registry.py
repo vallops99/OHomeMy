@@ -15,7 +15,10 @@ with fake-house/manifest.yaml over the websocket API:
   * creates the `input_boolean.panel_glance` helper that gates the `glance`
     region (docs/protocol.md, #13 item 4),
   * creates the two Popup helpers, `input_text.panel_popup` and
-    `input_button.panel_popup_activity` (docs/protocol.md "Popups", #28).
+    `input_button.panel_popup_activity` (docs/protocol.md "Popups", #28),
+  * builds each `device_of` binary_sensor as a template helper linked to
+    that entity's device (#29): a camera's motion sensor has to sit on the
+    camera's device, and YAML templates cannot join one.
 
 These are editable-storage helpers, not config-flow integrations: they have no
 `config_entries` row for bootstrap-helpers.py to write, and each lives behind
@@ -91,6 +94,11 @@ def label_slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
 
 
+def template_key(e: dict) -> tuple[str, str]:
+    """How a `device_of` sensor's template helper is found again: by title."""
+    return ("template", e["name"])
+
+
 class Client:
     def __init__(self, ws) -> None:
         self.ws = ws
@@ -110,6 +118,14 @@ async def run(url: str, token: str, dry_run: bool) -> int:
     changes = 0
 
     async with aiohttp.ClientSession() as session:
+        rest_headers = {"Authorization": f"Bearer {token}"}
+
+        async def flow(path: str, payload: dict) -> dict:
+            """One step of a config flow. Flows are REST-only, not websocket."""
+            async with session.post(f"{url}/api/config/config_entries/flow{path}",
+                                    json=payload, headers=rest_headers) as r:
+                return await r.json()
+
         async with session.ws_connect(f"{url}/api/websocket") as ws:
             await ws.receive_json()  # auth_required
             await ws.send_json({"type": "auth", "access_token": token})
@@ -201,25 +217,32 @@ async def run(url: str, token: str, dry_run: bool) -> int:
             # Config entries created by bootstrap-helpers.py. Home Assistant
             # drops `unique_id` for these helper domains but preserves the
             # title, and the title comes from the manifest -- so match on that.
-            res = await c.cmd(type="config_entries/get")
-            entry_by_title = {
-                (ce.get("domain"), ce.get("title")): ce["entry_id"]
-                for ce in res.get("result", [])
-                if ce.get("domain") in ("generic", "switch_as_x")
-            }
+            async def registries():
+                res = await c.cmd(type="config_entries/get")
+                entry_by_title = {
+                    (ce.get("domain"), ce.get("title")): ce["entry_id"]
+                    for ce in res.get("result", [])
+                    if ce.get("domain") in ("generic", "switch_as_x", "template")
+                }
+                res = await c.cmd(type="config/entity_registry/list")
+                return entry_by_title, res["result"]
 
-            res = await c.cmd(type="config/entity_registry/list")
-            by_id = {e["entity_id"]: e for e in res["result"]}
-            by_unique = {(e.get("platform"), e.get("unique_id")): e
-                         for e in res["result"]}
-            by_config_entry = {e.get("config_entry_id"): e
-                               for e in res["result"]}
+            entry_by_title, registry = await registries()
+            device_of = {e["id"]: e for e in manifest["entities"]
+                         if e.get("device_of")}
 
-            missing = []
-            for e in manifest["entities"]:
+            def find(e: dict, entry_by_title: dict, registry: list):
+                """The registry entry the manifest entity `e` is, wherever it sits."""
                 want_id = e["id"]
-                entry = by_id.get(want_id)
+                by_config_entry = {r.get("config_entry_id"): r for r in registry}
+                # A `device_of` sensor is only ever its template helper: an
+                # entry at its id from anywhere else is the YAML template it
+                # replaced, orphaned, and removed below.
+                if want_id in device_of:
+                    cid = entry_by_title.get(template_key(e))
+                    return by_config_entry.get(cid) if cid else None
 
+                entry = next((r for r in registry if r["entity_id"] == want_id), None)
                 # The entity may exist under a Home-Assistant-derived id.
                 # Template entities carry our own unique_id; config-entry
                 # helpers (generic camera, switch_as_x siren) get a random
@@ -228,7 +251,9 @@ async def run(url: str, token: str, dry_run: bool) -> int:
                 if entry is None:
                     for platform in ("template", "universal", "generic",
                                      "generic_thermostat"):
-                        entry = by_unique.get((platform, slug(want_id)))
+                        entry = next((r for r in registry
+                                      if (r.get("platform"), r.get("unique_id"))
+                                      == (platform, slug(want_id))), None)
                         if entry:
                             break
                 if entry is None:
@@ -237,6 +262,75 @@ async def run(url: str, token: str, dry_run: bool) -> int:
                     cid = entry_by_title.get((helper_domain, e["name"]))
                     if cid:
                         entry = by_config_entry.get(cid)
+                return entry
+
+            # ---- device-bound sensors ----
+            # A camera's motion comes from the motion sensor on the camera's
+            # own device (#29, CONTEXT.md), because the three cameras share an
+            # Area. YAML templates cannot join a device, so these are template
+            # *helpers* -- config entries, with a device selector -- created
+            # through the config flow over the same backing helpers
+            # generate.py writes. Created once; to relink one, delete the
+            # helper in Home Assistant and re-run.
+            created = False
+            for e in device_of.values():
+                if template_key(e) in entry_by_title:
+                    continue
+                target = next((m for m in manifest["entities"]
+                               if m["id"] == e["device_of"]), None)
+                host = find(target, entry_by_title, registry) if target else None
+                device_id = (host or {}).get("device_id")
+                if not device_id:
+                    print(f"  ! {e['id']}: {e['device_of']} has no device yet; "
+                          f"re-run once it has", file=sys.stderr)
+                    continue
+                print(f"+ template helper {e['id']} on the device of {e['device_of']}")
+                changes += 1
+                if dry_run:
+                    continue
+                state = f"input_boolean.fake_state_{slug(e['id'])}"
+                online = f"input_boolean.fake_online_{slug(e['id'])}"
+                step = await flow("", {"handler": "template"})
+                step = await flow(f"/{step['flow_id']}", {"next_step_id": "binary_sensor"})
+                options = {
+                    "name": e["name"],
+                    "state": f"{{{{ is_state('{state}','on') }}}}",
+                    "device_id": device_id,
+                    "additional_options": {
+                        "availability": f"{{{{ is_state('{online}','on') }}}}",
+                    },
+                }
+                if e.get("device_class"):
+                    options["device_class"] = e["device_class"]
+                step = await flow(f"/{step['flow_id']}", options)
+                if step.get("type") != "create_entry":
+                    print(f"  ! {step}", file=sys.stderr)
+                    continue
+                created = True
+            if created:
+                entry_by_title, registry = await registries()
+
+            # The YAML template each of those replaced stays in the registry,
+            # orphaned, holding the manifest id the helper is renamed to.
+            for e in device_of.values():
+                orphan = next((r for r in registry if r["entity_id"] == e["id"]), None)
+                helper = find(e, entry_by_title, registry)
+                if orphan is None or helper is None or orphan["id"] == helper["id"]:
+                    continue
+                print(f"- orphaned {e['id']} ({orphan.get('platform')})")
+                changes += 1
+                if not dry_run:
+                    r = await c.cmd(type="config/entity_registry/remove",
+                                    entity_id=e["id"])
+                    if not r.get("success"):
+                        print(f"  ! {r.get('error')}", file=sys.stderr)
+            if not dry_run:
+                entry_by_title, registry = await registries()
+
+            missing = []
+            for e in manifest["entities"]:
+                want_id = e["id"]
+                entry = find(e, entry_by_title, registry)
                 if entry is None:
                     missing.append(want_id)
                     continue

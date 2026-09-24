@@ -11,6 +11,9 @@
 # kind:  light | switch | lock | alarm | vacuum | select | sensor |
 #        binary_sensor | climate | media_player | camera | siren |
 #        event | button | button_lock
+# device_of: (binary_sensor only) the entity whose device this one joins.
+#        YAML templates cannot join a device, so apply-registry.py builds
+#        these as template helpers linked to it instead.
 # area:  an area_id from HA's area registry, or null for a Singleton
 # labels: see CONTEXT.md label vocabulary
 
@@ -100,6 +103,12 @@ labels:
   - id: page:citofono:right
     name: page:citofono:right
     icon: mdi:doorbell-video
+  # The cameras' own Page (#29): their Feeds, reached by tapping the camera
+  # glance on `page:main`, which opens the Page Placing all of them in
+  # `left` or `right`.
+  - id: page:telecamere:right
+    name: page:telecamere:right
+    icon: mdi:cctv
 
 entities:
   # ---------------- lights ----------------
@@ -239,21 +248,24 @@ entities:
     labels: [security]
 
   # ---------------- cameras ----------------
+  # In `glance` on `page:main`, as the motion glance, and in `right` on
+  # `page:telecamere`, as Feeds (#29). Not in `left`: a 16:9 Feed does not
+  # fit under the gates.
   - id: camera.telecamera_cancello
     name: Telecamera Cancello
     kind: camera
     area: esterno
-    labels: [vision, page:main:left]
+    labels: [vision, page:main:glance, page:telecamere:right]
   - id: camera.telecamera_cancelletto
     name: Telecamera Cancelletto
     kind: camera
     area: esterno
-    labels: [vision, page:main:left]
+    labels: [vision, page:main:glance, page:telecamere:right]
   - id: camera.telecamera_esterno_giardino
     name: Telecamera Giardino
     kind: camera
     area: esterno
-    labels: [vision, page:main:left]
+    labels: [vision, page:main:glance, page:telecamere:right]
 
   # ---------------- climate ----------------
   - id: climate.corridoio_termostato
@@ -382,18 +394,30 @@ entities:
     device_class: door
     initial: 'off'
   - id: binary_sensor.telecamera_cancello_movimento
+    # On the camera's own device, as a real EZVIZ camera's motion sensor
+    # is: that is how a Feed finds its motion, since all three cameras
+    # share `esterno` (CONTEXT.md, Derived).
+    device_of: camera.telecamera_cancello
     name: Movimento Cancello
     kind: binary_sensor
     area: esterno
     device_class: motion
     initial: 'off'
   - id: binary_sensor.telecamera_cancelletto_movimento
+    # On the camera's own device, as a real EZVIZ camera's motion sensor
+    # is: that is how a Feed finds its motion, since all three cameras
+    # share `esterno` (CONTEXT.md, Derived).
+    device_of: camera.telecamera_cancelletto
     name: Movimento Cancelletto
     kind: binary_sensor
     area: esterno
     device_class: motion
     initial: 'off'
   - id: binary_sensor.telecamera_esterno_giardino_movimento
+    # On the camera's own device, as a real EZVIZ camera's motion sensor
+    # is: that is how a Feed finds its motion, since all three cameras
+    # share `esterno` (CONTEXT.md, Derived).
+    device_of: camera.telecamera_esterno_giardino
     name: Movimento Giardino
     kind: binary_sensor
     area: esterno

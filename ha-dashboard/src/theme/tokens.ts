@@ -206,6 +206,11 @@ export function buildTokens(k: Knobs = KNOBS) {
      * round close button (#24): over `touch.primary` because it is the only
      * way out, reached for from a step back.
      *
+     * `feedThumbW` (#29) is the width of the camera Page's strip of
+     * thumbnails beside the big Feed, as in variant B of the prototype:
+     * 16:9 at 300 px is 169 px of picture, so two thumbnails and their
+     * captions sit beside the big Feed at 1280x800 with room to spare.
+     *
      * `tileMaxH` is the cap `Tile` puts on every card built on `CardBase`. A
      * Row's swipe wrapper (#27) takes the same cap, or it grows past the
      * card with the Region and the label it reveals shows below the row
@@ -222,6 +227,7 @@ export function buildTokens(k: Knobs = KNOBS) {
       chipRowLines: 2,
       popupSlotW: 412,
       popupClose: 80,
+      feedThumbW: 300,
       tileMaxH: 100,
     },
   };

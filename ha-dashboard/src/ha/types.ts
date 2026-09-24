@@ -29,6 +29,13 @@ export type Entity = {
   /** Friendly name, already resolved. Italian, from Home Assistant. */
   name: string;
   areaId: AreaId | null;
+  /**
+   * The device this entity belongs to, from the entity registry, or null for
+   * an entity with no device (a template, a helper). Two entities on one
+   * device are one physical thing: a camera and the motion sensor built into
+   * it (CONTEXT.md, Derived).
+   */
+  deviceId: string | null;
   labels: Label[];
   /** Raw Home Assistant state string, e.g. `on`, `off`, `unavailable`. */
   state: string;

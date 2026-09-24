@@ -12,6 +12,7 @@ const entity = (id: string, attributes: Record<string, unknown> = {}, state = 'o
   domain: id.split('.')[0],
   name: id,
   areaId: null,
+  deviceId: null,
   labels: [],
   state,
   attributes,

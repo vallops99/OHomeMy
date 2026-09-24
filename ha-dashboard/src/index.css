@@ -1,1 +1,8 @@
 #root { width: 100%; height: 100%; }
+
+/* A Feed waiting for its first frame (#29): the placeholder breathes, so a
+   picture that is coming reads differently from one that has stopped. */
+@keyframes feed-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.8; }
+}

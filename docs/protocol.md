@@ -119,6 +119,19 @@ different regions produces two different components:
 | `right` | a full row — the Area's name, how many of its lights are on, a brightness slider, its temperature |
 | `footer` | a single tappable block that opens that Area's page |
 
+An entity's shape comes from its domain as well as its region. A camera is the
+one that changes most:
+
+| a camera in… | renders as |
+| --- | --- |
+| `left`, `right` | a **Feed**: its live picture, over WebRTC. The region's cameras render together, where the first one would be: one big Feed, and beside it a strip of the others as 16:9 thumbnails, each captioned with its name and status. The big one is the camera last tapped, or else the first with motion, or else the first. Tapping a thumbnail makes it big. |
+| `glance` | the **motion glance**: one tile for all the region's cameras, saying how many there are and whether any of them sees motion. Tapping it opens the page where every one of those cameras is also placed in `left` or `right`, other than the current page. If several pages qualify, the one whose placement label comes first in Home Assistant's label registry wins. If none does, the tile is not a control and does not look like one. |
+
+A camera's motion is a `motion` binary_sensor on the camera's own device, not
+merely in its Area; a camera with no such sensor never shows motion. Nothing
+labels the glance's page: placing the cameras' Feeds somewhere is what makes
+that page the one it opens.
+
 So the Areas are the navigation. There is no separate nav concept: a page
 button is an **Area** placed in a footer, and tapping it opens
 `page:<that area's id>` — the id from Home Assistant's area registry, not the
@@ -127,8 +140,9 @@ leads to the same page: swipe it right, or tap the chevron at its end. Tapping
 the row itself still toggles its light. Neither route checks that the page has
 anything on it; an empty page says so (see "An empty page renders a message").
 
-Only an Area navigates. An entity in the footer renders as its own component
-and opens nothing: an entity is not an Area, so there is no
+Only an Area navigates, with one exception: the camera glance, which opens the
+page its cameras' Feeds are on (above). An entity in the footer renders as its
+own component and opens nothing: an entity is not an Area, so there is no
 `page:<that entity>` for it to open. `media_player.ovunque` in the footer is
 the transport strip, not a page button.
 
@@ -360,10 +374,10 @@ At 1280x800 the bottom row holds three gates at full width. A fourth fits by
 shrinking every slot, so gate names ellipsise. Past that the row scrolls
 sideways.
 
-The camera is its still picture for now, which is Home Assistant's own camera
-proxy image. The live picture is
-[Camera Feeds](https://github.com/vallops99/homeassistant-frontend/issues/29)'
-concern.
+The camera is its live Feed, cropped to fill the screen, with the Feed's status
+beside the title (`In diretta`, `Connessione…`, and so on). Its session opens
+when the Popup does and closes with it, so a Ring doorbell is not kept
+streaming after the Popup goes.
 
 ### Underneath
 

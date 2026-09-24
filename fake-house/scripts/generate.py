@@ -272,6 +272,12 @@ class Builder:
     def _binary_sensor(self, e: dict) -> None:
         online = self.online_helper(e)
         state = self.bool_helper(e, e.get("initial") == "on")
+        if e.get("device_of"):
+            # A YAML template cannot join a device, and this one must: it is
+            # the motion sensor built into a camera (#29). apply-registry.py
+            # builds it as a template helper linked to the camera's device,
+            # over these same two backing helpers.
+            return
         cfg = {
             "name": e["name"],
             "default_entity_id": e["id"],

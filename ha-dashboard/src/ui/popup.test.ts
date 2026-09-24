@@ -13,6 +13,7 @@ const entity = (id: string, state = 'on'): Entity => ({
   domain: id.split('.')[0],
   name: id,
   areaId: null,
+  deviceId: null,
   labels: [],
   state,
   attributes: {},

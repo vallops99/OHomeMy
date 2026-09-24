@@ -93,16 +93,33 @@ Popup replaces the current one.
 _Avoid_: Modal (that is @hakit's entity dialog), dialog, overlay, alert
 
 **Feed**:
-A camera rendered as its live picture, which is what a camera becomes in
-`left` or `right`. In `glance`, cameras stay a motion glance, and tapping it
-opens the Page where those same cameras are Placed as Feeds.
+A camera rendered as its live picture, over WebRTC and nothing else, which is
+what a camera becomes in `left` or `right`. A Region's cameras render
+together: one big Feed, and beside it a strip of the others as 16:9
+thumbnails, each captioned with its name and status. The big one is the camera
+last tapped; until one is, the first with motion, else the first. Tapping a
+thumbnail makes it big; tapping the big one does nothing, and a Feed never
+navigates. Which one is big starts over each time the Page is opened.
+A Feed is loading (`Connessione…`) until its first frame, then live
+(`In diretta`, or `Movimento`). One whose stream fails or drops says
+`Riconnessione…` and tries again after 5 s, or at once on `Riprova`. A camera
+Home Assistant offers no live stream for says so for good, with no retry
+(`Nessun video in diretta`). An Unavailable camera is a Fault and never plays.
+In `glance`, cameras stay a motion glance, and tapping it opens the Page where
+those same cameras are Placed as Feeds.
 _Avoid_: Stream (the transport, not the thing on the panel), video, snapshot
 
 **Derived**:
-Resolved from a registry query at render time rather than declared. Only one
-Derived rule survives the protocol: a Row consults the `main` Label to find the
-light its slider drives and the entity its temperature comes from. Everything
-else is Placed explicitly.
+Resolved from a registry query at render time rather than declared. Three
+Derived rules survive the protocol, and everything else is Placed explicitly:
+- A Row consults the `main` Label to find the light its slider drives and the
+  entity its temperature comes from.
+- A camera's motion is a `motion` binary_sensor on the camera's own
+  **device**, not its Area: several cameras can share an Area, as the three
+  outdoor ones share Esterno. A camera with no such sensor never shows motion.
+- The camera glance opens the Page where every one of its cameras is also
+  Placed in `left` or `right`, other than the current Page; of several, the
+  first in label-registry order. With none, the glance is not a control.
 _Avoid_: Automatic, implicit, inferred
 
 ### State

@@ -22,8 +22,9 @@
  *     #27 it also opens the Area's Page, on a swipe or its chevron.
  *   - an entity -> dispatched by Domain, in `entitySlot` below, mirroring
  *     `screens/ScreenView.tsx`'s function of the same name: `lock` ->
- *     `GateSlab`, `alarm_control_panel` -> `AlarmTile`, `camera` -> folded
- *     into a `CameraGlance` (see the camera note below), `media_player` ->
+ *     `GateSlab`, `alarm_control_panel` -> `AlarmTile`, `camera` -> a Feed,
+ *     every camera of the Region together in one `Feeds` block (see the
+ *     camera note below), `media_player` ->
  *     `MediaBar`, `light` and `switch` -> `ToggleTile` (#16). A Domain with
  *     no dedicated component falls through to a visible `FaultTile` rather
  *     than rendering nothing -- a Page asking for something unrenderable is a
@@ -78,13 +79,28 @@
  *     special case here or in `Dashboard.tsx`.
  *   - an entity -> by Domain, feeding the existing glance components
  *     (`Hero`, `Stats`, `ChipRow`) rather than being rendered as its own
- *     tile. See `GlanceView` below for the reasoning in full.
+ *     tile. See `GlanceView` below for the reasoning in full. The one
+ *     exception is `camera`: every camera Placed here renders together as
+ *     one `CameraGlance`, the motion glance that opens its cameras' Feeds
+ *     (#29).
  */
-import { houseReport, useAreas, usePower, useEntities, type Area, type Entity, type Placed, type Region } from '../ha';
+import {
+  cameraMoving,
+  feedsPageFor,
+  houseReport,
+  useLabelOrder,
+  usePower,
+  useEntities,
+  type Area,
+  type Entity,
+  type Placed,
+  type Region,
+} from '../ha';
 import { AlarmTile } from './AlarmTile';
 import { CameraGlance } from './CameraGlance';
 import { ChipRow } from './ChipRow';
 import { FaultTile } from './FaultTile';
+import { Feeds } from './Feeds';
 import { GateSlab } from './GateSlab';
 import { Hero } from './Hero';
 import { Icon } from './Icon';
@@ -102,17 +118,15 @@ import { ToggleTile } from './ToggleTile';
  * forward unchanged because the Domain-to-component mapping is not a layout
  * decision the protocol touches.
  *
- * `camera` has no case of its own here: a single camera is not a
- * Region-shaped unit the way a lock or a media player is -- `CameraGlance`
- * renders a *count* of cameras plus their Areas' motion (its own header
- * comment), so it needs every Placed camera together, not one call per
+ * `camera` has no case of its own here: a camera is a Feed, and a Region's
+ * Feeds are one block -- one big Feed and a strip of the others (`Feeds`,
+ * #29) -- so it needs every Placed camera together, not one call per
  * entity. `PlacementView` below pulls every `camera` out of a Region's
  * `Placed[]` before this function ever sees the rest, and renders them as one
- * `CameraGlance` in the position the first camera would otherwise have taken
- * -- ordering (docs/protocol.md: Areas first, then entities, each in
- * registry order) is preserved for what is left, and the fixture's own
- * layout (three cameras placed together in `left`, per the ticket)
- * is exactly this shape. A camera therefore never reaches `entitySlot`.
+ * `Feeds` in the position the first camera would otherwise have taken --
+ * ordering (docs/protocol.md: Areas first, then entities, each in registry
+ * order) is preserved for what is left. A camera therefore never reaches
+ * `entitySlot`.
  */
 function entitySlot(entity: Entity) {
   if (entity.domain === 'lock') {
@@ -305,6 +319,11 @@ function HomeBlock() {
  *     house-wide scan would have found gets what it actually placed.
  *   - the `alarm_control_panel` Placed in `glance` feeds `ChipRow`'s `alarm`
  *     prop, same as `ScreenView.tsx`'s `chips` case did by Label.
+ *   - every `camera` Placed in `glance` renders together as one
+ *     `CameraGlance` under the rest: motion per camera, from its own device
+ *     (`cameraMoving`), and a tap that opens the Page where the same cameras
+ *     are Placed as Feeds (`feedsPageFor`, #29). It is the one tile this
+ *     Region renders, because it is the one thing here that leads somewhere.
  *   - `Stats`'s `lightsOn` count and `ChipRow`'s `report` (the Verdict,
  *     `houseReport`) are **not** sourced from what is Placed in `glance`.
  *     Both are whole-house Derived facts -- "how many zones are lit
@@ -322,6 +341,8 @@ function HomeBlock() {
 function GlanceView({ placed }: { placed: Placed[] }) {
   const entities = useEntities();
   const watts = usePower();
+  const labelOrder = useLabelOrder();
+  const { page, openPage } = useNavigation();
 
   const placedEntities = placed.filter((p): p is { kind: 'entity'; entity: Entity } => p.kind === 'entity').map(p => p.entity);
 
@@ -344,6 +365,9 @@ function GlanceView({ placed }: { placed: Placed[] }) {
   })();
 
   const alarm = placedEntities.find(e => e.domain === 'alarm_control_panel') ?? null;
+
+  const cameras = placedEntities.filter(e => e.domain === 'camera');
+  const feedsPage = feedsPageFor(cameras, labelOrder, page);
 
   // Whole-house Derived, deliberately not narrowed to `placedEntities` -- see
   // the header note above.
@@ -407,6 +431,15 @@ function GlanceView({ placed }: { placed: Placed[] }) {
       <div style={{ flexShrink: 0, paddingTop: 10 }}>
         <ChipRow report={report} alarm={alarm} />
       </div>
+      {cameras.length > 0 && (
+        <div style={{ flexShrink: 0, display: 'flex' }}>
+          <CameraGlance
+            cameras={cameras}
+            moving={cameras.filter(c => cameraMoving(c, entities.values()))}
+            onOpen={feedsPage === null ? undefined : () => openPage(feedsPage)}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -419,19 +452,16 @@ function GlanceView({ placed }: { placed: Placed[] }) {
  * *how* each `Placed` becomes a node, according to which Region called it.
  *
  * Cameras are pulled out ahead of the per-item dispatch and rendered as one
- * `CameraGlance`, in the slot the first camera occupied -- see the note on
- * `entitySlot` above. `useAreas()` is called unconditionally (hooks cannot be
- * conditional) to give `CameraGlance` the Areas it needs for motion lookup;
- * it is cheap, the same whole-house subscription every other hook here reads
- * (`src/ha/registry.ts`), not a second one. `useNavigation()` (#14) is read
- * the same way, unconditionally, to know the current Page name -- needed
- * only to decide whether the `footer` Region also gets a `HomeBlock`.
+ * `Feeds`, in the slot the first camera occupied -- see the note on
+ * `entitySlot` above. `useNavigation()` (#14) is read unconditionally
+ * (hooks cannot be conditional) to know the current Page name: it decides
+ * whether the `footer` Region also gets a `HomeBlock`, and it keys `Feeds`,
+ * so which Feed is big starts over each time a Page is opened.
  *
  * `home={false}` drops that `HomeBlock` whatever the Page: a Popup has no
  * "Casa" block, because its close button is the way out (#28).
  */
 export function PlacementView({ region, placed, home = true }: { region: Region; placed: Placed[]; home?: boolean }) {
-  const areas = useAreas();
   const { page } = useNavigation();
 
   if (region === 'glance') {
@@ -440,7 +470,7 @@ export function PlacementView({ region, placed, home = true }: { region: Region;
 
   const cameras = placed.filter((p): p is { kind: 'entity'; entity: Entity } => p.kind === 'entity' && p.entity.domain === 'camera');
   // The index of the *first* camera in `placed`, so the grouped
-  // `CameraGlance` can be rendered exactly once, in the position the first
+  // `Feeds` can be rendered exactly once, in the position the first
   // camera held -- computed up front rather than with a mutable flag toggled
   // during the `.map` below, which oxlint flags as unsafe render-time state.
   const firstCameraIndex = placed.findIndex(p => p.kind === 'entity' && p.entity.domain === 'camera');
@@ -470,10 +500,10 @@ export function PlacementView({ region, placed, home = true }: { region: Region;
           return <RoomRow key={item.area.id} area={item.area} icon={item.area.icon ?? undefined} />;
         }
         if (item.entity.domain === 'camera') {
-          // Every camera renders once, together, as one `CameraGlance` --
-          // the rest are skipped here, having already been folded into it.
+          // Every camera renders once, together, as one `Feeds` -- the rest
+          // are skipped here, having already been folded into it.
           if (i !== firstCameraIndex) return null;
-          return <CameraGlance key='cameras' cameras={cameras.map(c => c.entity)} areas={areas} />;
+          return <Feeds key={`feeds:${page}`} cameras={cameras.map(c => c.entity)} />;
         }
         return entitySlot(item.entity);
       })}

@@ -6,7 +6,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { resolvePage, type PageLayout, type Region } from './placement';
+import { feedsPageFor, resolvePage, type PageLayout, type Region } from './placement';
 import type { Area, Entity } from './types';
 
 const entity = (id: string, labels: string[]): Entity => ({
@@ -14,6 +14,7 @@ const entity = (id: string, labels: string[]): Entity => ({
   domain: id.split('.')[0],
   name: id,
   areaId: null,
+  deviceId: null,
   labels,
   state: 'on',
   attributes: {},
@@ -123,4 +124,56 @@ test('`ignored` mutes an Area on every one of its placements', () => {
 
   assert.deepEqual(ids(resolvePage([salone], entities(), 'main')), empty);
   assert.deepEqual(ids(resolvePage([salone], entities(), 'cucina')), empty);
+});
+
+// ---- the camera glance's Page (#29) ----
+
+const camera = (id: string, labels: string[]) => entity(`camera.${id}`, labels);
+
+test('the glance opens the Page where every one of its cameras is also Placed in left or right', () => {
+  const cams = [camera('a', ['page_main_glance', 'page_telecamere_right']), camera('b', ['page_main_glance', 'page_telecamere_left'])];
+
+  assert.equal(feedsPageFor(cams, ['page_main_glance', 'page_telecamere_right', 'page_telecamere_left'], 'main'), 'telecamere');
+});
+
+test('a Page holding only some of the cameras does not qualify', () => {
+  const cams = [camera('a', ['page_main_glance', 'page_telecamere_right']), camera('b', ['page_main_glance'])];
+
+  assert.equal(feedsPageFor(cams, ['page_telecamere_right'], 'main'), null);
+});
+
+test('a Page holding the cameras only in glance or footer does not qualify', () => {
+  const cams = [camera('a', ['page_main_glance', 'page_esterno_glance', 'page_casa_footer'])];
+
+  assert.equal(feedsPageFor(cams, ['page_main_glance', 'page_esterno_glance', 'page_casa_footer'], 'main'), null);
+});
+
+test('the current Page never qualifies, even when it holds the cameras as Feeds', () => {
+  const cams = [camera('a', ['page_main_glance', 'page_main_right'])];
+
+  assert.equal(feedsPageFor(cams, ['page_main_glance', 'page_main_right'], 'main'), null);
+});
+
+test('the current Page is compared by slug, as a Page name is everywhere else', () => {
+  const cams = [camera('a', ['page_sala_tv_right', 'page_esterno_right'])];
+
+  assert.equal(feedsPageFor(cams, ['page_sala_tv_right', 'page_esterno_right'], 'sala-tv'), 'esterno');
+});
+
+test('of several qualifying Pages, the first in label-registry order wins', () => {
+  const cams = [camera('a', ['page_zeta_right', 'page_alfa_right']), camera('b', ['page_alfa_left', 'page_zeta_right'])];
+
+  assert.equal(feedsPageFor(cams, ['page_zeta_right', 'page_alfa_right', 'page_alfa_left'], 'main'), 'zeta');
+  assert.equal(feedsPageFor(cams, ['page_alfa_left', 'page_zeta_right', 'page_alfa_right'], 'main'), 'alfa');
+});
+
+test('a Page whose Labels the registry list does not hold yet sorts after those it does', () => {
+  const cams = [camera('a', ['page_nuova_right', 'page_vecchia_right'])];
+
+  assert.equal(feedsPageFor(cams, ['page_vecchia_right'], 'main'), 'vecchia');
+  assert.equal(feedsPageFor(cams, [], 'main'), 'nuova');
+});
+
+test('no cameras opens nothing', () => {
+  assert.equal(feedsPageFor([], ['page_telecamere_right'], 'main'), null);
 });

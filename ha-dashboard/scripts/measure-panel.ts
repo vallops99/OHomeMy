@@ -84,7 +84,8 @@ const VIEWPORTS = [
  * The fixture's own content, as markup.
  *
  * Not arbitrary sample text: these are the entities `fake-house/manifest.yaml`
- * places in `glance` and `left` on `page:main`, with the strings the
+ * places in `glance` and `left` on `page:main` -- the gates in `left`, and
+ * since #29 the cameras in `glance` as its camera tile -- with the strings the
  * panel actually renders ("Un guasto" is `houseReport`'s fault headline,
  * "Nessun movimento" is `CameraGlance`'s quiet state). Two chips rather than
  * one because that is what the house reports today, and the chip row's height
@@ -167,16 +168,6 @@ function leftColumn(chips: ChipSpec[]): string {
         ">21°</div>
         <div style="font-size:${t.font.glanceM}px; color:${t.color.textSecondary}; margin-top:${t.space.sm}px">47% umidità</div>
       </div>
-      <!--
-        The chip row is bounded to one line and scrolls horizontally within it
-        (ADR-0007), so house state can never change the column's height.
-      -->
-      <div id="chips" style="
-        flex:0 0 ${CHIP_BOX_H}px; height:${CHIP_BOX_H}px;
-        display:flex; flex-wrap:wrap; gap:${t.space.sm}px;
-        overflow-x:hidden; overflow-y:auto;
-        scroll-snap-type:y mandatory; align-content:flex-start;
-      ">${chips.map(c => chip(c.text, c.fault)).join('')}</div>
       <div id="stats" style="flex-shrink:0; display:flex; gap:${t.space.xl}px">
         <div>
           <div style="font-size:${t.font.glanceL}px;font-weight:600;color:${t.color.textPrimary}">0</div>
@@ -186,6 +177,37 @@ function leftColumn(chips: ChipSpec[]): string {
           <div style="font-size:${t.font.glanceL}px;font-weight:600;color:${t.color.textPrimary}">320<span style="font-size:${t.font.body}px;color:${t.color.textSecondary}"> W</span></div>
           <div style="font-size:${t.font.caption}px;color:${t.color.textSecondary};text-transform:uppercase;letter-spacing:1px">consumo</div>
         </div>
+      </div>
+      <!--
+        The chip row is bounded to one line and scrolls horizontally within it
+        (ADR-0007), so house state can never change the column's height.
+      -->
+      <div style="flex-shrink:0; padding-top:10px">
+        <div id="chips" style="
+          flex:0 0 ${CHIP_BOX_H}px; height:${CHIP_BOX_H}px;
+          display:flex; flex-wrap:wrap; gap:${t.space.sm}px;
+          overflow-x:hidden; overflow-y:auto;
+          scroll-snap-type:y mandatory; align-content:flex-start;
+        ">${chips.map(c => chip(c.text, c.fault)).join('')}</div>
+      </div>
+      <!--
+        The camera glance (#29): the fixture's cameras are Placed in \`glance\`
+        now, rendered under the chips. A control since it opens the cameras'
+        Page, so its padding is \`sm\` rather than \`md\` -- 74 px, over
+        \`touch.primary\` and 12 px under what \`md\` cost, which the column did
+        not have at 768.
+      -->
+      <div id="camera-glance" style="
+        flex:0 0 auto; border-radius:${t.radius.tile}px; background:${t.color.surface};
+        border:1px solid ${t.color.border};
+        padding:${t.space.sm}px ${t.space.lg}px; box-sizing:border-box;
+        display:flex; flex-direction:column; justify-content:center; gap:${t.space.xs}px;
+      ">
+        <div style="display:flex;align-items:center;gap:${t.space.sm}px">
+          <span style="width:32px;height:32px;flex:0 0 32px;display:block;background:${t.color.textSecondary};border-radius:4px"></span>
+          <span style="font-size:${t.font.glanceM}px;font-weight:600;color:${t.color.textPrimary}">3 camere</span>
+        </div>
+        <span style="font-size:${t.font.body}px;color:${t.color.textPrimary};opacity:.85">Nessun movimento</span>
       </div>
     </div>
 
@@ -199,17 +221,6 @@ function leftColumn(chips: ChipSpec[]): string {
       display:flex; flex-direction:column; gap:${t.space.sm}px;
     ">
       ${slab('Cancello')}${slab('Cancelletto')}
-      <div id="camera-glance" style="
-        flex:0 0 auto; border-radius:${t.radius.tile}px; background:${t.color.surface};
-        padding:${t.space.md}px ${t.space.lg}px; box-sizing:border-box;
-        display:flex; flex-direction:column; justify-content:center; gap:${t.space.xs}px;
-      ">
-        <div style="display:flex;align-items:center;gap:${t.space.sm}px">
-          <span style="width:32px;height:32px;flex:0 0 32px;display:block;background:${t.color.textSecondary};border-radius:4px"></span>
-          <span style="font-size:${t.font.glanceM}px;font-weight:600;color:${t.color.textPrimary}">3 camere</span>
-        </div>
-        <span style="font-size:${t.font.body}px;color:${t.color.textPrimary};opacity:.85">Nessun movimento</span>
-      </div>
     </div>
   </div>`;
 }
@@ -345,31 +356,31 @@ const failures: Failure[] = [];
 
 for (const { w, h, why } of VIEWPORTS) {
   for (const [setName, chips] of Object.entries(CHIP_SETS)) {
-  const page = await browser.newPage({ viewport: { width: w, height: h } });
-  await page.setContent(panel(chips));
-  const found = (await page.evaluate(probe)) as { rule: string; detail: string }[];
-  const space = (await page.evaluate(headroom)) as {
-    glanceNeeds: number;
-    glanceHas: number;
-    slack: number;
-    leftNeeds: number;
-    leftHas: number;
-  } | null;
-  const label = `${w}x${h} ${setName}`;
+    const page = await browser.newPage({ viewport: { width: w, height: h } });
+    await page.setContent(panel(chips));
+    const found = (await page.evaluate(probe)) as { rule: string; detail: string }[];
+    const space = (await page.evaluate(headroom)) as {
+      glanceNeeds: number;
+      glanceHas: number;
+      slack: number;
+      leftNeeds: number;
+      leftHas: number;
+    } | null;
+    const label = `${w}x${h} ${setName}`;
 
-  if (found.length === 0) {
-    console.log(`  PASS  ${label}  (${why})`);
-  } else {
-    console.log(`  FAIL  ${label}  (${why})`);
-    for (const f of found) failures.push({ viewport: label, ...f });
-  }
-  if (space !== null) {
-    console.log(
-      `        glance needs ${space.glanceNeeds} / has ${space.glanceHas} (${space.slack >= 0 ? '+' : ''}${space.slack}px slack)` +
-        `, left needs ${space.leftNeeds} / has ${space.leftHas}`
-    );
-  }
-  await page.close();
+    if (found.length === 0) {
+      console.log(`  PASS  ${label}  (${why})`);
+    } else {
+      console.log(`  FAIL  ${label}  (${why})`);
+      for (const f of found) failures.push({ viewport: label, ...f });
+    }
+    if (space !== null) {
+      console.log(
+        `        glance needs ${space.glanceNeeds} / has ${space.glanceHas} (${space.slack >= 0 ? '+' : ''}${space.slack}px slack)` +
+          `, left needs ${space.leftNeeds} / has ${space.leftHas}`
+      );
+    }
+    await page.close();
   }
 }
 

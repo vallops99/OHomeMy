@@ -136,7 +136,7 @@ export function Panel({ glance, left, right, footer }: PanelProps) {
           // for its content (the 112 px hero, the chip row), not sized against
           // the right column's Area rows.
           //
-          // `left` (today: the gates, then the camera glance) is
+          // `left` (today: the gates; the camera glance moved to `glance`, #29) is
           // pinned at its own full, fixed size and anchored to the foot of
           // the column with `marginTop: auto` -- the same trick
           // `screens/ScreenView.tsx`'s `cameras` case used ("everything from

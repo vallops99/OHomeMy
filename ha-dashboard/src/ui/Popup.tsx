@@ -6,7 +6,12 @@
  * first camera in `right` fills the screen as the background, and everything
  * else floats as one centred row along the bottom, each thing in its own
  * Region's Rendering contract via `PlacementView`. The header carries the
- * title and the one way out, the close button.
+ * title, the Feed's status, and the one way out, the close button.
+ *
+ * The background is the camera's live Feed (#29), its session opened when
+ * the Popup mounts and closed when it unmounts -- for the Ring, a cloud
+ * session that keeps the doorbell streaming, so it must not outlive the
+ * Popup (docs/research/camera-streaming.md §4).
  *
  * This component never decides whether it is open. `Dashboard` mounts it
  * while the helper names a Page and unmounts it when the helper is cleared;
@@ -19,7 +24,9 @@
  * cleared, which closes the Popup on every panel.
  */
 import { useMemo, useRef, type PointerEvent } from 'react';
-import { useAreas, useCameraStill, usePage, type Entity } from '../ha';
+import { cameraMoving, useAreas, useEntities, useFeed, usePage } from '../ha';
+import { FeedFrame } from './Feed';
+import { TONE_COLOR, feedPhase, feedStatus } from './feeds';
 import { Icon } from './Icon';
 import { NavigationProvider, useNavigation, type Navigation } from './NavigationContext';
 import { EmptyPageMessage, PlacementView } from './PlacementView';
@@ -53,6 +60,10 @@ export function Popup({ page, onClose, onActivity }: PopupProps) {
   const areas = useAreas();
   const shape = popupShape(layout);
   const title = popupTitle(page, areas);
+  const entities = useEntities();
+  // An Unavailable camera is a Fault: no session, and no retrying.
+  const feed = useFeed(shape.feed === null || shape.feed.unavailable ? null : shape.feed.id);
+  const status = shape.feed === null ? null : feedStatus(feedPhase(shape.feed, feed), cameraMoving(shape.feed, entities.values()));
 
   const outer = useNavigation();
   const navigation = useMemo<Navigation>(
@@ -88,7 +99,7 @@ export function Popup({ page, onClose, onActivity }: PopupProps) {
         style={{ position: 'fixed', inset: 0, zIndex: Z_POPUP, background: t.color.ground, overflow: 'hidden' }}
       >
         {shape.feed ? (
-          <FeedStill camera={shape.feed} />
+          <FeedFrame camera={shape.feed} feed={feed} size='full' />
         ) : (
           shape.empty && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>
@@ -112,16 +123,29 @@ export function Popup({ page, onClose, onActivity }: PopupProps) {
           }}
         >
           {/*
-            Title only. #24's header also carried an "In diretta" status, but
-            the background is a still until the live Feed (#29): a Popup
-            claiming to be live over a picture that is not would be a lie.
-            The status arrives with the Feed.
+            The title, and beside it the Feed's status (#24): `In diretta`
+            only once the picture behind is live, so the header never claims
+            a live picture that is not there.
           */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: t.space.md, minWidth: 0, color: t.color.textPrimary }}>
-            <Icon name={title.icon} size={Math.round(t.font.glanceL * 1.1)} />
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: t.space.md, minWidth: 0, color: t.color.textPrimary }}>
+            <span style={{ alignSelf: 'center', display: 'flex' }}>
+              <Icon name={title.icon} size={Math.round(t.font.glanceL * 1.1)} />
+            </span>
             <span style={{ fontSize: t.font.glanceL, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {title.name}
             </span>
+            {status && (
+              <span
+                style={{
+                  flexShrink: 0,
+                  fontSize: t.font.body,
+                  fontWeight: 600,
+                  color: TONE_COLOR[status.tone],
+                }}
+              >
+                {status.text}
+              </span>
+            )}
           </div>
           <CloseButton onClose={onClose} />
         </div>
@@ -190,49 +214,5 @@ function CloseButton({ onClose }: { onClose: () => void }) {
     >
       <Icon name='mdi:close' size={size / 2} />
     </button>
-  );
-}
-
-/**
- * The camera behind the Popup, edge to edge.
- *
- * A still for now -- Home Assistant's own camera proxy picture -- and the
- * seam where the live Feed goes when #29 builds it. An Unavailable camera is
- * a Fault and says so, rather than leaving a black screen that could be a
- * picture of the dark.
- */
-function FeedStill({ camera }: { camera: Entity }) {
-  const src = useCameraStill(camera);
-
-  if (camera.unavailable) {
-    return (
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: t.space.sm,
-          background: t.color.faultSurface,
-          color: t.color.fault,
-        }}
-      >
-        <Icon name='mdi:cctv-off' size={64} />
-        <span style={{ fontSize: t.font.glanceM, fontWeight: 600 }}>{camera.name}: non disponibile</span>
-      </div>
-    );
-  }
-
-  // Reachable but with no picture to give: the plain ground, as if no camera.
-  if (src === null) return null;
-
-  return (
-    <img
-      src={src}
-      alt={camera.name}
-      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-    />
   );
 }

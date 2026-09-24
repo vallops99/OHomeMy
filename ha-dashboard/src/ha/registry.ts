@@ -10,7 +10,7 @@
  * lets the placement resolver run under plain Node in its tests.
  */
 import { useHass, useRegistryData } from '@hakit/core';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { resolvePage, type PageLayout } from './placement';
 import type { Area, AreaId, Entity, EntityId, Label } from './types';
 
@@ -64,6 +64,7 @@ export const isUnavailableState = (state: string | undefined) => state === 'unav
 type RegistryEntry = {
   entity_id?: string;
   area_id?: string | null;
+  device_id?: string | null;
   labels?: string[];
   /**
    * Home Assistant's own marker for plumbing: `config` or `diagnostic`. It
@@ -119,6 +120,7 @@ export function useEntities(): Map<EntityId, Entity> {
         domain,
         name: (attributes.friendly_name as string) ?? id,
         areaId: entry.area_id ?? null,
+        deviceId: entry.device_id ?? null,
         labels,
         state,
         attributes,
@@ -200,7 +202,6 @@ export function useByDomain(domain: string): Entity[] {
   );
 }
 
-/** Every entity carrying a Label, wherever it lives. Singletons are found this way. */
 /**
  * What the house is drawing right now, in watts.
  *
@@ -228,20 +229,41 @@ export function usePower(): number | null {
 }
 
 /**
- * A camera's still picture as a URL the browser can load, or `null` when
- * Home Assistant offers none (an Unavailable camera has no `entity_picture`).
+ * Every Label id, in Home Assistant's label-registry order, kept current as
+ * Labels are added and removed.
  *
- * `entity_picture` is Home Assistant's own camera proxy path, carrying an
- * access token that Home Assistant rotates by changing the attribute -- so a
- * new URL arrives through ordinary state updates and the picture follows it.
- * A still, not a stream: the Popup's stand-in until the live Feed (#29).
+ * Only the camera glance needs it, to pick between several Pages that could
+ * show its Feeds (#29, `feedsPageFor`). @hakit keeps no label registry of its
+ * own, so this asks for it over the websocket and asks again whenever Home
+ * Assistant announces a change. Empty until the first answer: a glance then
+ * picks by Page name, and corrects itself a moment later.
  */
-export function useCameraStill(camera: Entity | null): string | null {
-  const joinHassUrl = useHass(s => s.helpers.joinHassUrl);
-  const path = camera?.attributes.entity_picture;
-  return typeof path === 'string' && path !== '' ? joinHassUrl(path) : null;
+export function useLabelOrder(): Label[] {
+  const connection = useHass(s => s.connection);
+  const [order, setOrder] = useState<Label[]>([]);
+
+  useEffect(() => {
+    if (!connection) return;
+    let live = true;
+    const load = () =>
+      connection
+        .sendMessagePromise<{ label_id: string }[]>({ type: 'config/label_registry/list' })
+        .then(labels => {
+          if (live) setOrder(labels.map(l => l.label_id));
+        })
+        .catch(() => {});
+    load();
+    const unsubscribe = connection.subscribeEvents(load, 'label_registry_updated');
+    return () => {
+      live = false;
+      unsubscribe.then(unsub => unsub()).catch(() => {});
+    };
+  }, [connection]);
+
+  return order;
 }
 
+/** Every entity carrying a Label, wherever it lives. Singletons are found this way. */
 export function useByLabel(label: Label): Entity[] {
   const entities = useEntities();
   return useMemo(

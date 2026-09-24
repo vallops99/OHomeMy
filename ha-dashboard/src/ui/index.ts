@@ -20,6 +20,7 @@ export { Stats, type StatsProps } from './Stats';
 export { ChipRow, type ChipRowProps } from './ChipRow';
 export { AlarmTile, type AlarmTileProps } from './AlarmTile';
 export { CameraGlance, type CameraGlanceProps } from './CameraGlance';
+export { Feeds, type FeedsProps } from './Feeds';
 export { MediaBar, type MediaBarProps } from './MediaBar';
 export { FaultTile, type FaultTileProps } from './FaultTile';
 export { PlacementView, EmptyPageMessage } from './PlacementView';

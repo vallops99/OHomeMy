@@ -41,6 +41,17 @@ generator picks per domain. All three routes produce genuine entities:
 | event | trigger-based `template` event, fired by pressing an `input_button` |
 | button | `template` button that does nothing when pressed |
 | lock over a button (`button_lock`) | `template` lock that presses the button; the real house needs the same wrapper (docs/protocol.md, "Popups") |
+| binary_sensor with `device_of` | `template` **helper** (a config entry) linked to that entity's device, created by `apply-registry.py` |
+
+A camera's motion is the motion sensor on the camera's own device (CONTEXT.md,
+Derived), and YAML templates cannot join a device. So the three camera motion
+sensors carry `device_of: camera.<id>` in the manifest: `generate.py` still
+writes their backing helpers but no YAML template, and `apply-registry.py`
+creates each one through Home Assistant's template config flow with the
+camera's device selected. It creates each once; to relink one, delete that
+helper in Home Assistant and re-run. Being on a device, it shows in Home
+Assistant as "Telecamera Cancello Movimento Cancello" (the device name comes
+first), which the panel never displays.
 
 Each fake is backed by helper entities that hold its state, so anything can be
 driven from outside:
@@ -116,9 +127,21 @@ python fake-house/scripts/scene.py sera    --token-from ha-dashboard/.env.develo
 ## Known limits
 
 - **Cameras are a still image, not a stream.** The `generic` camera platform is
-  config-flow only, and live streaming is its own open question (see map #1).
-  The entity is real and sits in the right Area, which is what the dashboard
-  needs to lay out; what it *shows* is a placeholder.
+  config-flow only, and the fakes have no stream source, so Home Assistant
+  offers no live stream for them: their Feeds say "Nessun video in diretta",
+  which is the panel's real answer for such a camera. Their `fake_online_*`
+  helpers exist but do not drive a generic camera, so a camera Fault cannot
+  be produced on demand.
+
+  To see a live Feed, give one camera a stream in Home Assistant (Settings,
+  the camera's generic entry, Configure): a clip in `config/www/`, say one
+  made with `ffmpeg -f lavfi -i testsrc=size=640x360:rate=15 -t 600 -c:v libx264
+  -profile:v baseline -pix_fmt yuv420p fake-feed.mp4`, as the stream source
+  `http://127.0.0.1:8123/local/fake-feed.mp4#input=file`. go2rtc, which ships
+  with Home Assistant, then serves it over WebRTC. If the Feed fails with
+  "Stream source is not supported by go2rtc" after a restart, reload the go2rtc
+  integration. Remove the stream source afterwards; `bootstrap-helpers.py`
+  also resets it.
 - **The entity registry refuses to rename across domains.** This is why sirens
   are a template switch wrapped by `switch_as_x` rather than a renamed switch.
 - **`default_entity_id` only exists on the `template` platform.** The other

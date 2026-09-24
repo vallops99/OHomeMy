@@ -159,3 +159,51 @@ export function resolvePage(areas: Area[], entities: Map<string, Entity>, page: 
 
   return layout;
 }
+
+/**
+ * The Page a camera glance opens (#29): the Page where *every* one of the
+ * glance's cameras is also Placed in `left` or `right`, and so renders as a
+ * Feed. Derived, with no Label of its own: moving the cameras' Feeds to
+ * another Page moves where the glance leads.
+ *
+ * The current Page never qualifies, since opening it would change nothing.
+ * Of several Pages that qualify, the one whose Placement Label comes first in
+ * Home Assistant's label registry wins (`labelOrder`, label ids in registry
+ * order); a Label the list does not hold sorts after every one it does, then
+ * by Page name, so the answer never depends on the order the cameras came in.
+ * `null` when no Page qualifies, and then the glance is not a control.
+ */
+export function feedsPageFor(cameras: Entity[], labelOrder: Label[], currentPage: string): string | null {
+  if (cameras.length === 0) return null;
+  const current = slugify(currentPage);
+
+  // Each Page mapped to the registry positions of the Labels that put a
+  // camera there as a Feed; a Page stays a candidate only while every camera
+  // so far has one.
+  const position = (label: Label) => {
+    const i = labelOrder.indexOf(label);
+    return i === -1 ? Number.POSITIVE_INFINITY : i;
+  };
+  let candidates: Map<string, number> | null = null;
+  for (const camera of cameras) {
+    const here = new Map<string, number>();
+    for (const label of camera.labels) {
+      const placement = parsePlacement(label);
+      if (placement === null || (placement.region !== 'left' && placement.region !== 'right')) continue;
+      if (placement.page === current) continue;
+      here.set(placement.page, Math.min(here.get(placement.page) ?? Number.POSITIVE_INFINITY, position(label)));
+    }
+    if (candidates === null) {
+      candidates = here;
+      continue;
+    }
+    for (const [page, at] of candidates) {
+      const also = here.get(page);
+      if (also === undefined) candidates.delete(page);
+      else candidates.set(page, Math.min(at, also));
+    }
+  }
+
+  const ranked = [...(candidates ?? new Map<string, number>())].sort(([pa, a], [pb, b]) => (a === b ? pa.localeCompare(pb) : a - b));
+  return ranked[0]?.[0] ?? null;
+}
