@@ -23,6 +23,8 @@ export { CameraGlance, type CameraGlanceProps } from './CameraGlance';
 export { MediaBar, type MediaBarProps } from './MediaBar';
 export { FaultTile, type FaultTileProps } from './FaultTile';
 export { PlacementView, EmptyPageMessage } from './PlacementView';
+export { Popup, type PopupProps } from './Popup';
+export { popupPage } from './popup';
 export { NavigationProvider, useNavigation, type Navigation } from './NavigationContext';
 export { HakitTheme } from './HakitTheme';
 export { stateLabel } from './stateLabel';

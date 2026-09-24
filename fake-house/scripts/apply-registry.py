@@ -13,12 +13,14 @@ with fake-house/manifest.yaml over the websocket API:
   * renames entities whose generated id differs from the manifest id
     (siren.* fakes are built as template switches; see generate.py),
   * creates the `input_boolean.panel_glance` helper that gates the `glance`
-    region (docs/protocol.md, #13 item 4).
+    region (docs/protocol.md, #13 item 4),
+  * creates the two Popup helpers, `input_text.panel_popup` and
+    `input_button.panel_popup_activity` (docs/protocol.md "Popups", #28).
 
-`input_boolean` is an editable-storage helper, not a config-flow integration:
-it has no `config_entries` row for bootstrap-helpers.py to write, and it lives
-behind its own `input_boolean/create` websocket command instead. It is created
-here, against the live instance, rather than there.
+These are editable-storage helpers, not config-flow integrations: they have no
+`config_entries` row for bootstrap-helpers.py to write, and each lives behind
+its own `<domain>/create` websocket command instead. They are created here,
+against the live instance, rather than there.
 
 Idempotent: running it twice changes nothing the second time.
 
@@ -47,6 +49,17 @@ MANIFEST = HERE.parent / "manifest.yaml"
 GLANCE_TOGGLE = "input_boolean.panel_glance"
 GLANCE_TOGGLE_NAME = "Riquadro Colpo d'Occhio"
 GLANCE_TOGGLE_ICON = "mdi:eye-outline"
+
+# The Popup's helpers (docs/protocol.md "Popups", ADR-0009). Facts about the
+# panel too, found by fixed id like the glance toggle. Each entry: the
+# English name `<domain>/create` slugifies into the wanted id, the Italian
+# name and icon it is renamed to, and any settings of its own.
+POPUP_HELPERS = [
+    ("input_text.panel_popup", "Panel Popup", "Popup del pannello",
+     "mdi:dock-window", {"min": 0, "max": 255, "mode": "text"}),
+    ("input_button.panel_popup_activity", "Panel Popup Activity",
+     "Tocco sul popup", "mdi:gesture-tap", {}),
+]
 
 
 def read_token_from_env_file(path: pathlib.Path) -> str:
@@ -319,6 +332,42 @@ async def run(url: str, token: str, dry_run: bool) -> int:
                                     icon=GLANCE_TOGGLE_ICON)
                     if not r.get("success"):
                         print(f"  ! {r.get('error')}", file=sys.stderr)
+
+            # ---- popup helpers ----
+            # Same dance as the glance toggle above: create under an English
+            # name that slugifies to the fixed id, then rename. Neither is
+            # given a value: an empty `input_text` is a closed Popup, which
+            # is the state a fresh house should start in.
+            for entity_id, create_name, name, icon, extra in POPUP_HELPERS:
+                domain, helper_id = entity_id.split(".", 1)
+                res = await c.cmd(type=f"{domain}/list")
+                existing = {h["id"]: h for h in res["result"]}
+                h = existing.get(helper_id)
+                if h is None:
+                    print(f"+ helper {entity_id}")
+                    changes += 1
+                    if dry_run:
+                        continue
+                    r = await c.cmd(type=f"{domain}/create", name=create_name, **extra)
+                    if not r.get("success"):
+                        print(f"  ! {r.get('error')}", file=sys.stderr)
+                        continue
+                    if r["result"]["id"] != helper_id:
+                        print(f"  ! created as {domain}.{r['result']['id']}, "
+                              f"not {entity_id}", file=sys.stderr)
+                        continue
+                elif h.get("name") == name and h.get("icon") == icon:
+                    continue
+                else:
+                    print(f"~ helper {entity_id}: name/icon out of date")
+                    changes += 1
+                    if dry_run:
+                        continue
+                r = await c.cmd(type=f"{domain}/update",
+                                **{f"{domain}_id": helper_id},
+                                name=name, icon=icon, **extra)
+                if not r.get("success"):
+                    print(f"  ! {r.get('error')}", file=sys.stderr)
 
             if missing:
                 print(f"\n{len(missing)} manifest entities not found in Home "

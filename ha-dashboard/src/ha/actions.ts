@@ -17,6 +17,10 @@ export type Actions = {
   setBrightness: (entity: Entity, percent: number) => void;
   lock: (entity: Entity) => void;
   unlock: (entity: Entity) => void;
+  /** Set an `input_text` helper's value; `''` clears it. */
+  setText: (entityId: EntityId, value: string) => void;
+  /** Press a `button` or `input_button`. */
+  press: (entityId: EntityId) => void;
   /** Escape hatch for Domains with no verb of their own yet. */
   call: (domain: string, service: string, entityId: EntityId, data?: Record<string, unknown>) => void;
 };
@@ -65,6 +69,12 @@ export function useActions(): Actions {
         if (entity.unavailable) return;
         call('lock', 'unlock', entity.id);
       },
+      // By id, not by `Entity`, and with no Unavailable guard: these drive
+      // the panel's own helpers (Dashboard.tsx), which are named rather than
+      // rendered. A call to a helper that is not there fails in Home
+      // Assistant and changes nothing, which is the right outcome anyway.
+      setText: (entityId, value) => call('input_text', 'set_value', entityId, { value }),
+      press: entityId => call(entityId.split('.')[0], 'press', entityId),
     }),
     [call]
   );

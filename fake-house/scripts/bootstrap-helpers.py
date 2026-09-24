@@ -56,14 +56,14 @@ def now() -> str:
 
 
 def entry(domain: str, title: str, data: dict, options: dict,
-          unique_id: str | None) -> dict:
+          unique_id: str | None, entry_id: str | None = None) -> dict:
     return {
         "created_at": now(),
         "data": data,
         "disabled_by": None,
         "discovery_keys": {},
         "domain": domain,
-        "entry_id": ulid(),
+        "entry_id": entry_id or ulid(),
         "minor_version": 1,
         "modified_at": now(),
         "options": options,
@@ -96,7 +96,14 @@ def main() -> int:
     blob = json.loads(store.read_text())
     entries = blob["data"]["entries"]
 
-    # Drop anything we previously created, so this is idempotent.
+    # Drop anything we previously created, so this is idempotent -- but keep
+    # each one's `entry_id` for its replacement. Home Assistant ties the
+    # entity to the entry id: a fresh one on every run orphans the old entity
+    # (left `unavailable` under the manifest's id) and creates a second one
+    # under a derived id, which `apply-registry.py` then cannot rename onto
+    # the id the orphan still holds.
+    kept_ids = {e["unique_id"]: e["entry_id"] for e in entries
+                if (e.get("unique_id") or "").startswith(MARKER)}
     before = len(entries)
     entries = [e for e in entries
                if not (e.get("unique_id") or "").startswith(MARKER)]
@@ -125,6 +132,7 @@ def main() -> int:
                     "limit_refetch_to_url_change": False,
                 },
                 f"{MARKER}:{slug(e['id'])}",
+                kept_ids.get(f"{MARKER}:{slug(e['id'])}"),
             ))
             added += 1
         elif e["kind"] == "siren":
@@ -139,6 +147,7 @@ def main() -> int:
                     "target_domain": "siren",
                 },
                 f"{MARKER}:{slug(e['id'])}",
+                kept_ids.get(f"{MARKER}:{slug(e['id'])}"),
             ))
             added += 1
 

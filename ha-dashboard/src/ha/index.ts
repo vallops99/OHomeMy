@@ -13,6 +13,7 @@ export {
   useByDomain,
   useEntities,
   useEntityState,
+  useCameraStill,
   usePower,
   pickMain,
   isUnavailableState,

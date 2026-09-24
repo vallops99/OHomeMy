@@ -18,7 +18,7 @@ real one -- real service calls, real state machine, real `unavailable`.
 
 ## The manifest is the source of truth
 
-`manifest.yaml` declares all 57 entities once: entity id, Area, Labels, and the
+`manifest.yaml` declares all 62 entities once: entity id, Area, Labels, and the
 `kind` that decides how it is faked. Entity ids are taken verbatim from the
 existing `Casa Carina` Lovelace dashboard, which is the statement of intent for
 the real house.
@@ -38,6 +38,9 @@ generator picks per domain. All three routes produce genuine entities:
 | climate | `generic_thermostat` over a faked switch + sensor |
 | camera | `generic` camera config entry (a still image) |
 | siren | template switch wrapped by `switch_as_x` |
+| event | trigger-based `template` event, fired by pressing an `input_button` |
+| button | `template` button that does nothing when pressed |
+| lock over a button (`button_lock`) | `template` lock that presses the button; the real house needs the same wrapper (docs/protocol.md, "Popups") |
 
 Each fake is backed by helper entities that hold its state, so anything can be
 driven from outside:
@@ -48,6 +51,7 @@ input_boolean.fake_state_<slug>    on/off
 input_number.fake_level_<slug>     brightness / volume
 input_select.fake_mode_<slug>      alarm mode, vacuum state, select options
 input_number.fake_value_<slug>     numeric sensor value
+input_button.fake_fire_<slug>      fires an `event` entity (a doorbell ring)
 ```
 
 **Every** fake entity has an `fake_online_*` switch, so a visible fault can be
@@ -61,9 +65,14 @@ produced on demand -- the design renders `unavailable` rather than hiding it.
 # 1. generate the packages
 python fake-house/scripts/generate.py --config-dir ~/projects/home-assistant/config
 
-# 2. config-entry helpers (cameras, sirens) -- Home Assistant must be stopped
+# 2. config-entry helpers (cameras, sirens) -- Home Assistant must be stopped.
+#    `.storage` belongs to the container's root, so run the script in a
+#    throwaway container from the same image:
 docker stop ha-local
-python fake-house/scripts/bootstrap-helpers.py --config-dir ~/projects/home-assistant/config
+docker run --rm --entrypoint python \
+  -v ~/projects/home-assistant/config:/config -v "$PWD/fake-house:/fh" \
+  ghcr.io/home-assistant/home-assistant:stable \
+  /fh/scripts/bootstrap-helpers.py --config-dir /config
 docker start ha-local
 
 # 3. Areas, Labels, and the entity ids the non-template platforms don't control
@@ -77,7 +86,10 @@ homeassistant:
   packages: !include_dir_named packages
 ```
 
-Steps 1 and 3 are idempotent; re-run them freely. Step 3 is also the one to
+All three steps are idempotent; re-run them freely. Step 2 keeps each config
+entry's id, so re-running it leaves the entities where they are. Step 3 also
+creates the panel's own helpers: `input_boolean.panel_glance`,
+`input_text.panel_popup` and `input_button.panel_popup_activity`. Step 3 is also the one to
 re-run after editing Areas or Labels in the manifest.
 
 `generate.py --clean` removes the generated packages;
@@ -112,5 +124,5 @@ python fake-house/scripts/scene.py sera    --token-from ha-dashboard/.env.develo
 - **`default_entity_id` only exists on the `template` platform.** The other
   platforms name entities from their title, so `apply-registry.py` renames them
   afterwards. That rename is same-domain, which the registry does allow.
-- **Helper entities are visible in Home Assistant.** 129 `input_*` helpers back
+- **Helper entities are visible in Home Assistant.** 134 `input_*` helpers back
   the fakes. They carry no Area, so the dashboard's Area queries never see them.

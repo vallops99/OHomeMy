@@ -84,7 +84,10 @@ _Avoid_: Tile, card, area widget
 A Page presented as an overlay on top of whatever Page is current, opened and
 closed by Home Assistant rather than by a tap on the panel. Its contents are
 Placed like any other Page's; "popup" names how the Page is shown, not a Page.
-Closes only on its close button or when Home Assistant closes it.
+House-wide: every panel shows the same Popup, and closing it on one closes it
+on all. Closes on its close button, when Home Assistant closes it, or when
+something inside it navigates -- never on its own. At most one at a time: a new
+Popup replaces the current one.
 _Avoid_: Modal (that is @hakit's entity dialog), dialog, overlay, alert
 
 **Feed**:

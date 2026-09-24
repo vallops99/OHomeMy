@@ -143,7 +143,8 @@ self-referential one falls out of that move by accident every time.
 You do not label a way home. On every page except `page:main`, the renderer
 prepends a "Casa" block to the footer, in front of whatever you placed there.
 Tapping it returns to `page:main`. `page:main` itself never gets one — it has
-nowhere to go back to.
+nowhere to go back to. A page shown as a Popup doesn't get one either: its close
+button is the way out (see "Popups", below).
 
 This is the one piece of the panel's layout that is not declared by a label:
 every page needs a way out, and a page whose house-editor forgot to label a
@@ -282,6 +283,219 @@ area clima:             [page:corridoio:footer]   # tap -> page:clima
 # What it must NOT carry is page:corridoio:footer -- a block on the corridoio
 # page that opens the corridoio page. The renderer skips it.
 ```
+
+## Popups
+
+A **Popup** is a page shown over the panel instead of opened on it: full
+screen, on top of whatever page is current, and opened and closed by Home
+Assistant rather than by a tap. Its contents are placed like any other page's.
+"Popup" names how a page is shown, not a kind of page. The doorbell is the case
+it exists for: someone rings, and the panel shows the gate camera with the
+gates in front of it.
+
+Home Assistant signals the panel through a **helper's state**, not an event.
+[ADR-0009](adr/0009-popups-are-helper-state-not-events.md) records why, from
+[the signalling research](research/panel-signalling.md): an event needs an
+admin token and is lost while the tablet's screen is off, and a helper's state
+is sent again on every reconnect.
+
+### The two helpers
+
+| helper | what it does |
+| --- | --- |
+| `input_text.panel_popup` | holds the **bare name** of the page to show (`citofono`, not `page:citofono`); empty when no Popup is open |
+| `input_button.panel_popup_activity` | pressed by the panel when someone touches an open Popup |
+
+Both are found by **fixed entity id**, like `input_boolean.panel_glance`, and
+not by a label: they are facts about the panel, not about the house. Create
+them in Home Assistant's helpers UI with exactly these ids.
+
+### Opening, replacing, closing
+
+- **Open**: set `input_text.panel_popup` to a page name. The value is trimmed.
+- **Replace**: set it to another name. There is at most one Popup and no stack.
+- **Close**: set it to `""`. The Popup's close button does exactly this, and
+  it is the only thing the panel ever writes there.
+- An empty value, `unknown`, `unavailable`, or no helper at all means **no
+  Popup**. When the helper comes back its state is sent again, and the Popup
+  reappears if it is still set.
+
+The helper is the only source of truth. The panel never closes a Popup on its
+own and never hides one ahead of the helper: pressing close asks Home
+Assistant to clear it, and the Popup goes away when the cleared value comes
+back. Because every panel reads the same helper, **a Popup is house-wide**:
+every panel shows it, and closing it on one closes it on all. It also survives
+a restart of the panel or of Home Assistant until something clears it.
+
+Nothing is special-cased. A helper naming a page with nothing placed on it
+still opens: the Popup shows the empty-page message and the close button, so
+a typo in an automation is visible rather than silent. A helper naming `main`,
+or the page already underneath, opens that page as a Popup like any other.
+
+### How a page looks as a Popup
+
+A Popup does not use the 2x2. The regions are read like this:
+
+| region | in a Popup |
+| --- | --- |
+| `right` | its **first camera** fills the screen, edge to edge, behind everything. With no camera there the background is plain. Anything else in `right`, other cameras included, floats in the bottom row. |
+| `left`, `footer` | float as **one centred row along the bottom**: `left` first, then the rest of `right`, then `footer`. |
+| `glance` | not shown. A Popup has no glance quadrant, as if the helper toggle were off. |
+
+Everything in the bottom row keeps its own region's rendering contract: a lock
+is a gate, an Area in `left` or `right` is a row, and an Area in `footer` is
+the block that opens its page.
+
+Across the top: the title on the left and a round close button on the right.
+The title is the Area's name when the page is an Area's page (`salone` reads
+"Soggiorno"), and otherwise the page name itself, capitalised: `citofono` reads
+"Citofono". There is **no "Casa" block**: the close button is the way out, and
+tapping the background does nothing.
+
+At 1280x800 the bottom row holds three gates at full width. A fourth fits by
+shrinking every slot, so gate names ellipsise. Past that the row scrolls
+sideways.
+
+The camera is its still picture for now, which is Home Assistant's own camera
+proxy image. The live picture is
+[Camera Feeds](https://github.com/vallops99/homeassistant-frontend/issues/29)'
+concern.
+
+### Underneath
+
+The page underneath stays mounted and running. The idle return is not
+affected by a Popup. If it fires while one is open, the panel goes back to
+`page:main` underneath, and the Popup stays on top.
+
+**Navigating from inside a Popup** closes it. Tapping an Area's footer block
+in a Popup opens that page underneath *and* clears `input_text.panel_popup`,
+which closes the Popup on every panel. Anything else that opens a page from
+inside a Popup does the same.
+
+### Activity, and closing on a timer
+
+The panel never closes a Popup by itself, so an automatic close belongs to the
+automation, as a delay. Home Assistant can't see touches, so the panel reports
+them: **any touch inside a Popup except the close button** presses
+`input_button.panel_popup_activity`, at most once every 5 seconds. The panel
+does nothing else with it. An automation that triggers on it can restart its
+wait, so the Popup stays up while someone is using it.
+
+### A doorbell, a gate and an intercom
+
+The Ring integration names a doorbell's entities `camera.<doorbell>_live_view`
+and `event.<doorbell>_ding`, which fires event type `ring`
+([the Ring research](research/ring-integration.md)). The Ring Intercom has no
+camera, and it opens its door with a **button**, `button.<intercom>_open_door`.
+The panel has no rendering for `button`, so wrap the button in a template
+`lock` and label that lock as a gate:
+
+```yaml
+template:
+  - lock:
+      - name: Citofono
+        default_entity_id: lock.citofono_porta
+        # The intercom reports no state: the door is never shown open.
+        state: locked
+        availability: "{{ not is_state('button.<intercom>_open_door', 'unavailable') }}"
+        lock: []
+        unlock:
+          action: button.press
+          target: { entity_id: button.<intercom>_open_door }
+        open:
+          action: button.press
+          target: { entity_id: button.<intercom>_open_door }
+```
+
+The page it all lives on:
+
+```yaml
+camera.<doorbell>_live_view:  [vision, page:citofono:right]   # the background
+lock.esterno_cancello:        [gate, page:main:left, page:citofono:left]
+lock.esterno_cancelletto:     [gate, page:main:left, page:citofono:left]
+lock.citofono_porta:          [gate, page:citofono:left]
+```
+
+### Example automation
+
+A ring wakes the tablet, brings Fully Kiosk to the front and opens the Popup.
+After two minutes without a touch the automation closes it again:
+
+```yaml
+alias: Citofono popup
+mode: restart            # a second ring, or a touch in the Popup, restarts the wait
+triggers:
+  - trigger: event.received
+    target:
+      entity_id: event.<doorbell>_ding
+    options:
+      event_type: [ring]
+    id: ring
+  - trigger: state
+    entity_id: input_button.panel_popup_activity
+    id: activity
+conditions:
+  - or:
+      - condition: trigger
+        id: ring
+      - condition: state
+        entity_id: input_text.panel_popup
+        state: citofono
+actions:
+  # "Not activity" rather than "ring", so that Run actions, which has no
+  # trigger, opens the Popup too.
+  - if:
+      - not:
+          - condition: trigger
+            id: activity
+    then:
+      - action: switch.turn_on
+        target: { entity_id: switch.<tablet>_screen }
+      - action: button.press
+        target: { entity_id: button.<tablet>_bring_to_foreground }
+      - action: input_text.set_value
+        target: { entity_id: input_text.panel_popup }
+        data: { value: citofono }
+  - delay: "00:02:00"
+  # Optional auto-close. Guarded so it never closes a newer Popup.
+  - if:
+      - condition: state
+        entity_id: input_text.panel_popup
+        state: citofono
+    then:
+      - action: input_text.set_value
+        target: { entity_id: input_text.panel_popup }
+        data: { value: "" }
+```
+
+This was run against Home Assistant 2026.9 with the fake house's doorbell:
+
+- **Trigger on the ring, not on the attribute.** A `state` trigger on the
+  `event_type` attribute `to: ring` never fires: a doorbell's `event_type` is
+  always `ring`, so the attribute does not change from one ring to the next.
+  `event.received` fires on every ring. So does a plain `state` trigger on the
+  event entity, whose state is the time of the last event, with
+  `not_to: [unavailable, unknown]`.
+- **Run actions** opens the Popup and closes it after the delay. It returns
+  only once the run has finished.
+- A touch while the Popup is open restarts the wait. A touch while it is
+  closed opens nothing. A newer Popup (the helper set to another page)
+  survives the guard.
+- `switch.<tablet>_screen` and `button.<tablet>_bring_to_foreground` are the
+  Fully Kiosk integration's `Screen` switch and `Bring to foreground` button,
+  named from `strings.json`. With no Fully device here, those two ids are
+  unchecked. Read the real ids off the tablet's device page, since an entity
+  id follows the name it was created under. Missing entities only log a
+  warning, and the rest of the run continues.
+
+### Trying it on the fake house
+
+`fake-house/` has everything above: both helpers, a doorbell
+(`camera.campanello_live_view`, `event.campanello_ding`), an intercom
+(`button.citofono_open_door` wrapped as `lock.citofono_porta`), and
+`page:citofono`. To open the Popup by hand, set `input_text.panel_popup` to
+`citofono`. To ring, press `input_button.fake_fire_event_campanello_ding`, or
+use **Run actions** on the automation.
 
 ## What this costs
 

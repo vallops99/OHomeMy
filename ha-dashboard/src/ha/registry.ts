@@ -227,6 +227,21 @@ export function usePower(): number | null {
   }, [entities]);
 }
 
+/**
+ * A camera's still picture as a URL the browser can load, or `null` when
+ * Home Assistant offers none (an Unavailable camera has no `entity_picture`).
+ *
+ * `entity_picture` is Home Assistant's own camera proxy path, carrying an
+ * access token that Home Assistant rotates by changing the attribute -- so a
+ * new URL arrives through ordinary state updates and the picture follows it.
+ * A still, not a stream: the Popup's stand-in until the live Feed (#29).
+ */
+export function useCameraStill(camera: Entity | null): string | null {
+  const joinHassUrl = useHass(s => s.helpers.joinHassUrl);
+  const path = camera?.attributes.entity_picture;
+  return typeof path === 'string' && path !== '' ? joinHassUrl(path) : null;
+}
+
 export function useByLabel(label: Label): Entity[] {
   const entities = useEntities();
   return useMemo(

@@ -9,7 +9,8 @@
 # dashboard, so that swapping fakes for real devices is a no-op.
 #
 # kind:  light | switch | lock | alarm | vacuum | select | sensor |
-#        binary_sensor | climate | media_player | camera | siren
+#        binary_sensor | climate | media_player | camera | siren |
+#        event | button | button_lock
 # area:  an area_id from HA's area registry, or null for a Singleton
 # labels: see CONTEXT.md label vocabulary
 
@@ -90,6 +91,15 @@ labels:
   - id: page:corridoio:right
     name: page:corridoio:right
     icon: mdi:walk
+  # The Page Home Assistant opens as a Popup when someone rings (#28,
+  # docs/protocol.md "Popups"): the doorbell's picture behind, the gates and
+  # the intercom's door in front. Only the Regions it uses.
+  - id: page:citofono:left
+    name: page:citofono:left
+    icon: mdi:doorbell-video
+  - id: page:citofono:right
+    name: page:citofono:right
+    icon: mdi:doorbell-video
 
 entities:
   # ---------------- lights ----------------
@@ -172,12 +182,44 @@ entities:
     name: Cancello
     kind: lock
     area: esterno
-    labels: [gate, main, page:main:left]
+    labels: [gate, main, page:main:left, page:citofono:left]
   - id: lock.esterno_cancelletto
     name: Cancelletto
     kind: lock
     area: esterno
-    labels: [gate, page:main:left]
+    labels: [gate, page:main:left, page:citofono:left]
+
+  # ---------------- doorbell & intercom (Ring) ----------------
+  # Entity ids as the Ring integration names them
+  # (docs/research/ring-integration.md): a doorbell is a `live_view` camera
+  # and a `ding` event of type `ring`; an Intercom has no camera, and opens
+  # its door with a `button`.
+  - id: camera.campanello_live_view
+    name: Campanello
+    kind: camera
+    area: esterno
+    labels: [vision, page:citofono:right]
+  # Fired by pressing `input_button.fake_fire_event_campanello_ding`, which
+  # is what the Popup's automation triggers on.
+  - id: event.campanello_ding
+    name: Campanello Suono
+    kind: event
+    area: esterno
+    device_class: doorbell
+    event_types: [ring]
+  - id: button.citofono_open_door
+    name: Citofono Apri Porta
+    kind: button
+    area: ingresso
+  # The panel has no `button` rendering, so the door is a gate like the
+  # others: a template lock in front of the button. Not only a fake -- the
+  # real house needs the same wrapper around the real button.
+  - id: lock.citofono_porta
+    name: Citofono
+    kind: button_lock
+    area: ingresso
+    button: button.citofono_open_door
+    labels: [gate, page:citofono:left]
 
   # ---------------- security ----------------
   - id: alarm_control_panel.ezviz_alarm

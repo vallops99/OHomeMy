@@ -196,8 +196,28 @@ export function buildTokens(k: Knobs = KNOBS) {
      * be a coincidence this token does not want to depend on. If a future
      * chip's contents change height, remeasure and update this number rather
      * than assume it still matches.
+     *
+     * `popupSlotW` (#28) is one slot of a Popup's bottom row, sized for a
+     * `GateSlab`. Measured on the real app at 1280x800 and 1280x768 with
+     * `page:citofono`'s three gates: at 403 px "Cancelletto" ellipsised
+     * (218 px of name in 209); at 412, with the row's `md` padding and `sm`
+     * gap, all three names fit whole. Barely -- a fourth gate, a longer name
+     * or a wider gap brings the ellipsis back. `popupClose` is the Popup's
+     * round close button (#24): over `touch.primary` because it is the only
+     * way out, reached for from a step back.
      */
-    layout: { sidebarW: 420, rowRoom: 76, rowStrip: 96, gateSlab: 100, leftColW: 420, footerH: 64, chipRowFloor: 40, chipRowLines: 2 },
+    layout: {
+      sidebarW: 420,
+      rowRoom: 76,
+      rowStrip: 96,
+      gateSlab: 100,
+      leftColW: 420,
+      footerH: 64,
+      chipRowFloor: 40,
+      chipRowLines: 2,
+      popupSlotW: 412,
+      popupClose: 80,
+    },
   };
 }
 

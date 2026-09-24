@@ -13,6 +13,7 @@ Each fake entity is backed by helpers that hold its state:
     input_number.fake_level__<slug>     brightness / position
     input_select.fake_mode__<slug>      enumerated state
     input_number.fake_value__<slug>     numeric sensor value
+    input_button.fake_fire__<slug>      fires an `event` entity by hand
 
 Usage:
     python fake-house/scripts/generate.py --config-dir /path/to/ha/config
@@ -60,6 +61,7 @@ class Builder:
         self.input_boolean: dict = {}
         self.input_number: dict = {}
         self.input_select: dict = {}
+        self.input_button: dict = {}
         self.template: list = []
         self.media_player: list = []
         self.camera: list = []
@@ -99,6 +101,11 @@ class Builder:
             "initial": str(initial),
         }
         return f"input_select.{name}"
+
+    def fire_helper(self, e: dict) -> str:
+        name = helper("fire", e["id"])
+        self.input_button[name] = {"name": f"[fire] {e['id']}", "icon": "mdi:gesture-tap-button"}
+        return f"input_button.{name}"
 
     # -- per-domain builders ---------------------------------------------
     def build(self, e: dict) -> None:
@@ -317,6 +324,71 @@ class Builder:
             "initial_hvac_mode": "heat",
         })
 
+    def _event(self, e: dict) -> None:
+        # A genuine `event` entity: the template platform's trigger-based
+        # form, which emits one event per trigger. The trigger is pressing an
+        # `input_button`, so a ring is one tap in Home Assistant's UI -- the
+        # same entity, state and `event_type` attribute a real Ring ding has
+        # (docs/research/ring-integration.md).
+        online = self.online_helper(e)
+        fire = self.fire_helper(e)
+        types = e["event_types"]
+        cfg = {
+            "name": e["name"],
+            "default_entity_id": e["id"],
+            "unique_id": slug(e["id"]),
+            "event_type": types[0],
+            "event_types": f"{{{{ {types!r} }}}}",
+            "availability": f"{{{{ is_state('{online}','on') }}}}",
+        }
+        if e.get("device_class"):
+            cfg["device_class"] = e["device_class"]
+        self.template.append({
+            "triggers": [{"trigger": "state", "entity_id": fire}],
+            # A state trigger also fires when the button first appears after
+            # a restart (no `from_state`). That is not a press, and a ring on
+            # every restart would open the Popup on every restart.
+            "conditions": [{"condition": "template",
+                            "value_template": "{{ trigger.from_state is not none }}"}],
+            "event": [cfg],
+        })
+
+    def _button(self, e: dict) -> None:
+        # A button reports no state but the time it was last pressed, which
+        # the button entity keeps by itself. Pressing the fake does nothing
+        # else: the Ring Intercom's `open_door` is fire-and-forget too.
+        online = self.online_helper(e)
+        self.template.append({"button": [{
+            "name": e["name"],
+            "default_entity_id": e["id"],
+            "unique_id": slug(e["id"]),
+            "availability": f"{{{{ is_state('{online}','on') }}}}",
+            "press": [],
+        }]})
+
+    def _button_lock(self, e: dict) -> None:
+        # Not a fake of a device: the wrapper the real house needs too. The
+        # Ring Intercom opens its door with a `button` (ring-integration.md),
+        # and the panel renders gates as `lock`s and gives `button` no
+        # rendering at all, so a template lock stands in front of it.
+        #
+        # Always `locked`: the Intercom has no state to report, and a door
+        # the panel claimed was open would be a guess. Unlocking (or opening)
+        # presses the button; locking does nothing, because there is nothing
+        # to lock.
+        button = e["button"]
+        self.template.append({"lock": [{
+            "name": e["name"],
+            "default_entity_id": e["id"],
+            "unique_id": slug(e["id"]),
+            "state": "locked",
+            # A never-pressed button is `unknown`, which is not a fault here.
+            "availability": f"{{{{ not is_state('{button}','unavailable') }}}}",
+            "lock": [],
+            "unlock": {"action": "button.press", "target": {"entity_id": button}},
+            "open": {"action": "button.press", "target": {"entity_id": button}},
+        }]})
+
     def _media_player(self, e: dict) -> None:
         # No template media_player platform. `universal` wraps helpers into a
         # real media_player with the standard service surface.
@@ -397,6 +469,7 @@ def main() -> int:
         "input_boolean": b.input_boolean,
         "input_number": b.input_number,
         "input_select": b.input_select,
+        "input_button": b.input_button,
     })
     write("entities", {"template": b.template})
     if b.media_player:
@@ -407,7 +480,8 @@ def main() -> int:
         write("camera", {"camera": b.camera})
 
     total = len(manifest["entities"])
-    helpers = len(b.input_boolean) + len(b.input_number) + len(b.input_select)
+    helpers = (len(b.input_boolean) + len(b.input_number) + len(b.input_select)
+               + len(b.input_button))
     for p in written:
         print(f"wrote {p}")
     print(f"\n{total} fake entities, {helpers} backing helpers")

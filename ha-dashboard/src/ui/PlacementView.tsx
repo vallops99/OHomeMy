@@ -425,8 +425,11 @@ function GlanceView({ placed }: { placed: Placed[] }) {
  * (`src/ha/registry.ts`), not a second one. `useNavigation()` (#14) is read
  * the same way, unconditionally, to know the current Page name -- needed
  * only to decide whether the `footer` Region also gets a `HomeBlock`.
+ *
+ * `home={false}` drops that `HomeBlock` whatever the Page: a Popup has no
+ * "Casa" block, because its close button is the way out (#28).
  */
-export function PlacementView({ region, placed }: { region: Region; placed: Placed[] }) {
+export function PlacementView({ region, placed, home = true }: { region: Region; placed: Placed[]; home?: boolean }) {
   const areas = useAreas();
   const { page } = useNavigation();
 
@@ -451,7 +454,7 @@ export function PlacementView({ region, placed }: { region: Region; placed: Plac
         already home, so a block that opens it there would be a control
         pointing at the screen already on screen.
       */}
-      {region === 'footer' && page !== 'main' && <HomeBlock key='home' />}
+      {home && region === 'footer' && page !== 'main' && <HomeBlock key='home' />}
       {placed.map((item, i) => {
         if (item.kind === 'area') {
           if (region === 'footer') {

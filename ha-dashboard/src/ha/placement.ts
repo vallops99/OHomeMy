@@ -59,7 +59,7 @@ const emptyLayout = (): PageLayout => ({ glance: [], left: [], right: [], footer
  * lets `usePage('main')` line up with a Label typed as `page:main:right` in
  * Home Assistant's UI (#12, option 1).
  */
-const slugify = (value: string): string => value.toLowerCase().replace(/[:-]/g, '_');
+export const slugify = (value: string): string => value.toLowerCase().replace(/[:-]/g, '_');
 
 /** One Placement read out of one Placement Label: a Page slug and a Region. */
 type Placement = { page: string; region: Region };

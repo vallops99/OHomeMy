@@ -28,8 +28,8 @@
  * comment for the full reasoning on why a context and not prop-threading.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { usePage, useEntityState } from './ha';
-import { EmptyPageMessage, NavigationProvider, Panel, PlacementView } from './ui';
+import { useActions, usePage, useEntityState } from './ha';
+import { EmptyPageMessage, NavigationProvider, Panel, PlacementView, Popup, popupPage } from './ui';
 
 /** The Page the panel opens on, and the one Page the idle timer below never fires on. */
 const MAIN_PAGE = 'main';
@@ -74,10 +74,33 @@ const IDLE_RETURN_MS = 240_000;
  */
 const GLANCE_TOGGLE = 'input_boolean.panel_glance';
 
+/**
+ * The helper that opens a Popup (#28, ADR-0009): an `input_text` holding the
+ * bare name of the Page to show over the panel, empty when none is. Named
+ * here for the same reason as `GLANCE_TOGGLE`: a fact about the panel, not
+ * the house. Home Assistant writes it; the panel only ever clears it.
+ */
+const POPUP_HELPER = 'input_text.panel_popup';
+
+/**
+ * Pressed when someone touches an open Popup, so the house's automation can
+ * restart its auto-close wait (ADR-0009): Home Assistant cannot see touches.
+ * The panel reports, and does nothing else with it.
+ */
+const POPUP_ACTIVITY = 'input_button.panel_popup_activity';
+
 function Dashboard() {
   const [currentPage, setCurrentPage] = useState(MAIN_PAGE);
   const page = usePage(currentPage);
   const toggle = useEntityState(GLANCE_TOGGLE);
+  const popup = popupPage(useEntityState(POPUP_HELPER));
+  const actions = useActions();
+
+  // The helper is the only source of truth (ADR-0009): closing asks Home
+  // Assistant to clear it and hides nothing here, so the Popup goes away on
+  // every panel at once, when the cleared state comes back.
+  const closePopup = useCallback(() => actions.setText(POPUP_HELPER, ''), [actions]);
+  const reportPopupActivity = useCallback(() => actions.press(POPUP_ACTIVITY), [actions]);
 
   // Absent from the registry entirely means the helper has not been created
   // (fake-house/scripts/apply-registry.py creates it), and the glance layer
@@ -186,6 +209,15 @@ function Dashboard() {
         // survives exactly the situation decision 6 exists to guard against.
         footer={<PlacementView region='footer' placed={page.footer} />}
       />
+      {/*
+        Over the Page, not instead of it: the Page underneath stays mounted
+        and running, and the idle return above keeps its own clock -- if it
+        fires, the panel goes home under the Popup, which stays on top. A
+        touch in the Popup is a touch on the panel like any other, so it
+        restarts that clock too: someone is standing here.
+        Keyed by the Page so a new value in the helper is a new Popup.
+      */}
+      {popup !== null && <Popup key={popup} page={popup} onClose={closePopup} onActivity={reportPopupActivity} />}
     </NavigationProvider>
   );
 }
