@@ -10,6 +10,7 @@
  * idle and Unavailable each say so; Unavailable is a Fault.
  */
 import { useActions, useHassUrl, type Entity } from '../ha';
+import { isPhone } from './device';
 import { Icon } from './Icon';
 import { mediaControls, mediaNowPlaying } from './mediaState';
 import { Slider } from './Slider';
@@ -37,6 +38,10 @@ export function MediaCard({ entity }: MediaCardProps) {
         flex: '0 0 auto',
         display: 'flex',
         alignItems: 'center',
+        // On a phone the row folds in two, as a Row's does (ADR-0011): the
+        // artwork and what is playing on one line, the volume and the
+        // buttons under it. Its one row sums past a phone's width.
+        flexWrap: isPhone ? 'wrap' : 'nowrap',
         gap: t.space.md,
         padding: t.space.md,
         boxSizing: 'border-box',
@@ -64,7 +69,15 @@ export function MediaCard({ entity }: MediaCardProps) {
         {(!picture || unavailable) && <Icon name={unavailable ? 'mdi:alert-circle' : playing ? 'mdi:music' : 'mdi:speaker'} size={32} />}
       </div>
 
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+      <div
+        style={{
+          // On a phone, the rest of the first line, so the controls wrap under.
+          flex: isPhone ? `1 1 calc(100% - ${ART + t.space.md}px)` : 1,
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
         <span
           style={{
             fontSize: t.font.caption,
@@ -106,7 +119,15 @@ export function MediaCard({ entity }: MediaCardProps) {
       </div>
 
       {controls.volume !== null && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: t.space.xs, width: 180, flexShrink: 0, color: t.color.textSecondary }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: t.space.xs,
+            ...(isPhone ? { flex: 1, minWidth: 0 } : { width: 180, flexShrink: 0 }),
+            color: t.color.textSecondary,
+          }}
+        >
           <Icon name='mdi:volume-high' size={22} />
           <div style={{ flex: 1, minWidth: 0 }} data-gesture-owner>
             <Slider
