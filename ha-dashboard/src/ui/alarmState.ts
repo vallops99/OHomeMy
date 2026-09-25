@@ -27,8 +27,13 @@ export function alarmIcon(entity: Entity): string {
   return 'mdi:shield-off-outline';
 }
 
-/** One thing the alarm Modal offers: a service to call, worded for the button. */
-export type AlarmCommand = { service: string; label: string; icon: string };
+/**
+ * One thing the alarm offers: a service to call, worded for the button.
+ * `short` is for the full alarm card (#34), where the alarm is already named
+ * above the buttons and three of them share a 420 px column: "Inserisci fuori
+ * casa" wrapped there, and doubled the buttons' height.
+ */
+export type AlarmCommand = { service: string; label: string; short: string; icon: string };
 
 /**
  * The arm modes Home Assistant's `supported_features` bits name, in the order
@@ -36,10 +41,10 @@ export type AlarmCommand = { service: string; label: string; icon: string };
  * anyone arms on the way out.
  */
 const ARM_MODES: (AlarmCommand & { bit: number })[] = [
-  { bit: 1, service: 'alarm_arm_home', label: 'Inserisci in casa', icon: 'mdi:shield-home' },
-  { bit: 2, service: 'alarm_arm_away', label: 'Inserisci fuori casa', icon: 'mdi:shield-lock' },
-  { bit: 4, service: 'alarm_arm_night', label: 'Inserisci notte', icon: 'mdi:shield-moon' },
-  { bit: 32, service: 'alarm_arm_vacation', label: 'Inserisci vacanza', icon: 'mdi:shield-airplane' },
+  { bit: 1, service: 'alarm_arm_home', label: 'Inserisci in casa', short: 'In casa', icon: 'mdi:shield-home' },
+  { bit: 2, service: 'alarm_arm_away', label: 'Inserisci fuori casa', short: 'Fuori casa', icon: 'mdi:shield-lock' },
+  { bit: 4, service: 'alarm_arm_night', label: 'Inserisci notte', short: 'Notte', icon: 'mdi:shield-moon' },
+  { bit: 32, service: 'alarm_arm_vacation', label: 'Inserisci vacanza', short: 'Vacanza', icon: 'mdi:shield-airplane' },
 ];
 
 /**
@@ -50,7 +55,8 @@ const ARM_MODES: (AlarmCommand & { bit: number })[] = [
  */
 export function alarmCommands(entity: Entity): AlarmCommand[] {
   if (entity.unavailable) return [];
-  if (entity.state !== 'disarmed') return [{ service: 'alarm_disarm', label: 'Disinserisci', icon: 'mdi:shield-off-outline' }];
+  if (entity.state !== 'disarmed')
+    return [{ service: 'alarm_disarm', label: 'Disinserisci', short: 'Disinserisci', icon: 'mdi:shield-off-outline' }];
   const features = Number(entity.attributes.supported_features) || 0;
-  return ARM_MODES.filter(m => features & m.bit).map(({ service, label, icon }) => ({ service, label, icon }));
+  return ARM_MODES.filter(m => features & m.bit).map(({ bit: _bit, ...command }) => command);
 }

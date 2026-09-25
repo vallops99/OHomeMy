@@ -22,7 +22,7 @@
  *     #27 it also opens the Area's Page, on a swipe or its chevron.
  *   - an entity -> dispatched by Domain, in `entitySlot` below, mirroring
  *     `screens/ScreenView.tsx`'s function of the same name: `lock` ->
- *     `GateSlab`, `alarm_control_panel` -> `AlarmTile`, `camera` -> a Feed,
+ *     `GateSlab`, `alarm_control_panel` -> `AlarmPanel`, `camera` -> a Feed,
  *     every camera of the Region together in one `Feeds` block (see the
  *     camera note below), `media_player` ->
  *     `MediaBar`, `light` and `switch` -> `ToggleTile` (#16). A Domain with
@@ -35,6 +35,9 @@
  *     full one and `footer` the compact one (#31): `climate` -> `ClimateCard`
  *     / `ClimateBlock`, `sensor` -> `SensorTile` / `SensorBlock` (#33).
  *     `weather` -> `WeatherCard`, in `left`/`right` only.
+ *     `alarm_control_panel` -> `AlarmPanel` / `AlarmTile`, `binary_sensor`
+ *     -> `BinarySensorTile` / `BinarySensorBlock`, and `light`, `switch`,
+ *     `siren` -> `ToggleTile` / `ToggleBlock` (#34).
  *
  * `footer`:
  *   - an Area -> a tappable block that opens that Area's Page (`page:<area
@@ -107,7 +110,9 @@ import {
   type Placed,
   type Region,
 } from '../ha';
+import { AlarmPanel } from './AlarmPanel';
 import { AlarmTile } from './AlarmTile';
+import { BinarySensorBlock, BinarySensorTile } from './BinarySensorTile';
 import { CameraGlance } from './CameraGlance';
 import { ClimateBlock, ClimateCard } from './ClimateCard';
 import { ChipRow } from './ChipRow';
@@ -125,6 +130,7 @@ import { Stats } from './Stats';
 import { OpenChevron, SwipeToOpen } from './SwipeToOpen';
 import { t } from './theme';
 import { Tile } from './Tile';
+import { ToggleBlock } from './ToggleBlock';
 import { ToggleTile } from './ToggleTile';
 import { WeatherCard } from './WeatherCard';
 
@@ -157,13 +163,16 @@ function entitySlot(entity: Entity, region: Exclude<Region, 'glance'>) {
     return <GateSlab key={entity.id} entity={entity} />;
   }
   if (entity.domain === 'alarm_control_panel') {
-    return <AlarmTile key={entity.id} entity={entity} />;
+    return compact ? <AlarmTile key={entity.id} entity={entity} /> : <AlarmPanel key={entity.id} entity={entity} />;
   }
   if (entity.domain === 'media_player') {
     return <MediaBar key={entity.id} entities={[entity]} />;
   }
-  if (entity.domain === 'light' || entity.domain === 'switch') {
-    return <ToggleTile key={entity.id} entity={entity} />;
+  if (entity.domain === 'light' || entity.domain === 'switch' || entity.domain === 'siren') {
+    return compact ? <ToggleBlock key={entity.id} entity={entity} /> : <ToggleTile key={entity.id} entity={entity} />;
+  }
+  if (entity.domain === 'binary_sensor') {
+    return compact ? <BinarySensorBlock key={entity.id} entity={entity} /> : <BinarySensorTile key={entity.id} entity={entity} />;
   }
   if (entity.domain === 'climate') {
     return compact ? <ClimateBlock key={entity.id} entity={entity} /> : <ClimateCard key={entity.id} entity={entity} />;

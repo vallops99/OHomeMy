@@ -11,15 +11,13 @@
  * every arm and disarm button stays disabled until *some* code is typed,
  * keypad or no keypad, and its `defaultCode` escape would send a made-up
  * code to the integration. So the Modal keeps its header, state and logbook,
- * and its controls are ours: one button per `alarmCommands` entry, calling
- * the service with no code, as the tile's press does.
+ * and its controls are ours (`AlarmCommands`): one button per `alarmCommands`
+ * entry, calling the service with no code, as the tile's press does.
  */
 import { ModalByEntityDomain } from '@hakit/components';
-import { useActions, type Entity } from '../ha';
-import { alarmCommands } from './alarmState';
-import { Icon } from './Icon';
+import type { Entity } from '../ha';
+import { AlarmCommands } from './AlarmCommands';
 import { stateLabel } from './stateLabel';
-import { t } from './theme';
 
 export type AlarmModalProps = {
   /** The `alarm_control_panel` entity. */
@@ -29,7 +27,6 @@ export type AlarmModalProps = {
 };
 
 export function AlarmModal({ alarm, open, onClose }: AlarmModalProps) {
-  const actions = useActions();
   return (
     <ModalByEntityDomain
       // Our ids are plain strings by design (src/ha/types.ts); @hakit wants
@@ -42,35 +39,7 @@ export function AlarmModal({ alarm, open, onClose }: AlarmModalProps) {
       stateTitle={stateLabel(alarm)}
       hideDefaultLayout
     >
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: t.space.sm, padding: t.space.md }}>
-        {alarmCommands(alarm).map(command => (
-          <button
-            key={command.service}
-            type='button'
-            onClick={() => actions.call('alarm_control_panel', command.service, alarm.id)}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: t.space.xs,
-              minWidth: t.touch.primary * 2,
-              minHeight: t.touch.primary * 1.5,
-              padding: t.space.md,
-              borderRadius: t.radius.tile,
-              border: `1px solid ${t.color.border}`,
-              background: t.color.surfaceRaised,
-              color: t.color.textPrimary,
-              fontSize: t.font.body,
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            <Icon name={command.icon} size={32} />
-            {command.label}
-          </button>
-        ))}
-      </div>
+      <AlarmCommands alarm={alarm} />
     </ModalByEntityDomain>
   );
 }

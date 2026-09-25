@@ -48,3 +48,14 @@ test('each command is worded like the state it leads to', () => {
     ['Disinserisci']
   );
 });
+
+test('each command has a short label for the card, where the alarm is already named', () => {
+  assert.deepEqual(
+    alarmCommands(alarm('disarmed', 39)).map(c => c.short),
+    ['In casa', 'Fuori casa', 'Notte', 'Vacanza']
+  );
+  assert.deepEqual(
+    alarmCommands(alarm('triggered')).map(c => c.short),
+    ['Disinserisci']
+  );
+});

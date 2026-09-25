@@ -11,7 +11,8 @@ with fake-house/manifest.yaml over the websocket API:
     looking assignable and placing nothing,
   * assigns each Area its own Labels, and each entity its Area and Labels,
   * renames entities whose generated id differs from the manifest id
-    (siren.* fakes are built as template switches; see generate.py),
+    (siren.* fakes are built as template switches; see generate.py), and
+    gives each siren its manifest name, not its wrapped switch's,
   * creates the `input_boolean.panel_glance` helper that gates the `glance`
     region (docs/protocol.md, #13 item 4),
   * creates the two Popup helpers, `input_text.panel_popup` and
@@ -351,8 +352,13 @@ async def run(url: str, token: str, dry_run: bool) -> int:
                 want_labels = sorted(label_slug(l) for l in e.get("labels") or [])
                 has_area = entry.get("area_id")
                 has_labels = sorted(entry.get("labels") or [])
+                # A siren is a `switch_as_x` wrapper, which takes its name from
+                # the template switch it wraps -- "Sirena Cancello Src" on the
+                # panel (#34). Its registry name is set to the manifest's.
+                want_name = e["name"] if e["kind"] == "siren" else entry.get("name")
+                has_name = entry.get("name")
 
-                if has_area == want_area and has_labels == want_labels:
+                if has_area == want_area and has_labels == want_labels and has_name == want_name:
                     continue
 
                 bits = []
@@ -360,13 +366,16 @@ async def run(url: str, token: str, dry_run: bool) -> int:
                     bits.append(f"area {has_area!r} -> {want_area!r}")
                 if has_labels != want_labels:
                     bits.append(f"labels {has_labels} -> {want_labels}")
+                if has_name != want_name:
+                    bits.append(f"name {has_name!r} -> {want_name!r}")
                 print(f"~ {want_id}: {'; '.join(bits)}")
                 changes += 1
                 if not dry_run:
                     r = await c.cmd(type="config/entity_registry/update",
                                     entity_id=want_id,
                                     area_id=want_area,
-                                    labels=want_labels)
+                                    labels=want_labels,
+                                    name=want_name)
                     if not r.get("success"):
                         print(f"  ! {r.get('error')}", file=sys.stderr)
 

@@ -145,8 +145,9 @@ naming the domain.
 | an entity in… | `left`, `right` | `footer` | `glance` |
 | --- | --- | --- | --- |
 | `lock` | a gate slab: tap to open or close | the same | — |
-| `light`, `switch` | a row: tap to toggle, a brightness slider when it dims | the same | — |
-| `alarm_control_panel` | a tile: tap to arm away or disarm | the same | the alarm chip, which opens its arm/disarm Modal |
+| `light`, `switch`, `siren` | a row: tap to toggle, a brightness slider when it dims | a block: state over name; tap to toggle | — |
+| `alarm_control_panel` | the full card: its state, and every arm mode it supports while disarmed, else a disarm — the same buttons as its Modal | a tile: tap to arm away or disarm | the alarm chip, which opens its arm/disarm Modal |
+| `binary_sensor` | a read-only row: name, and its state by device class — a door, window or opening reads `Aperta`/`Chiusa`, and an open one is drawn as the Verdict draws an open way in | a block: state over name | — |
 | `media_player` | the transport strip, showing whatever is playing | the same | — |
 | `climate` | the full card: the room's temperature, the setpoint with − and +, the HVAC modes it reports, and what it is doing | a block: name, temperature and setpoint; a tap does nothing | the big temperature |
 | `weather` | the condition in Italian, the temperature, and the next five days | a fault tile | — |

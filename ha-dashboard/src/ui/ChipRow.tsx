@@ -35,6 +35,7 @@ import { liveConcern } from './concernList';
 import { AlarmModal } from './AlarmModal';
 import { Icon } from './Icon';
 import { alarmIcon } from './alarmState';
+import { LEVEL_ICON } from './levelIcon';
 import { stateLabel } from './stateLabel';
 import { t } from './theme';
 
@@ -42,14 +43,6 @@ export type ChipRowProps = {
   report: HouseReport;
   /** The alarm panel entity, or null when the house has none. */
   alarm: Entity | null;
-};
-
-/** Icon per concern level. `Health.headline` already carries the wording. */
-const LEVEL_ICON: Record<Health['level'], string> = {
-  fault: 'mdi:alert-circle',
-  open: 'mdi:door-open',
-  on: 'mdi:lightbulb-on',
-  ok: 'mdi:check-circle',
 };
 
 /**

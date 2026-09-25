@@ -76,7 +76,8 @@ const isReportableFault = (e: Entity) => e.unavailable && !NEVER_FAULT.has(e.dom
 /** A door, window or gate standing open is a way into the house. */
 const OPENING_CLASSES = new Set(['door', 'window', 'garage', 'opening']);
 
-const isOpenDoor = (e: Entity) =>
+/** Exported so a contact's own tile can never disagree with the Verdict (#34). */
+export const isOpenDoor = (e: Entity) =>
   e.domain === 'binary_sensor' && OPENING_CLASSES.has(e.attributes.device_class as string) && e.state === 'on';
 
 /** A gate is a `lock`, and `unlocked` is the state worth shouting about. */
