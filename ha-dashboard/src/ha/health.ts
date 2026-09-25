@@ -26,6 +26,12 @@ export type Health = {
   detail: string | null;
   /** How many entities drove the verdict, for the caller that wants a count. */
   count: number;
+  /**
+   * Every entity behind this Concern -- exactly the ones `count` counts, in
+   * the order found. What a Concern list shows (#30), so the list and the
+   * chip can never disagree about the rule. Empty for `ok`.
+   */
+  entities: Entity[];
 };
 
 /**
@@ -105,6 +111,7 @@ function concerns(entities: Entity[]): Health[] {
         .slice(0, 3)
         .join(', '),
       count: faults.length,
+      entities: faults,
     });
   }
 
@@ -118,6 +125,7 @@ function concerns(entities: Entity[]): Health[] {
         .slice(0, 3)
         .join(', '),
       count: open.length,
+      entities: open,
     });
   }
 
@@ -131,6 +139,7 @@ function concerns(entities: Entity[]): Health[] {
         .slice(0, 3)
         .join(', '),
       count: lit.length,
+      entities: lit,
     });
   }
 
@@ -141,7 +150,7 @@ function concerns(entities: Entity[]): Health[] {
 export function houseReport(entities: Entity[]): HouseReport {
   const found = concerns(entities);
   if (found.length === 0) {
-    return { verdict: { level: 'ok', headline: 'Tutto in ordine', detail: null, count: 0 }, also: [] };
+    return { verdict: { level: 'ok', headline: 'Tutto in ordine', detail: null, count: 0, entities: [] }, also: [] };
   }
   // "Lights are on" is not a concern worth a second line once something
   // louder is already being reported -- it is normal in an occupied house.

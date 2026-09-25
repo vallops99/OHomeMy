@@ -25,6 +25,7 @@
  */
 import { useMemo, useRef, type PointerEvent } from 'react';
 import { cameraMoving, useAreas, useEntities, useFeed, usePage } from '../ha';
+import { CloseButton } from './CloseButton';
 import { FeedFrame } from './Feed';
 import { TONE_COLOR, feedPhase, feedStatus } from './feeds';
 import { Icon } from './Icon';
@@ -32,17 +33,11 @@ import { NavigationProvider, useNavigation, type Navigation } from './Navigation
 import { EmptyPageMessage, PlacementView } from './PlacementView';
 import { activityGate, popupShape, popupTitle, slotKey } from './popup';
 import { isPhone } from './device';
+import { Z_POPUP } from './layers';
 import { t } from './theme';
 
 /** How often, at most, a touch is reported to Home Assistant (#23, decision 10). */
 const ACTIVITY_INTERVAL_MS = 5_000;
-
-/**
- * Over the panel and under @hakit's own entity modal (z-index 1000, mounted
- * into `<body>`), so a long-press on a gate inside the Popup still opens its
- * modal on top.
- */
-const Z_POPUP = 900;
 
 /** The dark gradients the header and the row sit on, so they read over any picture. */
 const SCRIM = t.color.backdrop;
@@ -85,7 +80,7 @@ export function Popup({ page, onClose, onActivity }: PopupProps) {
   const onPointerDown = (e: PointerEvent) => {
     // The close button is the one touch that is not activity: it asks for
     // the opposite of "keep this open".
-    if (e.target instanceof Element && e.target.closest('[data-popup-close]')) return;
+    if (e.target instanceof Element && e.target.closest('[data-close]')) return;
     if (gate.current(Date.now())) onActivity();
   };
 
@@ -202,36 +197,5 @@ export function Popup({ page, onClose, onActivity }: PopupProps) {
         )}
       </div>
     </NavigationProvider>
-  );
-}
-
-/** The close button: round, top-right, translucent over the picture (#24, decision 4). */
-function CloseButton({ onClose }: { onClose: () => void }) {
-  const size = t.layout.popupClose;
-  return (
-    <button
-      type='button'
-      data-popup-close
-      onClick={onClose}
-      aria-label='Chiudi'
-      title='Chiudi'
-      style={{
-        width: size,
-        height: size,
-        flexShrink: 0,
-        borderRadius: t.radius.pill,
-        border: `1px solid ${t.color.border}`,
-        background: t.color.backdrop,
-        backdropFilter: 'blur(6px)',
-        color: t.color.textPrimary,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        padding: 0,
-      }}
-    >
-      <Icon name='mdi:close' size={size / 2} />
-    </button>
   );
 }

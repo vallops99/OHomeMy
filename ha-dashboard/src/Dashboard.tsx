@@ -29,38 +29,10 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useActions, usePage, useEntityState } from './ha';
-import { EmptyPageMessage, isPhone, NavigationProvider, Panel, PhoneShell, PlacementView, Popup, popupPage } from './ui';
+import { EmptyPageMessage, IDLE_RETURN_MS, isPhone, NavigationProvider, Panel, PhoneShell, PlacementView, Popup, popupPage } from './ui';
 
 /** The Page the panel opens on, and the one Page the idle timer below never fires on. */
 const MAIN_PAGE = 'main';
-
-/**
- * Idle return, in milliseconds (#14, decision 4). After this long with no
- * interaction on a non-main Page, the panel returns to `page:main` on its
- * own.
- *
- * The panel sits at the entrance and its resting state is the house's
- * Verdict (CONTEXT.md); whoever walks up to it next should not find someone
- * else's Area page left open by whoever was last standing here. #2 already
- * established that the panel cannot sense someone *approaching* -- wake is
- * Fully Kiosk's own camera motion, not a Home Assistant entity this code can
- * read -- but it can sense time, which is the only signal left for "this
- * page has been abandoned".
- *
- * 240s and not something shorter: long enough that reading a Page (checking
- * a camera, watching a chip list, adjusting something on an Area's own page)
- * is never interrupted mid-use by a panel that yanks itself home -- a timer
- * that fires while someone is still looking is worse than no timer, because
- * it teaches people to distrust the panel. Long enough, too, that a `1s`
- * flip through this constant's history would find no reason to distinguish
- * "reading" from "walked away" at a shorter interval without real usage data
- * to measure against, which #14 does not have. Short enough that the panel
- * is reliably home by the time the *next* person reaches it, rather than
- * still showing whatever the last visitor opened. 240s is the number that
- * satisfies both without evidence to tune it more precisely; revisit with
- * real usage data if it turns out to be wrong in either direction.
- */
-const IDLE_RETURN_MS = 240_000;
 
 /**
  * The helper that gates the `glance` quadrant (docs/protocol.md). A Home

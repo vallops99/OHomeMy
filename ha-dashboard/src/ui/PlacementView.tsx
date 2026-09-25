@@ -429,7 +429,8 @@ function GlanceView({ placed }: { placed: Placed[] }) {
         <Stats lightsOn={lightsOn} watts={placedWatts ?? watts} />
       </div>
       <div style={{ flexShrink: 0, paddingTop: 10 }}>
-        <ChipRow report={report} alarm={alarm} />
+        {/* Keyed on the Page: leaving it closes any Concern list open from here (#30). */}
+        <ChipRow key={page} report={report} alarm={alarm} />
       </div>
       {cameras.length > 0 && (
         <div style={{ flexShrink: 0, display: 'flex' }}>

@@ -15,8 +15,24 @@
  * the kind of thing someone standing at the door needs to still see on the
  * way out, so every concern keeps its own chip regardless of the verdict's
  * level.
+ *
+ * Every chip can be tapped (#30). A Concern chip opens a Concern list of
+ * the entities behind that one Concern (`ConcernList`), and the alarm chip
+ * opens @hakit's entity Modal for the alarm, where arming and disarming
+ * happen. Neither adds anything to the chip's look -- no chevron, no
+ * affordance -- so the fixed box below is exactly as it was.
+ *
+ * The list is this row's own state, not a Popup's and not a Page's: only
+ * the panel that was tapped shows it. It follows the live report while open
+ * and closes when its Concern clears. `GlanceView` keys this component on
+ * the current Page, so leaving the Page -- the idle return, a Tab change on
+ * a phone, navigation from a Popup -- closes it too.
  */
-import type { Entity, Health, HouseReport } from '../ha';
+import { useState, type KeyboardEvent } from 'react';
+import type { Entity, Health, HealthLevel, HouseReport } from '../ha';
+import { ConcernList } from './ConcernList';
+import { liveConcern } from './concernList';
+import { AlarmModal } from './AlarmModal';
 import { Icon } from './Icon';
 import { alarmIcon } from './alarmState';
 import { stateLabel } from './stateLabel';
@@ -47,8 +63,30 @@ const LEVEL_ICON: Record<Health['level'], string> = {
  */
 const CHIP_BOX_H = t.layout.chipRowFloor * t.layout.chipRowLines + t.space.sm * (t.layout.chipRowLines - 1);
 
+/** A chip's tap, for a pointer or a keyboard, with nothing changed about how it looks. */
+const pressable = (onPress: () => void) => ({
+  role: 'button',
+  tabIndex: 0,
+  onClick: onPress,
+  onKeyDown: (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onPress();
+    }
+  },
+});
+
 export function ChipRow({ report, alarm }: ChipRowProps) {
   const concerns = [report.verdict, ...report.also];
+  const [openLevel, setOpenLevel] = useState<HealthLevel | null>(null);
+  const [alarmOpen, setAlarmOpen] = useState(false);
+
+  // The list follows the report while open, and closes for good once its
+  // Concern clears: it does not come back by itself if the Concern returns.
+  // Set during render, React's way to adjust state to a changed prop.
+  const concern = openLevel === null ? null : liveConcern(report, openLevel);
+  if (openLevel !== null && concern === null) setOpenLevel(null);
+
   return (
     // Wraps, inside a box of fixed height (`chipRowLines` x `chipRowFloor`,
     // plus the gap between the lines).
@@ -78,52 +116,66 @@ export function ChipRow({ report, alarm }: ChipRowProps) {
     // `scrollSnapAlign` per chip keeps the row resting on whole lines, so a
     // chip is either fully readable or fully scrolled to, never sliced in
     // half across the box's edge.
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: t.space.sm,
-        alignContent: 'flex-start',
-        flex: `0 0 ${CHIP_BOX_H}px`,
-        height: CHIP_BOX_H,
-        overflowX: 'hidden',
-        overflowY: 'auto',
-        scrollSnapType: 'y mandatory',
-      }}
-    >
-      {concerns.map((health, i) => (
-        <Chip key={i} health={health} />
-      ))}
-      {alarm && (
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: t.space.sm,
-            padding: `${t.space.sm}px ${t.space.md}px`,
-            borderRadius: t.radius.pill,
-            border: `1px solid ${t.color.border}`,
-            color: t.color.textSecondary,
-            fontSize: t.font.body,
-            // A chip holds its width and keeps its text on one line: what
-            // wraps is the row, never the inside of a chip.
-            flex: '0 0 auto',
-            whiteSpace: 'nowrap',
-            scrollSnapAlign: 'start',
-          }}
-        >
-          <Icon name={alarmIcon(alarm)} size={20} />
-          {stateLabel(alarm)}
-        </div>
-      )}
-    </div>
+    <>
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: t.space.sm,
+          alignContent: 'flex-start',
+          flex: `0 0 ${CHIP_BOX_H}px`,
+          height: CHIP_BOX_H,
+          overflowX: 'hidden',
+          overflowY: 'auto',
+          scrollSnapType: 'y mandatory',
+        }}
+      >
+        {concerns.map((health, i) => (
+          <Chip
+            key={i}
+            health={health}
+            onPress={
+              // `ok` is a chip too, but not a Concern: it has nothing behind it to list.
+              health.level === 'ok' ? undefined : () => setOpenLevel(health.level)
+            }
+          />
+        ))}
+        {alarm && (
+          <div
+            {...pressable(() => setAlarmOpen(true))}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: t.space.sm,
+              padding: `${t.space.sm}px ${t.space.md}px`,
+              borderRadius: t.radius.pill,
+              border: `1px solid ${t.color.border}`,
+              color: t.color.textSecondary,
+              fontSize: t.font.body,
+              // A chip holds its width and keeps its text on one line: what
+              // wraps is the row, never the inside of a chip.
+              flex: '0 0 auto',
+              whiteSpace: 'nowrap',
+              scrollSnapAlign: 'start',
+              cursor: 'pointer',
+            }}
+          >
+            <Icon name={alarmIcon(alarm)} size={20} />
+            {stateLabel(alarm)}
+          </div>
+        )}
+      </div>
+      {concern && <ConcernList concern={concern} onClose={() => setOpenLevel(null)} />}
+      {alarm && <AlarmModal alarm={alarm} open={alarmOpen} onClose={() => setAlarmOpen(false)} />}
+    </>
   );
 }
 
-function Chip({ health }: { health: Health }) {
+function Chip({ health, onPress }: { health: Health; onPress?: () => void }) {
   const fault = health.level === 'fault';
   return (
     <div
+      {...(onPress ? pressable(onPress) : {})}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -139,6 +191,7 @@ function Chip({ health }: { health: Health }) {
         flex: '0 0 auto',
         whiteSpace: 'nowrap',
         scrollSnapAlign: 'start',
+        ...(onPress ? { cursor: 'pointer' } : {}),
       }}
     >
       <Icon name={LEVEL_ICON[health.level]} size={20} />

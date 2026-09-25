@@ -28,6 +28,7 @@ export { Popup, type PopupProps } from './Popup';
 export { PhoneShell } from './PhoneShell';
 export { isPhone } from './device';
 export { popupPage } from './popup';
+export { IDLE_RETURN_MS } from './idle';
 export { NavigationProvider, useNavigation, type Navigation } from './NavigationContext';
 export { HakitTheme } from './HakitTheme';
 export { stateLabel } from './stateLabel';
