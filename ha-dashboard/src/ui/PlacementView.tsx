@@ -31,6 +31,10 @@
  *     bug worth seeing, same reasoning `ScreenView.tsx` used.
  *   - an `input_button` -> a Page Opener (ADR-0012): the same block an Area
  *     gets in `footer`, opening the Page its object id names.
+ *   - where a Domain has a full and a compact form, `left`/`right` get the
+ *     full one and `footer` the compact one (#31): `climate` -> `ClimateCard`
+ *     / `ClimateBlock`, `sensor` -> `SensorTile` / `SensorBlock` (#33).
+ *     `weather` -> `WeatherCard`, in `left`/`right` only.
  *
  * `footer`:
  *   - an Area -> a tappable block that opens that Area's Page (`page:<area
@@ -105,6 +109,7 @@ import {
 } from '../ha';
 import { AlarmTile } from './AlarmTile';
 import { CameraGlance } from './CameraGlance';
+import { ClimateBlock, ClimateCard } from './ClimateCard';
 import { ChipRow } from './ChipRow';
 import { FaultTile } from './FaultTile';
 import { Feeds } from './Feeds';
@@ -115,11 +120,13 @@ import { MediaBar } from './MediaBar';
 import { useNavigation } from './NavigationContext';
 import { popupTitle } from './popup';
 import { RoomRow } from './RoomRow';
+import { SensorBlock, SensorTile } from './SensorTile';
 import { Stats } from './Stats';
 import { OpenChevron, SwipeToOpen } from './SwipeToOpen';
 import { t } from './theme';
 import { Tile } from './Tile';
 import { ToggleTile } from './ToggleTile';
+import { WeatherCard } from './WeatherCard';
 
 /**
  * An entity placed in `left`, `right` or the footer, dispatched by Domain --
@@ -137,7 +144,11 @@ import { ToggleTile } from './ToggleTile';
  * order) is preserved for what is left. A camera therefore never reaches
  * `entitySlot`.
  */
-function entitySlot(entity: Entity) {
+function entitySlot(entity: Entity, region: Exclude<Region, 'glance'>) {
+  // Where a Domain has a full and a compact form, the Region chooses: `left`
+  // and `right` get the full one, `footer` the compact one (#31). The Page
+  // never decides shape.
+  const compact = region === 'footer';
   const opens = openerPage(entity);
   if (opens !== null) {
     return <PageOpenerBlock key={entity.id} entity={entity} page={opens} />;
@@ -153,6 +164,15 @@ function entitySlot(entity: Entity) {
   }
   if (entity.domain === 'light' || entity.domain === 'switch') {
     return <ToggleTile key={entity.id} entity={entity} />;
+  }
+  if (entity.domain === 'climate') {
+    return compact ? <ClimateBlock key={entity.id} entity={entity} /> : <ClimateCard key={entity.id} entity={entity} />;
+  }
+  if (entity.domain === 'sensor') {
+    return compact ? <SensorBlock key={entity.id} entity={entity} /> : <SensorTile key={entity.id} entity={entity} />;
+  }
+  if (entity.domain === 'weather' && !compact) {
+    return <WeatherCard key={entity.id} entity={entity} />;
   }
   return <FaultTile key={entity.id} label={`Nessun componente: ${entity.domain}`} />;
 }
@@ -354,7 +374,7 @@ function FooterMember({ entity, labelOrder, children }: { entity: Entity; labelO
  *     specifically for a `climate` entity among what is Placed, and only
  *     that Domain feeds Hero's temperature; a `temperature`-class `sensor`
  *     placed in `glance` is not a fallback for it (there being no Area to
- *     fall back to at the house level the way `RoomRow.areaTemperature` can)
+ *     fall back to at the house level the way a Row's `roomTemperature` can)
  *     and is simply not consulted for temperature at all.
  *   - a `sensor` Placed in `glance` with `device_class: humidity` feeds
  *     `Hero`'s humidity line.
@@ -573,11 +593,11 @@ export function PlacementView({ region, placed, home = true }: { region: Region;
         if (region === 'footer' && openerPage(item.entity) === null) {
           return (
             <FooterMember key={item.entity.id} entity={item.entity} labelOrder={labelOrder}>
-              {entitySlot(item.entity)}
+              {entitySlot(item.entity, 'footer')}
             </FooterMember>
           );
         }
-        return entitySlot(item.entity);
+        return entitySlot(item.entity, region);
       })}
     </>
   );

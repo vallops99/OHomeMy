@@ -136,6 +136,27 @@ merely in its Area; a camera with no such sensor never shows motion. Nothing
 labels the glance's page: placing the cameras' Feeds somewhere is what makes
 that page the one it opens.
 
+Every other domain, by region. The page never decides shape: where a domain
+has a full form and a compact one, `left` and `right` get the full one and
+`footer` the compact one. An Unavailable entity renders in its own shape,
+marked as a fault, and a domain with no shape in a region renders a fault tile
+naming the domain.
+
+| an entity in… | `left`, `right` | `footer` | `glance` |
+| --- | --- | --- | --- |
+| `lock` | a gate slab: tap to open or close | the same | — |
+| `light`, `switch` | a row: tap to toggle, a brightness slider when it dims | the same | — |
+| `alarm_control_panel` | a tile: tap to arm away or disarm | the same | the alarm chip, which opens its arm/disarm Modal |
+| `media_player` | the transport strip, showing whatever is playing | the same | — |
+| `climate` | the full card: the room's temperature, the setpoint with − and +, the HVAC modes it reports, and what it is doing | a block: name, temperature and setpoint; a tap does nothing | the big temperature |
+| `weather` | the condition in Italian, the temperature, and the next five days | a fault tile | — |
+| `sensor` | a row: name, current value and unit, an icon by device class; read-only | a block: value over name | `humidity` is the humidity line, `power` the consumption |
+| `input_button` | a Page Opener's block | the same | a fault tile |
+
+"—" is nothing: `glance` composes its own reading from what it is given and
+draws no tile for anything else. No `sensor` draws a graph: history is out of
+scope.
+
 So the Areas are the navigation. There is no separate nav concept: a page
 button is an **Area** placed in a footer, and tapping it opens
 `page:<that area's id>` — the id from Home Assistant's area registry, not the

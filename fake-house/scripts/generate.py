@@ -380,6 +380,11 @@ class Builder:
         # its object id, which is what makes it `input_button.<id>`.
         self.input_button[e["id"].split(".", 1)[1]] = {"name": e["name"], "icon": e["icon"]}
 
+    def _external(self, e: dict) -> None:
+        # A real entity from a real integration (the met.no weather): there
+        # is nothing to fake. apply-registry.py only labels it.
+        pass
+
     def _button_lock(self, e: dict) -> None:
         # Not a fake of a device: the wrapper the real house needs too. The
         # Ring Intercom opens its door with a `button` (ring-integration.md),

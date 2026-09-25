@@ -10,7 +10,9 @@
 #
 # kind:  light | switch | lock | alarm | vacuum | select | sensor |
 #        binary_sensor | climate | media_player | camera | siren |
-#        event | button | button_lock | input_button
+#        event | button | button_lock | input_button | external
+#        (`external`: a real entity from a real integration, not a fake --
+#        generate.py skips it, apply-registry.py only labels it)
 # device_of: (binary_sensor only) the entity whose device this one joins.
 #        YAML templates cannot join a device, so apply-registry.py builds
 #        these as template helpers linked to it instead.
@@ -109,6 +111,17 @@ labels:
   - id: page:telecamere:right
     name: page:telecamere:right
     icon: mdi:cctv
+  # Clima (#33): the thermostat, the weather and the readings. Its glance is
+  # the same as `page:main`'s, so the Verdict is still there.
+  - id: page:clima:glance
+    name: page:clima:glance
+    icon: mdi:thermostat
+  - id: page:clima:left
+    name: page:clima:left
+    icon: mdi:thermostat
+  - id: page:clima:right
+    name: page:clima:right
+    icon: mdi:thermostat
 
 entities:
   # ---------------- Page Openers ----------------
@@ -266,7 +279,7 @@ entities:
     name: Allarme
     kind: alarm
     area: null
-    labels: [security, main, page:main:glance]
+    labels: [security, main, page:main:glance, page:clima:glance]
   - id: siren.telecamera_cancello_sirena
     name: Sirena Cancello
     kind: siren
@@ -286,24 +299,26 @@ entities:
     name: Telecamera Cancello
     kind: camera
     area: esterno
-    labels: [vision, page:main:glance, page:telecamere:right]
+    labels: [vision, page:main:glance, page:clima:glance, page:telecamere:right]
   - id: camera.telecamera_cancelletto
     name: Telecamera Cancelletto
     kind: camera
     area: esterno
-    labels: [vision, page:main:glance, page:telecamere:right]
+    labels: [vision, page:main:glance, page:clima:glance, page:telecamere:right]
   - id: camera.telecamera_esterno_giardino
     name: Telecamera Giardino
     kind: camera
     area: esterno
-    labels: [vision, page:main:glance, page:telecamere:right]
+    labels: [vision, page:main:glance, page:clima:glance, page:telecamere:right]
 
   # ---------------- climate ----------------
+  # In full on `page:clima`, which makes it where the Hero on `page:main`
+  # leads (#32).
   - id: climate.corridoio_termostato
     name: Termostato
     kind: climate
     area: corridoio
-    labels: [main, page:main:glance]
+    labels: [main, page:main:glance, page:clima:glance, page:clima:left]
   - id: sensor.corridoio_termostato_umidita
     name: Umidita Termostato
     kind: sensor
@@ -311,7 +326,7 @@ entities:
     device_class: humidity
     unit: '%'
     initial: 47
-    labels: [page:main:glance]
+    labels: [page:main:glance, page:clima:glance, page:clima:right]
 
   # ---------------- media ----------------
   - id: media_player.ovunque
@@ -488,9 +503,21 @@ entities:
     unit: W
     initial: 320
     state_class: measurement
-    labels: [page:main:glance]
+    labels: [page:main:glance, page:clima:glance]
 
-  # ---------------- diagnostics (ignored) ----------------
+  # ---------------- weather ----------------
+  # Real in `ha-local`, from met.no: not a fake, so it is only labelled.
+  - id: weather.forecast_casa
+    name: Forecast Casa
+    kind: external
+    area: null
+    labels: [main, page:clima:right]
+
+  # An Echo's own chip temperature, not the room's. It used to carry
+  # `ignored`, because it won Camera Chri's temperature scan (#8's fault,
+  # found again on the room rows). A Row now reads only a `main` sensor
+  # (roomTemperature.ts), so it can be Placed on `page:clima`, as the old
+  # Lovelace Clima view had it, without reaching the Row.
   - id: sensor.echo_di_christian_temperatura
     name: Temperatura Echo
     kind: sensor
@@ -498,11 +525,9 @@ entities:
     device_class: temperature
     unit: "°C"
     initial: 21.5
-    # An Echo's own chip temperature, not the room's. It sits in this
-    # "ignored" section but never carried the Label, so it still reached the
-    # dashboard and won Camera Chri's temperature scan (#8's fault, found
-    # again on the room rows).
-    labels: [ignored]
+    labels: [page:clima:right]
+
+  # ---------------- diagnostics (ignored) ----------------
   - id: sensor.portone_ingresso_batteria
     name: Batteria Portone
     kind: sensor

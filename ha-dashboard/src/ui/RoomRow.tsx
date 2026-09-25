@@ -19,40 +19,13 @@ import { Icon } from './Icon';
 import { isPhone } from './device';
 import { brightnessPercent } from './lightState';
 import { useNavigation } from './NavigationContext';
+import { roomTemperature } from './roomTemperature';
 import { rowBox, rowStyle, useRowSlider } from './rowShape';
 import { Slider } from './Slider';
 import { stateLabel } from './stateLabel';
 import { OpenChevron, SwipeToOpen } from './SwipeToOpen';
 import { Tile } from './Tile';
 import { t } from './theme';
-
-/**
- * The Area's temperature: what the room is, not what a device in it is.
- *
- * A `climate` entity's own `current_temperature` is preferred over any
- * `temperature` sensor, for the reason #8 found at house level: the house is
- * full of devices that report their own chip temperature, and an Amazon Echo
- * in Camera Chri wins a naive scan -- putting a speaker's self-heating on the
- * wall as the room's reading. Device class is not intent.
- *
- * A plain sensor is still used when the Area has no thermostat, since most
- * rooms have no `climate` entity at all -- but never one carrying an
- * `entity_category`, which is Home Assistant's own marker for plumbing.
- */
-function areaTemperature(area: Area): string | null {
-  const thermostat = area.entities.find(e => e.domain === 'climate' && !e.unavailable);
-  const fromClimate = Number(thermostat?.attributes.current_temperature);
-  if (thermostat && !Number.isNaN(fromClimate)) return `${fromClimate.toFixed(1)}°`;
-
-  const sensor = area.entities.find(
-    e => e.domain === 'sensor' && e.attributes.device_class === 'temperature' && !e.unavailable && !e.attributes.entity_category
-  );
-  if (!sensor) return null;
-  const value = Number(sensor.state);
-  if (Number.isNaN(value)) return null;
-  const unit = (sensor.attributes.unit_of_measurement as string) ?? '°';
-  return `${value.toFixed(1)}${unit}`;
-}
 
 /**
  * `<on>/<total> luci` for the Area, or `null` when the Area has no `light`
@@ -82,7 +55,7 @@ export function RoomRow({ area, icon = 'mdi:sofa' }: RoomRowProps) {
   const main = pickMain(area, 'light');
   const active = main?.state === 'on';
   const unavailable = main?.unavailable ?? false;
-  const temperature = areaTemperature(area);
+  const temperature = roomTemperature(area);
   const counts = lightCount(area);
 
   const slider = useRowSlider(brightnessPercent(main));

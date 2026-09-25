@@ -18,7 +18,7 @@ real one -- real service calls, real state machine, real `unavailable`.
 
 ## The manifest is the source of truth
 
-`manifest.yaml` declares all 62 entities once: entity id, Area, Labels, and the
+`manifest.yaml` declares every entity once: entity id, Area, Labels, and the
 `kind` that decides how it is faked. Entity ids are taken verbatim from the
 existing `Casa Carina` Lovelace dashboard, which is the statement of intent for
 the real house.
@@ -42,6 +42,8 @@ generator picks per domain. All three routes produce genuine entities:
 | button | `template` button that does nothing when pressed |
 | lock over a button (`button_lock`) | `template` lock that presses the button; the real house needs the same wrapper (docs/protocol.md, "Popups") |
 | binary_sensor with `device_of` | `template` **helper** (a config entry) linked to that entity's device, created by `apply-registry.py` |
+| input_button (a Page Opener) | a YAML `input_button`, keyed by its object id: a helper the real house needs too, not a fake |
+| `external` | nothing: a real entity from a real integration (the met.no weather), only labelled |
 
 A camera's motion is the motion sensor on the camera's own device (CONTEXT.md,
 Derived), and YAML templates cannot join a device. So the three camera motion
