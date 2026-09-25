@@ -5,7 +5,7 @@ import { HakitTheme } from './ui';
 function App() {
   return (
     <HassConnect
-      hassUrl={import.meta.env.VITE_HA_URL}
+      hassUrl={import.meta.env.DEV ? import.meta.env.VITE_HA_URL : window.location.origin}
       hassToken={import.meta.env.VITE_HA_TOKEN}
       // @hakit is documented to take the language from the Home Assistant
       // instance, but its own surfaces (the entity modal) came up in English
