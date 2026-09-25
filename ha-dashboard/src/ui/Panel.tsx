@@ -25,13 +25,16 @@
  * that point `right` takes the panel's whole width. Making `glance`
  * an optional prop is what lets that be expressed in TypeScript rather than
  * as a runtime `if` the type system cannot see -- the caller (whatever reads
- * the toggle) simply omits the prop, and the left column disappears along
- * with it, `left` included: with no glance to sit above it, a left
- * column holding only `left` would be a second, smaller sidebar the
- * protocol never described. Neither ADR-0005 nor docs/protocol.md says what
- * happens to `left` when `glance` collapses, so this is a judgement
- * call, recorded here rather than left implicit: the two-column split is a
- * `glance`-driven shape, so when there is no `glance` there is no split.
+ * the toggle) simply omits the prop.
+ *
+ * `left` is optional too, and the left column exists while either of the two
+ * is there. It used to go with `glance`, `left` included, on the judgement
+ * that without a glance above it the column was a sidebar the protocol never
+ * described. That judgement dropped Placed things without a word: a Page
+ * whose `glance` held nothing lost its `left` with it, and the toggle took
+ * `page:main`'s gates. Something Placed is shown (docs/protocol.md), so the
+ * column now collapses only when both are absent, and only then does `right`
+ * take the width.
  *
  * This component knows nothing about Home Assistant, Areas, entities, or
  * Regions-as-a-source-of-content -- only that it has been handed four slots
@@ -84,9 +87,9 @@ function useHasMoreBelow(ref: React.RefObject<HTMLDivElement | null>): boolean {
 export type PanelProps = {
   /** The top-left quadrant. Absent when the glance toggle is off -- see above. */
   glance?: ReactNode;
-  /** The bottom-left quadrant. Only ever shown alongside `glance`. */
-  left: ReactNode;
-  /** The right column, full height. Takes the whole width when `glance` is absent. */
+  /** The bottom-left quadrant. Absent when nothing is Placed in it. */
+  left?: ReactNode;
+  /** The right column, full height. Takes the whole width when `glance` and `left` are both absent. */
   right: ReactNode;
   /** The strip along the floor. */
   footer: ReactNode;
@@ -129,8 +132,8 @@ export function Panel({ glance, left, right, footer }: PanelProps) {
         measuring rather than by reading the arithmetic.
       */}
       <div style={{ display: 'flex', flex: 1, gap: t.space.lg, minHeight: 0 }}>
-        {glance !== undefined && (
-          // The left column exists only because `glance` does -- see the
+        {(glance !== undefined || left !== undefined) && (
+          // The left column exists while `glance` or `left` does -- see the
           // header note. `flexShrink: 0` and a fixed width, same as variant
           // D's sidebar: the left column is the glance layer's column, sized
           // for its content (the 112 px hero, the chip row), not sized against
@@ -205,7 +208,7 @@ export function Panel({ glance, left, right, footer }: PanelProps) {
               glance you have to scroll is not a glance (CONTEXT.md: read on
               approach from 2 m).
             */}
-            <div style={{ flex: '0 0 auto', minHeight: 0 }}>{glance}</div>
+            {glance !== undefined && <div style={{ flex: '0 0 auto', minHeight: 0 }}>{glance}</div>}
             {/*
               `left` is the region that yields (ADR-0007), and it
               yields *discretely*: `flex: '0 1 auto'` with `overflowY: auto`
@@ -216,13 +219,15 @@ export function Panel({ glance, left, right, footer }: PanelProps) {
               and then exactly one named region does, visibly.
 
               `marginTop: 'auto'` still pins the block to the foot of the
-              column, so the gates stay where the hand expects them.
+              column under a glance, so the gates stay where the hand expects
+              them. With no glance above it, `left` is all the column holds
+              and starts at the top.
             */}
             <div
               ref={leftRef}
               style={{
                 flex: '0 1 auto',
-                marginTop: 'auto',
+                marginTop: glance !== undefined ? 'auto' : undefined,
                 minHeight: 0,
                 overflowY: 'auto',
                 display: 'flex',
@@ -252,8 +257,8 @@ export function Panel({ glance, left, right, footer }: PanelProps) {
         )}
 
         {/*
-          `right`: full height, and the whole width when `glance` (and
-          so the left column) is absent -- `flex: 1` does that with no
+          `right`: full height, and the whole width when the left column is
+          absent -- `flex: 1` does that with no
           conditional styling needed here, since it is the only remaining
           flex item in the row at that point.
         */}

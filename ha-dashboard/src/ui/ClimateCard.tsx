@@ -1,7 +1,9 @@
 /**
  * A `climate` entity in full (#33): what it is in `left` or `right`. The room
- * temperature, the setpoint with − and +, the HVAC modes the entity reports,
- * and what it is doing right now. Its compact form, for `footer`, is
+ * temperature and its humidity, the setpoint with − and +, the HVAC modes the
+ * entity reports, and what it is doing right now. The humidity is the
+ * thermostat's own, or the sensor on its device (`climateHumidity`); with
+ * neither, the line is not there. Its compact form, for `footer`, is
  * `ClimateBlock` below.
  *
  * Our own, not @hakit's `ClimateCard`: that card draws its own dial and
@@ -14,7 +16,7 @@
  * climate is a Fault: the card says so, and offers nothing to press.
  */
 import { useState } from 'react';
-import { useActions, type Entity } from '../ha';
+import { climateHumidity, useActions, useEntities, type Entity } from '../ha';
 import { climateReading, degrees, hvacActionLabel, hvacModes, stepSetpoint } from './climateState';
 import { Icon } from './Icon';
 import { ReadingBlock } from './ReadingBlock';
@@ -41,6 +43,7 @@ export function ClimateCard({ entity }: ClimateCardProps) {
   const actions = useActions();
   const { current, target } = climateReading(entity);
   const setpoint = useSetpoint(target);
+  const humidity = climateHumidity(entity, useEntities().values());
   const unavailable = entity.unavailable;
   const heating = entity.attributes.hvac_action === 'heating' || entity.attributes.hvac_action === 'cooling';
 
@@ -99,9 +102,14 @@ export function ClimateCard({ entity }: ClimateCardProps) {
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: t.space.md }}>
             {/* The room, read from 2 m: the one number here that is not a control. */}
-            <span style={{ flex: 1, fontSize: t.font.glanceXL, fontWeight: 300, lineHeight: 1.15, color: t.color.textPrimary }}>
-              {degrees(current)}
-            </span>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              <span style={{ fontSize: t.font.glanceXL, fontWeight: 300, lineHeight: 1.15, color: t.color.textPrimary }}>
+                {degrees(current)}
+              </span>
+              {humidity !== null && (
+                <span style={{ fontSize: t.font.caption, color: t.color.textSecondary }}>{Math.round(humidity)}% umidità</span>
+              )}
+            </div>
             <StepButton icon='mdi:minus' label='Abbassa' onPress={() => step(-1)} disabled={setpoint.shown === null} />
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 84 }}>
               <span style={{ fontSize: t.font.glanceL, fontWeight: 600, color: t.color.textPrimary, lineHeight: 1.2 }}>

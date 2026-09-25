@@ -83,8 +83,8 @@ function Dashboard() {
   // The *second*, independent way the quadrant collapses (#14, decision 3;
   // docs/protocol.md, "The glance region collapses -- two ways"): `glance`
   // resolves per Page like every other Region, so a Page with nothing Placed
-  // in it has no glance quadrant at all and `right` takes the
-  // panel's width.
+  // in it has no glance quadrant at all. Its `left` stays; only a Page with
+  // neither gives `right` the panel's width.
   //
   // This has to be decided here rather than inside `GlanceView`, because
   // `GlanceView` cannot render *nothing*: `Hero`, `Stats` and `ChipRow` take
@@ -94,8 +94,8 @@ function Dashboard() {
   // empty column -- it produces a column of house-wide leftovers with a
   // temperature-less `--` hero, which is exactly what appeared on
   // `page:corridoio` and what this check exists to prevent. Emptiness is a
-  // fact about the Page's Placement, so `Panel` must be told to drop the
-  // whole left column, which is the shape `glance={undefined}` already means.
+  // fact about the Page's Placement, so `Panel` must be told there is no
+  // glance, which is the shape `glance={undefined}` already means.
   const glancePlaced = page.glance.length > 0;
 
   // `openPage` is the only way anything below this component can change
@@ -187,7 +187,10 @@ function Dashboard() {
     <NavigationProvider value={{ page: currentPage, openPage }}>
       <Panel
         glance={glanceOn && glancePlaced ? <PlacementView region='glance' placed={page.glance} /> : undefined}
-        left={<PlacementView region='left' placed={page.left} />}
+        // Passed only when something is Placed there: `Panel` keeps the left
+        // column while `glance` or `left` is present, so `left` survives a
+        // Page with nothing in `glance` and the toggle alike.
+        left={page.left.length > 0 ? <PlacementView region='left' placed={page.left} /> : undefined}
         right={isEmpty ? <EmptyPageMessage /> : <PlacementView region='right' placed={page.right} />}
         // The footer is never swapped for the empty-Page message, even when
         // `isEmpty` is true: `PlacementView` already renders the `HomeBlock`

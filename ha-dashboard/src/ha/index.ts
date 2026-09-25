@@ -24,6 +24,7 @@ export { houseReport, houseTemperature, houseHumidity, type Health, type HealthL
 export { useActions, type Actions } from './actions';
 export { resolvePage, placedPageFor, openerPage, type Region, type Placed, type PageLayout } from './placement';
 export { cameraMoving } from './motion';
+export { climateHumidity } from './climateHumidity';
 export { useFeed, type Feed } from './useFeed';
 export { useForecast } from './useForecast';
 export type { ForecastDay } from './forecast';
