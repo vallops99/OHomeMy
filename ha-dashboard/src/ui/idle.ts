@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+
 /**
  * Idle return, in milliseconds (#14, decision 4). After this long with no
  * interaction on a non-main Page, the panel returns to `page:main` on its
@@ -28,3 +30,32 @@
  * real usage data if it turns out to be wrong in either direction.
  */
 export const IDLE_RETURN_MS = 240_000;
+
+/**
+ * Close after `IDLE_RETURN_MS` with no touch anywhere on the panel -- the
+ * same spell as the idle return, and on every Page, `page:main` and a phone
+ * included, where that return never runs. A touch in a Popup over it is a
+ * touch like any other. For the panel-local overlays: the Concern list (#30)
+ * and the `select` picker (#36).
+ */
+export function useIdleClose(onClose: () => void) {
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  useEffect(() => {
+    let timer = setTimeout(() => onCloseRef.current(), IDLE_RETURN_MS);
+    const onActivity = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => onCloseRef.current(), IDLE_RETURN_MS);
+    };
+    document.addEventListener('pointerdown', onActivity, true);
+    document.addEventListener('keydown', onActivity, true);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('pointerdown', onActivity, true);
+      document.removeEventListener('keydown', onActivity, true);
+    };
+  }, []);
+}

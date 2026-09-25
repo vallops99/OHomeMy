@@ -11,6 +11,7 @@
  */
 import { useHass, useRegistryData } from '@hakit/core';
 import { useEffect, useMemo, useState } from 'react';
+import { deviceBattery } from './battery';
 import { resolvePage, type PageLayout } from './placement';
 import type { Area, AreaId, Entity, EntityId, Label } from './types';
 
@@ -292,4 +293,23 @@ export function usePage(page: string): PageLayout {
  */
 export function useHassUrl(): (path: string) => string {
   return useHass(s => s.helpers.joinHassUrl);
+}
+
+/**
+ * The battery level of an entity's device (#36): its `battery` sensor, even a
+ * `diagnostic` one `useEntities` never returns. `null` with no device or no
+ * such sensor -- and then nothing shows a battery, rather than a fake one.
+ */
+export function useDeviceBattery(entity: Entity): number | null {
+  const registry = useRegistryData('entitiesRegistryDisplay');
+  const states = useHass(s => s.entities);
+  return useMemo(
+    () =>
+      deviceBattery(
+        Object.values(registry ?? {}) as RegistryEntry[],
+        (states ?? {}) as Record<string, { state: string; attributes: Record<string, unknown> }>,
+        entity.deviceId
+      ),
+    [registry, states, entity.deviceId]
+  );
 }

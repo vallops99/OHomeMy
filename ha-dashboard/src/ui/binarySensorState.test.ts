@@ -48,3 +48,8 @@ test('an Unavailable sensor says so', () => {
   assert.equal(binarySensorView(sensor('unavailable', 'door')).label, 'Non disponibile');
   assert.equal(binarySensorView(sensor('unavailable', 'door')).open, false);
 });
+
+test('a problem reads "Da ricaricare" when on, as the dishwasher’s salt and rinse aid do (#36)', () => {
+  assert.equal(binarySensorView(sensor('on', 'problem')).label, 'Da ricaricare');
+  assert.equal(binarySensorView(sensor('off', 'problem')).label, 'OK');
+});

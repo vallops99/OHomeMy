@@ -25,7 +25,11 @@ const CLASSES: Record<string, { on: string; off: string; iconOn: string; iconOff
   door: { on: 'Aperta', off: 'Chiusa', iconOn: LEVEL_ICON.open, iconOff: 'mdi:door-closed' },
   window: { on: 'Aperta', off: 'Chiusa', iconOn: 'mdi:window-open', iconOff: 'mdi:window-closed' },
   opening: { on: 'Aperta', off: 'Chiusa', iconOn: 'mdi:square-outline', iconOff: 'mdi:square' },
-  problem: { on: 'Problema', off: 'OK', iconOn: 'mdi:alert-circle', iconOff: 'mdi:check-circle' },
+  // "Da ricaricare", not "Problema" (#36): this house's problem sensors are
+  // the dishwasher's salt and rinse aid and the Roborock's water, each of
+  // them something to refill. A house whose problems are not refills will
+  // want this word changed.
+  problem: { on: 'Da ricaricare', off: 'OK', iconOn: 'mdi:alert-circle', iconOff: 'mdi:check-circle' },
   motion: { on: 'Movimento', off: 'Nessun movimento', iconOn: 'mdi:motion-sensor', iconOff: 'mdi:motion-sensor-off' },
   moisture: { on: 'Bagnato', off: 'Asciutto', iconOn: 'mdi:water', iconOff: 'mdi:water-off' },
 };

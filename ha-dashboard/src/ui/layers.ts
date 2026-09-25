@@ -1,7 +1,8 @@
 /**
  * The panel's stacking order, in one place: what may cover what.
  *
- * Bottom to top: the panel, a Concern list (#30), a Popup (#28), then
+ * Bottom to top: the panel, a Concern list (#30) or a `select` picker (#36),
+ * a Popup (#28), then
  * @hakit's own entity Modal (z-index 1000, mounted into `<body>`).
  */
 
@@ -17,3 +18,9 @@ export const Z_POPUP = 900;
  * list is open covers it without closing it (#30).
  */
 export const Z_CONCERN_LIST = Z_POPUP - 1;
+
+/**
+ * The `select` picker (#36): panel-local like a Concern list, so on the same
+ * layer -- a Popup covers it without closing it.
+ */
+export const Z_PICKER = Z_CONCERN_LIST;

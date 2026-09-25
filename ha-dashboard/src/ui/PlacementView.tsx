@@ -39,7 +39,8 @@
  *     `MediaBar` in `left` as well as `footer` (#35).
  *     `alarm_control_panel` -> `AlarmPanel` / `AlarmTile`, `binary_sensor`
  *     -> `BinarySensorTile` / `BinarySensorBlock`, and `light`, `switch`,
- *     `siren` -> `ToggleTile` / `ToggleBlock` (#34).
+ *     `siren` -> `ToggleTile` / `ToggleBlock` (#34). `vacuum` ->
+ *     `VacuumCard` and `select` -> `SelectTile`, in `left`/`right` only (#36).
  *
  * `footer`:
  *   - an Area -> a tappable block that opens that Area's Page (`page:<area
@@ -128,6 +129,7 @@ import { MediaCard } from './MediaCard';
 import { useNavigation } from './NavigationContext';
 import { popupTitle } from './popup';
 import { RoomRow } from './RoomRow';
+import { SelectTile } from './SelectTile';
 import { SensorBlock, SensorTile } from './SensorTile';
 import { Stats } from './Stats';
 import { OpenChevron, SwipeToOpen } from './SwipeToOpen';
@@ -135,6 +137,7 @@ import { t } from './theme';
 import { Tile } from './Tile';
 import { ToggleBlock } from './ToggleBlock';
 import { ToggleTile } from './ToggleTile';
+import { VacuumCard } from './VacuumCard';
 import { WeatherCard } from './WeatherCard';
 
 /**
@@ -185,6 +188,12 @@ function entitySlot(entity: Entity, region: Exclude<Region, 'glance'>) {
   }
   if (entity.domain === 'sensor') {
     return compact ? <SensorBlock key={entity.id} entity={entity} /> : <SensorTile key={entity.id} entity={entity} />;
+  }
+  if (entity.domain === 'vacuum' && !compact) {
+    return <VacuumCard key={entity.id} entity={entity} />;
+  }
+  if (entity.domain === 'select' && !compact) {
+    return <SelectTile key={entity.id} entity={entity} />;
   }
   if (entity.domain === 'weather' && !compact) {
     return <WeatherCard key={entity.id} entity={entity} />;

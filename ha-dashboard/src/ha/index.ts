@@ -15,6 +15,7 @@ export {
   useEntityState,
   useLabelOrder,
   useHassUrl,
+  useDeviceBattery,
   usePower,
   pickMain,
   isUnavailableState,

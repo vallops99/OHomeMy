@@ -20,14 +20,13 @@
  *
  * Rows are information, never controls: a tap on one does nothing.
  */
-import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useAreas, type Health } from '../ha';
 import { CloseButton } from './CloseButton';
 import { concernRows } from './concernList';
 import { isPhone } from './device';
 import { DOMAIN_ICON, Icon } from './Icon';
-import { IDLE_RETURN_MS } from './idle';
+import { useIdleClose } from './idle';
 import { Z_CONCERN_LIST } from './layers';
 import { t } from './theme';
 
@@ -137,32 +136,4 @@ export function ConcernList({ concern, onClose }: ConcernListProps) {
     </div>,
     document.body
   );
-}
-
-/**
- * Close after `IDLE_RETURN_MS` with no touch anywhere on the panel -- the
- * same spell as the idle return, and on every Page, `page:main` and a phone
- * included, where that return never runs. A touch in a Popup over the list
- * is a touch like any other.
- */
-function useIdleClose(onClose: () => void) {
-  const onCloseRef = useRef(onClose);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  });
-
-  useEffect(() => {
-    let timer = setTimeout(() => onCloseRef.current(), IDLE_RETURN_MS);
-    const onActivity = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => onCloseRef.current(), IDLE_RETURN_MS);
-    };
-    document.addEventListener('pointerdown', onActivity, true);
-    document.addEventListener('keydown', onActivity, true);
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('pointerdown', onActivity, true);
-      document.removeEventListener('keydown', onActivity, true);
-    };
-  }, []);
 }

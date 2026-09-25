@@ -136,6 +136,17 @@ labels:
   - id: page:media:right
     name: page:media:right
     icon: mdi:speaker
+  # Servizi (#36): the vacuum and its selects, the dishwasher, and the main
+  # switch with its readings. The Verdict glance again, so `left` renders.
+  - id: page:servizi:glance
+    name: page:servizi:glance
+    icon: mdi:washing-machine
+  - id: page:servizi:left
+    name: page:servizi:left
+    icon: mdi:washing-machine
+  - id: page:servizi:right
+    name: page:servizi:right
+    icon: mdi:washing-machine
   # Clima (#33): the thermostat, the weather and the readings. Its glance is
   # the same as `page:main`'s, so the Verdict is still there.
   - id: page:clima:glance
@@ -304,7 +315,7 @@ entities:
     name: Allarme
     kind: alarm
     area: null
-    labels: [security, main, page:main:glance, page:clima:glance, page:sicurezza:glance, page:sicurezza:left, page:media:glance]
+    labels: [security, main, page:main:glance, page:clima:glance, page:sicurezza:glance, page:sicurezza:left, page:media:glance, page:servizi:glance]
   - id: siren.telecamera_cancello_sirena
     name: Sirena Cancello
     kind: siren
@@ -343,7 +354,7 @@ entities:
     name: Termostato
     kind: climate
     area: corridoio
-    labels: [main, page:main:glance, page:clima:glance, page:clima:left, page:sicurezza:glance, page:media:glance]
+    labels: [main, page:main:glance, page:clima:glance, page:clima:left, page:sicurezza:glance, page:media:glance, page:servizi:glance]
   - id: sensor.corridoio_termostato_umidita
     name: Umidita Termostato
     kind: sensor
@@ -351,7 +362,7 @@ entities:
     device_class: humidity
     unit: '%'
     initial: 47
-    labels: [page:main:glance, page:clima:glance, page:clima:right, page:sicurezza:glance, page:media:glance]
+    labels: [page:main:glance, page:clima:glance, page:clima:right, page:sicurezza:glance, page:media:glance, page:servizi:glance]
 
   # ---------------- media ----------------
   # In `page:media:left` too, so `page:main`'s footer strip leads there
@@ -396,25 +407,29 @@ entities:
     name: Roborock S5 Max
     kind: vacuum
     area: salone
-    labels: [main]
+    labels: [main, page:servizi:left]
   - id: select.roborock_s5_max_mappa_selezionata
     name: Mappa Selezionata
     kind: select
     area: salone
     options: [Piano Terra, Primo Piano]
     initial: Piano Terra
+    labels: [page:servizi:left]
   - id: select.roborock_s5_max_modalita_panno
     name: Modalita Panno
     kind: select
     area: salone
-    options: [Off, Basso, Medio, Alto]
+    # Quoted: a bare `Off` is YAML's boolean, and the select offered "False".
+    options: ['Off', Basso, Medio, Alto]
     initial: Medio
+    labels: [page:servizi:left]
   - id: select.soggiorno_roborock_s5_max_cleaning_mode
     name: Modalita Pulizia
     kind: select
     area: salone
     options: [Silenzioso, Bilanciato, Turbo, Max]
     initial: Bilanciato
+    labels: [page:servizi:left]
   - id: sensor.roborock_s5_max_batteria
     name: Batteria Roborock
     kind: sensor
@@ -441,18 +456,21 @@ entities:
     area: cucina
     device_class: door
     initial: 'off'
+    labels: [page:servizi:right]
   - id: binary_sensor.cucina_lavastoviglie_salt
     name: Sale Lavastoviglie
     kind: binary_sensor
     area: cucina
     device_class: problem
     initial: 'off'
+    labels: [page:servizi:right]
   - id: binary_sensor.cucina_lavastoviglie_rinse_aid
     name: Brillantante Lavastoviglie
     kind: binary_sensor
     area: cucina
     device_class: problem
     initial: 'on'
+    labels: [page:servizi:right]
 
   # ---------------- doors & motion ----------------
   - id: binary_sensor.portone_ingresso
@@ -517,6 +535,7 @@ entities:
     name: Quadro Generale
     kind: switch
     area: ingresso
+    labels: [page:servizi:right]
   - id: sensor.generale_quadro_sonoff_100285d3f0_energy_month
     name: Energia Mensile
     kind: sensor
@@ -525,6 +544,7 @@ entities:
     unit: kWh
     initial: 143.2
     state_class: total_increasing
+    labels: [page:servizi:right]
   - id: sensor.generale_quadro_sonoff_100285d3f0_power
     name: Potenza Attuale
     kind: sensor
@@ -533,7 +553,9 @@ entities:
     unit: W
     initial: 320
     state_class: measurement
-    labels: [page:main:glance, page:clima:glance, page:sicurezza:glance, page:media:glance]
+    # In `page:servizi:right` too, which makes Servizi where the consumption
+    # on `page:main` leads (#32).
+    labels: [page:main:glance, page:clima:glance, page:sicurezza:glance, page:media:glance, page:servizi:glance, page:servizi:right]
 
   # ---------------- weather ----------------
   # Real in `ha-local`, from met.no: not a fake, so it is only labelled.

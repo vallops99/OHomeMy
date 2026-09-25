@@ -51,6 +51,7 @@ const BY_DOMAIN: Record<string, Record<string, string>> = {
   },
   climate: { heat: 'Riscaldamento', cool: 'Raffrescamento', auto: 'Automatico', dry: 'Deumidificazione', fan_only: 'Ventilazione' },
   cover: { open: 'Aperta', closed: 'Chiusa' },
+  vacuum: { error: 'Errore', idle: 'Fermo' },
 };
 
 /**
