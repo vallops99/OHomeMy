@@ -31,6 +31,13 @@ function nowPlaying(entity: Entity): string {
   return title ?? 'In riproduzione';
 }
 
+/**
+ * The strip's own box: the width left over, but never under `mediaBarMinW`
+ * (tokens.ts) -- below that the footer scrolls rather than crush the
+ * transport (#32).
+ */
+const box = { flex: 1, minWidth: t.layout.mediaBarMinW, display: 'flex' } as const;
+
 export function MediaBar({ entities }: MediaBarProps) {
   const actions = useActions();
   const playing = playingOf(entities);
@@ -39,9 +46,7 @@ export function MediaBar({ entities }: MediaBarProps) {
     return (
       <div
         style={{
-          flex: 1,
-          minWidth: 0,
-          display: 'flex',
+          ...box,
           alignItems: 'center',
           gap: t.space.sm,
           padding: `0 ${t.space.lg}px`,
@@ -61,43 +66,57 @@ export function MediaBar({ entities }: MediaBarProps) {
   const fg = onSurfaceFor({ active: true, strong: true });
 
   return (
-    <Tile entity={playing} active strong alwaysFilled disableModal>
-      <div style={{ display: 'flex', alignItems: 'center', gap: t.space.md, height: '100%', color: fg }}>
-        <Icon name='mdi:music' size={32} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: t.font.glanceM,
-              fontWeight: 600,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {nowPlaying(playing)}
+    <div style={box}>
+      {/*
+        `sm` top and bottom, not the tile's `md`: the transport's 44 px
+        buttons plus `md` made the strip 74 px, past `layout.footerH` (a
+        `minHeight`, so content wins), and the footer took 10 px from the
+        left column whenever something played (#32, `npm run measure`).
+      */}
+      <Tile entity={playing} active strong alwaysFilled disableModal style={{ paddingBlock: t.space.sm }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: t.space.md, height: '100%', color: fg }}>
+          <Icon name='mdi:music' size={32} />
+          {/*
+            `contain: inline-size`: the title's whole nowrap width must not
+            count toward the strip's own minimum, or a long title widens the
+            strip past the footer and scrolls it instead of ellipsising (#32).
+            The strip's floor is `mediaBarMinW`, and nothing else.
+          */}
+          <div style={{ flex: 1, minWidth: 0, contain: 'inline-size' }}>
+            <div
+              style={{
+                fontSize: t.font.glanceM,
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {nowPlaying(playing)}
+            </div>
+            <div style={{ fontSize: t.font.caption, opacity: 0.85 }}>{playing.name}</div>
           </div>
-          <div style={{ fontSize: t.font.caption, opacity: 0.85 }}>{playing.name}</div>
-        </div>
 
-        {/* Transport controls own their own presses: the tile beneath must not
+          {/* Transport controls own their own presses: the tile beneath must not
             also toggle the player when a button is hit. */}
-        <div style={{ display: 'flex', gap: t.space.sm, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-          <MediaButton
-            icon='mdi:skip-previous'
-            label='Precedente'
-            onPress={() => actions.call('media_player', 'media_previous_track', playing.id)}
-            fg={fg}
-          />
-          <MediaButton icon='mdi:pause' label='Pausa' onPress={() => actions.call('media_player', 'media_pause', playing.id)} fg={fg} />
-          <MediaButton
-            icon='mdi:skip-next'
-            label='Successivo'
-            onPress={() => actions.call('media_player', 'media_next_track', playing.id)}
-            fg={fg}
-          />
+          <div style={{ display: 'flex', gap: t.space.sm, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+            <MediaButton
+              icon='mdi:skip-previous'
+              label='Precedente'
+              onPress={() => actions.call('media_player', 'media_previous_track', playing.id)}
+              fg={fg}
+            />
+            <MediaButton icon='mdi:pause' label='Pausa' onPress={() => actions.call('media_player', 'media_pause', playing.id)} fg={fg} />
+            <MediaButton
+              icon='mdi:skip-next'
+              label='Successivo'
+              onPress={() => actions.call('media_player', 'media_next_track', playing.id)}
+              fg={fg}
+            />
+          </div>
         </div>
-      </div>
-    </Tile>
+      </Tile>
+    </div>
   );
 }
 

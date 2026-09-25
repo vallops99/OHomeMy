@@ -265,8 +265,30 @@ export function Panel({ glance, left, right, footer }: PanelProps) {
         the thing that gets squeezed when the quadrants above it grow --
         exactly the row that must stay reachable at the foot of a panel that
         cannot scroll.
+
+        A house that places more than fits (#32) gets a footer that scrolls
+        sideways, resting on whole blocks, as `ChipRow` rests on whole chips:
+        a block is either all there or scrolled to, never clipped. Every item
+        `PlacementView` puts here is a `scrollSnapAlign: 'start'` point. At the
+        fixture's busy footer nothing scrolls (`npm run measure`).
       */}
-      <div style={{ flexShrink: 0, minHeight: t.layout.footerH, display: 'flex', alignItems: 'stretch', gap: t.space.sm }}>{footer}</div>
+      <div
+        style={{
+          flexShrink: 0,
+          minHeight: t.layout.footerH,
+          display: 'flex',
+          alignItems: 'stretch',
+          gap: t.space.sm,
+          overflowX: 'auto',
+          overflowY: 'hidden',
+          scrollSnapType: 'x mandatory',
+          // A scrollbar would take height from a strip measured to the pixel;
+          // Fully Kiosk hides them anyway, and the snapping says there is more.
+          scrollbarWidth: 'none',
+        }}
+      >
+        {footer}
+      </div>
     </div>
   );
 }

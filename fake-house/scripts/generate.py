@@ -372,6 +372,14 @@ class Builder:
             "press": [],
         }]})
 
+    def _input_button(self, e: dict) -> None:
+        # A Page Opener (ADR-0012), which is a helper rather than a fake of a
+        # device, so it has no backing helpers and no `fake_online_*`: it
+        # holds no state to fake, and the real house creates the same one.
+        # Declared on the same path as the `fake_fire_*` buttons, keyed by
+        # its object id, which is what makes it `input_button.<id>`.
+        self.input_button[e["id"].split(".", 1)[1]] = {"name": e["name"], "icon": e["icon"]}
+
     def _button_lock(self, e: dict) -> None:
         # Not a fake of a device: the wrapper the real house needs too. The
         # Ring Intercom opens its door with a `button` (ring-integration.md),

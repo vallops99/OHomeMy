@@ -6,7 +6,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { feedsPageFor, resolvePage, type PageLayout, type Region } from './placement';
+import { openerPage, placedPageFor, resolvePage, type PageLayout, type Region } from './placement';
 import type { Area, Entity } from './types';
 
 const entity = (id: string, labels: string[]): Entity => ({
@@ -133,47 +133,93 @@ const camera = (id: string, labels: string[]) => entity(`camera.${id}`, labels);
 test('the glance opens the Page where every one of its cameras is also Placed in left or right', () => {
   const cams = [camera('a', ['page_main_glance', 'page_telecamere_right']), camera('b', ['page_main_glance', 'page_telecamere_left'])];
 
-  assert.equal(feedsPageFor(cams, ['page_main_glance', 'page_telecamere_right', 'page_telecamere_left'], 'main'), 'telecamere');
+  assert.equal(placedPageFor(cams, ['page_main_glance', 'page_telecamere_right', 'page_telecamere_left'], 'main'), 'telecamere');
 });
 
 test('a Page holding only some of the cameras does not qualify', () => {
   const cams = [camera('a', ['page_main_glance', 'page_telecamere_right']), camera('b', ['page_main_glance'])];
 
-  assert.equal(feedsPageFor(cams, ['page_telecamere_right'], 'main'), null);
+  assert.equal(placedPageFor(cams, ['page_telecamere_right'], 'main'), null);
 });
 
 test('a Page holding the cameras only in glance or footer does not qualify', () => {
   const cams = [camera('a', ['page_main_glance', 'page_esterno_glance', 'page_casa_footer'])];
 
-  assert.equal(feedsPageFor(cams, ['page_main_glance', 'page_esterno_glance', 'page_casa_footer'], 'main'), null);
+  assert.equal(placedPageFor(cams, ['page_main_glance', 'page_esterno_glance', 'page_casa_footer'], 'main'), null);
 });
 
 test('the current Page never qualifies, even when it holds the cameras as Feeds', () => {
   const cams = [camera('a', ['page_main_glance', 'page_main_right'])];
 
-  assert.equal(feedsPageFor(cams, ['page_main_glance', 'page_main_right'], 'main'), null);
+  assert.equal(placedPageFor(cams, ['page_main_glance', 'page_main_right'], 'main'), null);
 });
 
 test('the current Page is compared by slug, as a Page name is everywhere else', () => {
   const cams = [camera('a', ['page_sala_tv_right', 'page_esterno_right'])];
 
-  assert.equal(feedsPageFor(cams, ['page_sala_tv_right', 'page_esterno_right'], 'sala-tv'), 'esterno');
+  assert.equal(placedPageFor(cams, ['page_sala_tv_right', 'page_esterno_right'], 'sala-tv'), 'esterno');
 });
 
 test('of several qualifying Pages, the first in label-registry order wins', () => {
   const cams = [camera('a', ['page_zeta_right', 'page_alfa_right']), camera('b', ['page_alfa_left', 'page_zeta_right'])];
 
-  assert.equal(feedsPageFor(cams, ['page_zeta_right', 'page_alfa_right', 'page_alfa_left'], 'main'), 'zeta');
-  assert.equal(feedsPageFor(cams, ['page_alfa_left', 'page_zeta_right', 'page_alfa_right'], 'main'), 'alfa');
+  assert.equal(placedPageFor(cams, ['page_zeta_right', 'page_alfa_right', 'page_alfa_left'], 'main'), 'zeta');
+  assert.equal(placedPageFor(cams, ['page_alfa_left', 'page_zeta_right', 'page_alfa_right'], 'main'), 'alfa');
 });
 
 test('a Page whose Labels the registry list does not hold yet sorts after those it does', () => {
   const cams = [camera('a', ['page_nuova_right', 'page_vecchia_right'])];
 
-  assert.equal(feedsPageFor(cams, ['page_vecchia_right'], 'main'), 'vecchia');
-  assert.equal(feedsPageFor(cams, [], 'main'), 'nuova');
+  assert.equal(placedPageFor(cams, ['page_vecchia_right'], 'main'), 'vecchia');
+  assert.equal(placedPageFor(cams, [], 'main'), 'nuova');
 });
 
 test('no cameras opens nothing', () => {
-  assert.equal(feedsPageFor([], ['page_telecamere_right'], 'main'), null);
+  assert.equal(placedPageFor([], ['page_telecamere_right'], 'main'), null);
+});
+
+// ---- a member's Page: the same rule, for one entity (#32) ----
+
+test('a footer entity leads to the other Page where it is Placed in left or right', () => {
+  const media = entity('media_player.ovunque', ['page_main_footer', 'page_media_left']);
+
+  assert.equal(placedPageFor([media], ['page_main_footer', 'page_media_left'], 'main'), 'media');
+});
+
+test('an entity Placed nowhere else in left or right leads nowhere', () => {
+  const media = entity('media_player.ovunque', ['page_main_footer', 'page_corridoio_footer', 'page_clima_glance']);
+
+  assert.equal(placedPageFor([media], [], 'main'), null);
+});
+
+test('on the Page it leads to, a member leads nowhere', () => {
+  const media = entity('media_player.ovunque', ['page_media_footer', 'page_media_left']);
+
+  assert.equal(placedPageFor([media], [], 'media'), null);
+});
+
+// ---- Page Openers (#32, ADR-0012) ----
+
+test('an input_button is a Page Opener for the Page its object id names', () => {
+  assert.equal(openerPage(entity('input_button.sicurezza', [])), 'sicurezza');
+  assert.equal(openerPage(entity('input_button.sala_tv', [])), 'sala_tv');
+});
+
+test('nothing else is a Page Opener', () => {
+  assert.equal(openerPage(entity('button.sicurezza', [])), null);
+  assert.equal(openerPage(entity('script.sicurezza', [])), null);
+});
+
+test('a Page Opener is skipped on its own Page, in every Region, and only there', () => {
+  const opener = entity('input_button.clima', ['page_main_footer', 'page_clima_footer', 'page_clima_right', 'page_clima_glance']);
+  const other = entity('input_button.media', ['page_clima_footer']);
+
+  assert.deepEqual(ids(resolvePage([], entities(opener, other), 'clima')), { ...empty, footer: ['entity:input_button.media'] });
+  assert.deepEqual(ids(resolvePage([], entities(opener, other), 'main')), { ...empty, footer: ['entity:input_button.clima'] });
+});
+
+test('a Page Opener’s own Page is compared by slug', () => {
+  const opener = entity('input_button.sala_tv', ['page_sala_tv_footer']);
+
+  assert.deepEqual(ids(resolvePage([], entities(opener), 'sala-tv')), empty);
 });

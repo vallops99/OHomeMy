@@ -3,6 +3,7 @@
  * the house is drawing right now. Variant D (#6) draws these as bare value
  * over caption, side by side -- no card, matching the Hero's borderlessness.
  */
+import { pressable } from './pressable';
 import { t } from './theme';
 
 export type StatsProps = {
@@ -10,11 +11,17 @@ export type StatsProps = {
   lightsOn: number;
   /** Instantaneous house draw in watts, or null when no power sensor reports one. */
   watts: number | null;
+  /**
+   * Opens the Page where the power `sensor` feeding the consumption is
+   * Placed (#32); absent when there is none, and then this is not a control.
+   */
+  onOpen?: () => void;
 };
 
-export function Stats({ lightsOn, watts }: StatsProps) {
+export function Stats({ lightsOn, watts, onOpen }: StatsProps) {
+  const press = pressable(onOpen);
   return (
-    <div style={{ display: 'flex', gap: t.space.xl }}>
+    <div {...press} style={{ display: 'flex', gap: t.space.xl, ...press.style }}>
       <Stat value={String(lightsOn)} label='luci accese' />
       {/*
        * The house has no power sensor in some configurations (CONTEXT.md:

@@ -11,17 +11,25 @@
  * panel's arrival question is "is the house I'm walking into comfortable",
  * not the weather outside.
  */
+import { pressable } from './pressable';
 import { t } from './theme';
 
 export type HeroProps = {
   /** Degrees Celsius from a `climate` entity, or null when none reports one. */
   temperature: number | null;
   humidity: number | null;
+  /**
+   * Opens the Page where the `climate` feeding the temperature is Placed
+   * (#32); absent when there is none, and then the Hero is not a control.
+   * No chevron either way: there is no room for one, and none is needed on
+   * the number everyone reads first.
+   */
+  onOpen?: () => void;
 };
 
-export function Hero({ temperature, humidity }: HeroProps) {
+export function Hero({ temperature, humidity, onOpen }: HeroProps) {
   return (
-    <div>
+    <div {...pressable(onOpen)}>
       <div
         style={{
           fontSize: t.font.hero,

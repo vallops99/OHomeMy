@@ -10,7 +10,7 @@
 #
 # kind:  light | switch | lock | alarm | vacuum | select | sensor |
 #        binary_sensor | climate | media_player | camera | siren |
-#        event | button | button_lock
+#        event | button | button_lock | input_button
 # device_of: (binary_sensor only) the entity whose device this one joins.
 #        YAML templates cannot join a device, so apply-registry.py builds
 #        these as template helpers linked to it instead.
@@ -111,6 +111,37 @@ labels:
     icon: mdi:cctv
 
 entities:
+  # ---------------- Page Openers ----------------
+  # The Topic Pages' front doors (ADR-0012): an `input_button` opens the Page
+  # its object id names, so `input_button.clima` opens `page:clima`. Not
+  # fakes of a device: the real house needs the same helpers. Its name and
+  # icon are what the block shows. Pressing one in Home Assistant does
+  # nothing.
+  - id: input_button.clima
+    name: Clima
+    kind: input_button
+    icon: mdi:thermostat
+    area: null
+    labels: [page:main:footer]
+  - id: input_button.sicurezza
+    name: Sicurezza
+    kind: input_button
+    icon: mdi:shield-home
+    area: null
+    labels: [page:main:footer]
+  - id: input_button.media
+    name: Media
+    kind: input_button
+    icon: mdi:speaker
+    area: null
+    labels: [page:main:footer]
+  - id: input_button.servizi
+    name: Servizi
+    kind: input_button
+    icon: mdi:washing-machine
+    area: null
+    labels: [page:main:footer]
+
   # ---------------- lights ----------------
   - id: light.luci_salone
     name: Luci Salone

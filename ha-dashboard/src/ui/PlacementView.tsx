@@ -29,6 +29,8 @@
  *     no dedicated component falls through to a visible `FaultTile` rather
  *     than rendering nothing -- a Page asking for something unrenderable is a
  *     bug worth seeing, same reasoning `ScreenView.tsx` used.
+ *   - an `input_button` -> a Page Opener (ADR-0012): the same block an Area
+ *     gets in `footer`, opening the Page its object id names.
  *
  * `footer`:
  *   - an Area -> a tappable block that opens that Area's Page (`page:<area
@@ -48,12 +50,12 @@
  *     the house's owner, so the control has to be discoverable and
  *     unambiguous without a hidden gesture, and it must not overload a tile
  *     whose press already toggles a light.
- *   - an entity -> the same `entitySlot` dispatch as `left` and `right`
- *     (`media_player` -> `MediaBar`, docs/protocol.md's worked example places
- *     `media_player.ovunque` in the footer directly). An entity is never an
- *     Area and has no Area Page of its own, so #14 invents no navigation for
- *     it here -- a `media_player` in the footer stays exactly the transport
- *     strip it already was, Placement and Rendering contract both unchanged.
+ *   - a Page Opener -> the same block as an Area, opening its Page.
+ *   - any other entity -> the same `entitySlot` dispatch as `left` and
+ *     `right` (`media_player` -> `MediaBar`). Its tap stays its own. When the
+ *     same entity is also Placed in `left` or `right` on another Page, it
+ *     gains a trailing chevron and a right swipe to that Page (#32,
+ *     `FooterMember`), as a Row does; with no such Page, nothing is added.
  *   - additionally, on every Page that is not `page:main`: a `HomeBlock`,
  *     prepended before anything Placed. See its own comment below for why it
  *     exists and why it sits outside the Areas-then-entities order.
@@ -72,9 +74,9 @@
  *     `ScreenView.tsx`'s "a screen asking for something unrenderable" case
  *     than to a typo. So it renders a visible `FaultTile` rather than being
  *     silently dropped -- the same "admit it, don't fake it" precedent as
- *     `footer` above and `FaultTile.tsx`'s own header comment. If a future
- *     protocol revision defines Area-in-glance, this is the one line to
- *     change. #14 leaves `glance` itself otherwise untouched: it resolves
+ *     `footer` above and `FaultTile.tsx`'s own header comment. A Page Opener
+ *     gets the same judgement (ADR-0012): it stands for a Page as an Area
+ *     does. #14 leaves `glance` itself otherwise untouched: it resolves
  *     per-Page like every other Region (decision 3), with no Page-specific
  *     special case here or in `Dashboard.tsx`.
  *   - an entity -> by Domain, feeding the existing glance components
@@ -82,17 +84,22 @@
  *     tile. See `GlanceView` below for the reasoning in full. The one
  *     exception is `camera`: every camera Placed here renders together as
  *     one `CameraGlance`, the motion glance that opens its cameras' Feeds
- *     (#29).
+ *     (#29). Since #32 a tap on `Hero` opens the Page its `climate` is
+ *     Placed on, and a tap on `Stats` the Page of its power `sensor`.
  */
+import type { ReactNode } from 'react';
 import {
   cameraMoving,
-  feedsPageFor,
   houseReport,
+  openerPage,
+  placedPageFor,
+  useAreas,
   useLabelOrder,
   usePower,
   useEntities,
   type Area,
   type Entity,
+  type Label,
   type Placed,
   type Region,
 } from '../ha';
@@ -106,8 +113,10 @@ import { Hero } from './Hero';
 import { Icon } from './Icon';
 import { MediaBar } from './MediaBar';
 import { useNavigation } from './NavigationContext';
+import { popupTitle } from './popup';
 import { RoomRow } from './RoomRow';
 import { Stats } from './Stats';
+import { OpenChevron, SwipeToOpen } from './SwipeToOpen';
 import { t } from './theme';
 import { Tile } from './Tile';
 import { ToggleTile } from './ToggleTile';
@@ -129,6 +138,10 @@ import { ToggleTile } from './ToggleTile';
  * `entitySlot`.
  */
 function entitySlot(entity: Entity) {
+  const opens = openerPage(entity);
+  if (opens !== null) {
+    return <PageOpenerBlock key={entity.id} entity={entity} page={opens} />;
+  }
   if (entity.domain === 'lock') {
     return <GateSlab key={entity.id} entity={entity} />;
   }
@@ -145,31 +158,18 @@ function entitySlot(entity: Entity) {
 }
 
 /**
- * The footer's Area block: a tappable surface that opens `page:<area id>`
- * (#14). Built and styled here rather than as a fifth exported `src/ui/`
- * component, because it has exactly one caller and no state of its own --
- * `RoomRow`, `GateSlab` and the rest earned their own files by being reused
- * across Regions; this is not.
+ * A block that opens a Page: what an Area becomes in `footer` (#14), what a
+ * Page Opener is in `left`, `right` or `footer` (ADR-0012), and the
+ * renderer's own "Casa" block. Built here rather than as its own `src/ui/`
+ * component, because nothing outside this file renders one.
  *
  * Modelled on `GateSlab`'s slab shape (full tappable surface, icon over
  * name) rather than on `RoomRow`'s row shape, because the footer is a strip
  * of equal-weight blocks (docs/protocol.md: "media, and the blocks that open
  * other pages"), not a vertical list -- the same reason the deleted
  * `NavBar.tsx`'s destinations were also slabs in a row, not rows in a list.
- *
- * The Page it opens is `area.id`, not `area.name` -- the fixture that proves
- * why: `id: salone, name: Soggiorno` (fake-house/manifest.yaml). Home
- * Assistant's own label slugifying (#12) is what makes `openPage(area.id)`
- * line up with a Label typed as `page:salone` in Home Assistant's UI --
- * `usePage`/`resolvePage` slugify *both* the stored Label and the requested
- * Page name with the same `slugify()` (`src/ha/placement.ts`) before
- * comparing, so passing the id here is what docs/protocol.md's worked
- * example means by "tap -> page:corridoio": the Area's registry id is the
- * Page name, by construction of the protocol, not a separate mapping this
- * file has to maintain.
  */
-function AreaOpenerBlock({ area }: { area: Area }) {
-  const { openPage } = useNavigation();
+function PageBlock({ name, icon, title, onOpen }: { name: string; icon: string; title: string; onOpen: () => void }) {
   return (
     // `flex: '0 0 auto'`, not `flex: 1`: a page button is a control sized to
     // its own label, not a Region claiming a share of the floor. Measured at
@@ -177,7 +177,10 @@ function AreaOpenerBlock({ area }: { area: Area }) {
     // the panel, purely because it was the only other flex item beside the
     // media strip. The footer's *remaining* width belongs to `MediaBar`,
     // which is a transport strip and genuinely wants it.
-    <div title={`Apri ${area.name}`} style={{ display: 'flex', flex: '0 0 auto', minWidth: 0 }}>
+    //
+    // `scrollSnapAlign`: when a house places more than the footer holds, the
+    // footer scrolls sideways and rests on whole blocks (Panel.tsx).
+    <div title={title} style={{ display: 'flex', flex: '0 0 auto', minWidth: 0, scrollSnapAlign: 'start' }}>
       {/*
         `paddingBlock` overrides `Tile`'s own `md` padding, which is sized for
         a tile with a state line under a title, not for a compact footer slab.
@@ -187,7 +190,7 @@ function AreaOpenerBlock({ area }: { area: Area }) {
         a `minHeight`, content winning there silently steals the left column's
         pixels rather than scrolling the footer.
       */}
-      <Tile disableModal style={{ minWidth: 0, paddingBlock: t.space.sm }} onClick={() => openPage(area.id)}>
+      <Tile disableModal style={{ minWidth: 0, paddingBlock: t.space.sm }} onClick={onOpen}>
         <div
           style={{
             display: 'flex',
@@ -200,13 +203,6 @@ function AreaOpenerBlock({ area }: { area: Area }) {
           }}
         >
           {/*
-            The Area's own registry icon when it has one (#13, same source
-            RoomRow now reads) -- recognisable as "that room" rather than as
-            a generic nav glyph. The arrow-box is the fallback for an Area
-            with no icon set, keeping the "this is a doorway to somewhere"
-            reading the deleted `NavBar.tsx`'s icons gave its own
-            destinations.
-
             26 over `caption`, not 32 over `glanceM`: the larger pair made
             this block 91 px tall, which overrode `layout.footerH` (a
             `minHeight`, so content wins) and took back the exact 32 px the
@@ -215,12 +211,54 @@ function AreaOpenerBlock({ area }: { area: Area }) {
             These are the proportions the deleted `NavBar.tsx` used for the
             same slab in the same strip, and they leave the block inside 64 px.
           */}
-          <Icon name={area.icon ?? 'mdi:arrow-right-bold-box-outline'} size={26} />
-          <span style={{ fontSize: t.font.caption, fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>{area.name}</span>
+          <Icon name={icon} size={26} />
+          <span style={{ fontSize: t.font.caption, fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>{name}</span>
         </div>
       </Tile>
     </div>
   );
+}
+
+/**
+ * The footer's Area block: opens `page:<area id>` (#14).
+ *
+ * The Page it opens is `area.id`, not `area.name` -- the fixture that proves
+ * why: `id: salone, name: Soggiorno` (fake-house/manifest.yaml). Home
+ * Assistant's own label slugifying (#12) is what makes `openPage(area.id)`
+ * line up with a Label typed as `page:salone` in Home Assistant's UI --
+ * `usePage`/`resolvePage` slugify *both* the stored Label and the requested
+ * Page name with the same `slugify()` (`src/ha/placement.ts`) before
+ * comparing, so the Area's registry id is the Page name by construction of
+ * the protocol, not a separate mapping this file has to maintain.
+ *
+ * The icon is the Area's own registry icon when it has one (#13, the same
+ * source RoomRow reads), recognisable as "that room" rather than as a
+ * generic nav glyph; the arrow-box is the fallback for an Area with none.
+ */
+function AreaOpenerBlock({ area }: { area: Area }) {
+  const { openPage } = useNavigation();
+  return (
+    <PageBlock
+      name={area.name}
+      icon={area.icon ?? 'mdi:arrow-right-bold-box-outline'}
+      title={`Apri ${area.name}`}
+      onOpen={() => openPage(area.id)}
+    />
+  );
+}
+
+/**
+ * A Page Opener (ADR-0012): an `input_button` standing for a Topic Page the
+ * way an Area stands for its own, so it is the same block. Its name and icon
+ * are the helper's own, set in Home Assistant; the Page it opens is its
+ * object id (`openerPage`). It never presses the button: the helper holds no
+ * state and pressing it would do nothing.
+ */
+function PageOpenerBlock({ entity, page }: { entity: Entity; page: string }) {
+  const { openPage } = useNavigation();
+  const icon =
+    typeof entity.attributes.icon === 'string' && entity.attributes.icon ? entity.attributes.icon : 'mdi:arrow-right-bold-box-outline';
+  return <PageBlock name={entity.name} icon={icon} title={`Apri ${entity.name}`} onOpen={() => openPage(page)} />;
 }
 
 /**
@@ -249,35 +287,43 @@ function AreaOpenerBlock({ area }: { area: Area }) {
  * is why it can sit before every Area block without bending the order those
  * blocks are in.
  *
- * Styled as the same kind of thing as `AreaOpenerBlock` (a tappable slab in
- * the footer strip) but visually distinguishable as *home* rather than as
- * another Area: `mdi:home` where an Area block shows the Area's own registry
- * icon or the generic arrow-box, and the Italian "Casa" rather than an Area
- * name, since the house is Italian and its UI copy is Italian throughout
- * (map Notes).
+ * The same block as an Area's, told apart as *home*: `mdi:home` and the
+ * Italian "Casa" rather than an Area's icon and name.
  */
 function HomeBlock() {
   const { openPage } = useNavigation();
+  return <PageBlock name='Casa' icon='mdi:home' title='Torna alla pagina principale' onOpen={() => openPage('main')} />;
+}
+
+/**
+ * An entity in `footer` that leads to its own other Page (CONTEXT.md,
+ * Derived; #32): the Page where it is also Placed in `left` or `right`. It
+ * keeps its own component and its own tap, and gains the Row's way to a
+ * Page -- a trailing chevron, or a swipe right. With no such Page it is
+ * rendered bare, with no chevron.
+ *
+ * The chevron sits after the component rather than inside its card, so every
+ * Domain gets it without each component growing a slot for it.
+ */
+function FooterMember({ entity, labelOrder, children }: { entity: Entity; labelOrder: Label[]; children: ReactNode }) {
+  const { page, openPage } = useNavigation();
+  const areas = useAreas();
+  const leads = placedPageFor([entity], labelOrder, page);
+  // The member takes the width its own component would have: a media strip
+  // keeps the footer's remaining width, anything else is sized to itself.
+  // No `minWidth: 0`: the component's own floor (`mediaBarMinW`) has to reach
+  // the footer, so a crowded footer scrolls instead of crushing it. Every
+  // member is a snap point for that scroll (Panel.tsx).
+  const box = { flex: entity.domain === 'media_player' ? 1 : '0 0 auto', scrollSnapAlign: 'start' } as const;
+  if (leads === null) return <div style={{ ...box, display: 'flex' }}>{children}</div>;
+  const name = popupTitle(leads, areas).name;
   return (
-    <div title='Torna alla pagina principale' style={{ display: 'flex', flex: '0 0 auto', minWidth: 0 }}>
-      {/* Same padding treatment as `AreaOpenerBlock` -- see its note. */}
-      <Tile disableModal style={{ minWidth: 0, paddingBlock: t.space.sm }} onClick={() => openPage('main')}>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-            gap: t.space.xs,
-            color: t.color.textPrimary,
-          }}
-        >
-          <Icon name='mdi:home' size={26} />
-          <span style={{ fontSize: t.font.caption, fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>Casa</span>
-        </div>
-      </Tile>
-    </div>
+    <SwipeToOpen name={name} onOpen={() => openPage(leads)} style={box}>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex' }}>{children}</div>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <OpenChevron label={`Apri ${name}`} onOpen={() => openPage(leads)} />
+      </div>
+    </SwipeToOpen>
   );
 }
 
@@ -322,7 +368,7 @@ function HomeBlock() {
  *   - every `camera` Placed in `glance` renders together as one
  *     `CameraGlance` under the rest: motion per camera, from its own device
  *     (`cameraMoving`), and a tap that opens the Page where the same cameras
- *     are Placed as Feeds (`feedsPageFor`, #29). It is the one tile this
+ *     are Placed as Feeds (`placedPageFor`, #29). It is the one tile this
  *     Region renders, because it is the one thing here that leads somewhere.
  *   - `Stats`'s `lightsOn` count and `ChipRow`'s `report` (the Verdict,
  *     `houseReport`) are **not** sourced from what is Placed in `glance`.
@@ -338,10 +384,9 @@ function HomeBlock() {
  *     always did, is what keeps that ranking intact rather than narrowing it
  *     to whatever happens to be labelled into `glance`.
  */
-function GlanceView({ placed }: { placed: Placed[] }) {
+function GlanceView({ placed, labelOrder }: { placed: Placed[]; labelOrder: Label[] }) {
   const entities = useEntities();
   const watts = usePower();
-  const labelOrder = useLabelOrder();
   const { page, openPage } = useNavigation();
 
   const placedEntities = placed.filter((p): p is { kind: 'entity'; entity: Entity } => p.kind === 'entity').map(p => p.entity);
@@ -367,7 +412,20 @@ function GlanceView({ placed }: { placed: Placed[] }) {
   const alarm = placedEntities.find(e => e.domain === 'alarm_control_panel') ?? null;
 
   const cameras = placedEntities.filter(e => e.domain === 'camera');
-  const feedsPage = feedsPageFor(cameras, labelOrder, page);
+  const feedsPage = placedPageFor(cameras, labelOrder, page);
+
+  // The temperature and the consumption lead where the entities feeding them
+  // are Placed (CONTEXT.md, Derived; #32), on a tap: nothing here has an
+  // action of its own. The climate is the Placed one even when Unavailable --
+  // its Page is where to go and look at why. The consumption leads only when
+  // a Placed sensor feeds it, never from `usePower()`'s house-wide fallback.
+  const placedClimate = placedEntities.find(e => e.domain === 'climate');
+  const climatePage = placedClimate ? placedPageFor([placedClimate], labelOrder, page) : null;
+  const powerPage = powerSensor ? placedPageFor([powerSensor], labelOrder, page) : null;
+
+  // An Area or a Page Opener has no shape in `glance` (see the header note):
+  // a visible fault, never a silent gap.
+  const unplaceable = placed.flatMap(p => (p.kind === 'area' ? [p.area.name] : openerPage(p.entity) !== null ? [p.entity.name] : []));
 
   // Whole-house Derived, deliberately not narrowed to `placedEntities` -- see
   // the header note above.
@@ -416,7 +474,7 @@ function GlanceView({ placed }: { placed: Placed[] }) {
       }}
     >
       <div style={{ flexShrink: 0 }}>
-        <Hero temperature={temperature} humidity={humidity} />
+        <Hero temperature={temperature} humidity={humidity} onOpen={climatePage === null ? undefined : () => openPage(climatePage)} />
       </div>
       {/*
         `placedWatts` falls back to the house-wide `usePower()` scan only when
@@ -426,7 +484,7 @@ function GlanceView({ placed }: { placed: Placed[] }) {
         reason unrelated to whether power is being drawn.
       */}
       <div style={{ flexShrink: 0 }}>
-        <Stats lightsOn={lightsOn} watts={placedWatts ?? watts} />
+        <Stats lightsOn={lightsOn} watts={placedWatts ?? watts} onOpen={powerPage === null ? undefined : () => openPage(powerPage)} />
       </div>
       <div style={{ flexShrink: 0, paddingTop: 10 }}>
         {/* Keyed on the Page: leaving it closes any Concern list open from here (#30). */}
@@ -441,6 +499,11 @@ function GlanceView({ placed }: { placed: Placed[] }) {
           />
         </div>
       )}
+      {unplaceable.map(name => (
+        <div key={name} style={{ flexShrink: 0, display: 'flex' }}>
+          <FaultTile label={`Non previsto in glance: ${name}`} />
+        </div>
+      ))}
     </div>
   );
 }
@@ -464,9 +527,10 @@ function GlanceView({ placed }: { placed: Placed[] }) {
  */
 export function PlacementView({ region, placed, home = true }: { region: Region; placed: Placed[]; home?: boolean }) {
   const { page } = useNavigation();
+  const labelOrder = useLabelOrder();
 
   if (region === 'glance') {
-    return <GlanceView placed={placed} />;
+    return <GlanceView placed={placed} labelOrder={labelOrder} />;
   }
 
   const cameras = placed.filter((p): p is { kind: 'entity'; entity: Entity } => p.kind === 'entity' && p.entity.domain === 'camera');
@@ -505,6 +569,13 @@ export function PlacementView({ region, placed, home = true }: { region: Region;
           // are skipped here, having already been folded into it.
           if (i !== firstCameraIndex) return null;
           return <Feeds key={`feeds:${page}`} cameras={cameras.map(c => c.entity)} />;
+        }
+        if (region === 'footer' && openerPage(item.entity) === null) {
+          return (
+            <FooterMember key={item.entity.id} entity={item.entity} labelOrder={labelOrder}>
+              {entitySlot(item.entity)}
+            </FooterMember>
+          );
         }
         return entitySlot(item.entity);
       })}

@@ -72,3 +72,10 @@ test('the lit Concern carries the lit main lights', () => {
     ['light.salone']
   );
 });
+
+test('a Page Opener never pressed is not a Fault', () => {
+  // An `input_button` is `unknown` until its first press, and a Page
+  // Opener is never pressed (ADR-0012).
+  const report = houseReport([down('input_button.clima', { state: 'unknown', areaId: null, labels: ['page_main_footer'] })]);
+  assert.equal(report.verdict.level, 'ok');
+});

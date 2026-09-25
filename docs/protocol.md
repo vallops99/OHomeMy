@@ -51,7 +51,7 @@ validate the name.
 ```
 page:main:right        the home screen
 page:salone:right      an Area's own page
-page:clima:footer      whatever you decide it is
+page:clima:right       a Topic Page: about a subject, not a place
 ```
 
 A page name is open-ended in this protocol, but Home Assistant's label registry
@@ -69,8 +69,12 @@ because those clutter the very picker you are labelling from.
 `page:main` is the panel's home screen by convention: it is what the renderer
 shows at rest, and what it returns to — the panel comes back to `page:main` on
 its own after 240 seconds idle on any other page (see "Getting back", below).
-Every other page is an Area's page, reached from anywhere that Area is placed:
-its block in a footer, or its row in `left` or `right` (see "The region").
+Every other page is either an Area's page, reached from anywhere that Area is
+placed (its block in a footer, or its row in `left` or `right`), or a **Topic
+Page**, about a subject the Areas do not divide up: `page:clima`,
+`page:sicurezza`, `page:media`, `page:servizi`. A Topic Page is reached by its
+**Page Opener** and by its own members (see "The region", and
+[ADR-0012](adr/0012-topic-pages-have-page-openers.md)).
 
 ## The region
 
@@ -97,7 +101,7 @@ right, and a strip along the floor.
 | `glance` | the top-left quadrant: temperature, humidity, lights on, consumption, and the house's concerns as chips. Read on approach from 2 m. |
 | `left` | the bottom-left quadrant. |
 | `right` | the right column. On `page:main` this is mostly Areas; on other pages it is whatever the page is about. |
-| `footer` | the strip along the floor: media, the blocks that open other pages, and — on every page but `page:main` — a renderer-supplied block back home. |
+| `footer` | the strip along the floor: media, the blocks that open other pages, and — on every page but `page:main` — a renderer-supplied block back home. When more is placed than fits, it scrolls sideways and rests on whole blocks, never clipping one. |
 
 None of the four names contains an underscore, and that is load-bearing rather
 than cosmetic. Home Assistant slugifies a label's name into its id, collapsing
@@ -140,11 +144,37 @@ leads to the same page: swipe it right, or tap the chevron at its end. Tapping
 the row itself still toggles its light. Neither route checks that the page has
 anything on it; an empty page says so (see "An empty page renders a message").
 
-Only an Area navigates, with one exception: the camera glance, which opens the
-page its cameras' Feeds are on (above). An entity in the footer renders as its
-own component and opens nothing: an entity is not an Area, so there is no
-`page:<that entity>` for it to open. `media_player.ovunque` in the footer is
-the transport strip, not a page button.
+A Topic Page has no Area to stand for it, so it has a **Page Opener**: an
+`input_button` whose object id names the page. `input_button.sicurezza` opens
+`page:sicurezza`. Create it in Home Assistant's helpers UI; its name and icon
+are what the block shows, and pressing it in Home Assistant does nothing.
+Every placed `input_button` is a Page Opener.
+
+| a Page Opener in… | renders as |
+| --- | --- |
+| `left`, `right`, `footer` | the same block an Area gets in `footer`, with the helper's name and icon. Tapping it opens its page. |
+| `glance` | a visible fault tile, as an Area there does: neither has a shape in `glance`. |
+
+Areas and Page Openers navigate, and so do three Derived routes. None of them
+is labelled:
+
+- **The camera glance** opens the page its cameras' Feeds are on (above).
+- **A footer member.** An entity in `footer` that is also placed in `left` or
+  `right` on another page gets a chevron at its end, and a swipe right, to
+  that page, as a row does. Tapping the entity itself still does its own
+  action. `media_player.ovunque` in `page:main:footer` and in
+  `page:media:left` is the transport strip with a chevron to `page:media`.
+  An entity placed nowhere else in `left` or `right` gets no chevron.
+- **The temperature and the consumption in `glance`.** Tapping the
+  temperature opens the page its `climate` is placed on in `left` or
+  `right`. Tapping the consumption opens the page its power `sensor` is
+  placed on. They get no chevron, because there is no room for one. With no
+  such page they are not controls, and do not look like one. The chips are
+  not affected: they open Concern lists.
+
+Each picks its page the way the camera glance does: another page, and of
+several, the one whose placement label comes first in Home Assistant's label
+registry.
 
 Navigation is flat: any page's footer opens any page, directly, with no
 hierarchy and no back stack. Going from one Area page to another is always
@@ -154,7 +184,9 @@ hierarchy and no back stack. Going from one Area page to another is always
 `page:corridoio:footer` would be a block, on the corridoio page, that opens the
 corridoio page. The renderer skips it. This matters more than it used to:
 placing every Area in every page's footer is now one label each, and the
-self-referential one falls out of that move by accident every time.
+self-referential one falls out of that move by accident every time. **A Page
+Opener does not appear on its own page** either, in any region:
+`input_button.clima` is skipped on `page:clima`.
 
 ### Getting back
 
@@ -209,9 +241,11 @@ reorder the registries.
 
 ## `main`
 
-The one Derived rule left. An Area rendered as a row in `right` has to know
-which light its slider drives and which entity reports its temperature. It
-takes them from the entities in that Area carrying the `main` label.
+The first of the Derived rules. The others are a camera's motion and where
+something leads (see "The region decides the shape"). An Area rendered as a
+row in `right` has to know which light its slider drives and which entity
+reports its temperature. It takes them from the entities in that Area
+carrying the `main` label.
 
 `main` places nothing on its own. It is only consulted when an Area row
 collapses its Area.
@@ -259,9 +293,10 @@ on the other side of the tap is empty. It still gets the "Casa" block
 described above, the same as any other page — a page with nothing on it is
 exactly the page you least want to be stuck on.
 
-You will hit this within minutes of creating a new page: label one Area's
-footer block to open `page:clima` before anything else carries a `page:clima:*`
-label, and tapping it shows the message rather than a blank panel.
+You will hit this within minutes of creating a new page: place
+`input_button.clima` in a footer before anything else carries a
+`page:clima:*` label, and tapping it shows the message rather than a blank
+panel. A mistyped object id does the same, so the mistake is visible.
 
 ## Worked example
 
@@ -296,9 +331,9 @@ light.luce_corridoio:   [page:corridoio:right]
 # vanish from both pages.
 media_player.ovunque:   [page:main:footer, page:corridoio:footer]
 
-# corridoio's own footer also reaches the clima page directly. It has to be
-# an *Area*, because only an Area block navigates:
-area clima:             [page:corridoio:footer]   # tap -> page:clima
+# corridoio's own footer also reaches the clima page directly, through its
+# Page Opener. clima is a Topic Page, so no Area stands for it:
+input_button.clima:     [page:main:footer, page:corridoio:footer]   # tap -> page:clima
 
 # What it must NOT carry is page:corridoio:footer -- a block on the corridoio
 # page that opens the corridoio page. The renderer skips it.

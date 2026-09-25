@@ -232,8 +232,9 @@ export function usePower(): number | null {
  * Every Label id, in Home Assistant's label-registry order, kept current as
  * Labels are added and removed.
  *
- * Only the camera glance needs it, to pick between several Pages that could
- * show its Feeds (#29, `feedsPageFor`). @hakit keeps no label registry of its
+ * What picks between several Pages something could lead to (`placedPageFor`):
+ * the camera glance's Feeds (#29), a footer member's chevron and the glance's
+ * temperature and consumption (#32). @hakit keeps no label registry of its
  * own, so this asks for it over the websocket and asks again whenever Home
  * Assistant announces a change. Empty until the first answer: a glance then
  * picks by Page name, and corrects itself a moment later.

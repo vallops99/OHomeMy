@@ -56,9 +56,11 @@ export type HouseReport = {
  * normal resting state rather than a problem: a backup sensor with no backup
  * yet, a `person` nobody has located, a `tts` engine idle until spoken to.
  * Counting them put "10 guasti - Backup Next scheduled automatic backup" on
- * the wall of a house where nothing was wrong.
+ * the wall of a house where nothing was wrong. An `input_button` is a Page
+ * Opener, which nobody ever presses (ADR-0012), so it rests at `unknown`
+ * for good.
  */
-const NEVER_FAULT = new Set(['event', 'person', 'tts', 'button', 'update', 'stt', 'conversation']);
+const NEVER_FAULT = new Set(['event', 'person', 'tts', 'button', 'input_button', 'update', 'stt', 'conversation']);
 
 /**
  * Whether a fault in this entity is one the panel should report.

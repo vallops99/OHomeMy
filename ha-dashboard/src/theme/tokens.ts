@@ -74,6 +74,9 @@ function armTokens(wall: ReturnType<typeof buildWallTokens>): ReturnType<typeof 
       // A phone Row is two lines, the slider under the name (RoomRow.tsx):
       // 64 px of slider plus a 28 px line plus the card's padding.
       tileMaxH: 140,
+      // The phone's footer wraps rather than scrolls (PhoneShell.tsx), and a
+      // 420 px floor is wider than the phone.
+      mediaBarMinW: 0,
     },
   };
 }
@@ -256,6 +259,13 @@ function buildWallTokens(k: Knobs) {
      * Row's swipe wrapper (#27) takes the same cap, or it grows past the
      * card with the Region and the label it reveals shows below the row
      * (measured on the real app at 1280x800: 162 px wrapper, 100 px card).
+     *
+     * `mediaBarMinW` (#32) is the least `MediaBar` is squeezed to before the
+     * footer scrolls sideways instead. Without a floor the strip, `flex: 1;
+     * minWidth: 0`, gave way first and a busy footer crushed the transport
+     * rather than scrolling: 32 icon + 3 x 44 buttons + gaps and padding is
+     * 236 px before a single letter of the title. 420 leaves the title
+     * about 180 px. `npm run measure`'s busy footer asserts it.
      */
     layout: {
       sidebarW: 420,
@@ -272,6 +282,7 @@ function buildWallTokens(k: Knobs) {
       popupClose: 80,
       feedThumbW: 300,
       tileMaxH: 100,
+      mediaBarMinW: 420,
     },
   };
 }

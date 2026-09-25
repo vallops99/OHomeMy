@@ -20,7 +20,17 @@
  *      neighbour, which is the failure the negative-margin Hero produced and
  *      the one `scrollHeight`-only probes cannot see.
  *
- * Both are asserted at 1280x768 (the shortest supported) and 1280x800 (the
+ * And since #32, the footer:
+ *
+ *   3. **The busy footer fits.** `MediaBar` (with its chevron to
+ *      `page:media`), one Area block and four Page Openers sit in one strip
+ *      with nothing scrolled, clipped or taller than `footerH`, and the
+ *      strip keeps at least `mediaBarMinW`.
+ *   4. **An overfull footer scrolls rather than clips.** With more blocks
+ *      than fit, the footer scrolls sideways, every block keeps its whole
+ *      label, and the strip still keeps `mediaBarMinW`.
+ *
+ * All of it is asserted at 1280x768 (the shortest supported) and 1280x800 (the
  * wall panel's native size). Stated as a property of every viewport >= the
  * floor rather than a list of samples, because a fit proven on samples and
  * broken between them is exactly how the defect in ADR-0007 reached the wall.
@@ -225,8 +235,82 @@ function leftColumn(chips: ChipSpec[]): string {
   </div>`;
 }
 
+/**
+ * The footer, as `Panel.tsx` and `PlacementView.tsx` build it: a strip that
+ * scrolls sideways with snapping, `PageBlock`s sized to their labels, and
+ * `MediaBar` inside a `FooterMember` -- the swipe surface and the chevron to
+ * the Page it is also Placed on (#32). The strip plays something, since its
+ * playing form is the wider one, with a title longer than it can show: a
+ * title must ellipsise, never widen the strip into a scroll.
+ */
+function footer(blocks: { name: string }[]): string {
+  const block = (name: string) => `
+    <div class="footer-item" style="display:flex; flex:0 0 auto; min-width:0; scroll-snap-align:start">
+      <div class="block" style="
+        box-sizing:border-box; border:1px solid ${t.color.border}; border-radius:${t.radius.tile}px;
+        background:${t.color.surface}; padding:${t.space.sm}px ${t.space.md}px; overflow:hidden;
+        min-height:${t.touch.primary}px; display:block; width:100%; min-width:0;
+      ">
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:${t.space.xs}px; color:${t.color.textPrimary}">
+          <span style="width:26px;height:26px;flex:0 0 26px;display:block;background:currentColor;border-radius:4px"></span>
+          <span style="font-size:${t.font.caption}px; font-weight:600; text-align:center; white-space:nowrap">${name}</span>
+        </div>
+      </div>
+    </div>`;
+  const button = `<span style="width:${t.touch.floor}px;height:${t.touch.floor}px;flex:0 0 ${t.touch.floor}px;display:flex;align-items:center;justify-content:center"><span style="width:28px;height:28px;display:block;background:${t.color.onActiveStrong};border-radius:4px"></span></span>`;
+  const media = `
+    <div id="media" class="footer-item" style="flex:1; scroll-snap-align:start; display:flex; position:relative; overflow:clip">
+      <div style="flex:1; min-width:0; display:flex">
+        <div style="flex:1; min-width:0; display:flex">
+          <div id="media-bar" style="flex:1; min-width:${t.layout.mediaBarMinW}px; display:flex">
+            <div style="
+              box-sizing:border-box; width:100%; min-height:${t.touch.primary}px; max-height:${t.layout.tileMaxH}px;
+              border:1px solid ${t.color.border}; border-radius:${t.radius.tile}px; background:${t.color.activeStrong};
+              padding:${t.space.sm}px ${t.space.md}px; overflow:hidden; color:${t.color.onActiveStrong};
+            ">
+              <div style="display:flex; align-items:center; gap:${t.space.md}px; height:100%">
+                <span style="width:32px;height:32px;flex:0 0 32px;display:block;background:currentColor;border-radius:4px"></span>
+                <div style="flex:1; min-width:0; contain:inline-size">
+                  <div style="font-size:${t.font.glanceM}px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">Concerto per pianoforte e orchestra n. 21 in do maggiore, K. 467 — Wolfgang Amadeus Mozart</div>
+                  <div style="font-size:${t.font.caption}px; opacity:.85">Ovunque</div>
+                </div>
+                <div id="transport" style="display:flex; gap:${t.space.sm}px; flex-shrink:0">${button}${button}${button}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center">
+          <span id="chevron" style="flex-shrink:0; width:${t.touch.floor}px; height:${t.touch.floor}px; display:block"></span>
+        </div>
+      </div>
+    </div>`;
+  return `
+    <div id="footer" style="
+      flex-shrink:0; min-height:${t.layout.footerH}px; display:flex; align-items:stretch; gap:${t.space.sm}px;
+      overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scrollbar-width:none;
+    ">${block(blocks[0].name)}${media}${blocks
+      .slice(1)
+      .map(b => block(b.name))
+      .join('')}</div>`;
+}
+
+/**
+ * The footers asserted. `busy` is what `fake-house/manifest.yaml` Places in
+ * `page:main:footer` once every Topic Page has its Opener (#32): Corridoio,
+ * then Ovunque's strip, then the four Openers. `overfull` is a house that
+ * places more than fits, which must scroll rather than clip.
+ */
+const BUSY_FOOTER = ['Corridoio', 'Clima', 'Sicurezza', 'Media', 'Servizi'].map(name => ({ name }));
+const FOOTERS: Record<string, { blocks: { name: string }[]; fits: boolean }> = {
+  busy: { blocks: BUSY_FOOTER, fits: true },
+  overfull: {
+    blocks: [...BUSY_FOOTER, ...['Soggiorno', 'Cucina', 'Cameretta', 'Ingresso', 'Esterno', 'Ufficio'].map(name => ({ name }))],
+    fits: false,
+  },
+};
+
 /** The whole panel, so the left column is measured inside the real shell. */
-function panel(chips: ChipSpec[]): string {
+function panel(chips: ChipSpec[], footerBlocks: { name: string }[] = BUSY_FOOTER): string {
   return `<body style="margin:0;font-family:${t.font.family};background:${t.color.ground}">
     <div id="panel" style="
       display:flex; flex-direction:column; gap:${t.space.lg}px; padding:${t.space.lg}px;
@@ -236,7 +320,7 @@ function panel(chips: ChipSpec[]): string {
         ${leftColumn(chips)}
         <div id="right" style="flex:1; min-height:0; overflow:auto"></div>
       </div>
-      <div id="footer" style="flex-shrink:0; min-height:${t.layout.footerH}px"></div>
+      ${footer(footerBlocks)}
     </div>
   </body>`;
 }
@@ -324,6 +408,55 @@ const probe = `(() => {
 })()`;
 
 /**
+ * The footer's assertions (#32). `fits` says which footer this is: the busy
+ * one must not scroll at all; the overfull one must, and only sideways.
+ * Either way no block is clipped, the strip holds `footerH`, and `MediaBar`
+ * keeps its floor.
+ */
+const footerProbe = (fits: boolean) => `(() => {
+  const TOLERANCE = 0.5;
+  const failures = [];
+  const footer = document.getElementById('footer');
+  const bar = document.getElementById('media-bar');
+  if (footer === null || bar === null) return [{ rule: 'setup', detail: 'no #footer or #media-bar in the page' }];
+
+  const scrolls = footer.scrollWidth - footer.clientWidth > TOLERANCE;
+  if (${fits} && scrolls) {
+    failures.push({ rule: 'the busy footer fits', detail: '#footer scrolls by ' + (footer.scrollWidth - footer.clientWidth) + 'px' });
+  }
+  if (!${fits} && !scrolls) {
+    failures.push({ rule: 'an overfull footer scrolls', detail: '#footer holds ' + footer.scrollWidth + 'px in ' + footer.clientWidth + 'px without scrolling' });
+  }
+  const height = footer.getBoundingClientRect().height;
+  if (Math.abs(height - ${t.layout.footerH}) > TOLERANCE) {
+    failures.push({ rule: 'the footer holds its height', detail: '#footer is ' + height.toFixed(1) + 'px, not ${t.layout.footerH}' });
+  }
+  for (const el of footer.querySelectorAll('.block')) {
+    const label = el.textContent.trim();
+    if (el.scrollWidth - el.clientWidth > TOLERANCE || el.scrollHeight - el.clientHeight > TOLERANCE) {
+      failures.push({ rule: 'no block is clipped', detail: label + ' needs ' + el.scrollWidth + 'x' + el.scrollHeight + ', has ' + el.clientWidth + 'x' + el.clientHeight });
+    }
+  }
+  const barW = bar.getBoundingClientRect().width;
+  if (barW < ${t.layout.mediaBarMinW} - TOLERANCE) {
+    failures.push({ rule: 'MediaBar keeps its floor', detail: '#media-bar is ' + barW.toFixed(1) + 'px, under ${t.layout.mediaBarMinW}' });
+  }
+  const chevron = document.getElementById('chevron').getBoundingClientRect();
+  const transport = document.getElementById('transport').getBoundingClientRect();
+  if (chevron.left < transport.right - TOLERANCE) {
+    failures.push({ rule: 'the chevron clears the transport', detail: 'chevron at ' + chevron.left + ', transport ends at ' + transport.right });
+  }
+  return failures;
+})()`;
+
+/** How wide the footer's strip came out, pass or fail. */
+const footerSpace = `(() => {
+  const footer = document.getElementById('footer');
+  const bar = document.getElementById('media-bar');
+  return { needs: footer.scrollWidth, has: footer.clientWidth, bar: Math.round(bar.getBoundingClientRect().width) };
+})()`;
+
+/**
  * Reports what the column *needs* versus what it *has*, pass or fail. The
  * headroom number is the point of ADR-0007's "shrink then scroll": a fit with
  * single-digit slack is one wrapped chip away from the defect, so the margin
@@ -382,6 +515,21 @@ for (const { w, h, why } of VIEWPORTS) {
     }
     await page.close();
   }
+  for (const [footerName, { blocks, fits }] of Object.entries(FOOTERS)) {
+    const page = await browser.newPage({ viewport: { width: w, height: h } });
+    await page.setContent(panel(CHIP_SETS.quiet, blocks));
+    const found = (await page.evaluate(footerProbe(fits))) as { rule: string; detail: string }[];
+    const space = (await page.evaluate(footerSpace)) as { needs: number; has: number; bar: number };
+    const label = `${w}x${h} ${footerName} footer`;
+    if (found.length === 0) {
+      console.log(`  PASS  ${label}  (${why})`);
+    } else {
+      console.log(`  FAIL  ${label}  (${why})`);
+      for (const f of found) failures.push({ viewport: label, ...f });
+    }
+    console.log(`        footer needs ${space.needs} / has ${space.has}, MediaBar ${space.bar}px`);
+    await page.close();
+  }
 }
 
 await browser.close();
@@ -391,4 +539,4 @@ if (failures.length > 0) {
   for (const f of failures) console.error(`  ${f.viewport}  ${f.rule}: ${f.detail}`);
   process.exit(1);
 }
-console.log('\nThe left column fits at every asserted viewport.');
+console.log('\nThe left column and the footer fit at every asserted viewport.');
