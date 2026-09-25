@@ -100,7 +100,9 @@ Area's Page. This is why the panel needs no separate navigation concept, and why
 one Area with two Placements can be both at once. The Page never decides
 shape: the same thing in the same Region looks the same on every Page, and
 where a Domain needs a full and a compact form, the Regions choose between
-them.
+them -- `left` and `right` the full one, `footer` the compact one. A
+`media_player` is the exception: only `right` gets its full card, and in
+`left` it stays the compact strip.
 _Avoid_: Renderer, variant, presentation mode
 
 **Row**:

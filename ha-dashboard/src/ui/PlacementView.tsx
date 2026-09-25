@@ -469,7 +469,13 @@ function GlanceView({ placed, labelOrder }: { placed: Placed[]; labelOrder: Labe
 
   // An Area or a Page Opener has no shape in `glance` (see the header note):
   // a visible fault, never a silent gap.
-  const unplaceable = placed.flatMap(p => (p.kind === 'area' ? [p.area.name] : openerPage(p.entity) !== null ? [p.entity.name] : []));
+  const unplaceable = placed.flatMap(p =>
+    p.kind === 'area'
+      ? [{ key: `area:${p.area.id}`, name: p.area.name }]
+      : openerPage(p.entity) !== null
+        ? [{ key: p.entity.id, name: p.entity.name }]
+        : []
+  );
 
   // Whole-house Derived, deliberately not narrowed to `placedEntities` -- see
   // the header note above.
@@ -543,8 +549,8 @@ function GlanceView({ placed, labelOrder }: { placed: Placed[]; labelOrder: Labe
           />
         </div>
       )}
-      {unplaceable.map(name => (
-        <div key={name} style={{ flexShrink: 0, display: 'flex' }}>
+      {unplaceable.map(({ key, name }) => (
+        <div key={key} style={{ flexShrink: 0, display: 'flex' }}>
           <FaultTile label={`Non previsto in glance: ${name}`} />
         </div>
       ))}
