@@ -138,7 +138,8 @@ that page the one it opens.
 
 Every other domain, by region. The page never decides shape: where a domain
 has a full form and a compact one, `left` and `right` get the full one and
-`footer` the compact one. An Unavailable entity renders in its own shape,
+`footer` the compact one. `media_player` is the one exception: only `right`
+gets its full card, so a house-wide player in `left` stays a strip. An Unavailable entity renders in its own shape,
 marked as a fault, and a domain with no shape in a region renders a fault tile
 naming the domain.
 
@@ -148,7 +149,7 @@ naming the domain.
 | `light`, `switch`, `siren` | a row: tap to toggle, a brightness slider when it dims | a block: state over name; tap to toggle | — |
 | `alarm_control_panel` | the full card: its state, and every arm mode it supports while disarmed, else a disarm — the same buttons as its Modal | a tile: tap to arm away or disarm | the alarm chip, which opens its arm/disarm Modal |
 | `binary_sensor` | a read-only row: name, and its state by device class — a door, window or opening reads `Aperta`/`Chiusa`, and an open one is drawn as the Verdict draws an open way in | a block: state over name | — |
-| `media_player` | the transport strip, showing whatever is playing | the same | — |
+| `media_player` | in `right`, the full card: name, artwork when there is any, what is playing, play/pause, previous/next, a volume slider and on/off — each only if the player supports it. In `left`, the transport strip, as in `footer` | the transport strip: whatever is playing, with the controls the player supports | — |
 | `climate` | the full card: the room's temperature, the setpoint with − and +, the HVAC modes it reports, and what it is doing | a block: name, temperature and setpoint; a tap does nothing | the big temperature |
 | `weather` | the condition in Italian, the temperature, and the next five days | a fault tile | — |
 | `sensor` | a row: name, current value and unit, an icon by device class; read-only | a block: value over name | `humidity` is the humidity line, `power` the consumption |

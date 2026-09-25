@@ -124,6 +124,18 @@ labels:
   - id: page:sicurezza:footer
     name: page:sicurezza:footer
     icon: mdi:shield-home
+  # Media (#35): Ovunque as the strip in `left`, every room's player in full
+  # in `right`. The same Verdict glance as Sicurezza, for the same reason:
+  # without one, `left` would not render.
+  - id: page:media:glance
+    name: page:media:glance
+    icon: mdi:speaker
+  - id: page:media:left
+    name: page:media:left
+    icon: mdi:speaker
+  - id: page:media:right
+    name: page:media:right
+    icon: mdi:speaker
   # Clima (#33): the thermostat, the weather and the readings. Its glance is
   # the same as `page:main`'s, so the Verdict is still there.
   - id: page:clima:glance
@@ -292,7 +304,7 @@ entities:
     name: Allarme
     kind: alarm
     area: null
-    labels: [security, main, page:main:glance, page:clima:glance, page:sicurezza:glance, page:sicurezza:left]
+    labels: [security, main, page:main:glance, page:clima:glance, page:sicurezza:glance, page:sicurezza:left, page:media:glance]
   - id: siren.telecamera_cancello_sirena
     name: Sirena Cancello
     kind: siren
@@ -331,7 +343,7 @@ entities:
     name: Termostato
     kind: climate
     area: corridoio
-    labels: [main, page:main:glance, page:clima:glance, page:clima:left, page:sicurezza:glance]
+    labels: [main, page:main:glance, page:clima:glance, page:clima:left, page:sicurezza:glance, page:media:glance]
   - id: sensor.corridoio_termostato_umidita
     name: Umidita Termostato
     kind: sensor
@@ -339,33 +351,36 @@ entities:
     device_class: humidity
     unit: '%'
     initial: 47
-    labels: [page:main:glance, page:clima:glance, page:clima:right, page:sicurezza:glance]
+    labels: [page:main:glance, page:clima:glance, page:clima:right, page:sicurezza:glance, page:media:glance]
 
   # ---------------- media ----------------
+  # In `page:media:left` too, so `page:main`'s footer strip leads there
+  # (#32's member chevron, first real case).
   - id: media_player.ovunque
     name: Ovunque
     kind: media_player
     area: null
-    labels: [multiroom, main, page:main:footer]
+    labels: [multiroom, main, page:main:footer, page:media:left]
   - id: media_player.echo_di_christian
     name: Echo di Christian
     kind: media_player
     area: camera_chri
-    labels: [main]
+    labels: [main, page:media:right]
   - id: media_player.echo_show_di_christian
     name: Echo Show di Christian
     kind: media_player
     area: salone
+    labels: [page:media:right]
   - id: media_player.echo_spot_di_christian
     name: Echo Spot di Christian
     kind: media_player
     area: ingresso
-    labels: [main]
+    labels: [main, page:media:right]
   - id: media_player.echo_pop_di_christian
     name: Echo Pop di Christian
     kind: media_player
     area: corridoio
-    labels: [main]
+    labels: [main, page:media:right]
   - id: media_player.christian_s_echo_auto
     name: Echo Auto
     kind: media_player
@@ -374,6 +389,7 @@ entities:
     name: TV Salone
     kind: media_player
     area: salone
+    labels: [page:media:right]
 
   # ---------------- vacuum ----------------
   - id: vacuum.roborock_s5_max
@@ -517,7 +533,7 @@ entities:
     unit: W
     initial: 320
     state_class: measurement
-    labels: [page:main:glance, page:clima:glance, page:sicurezza:glance]
+    labels: [page:main:glance, page:clima:glance, page:sicurezza:glance, page:media:glance]
 
   # ---------------- weather ----------------
   # Real in `ha-local`, from met.no: not a fake, so it is only labelled.

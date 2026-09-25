@@ -284,3 +284,12 @@ export function usePage(page: string): PageLayout {
   const entities = useEntities();
   return useMemo(() => resolvePage(areas, entities, page), [areas, entities, page]);
 }
+
+/**
+ * Turns a path Home Assistant hands out -- a media player's `entity_picture`,
+ * `/api/media_player_proxy/...` -- into a URL this panel can load, since the
+ * panel is not served by Home Assistant in development (#35).
+ */
+export function useHassUrl(): (path: string) => string {
+  return useHass(s => s.helpers.joinHassUrl);
+}

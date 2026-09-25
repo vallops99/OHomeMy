@@ -12,6 +12,7 @@
  */
 import { useActions, type Entity } from '../ha';
 import { Icon } from './Icon';
+import { mediaControls } from './mediaState';
 import { Tile } from './Tile';
 import { onSurfaceFor, t } from './theme';
 
@@ -34,9 +35,10 @@ function nowPlaying(entity: Entity): string {
 /**
  * The strip's own box: the width left over, but never under `mediaBarMinW`
  * (tokens.ts) -- below that the footer scrolls rather than crush the
- * transport (#32).
+ * transport (#32). At least a touch target tall: in `left` (#35) nothing
+ * stretches it the way the footer does.
  */
-const box = { flex: 1, minWidth: t.layout.mediaBarMinW, display: 'flex' } as const;
+const box = { flex: 1, minWidth: t.layout.mediaBarMinW, minHeight: t.touch.primary, display: 'flex' } as const;
 
 export function MediaBar({ entities }: MediaBarProps) {
   const actions = useActions();
@@ -64,6 +66,9 @@ export function MediaBar({ entities }: MediaBarProps) {
   }
 
   const fg = onSurfaceFor({ active: true, strong: true });
+  // Only what this player can do (#35): a skip button on a player with no
+  // skip would be a dead control that looks live.
+  const controls = mediaControls(playing);
 
   return (
     <div style={box}>
@@ -100,19 +105,25 @@ export function MediaBar({ entities }: MediaBarProps) {
           {/* Transport controls own their own presses: the tile beneath must not
             also toggle the player when a button is hit. */}
           <div style={{ display: 'flex', gap: t.space.sm, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-            <MediaButton
-              icon='mdi:skip-previous'
-              label='Precedente'
-              onPress={() => actions.call('media_player', 'media_previous_track', playing.id)}
-              fg={fg}
-            />
-            <MediaButton icon='mdi:pause' label='Pausa' onPress={() => actions.call('media_player', 'media_pause', playing.id)} fg={fg} />
-            <MediaButton
-              icon='mdi:skip-next'
-              label='Successivo'
-              onPress={() => actions.call('media_player', 'media_next_track', playing.id)}
-              fg={fg}
-            />
+            {controls.previous && (
+              <MediaButton
+                icon='mdi:skip-previous'
+                label='Precedente'
+                onPress={() => actions.call('media_player', 'media_previous_track', playing.id)}
+                fg={fg}
+              />
+            )}
+            {controls.playPause === 'pause' && (
+              <MediaButton icon='mdi:pause' label='Pausa' onPress={() => actions.call('media_player', 'media_pause', playing.id)} fg={fg} />
+            )}
+            {controls.next && (
+              <MediaButton
+                icon='mdi:skip-next'
+                label='Successivo'
+                onPress={() => actions.call('media_player', 'media_next_track', playing.id)}
+                fg={fg}
+              />
+            )}
           </div>
         </div>
       </Tile>

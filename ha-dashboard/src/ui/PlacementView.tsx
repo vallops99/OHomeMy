@@ -35,6 +35,8 @@
  *     full one and `footer` the compact one (#31): `climate` -> `ClimateCard`
  *     / `ClimateBlock`, `sensor` -> `SensorTile` / `SensorBlock` (#33).
  *     `weather` -> `WeatherCard`, in `left`/`right` only.
+ *     `media_player` is the one exception: `MediaCard` in `right` only, and
+ *     `MediaBar` in `left` as well as `footer` (#35).
  *     `alarm_control_panel` -> `AlarmPanel` / `AlarmTile`, `binary_sensor`
  *     -> `BinarySensorTile` / `BinarySensorBlock`, and `light`, `switch`,
  *     `siren` -> `ToggleTile` / `ToggleBlock` (#34).
@@ -122,6 +124,7 @@ import { GateSlab } from './GateSlab';
 import { Hero } from './Hero';
 import { Icon } from './Icon';
 import { MediaBar } from './MediaBar';
+import { MediaCard } from './MediaCard';
 import { useNavigation } from './NavigationContext';
 import { popupTitle } from './popup';
 import { RoomRow } from './RoomRow';
@@ -166,7 +169,10 @@ function entitySlot(entity: Entity, region: Exclude<Region, 'glance'>) {
     return compact ? <AlarmTile key={entity.id} entity={entity} /> : <AlarmPanel key={entity.id} entity={entity} />;
   }
   if (entity.domain === 'media_player') {
-    return <MediaBar key={entity.id} entities={[entity]} />;
+    // The full card only in `right`: in `left`, as in `footer`, a player
+    // stays the compact strip (#35) -- Ovunque on the Media Page is a strip
+    // on purpose.
+    return region === 'right' ? <MediaCard key={entity.id} entity={entity} /> : <MediaBar key={entity.id} entities={[entity]} />;
   }
   if (entity.domain === 'light' || entity.domain === 'switch' || entity.domain === 'siren') {
     return compact ? <ToggleBlock key={entity.id} entity={entity} /> : <ToggleTile key={entity.id} entity={entity} />;

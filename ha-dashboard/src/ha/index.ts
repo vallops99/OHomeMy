@@ -14,6 +14,7 @@ export {
   useEntities,
   useEntityState,
   useLabelOrder,
+  useHassUrl,
   usePower,
   pickMain,
   isUnavailableState,
