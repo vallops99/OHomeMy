@@ -56,8 +56,28 @@ One view of the panel, named by the first half of a Placement Label.
 Open-ended: a Page exists because something is labelled for it, and the renderer
 knows no list of them.
 `page:main` is the home screen by convention: where the panel rests, and
-where it returns to after a period idle elsewhere.
+where it returns to after a period idle elsewhere. Any other Page is either an
+**Area Page**, named by an Area's id and opened by that Area's block or Row,
+or a **Topic Page**, named after a subject rather than a place --
+`page:clima`, `page:sicurezza`, `page:media`.
 _Avoid_: Screen, view, route
+
+**Topic Page**:
+A Page about a subject the house's Areas do not divide up -- the climate, the
+house's security, its media, its services. No Area stands for it and none is
+invented to reach it: its front door is a Page Opener, and its members lead to
+it too (see Derived).
+_Avoid_: View, section, category page
+
+**Page Opener**:
+A Home Assistant `input_button` that stands for a Topic Page, the way an Area
+stands for its own: Placed like anything else, rendered as a block with its
+name and icon, and opening `page:<its object id>` when tapped --
+`input_button.sicurezza` opens `page:sicurezza`. The same block in `left`,
+`right` or `footer`; like an Area, it is skipped on its own Page and cannot
+render in `glance`. It holds no state and controls nothing; pressing it in
+Home Assistant does nothing.
+_Avoid_: Shortcut, link, nav button, fake Area
 
 **Region**:
 One of the panel's four areas -- `glance`, `left`, `right`, `footer` -- named by
@@ -77,7 +97,10 @@ What a Region promises to make of whatever is Placed in it. A Region decides
 the *shape* of a component, not only its position: an Area in `right` is a full
 row with a slider, while the same Area in `footer` is a block that opens that
 Area's Page. This is why the panel needs no separate navigation concept, and why
-one Area with two Placements can be both at once.
+one Area with two Placements can be both at once. The Page never decides
+shape: the same thing in the same Region looks the same on every Page, and
+where a Domain needs a full and a compact form, the Regions choose between
+them.
 _Avoid_: Renderer, variant, presentation mode
 
 **Row**:
@@ -116,7 +139,7 @@ those same cameras are Placed as Feeds.
 _Avoid_: Stream (the transport, not the thing on the panel), video, snapshot
 
 **Derived**:
-Resolved from a registry query at render time rather than declared. Three
+Resolved from a registry query at render time rather than declared. Four
 Derived rules survive the protocol, and everything else is Placed explicitly:
 - A Row consults the `main` Label to find the light its slider drives and the
   entity its temperature comes from.
@@ -126,6 +149,14 @@ Derived rules survive the protocol, and everything else is Placed explicitly:
 - The camera glance opens the Page where every one of its cameras is also
   Placed in `left` or `right`, other than the current Page; of several, the
   first in label-registry order. With none, the glance is not a control.
+- Any other entity in `footer` leads to the other Page where that same
+  entity is Placed in `left` or `right`, chosen as the camera glance chooses.
+  Tapping it still does its own action, and a trailing chevron, or a swipe
+  right, opens the Page, as on a Row. With no such Page there is no chevron.
+  In `glance` the same rule opens on a tap, because nothing there has an
+  action of its own: the temperature leads where its `climate` is Placed, the
+  consumption where its power `sensor` is. The chips are exempt: they open
+  Concern lists.
 _Avoid_: Automatic, implicit, inferred
 
 ### State
