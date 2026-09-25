@@ -136,6 +136,25 @@ lit zone, or nothing to report -- rather than a list of readings. What the
 `glance` Region answers.
 _Avoid_: Status, summary, overview
 
+**Concern**:
+One ranked kind of thing worth reporting at the door -- Faults, open ways in,
+lit zones -- and the entities behind it. The Verdict is the highest-ranked
+Concern; each Concern the panel still reports is one chip in `glance`.
+_Avoid_: Issue, alert, warning, health
+
+**Concern list**:
+The entities behind one Concern, shown over the current Page when its chip is
+tapped. Panel-local: only the panel that was tapped shows it, and Home
+Assistant never opens or closes it -- which is what makes it not a Popup. Not
+a Page either: nothing is Placed in it; its contents are Derived from the
+Concern. Each entity is named with its Area, and nothing in it is a control.
+It stays current while open, and closes on its close button, a tap outside
+it, the panel leaving the Page it was opened on (the idle return, a Tab
+change), when its Concern clears, or after the same idle spell untouched --
+on `page:main` and on a phone too, where no idle return runs. A Popup covers
+it without closing it.
+_Avoid_: Popup, modal, drawer, error list
+
 **Fault**:
 An Unavailable entity the dashboard would actually render. Narrower than
 Unavailable: Home Assistant's own housekeeping goes unreachable routinely, and
