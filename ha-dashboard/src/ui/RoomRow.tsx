@@ -11,13 +11,16 @@
  * the brightness slider is always visible and draggable so the row never
  * changes shape as the house changes state, and the Area's Page -- the same
  * one its footer block opens -- is reached by swiping the row right or by
- * tapping the trailing chevron. Holding the row does nothing: the @hakit light
+ * tapping the trailing chevron. The slider is there only when that light can
+ * be dimmed at all (#37): on an on/off light, or on no light, it would move
+ * and change nothing. Being dimmable is what a light is, not a state it is
+ * in, so the row still never changes shape as the house does. Holding the row does nothing: the @hakit light
  * modal is gone from Rows (ADR-0010).
  */
 import { pickMain, useActions, type Area } from '../ha';
 import { Icon } from './Icon';
 import { isPhone } from './device';
-import { brightnessPercent } from './lightState';
+import { brightnessPercent, supportsBrightness } from './lightState';
 import { useNavigation } from './NavigationContext';
 import { roomTemperature } from './roomTemperature';
 import { rowBox, rowStyle, useRowSlider } from './rowShape';
@@ -55,6 +58,7 @@ export function RoomRow({ area, icon = 'mdi:sofa' }: RoomRowProps) {
   const main = pickMain(area, 'light');
   const active = main?.state === 'on';
   const unavailable = main?.unavailable ?? false;
+  const dimmable = main !== null && supportsBrightness(main);
   const temperature = roomTemperature(area);
   const counts = lightCount(area);
 
@@ -109,11 +113,10 @@ export function RoomRow({ area, icon = 'mdi:sofa' }: RoomRowProps) {
               )}
               <span style={{ fontSize: t.font.glanceM, color: t.color.textPrimary, flexShrink: 0 }}>{temperature ?? '--'}</span>
             </div>
-            {!unavailable && (
+            {!unavailable && dimmable && (
               <div style={{ minWidth: 0 }} onClick={e => e.stopPropagation()}>
                 <Slider
                   value={slider.shown}
-                  disabled={!main}
                   onChange={slider.track}
                   onChangeApplied={v => {
                     slider.track(v);
@@ -144,16 +147,19 @@ export function RoomRow({ area, icon = 'mdi:sofa' }: RoomRowProps) {
                   </span>
                 )}
 
+                {/* Held empty without a slider, so the temperature stays in
+                    the same column as every other Row's in the Region. */}
                 <div style={{ width: 200, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-                  <Slider
-                    value={slider.shown}
-                    disabled={!main}
-                    onChange={slider.track}
-                    onChangeApplied={v => {
-                      slider.track(v);
-                      if (main) actions.setBrightness(main, v);
-                    }}
-                  />
+                  {dimmable && (
+                    <Slider
+                      value={slider.shown}
+                      onChange={slider.track}
+                      onChangeApplied={v => {
+                        slider.track(v);
+                        if (main) actions.setBrightness(main, v);
+                      }}
+                    />
+                  )}
                 </div>
               </>
             )}

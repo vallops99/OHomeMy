@@ -114,21 +114,25 @@ class Builder:
     def _light(self, e: dict) -> None:
         online = self.online_helper(e)
         state = self.bool_helper(e, False)
-        level = self.num_helper(e, "level", 0, 255, 1, 0)
         cfg = {
             "name": e["name"],
             "default_entity_id": e["id"],
             "unique_id": slug(e["id"]),
             "state": f"{{{{ is_state('{state}','on') }}}}",
-            "level": f"{{{{ states('{level}')|int(0) }}}}",
             "availability": f"{{{{ is_state('{online}','on') }}}}",
             "turn_on": {"action": "input_boolean.turn_on",
                         "target": {"entity_id": state}},
             "turn_off": {"action": "input_boolean.turn_off",
                          "target": {"entity_id": state}},
+        }
+        # A template light with no `level` declares only the `onoff` colour
+        # mode: an on/off light, which the Row gives no slider (#37).
+        if e.get("dimmable", True):
+            level = self.num_helper(e, "level", 0, 255, 1, 0)
+            cfg["level"] = f"{{{{ states('{level}')|int(0) }}}}"
             # Setting brightness to 0 must also switch the light off, so the
             # `state` helper and the dashboard's slider never disagree.
-            "set_level": [
+            cfg["set_level"] = [
                 {"action": "input_number.set_value",
                  "target": {"entity_id": level},
                  "data": {"value": "{{ brightness }}"}},
@@ -138,8 +142,7 @@ class Builder:
                            "target": {"entity_id": state}}],
                  "else": [{"action": "input_boolean.turn_off",
                            "target": {"entity_id": state}}]},
-            ],
-        }
+            ]
         self.template.append({"light": [cfg]})
 
     def _switch(self, e: dict) -> None:

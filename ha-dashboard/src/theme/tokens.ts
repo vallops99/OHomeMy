@@ -72,7 +72,9 @@ function armTokens(wall: ReturnType<typeof buildWallTokens>): ReturnType<typeof 
       // left "Cancelletto" ~170 px and cut it off.
       gateInset: 14,
       // A phone Row is two lines, the slider under the name (RoomRow.tsx):
-      // 64 px of slider plus a 28 px line plus the card's padding.
+      // 64 px of slider plus a 28 px line plus the card's padding. A Row
+      // whose `main` light cannot be dimmed has only the first line, centred
+      // in the same height, so the list keeps one rhythm.
       tileMaxH: 140,
       // The phone's footer wraps rather than scrolls (PhoneShell.tsx), and a
       // 420 px floor is wider than the phone.

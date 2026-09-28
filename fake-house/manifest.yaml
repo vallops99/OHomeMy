@@ -13,6 +13,8 @@
 #        event | button | button_lock | input_button | external
 #        (`external`: a real entity from a real integration, not a fake --
 #        generate.py skips it, apply-registry.py only labels it)
+# dimmable: (light only) false for an on/off light with no brightness.
+#        Defaults to true.
 # device_of: (binary_sensor only) the entity whose device this one joins.
 #        YAML templates cannot join a device, so apply-registry.py builds
 #        these as template helpers linked to it instead.
@@ -263,6 +265,9 @@ entities:
   - id: light.esterno_luce_casetta_2
     name: Luce Casetta
     kind: light
+    # On/off only: the one Area whose `main` light cannot be dimmed, so its
+    # Row shows no slider (#37).
+    dimmable: false
     area: esterno
     labels: [main]
 
