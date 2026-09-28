@@ -37,13 +37,16 @@ import { t } from './theme';
  * The Aggregate (the entity carrying the `main` Label -- CONTEXT.md) is
  * excluded from both the numerator and the denominator: it stands for the
  * other lights rather than being one more of them, so counting it alongside
- * them would double-count every light it aggregates.
+ * them would double-count every light it aggregates. A `main` light with no
+ * others beside it aggregates nothing -- it is the Area's only light -- so it
+ * counts as itself, and the Row reads `0/1` or `1/1`.
  */
 function lightCount(area: Area): { on: number; total: number } | null {
   const lights = area.entities.filter(e => e.domain === 'light');
-  const individual = lights.filter(e => !e.labels.includes('main'));
-  if (individual.length === 0) return null;
-  return { on: individual.filter(e => e.state === 'on').length, total: individual.length };
+  const others = lights.filter(e => !e.labels.includes('main'));
+  const counted = others.length > 0 ? others : lights;
+  if (counted.length === 0) return null;
+  return { on: counted.filter(e => e.state === 'on').length, total: counted.length };
 }
 
 export type RoomRowProps = {
