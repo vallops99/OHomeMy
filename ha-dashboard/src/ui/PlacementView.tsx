@@ -104,11 +104,11 @@
  *     special case here or in `Dashboard.tsx`.
  *   - an entity -> by Domain, feeding the existing glance components
  *     (`Hero`, `Stats`, `ChipRow`) rather than being rendered as its own
- *     tile. See `GlanceView` below for the reasoning in full. The one
- *     exception is `camera`: every camera Placed here renders together as
- *     one `CameraGlance`, the motion glance that opens its cameras' Feeds
- *     (#29). Since #32 a tap on `Hero` opens the Page its `climate` is
- *     Placed on, and a tap on `Stats` the Page of its power `sensor`.
+ *     tile. See `GlanceView` below for the reasoning in full. Every
+ *     `camera` Placed here becomes one chip in `ChipRow`, the camera chip
+ *     that opens its cameras' Feeds (#29, #44). Since #32 a tap on `Hero`
+ *     opens the Page its `climate` is Placed on, and a tap on the
+ *     consumption's StatCard the Page of its power `sensor`.
  *   - on the wall `glance` is split across the frame (#41): its chips go to
  *     the status bar and the rest to the top of the left column, so `Panel`
  *     asks for each half by `part`. A phone takes it whole, in one column.
@@ -135,7 +135,6 @@ import { AccessRow } from './AccessRow';
 import { AlarmPanel } from './AlarmPanel';
 import { AlarmTile } from './AlarmTile';
 import { BinarySensorBlock, BinarySensorTile } from './BinarySensorTile';
-import { CameraGlance } from './CameraGlance';
 import { openerIcon } from './dock';
 import { Card } from './Card';
 import { ClimateBlock, ClimateCard } from './ClimateCard';
@@ -428,11 +427,10 @@ function FooterMember({ entity, labelOrder, children }: { entity: Entity; labelO
  *     house-wide scan would have found gets what it actually placed.
  *   - the `alarm_control_panel` Placed in `glance` feeds `ChipRow`'s `alarm`
  *     prop, same as `ScreenView.tsx`'s `chips` case did by Label.
- *   - every `camera` Placed in `glance` renders together as one
- *     `CameraGlance` under the rest: motion per camera, from its own device
- *     (`cameraMoving`), and a tap that opens the Page where the same cameras
- *     are Placed as Feeds (`placedPageFor`, #29). It is the one tile this
- *     Region renders, because it is the one thing here that leads somewhere.
+ *   - every `camera` Placed in `glance` feeds `ChipRow`'s camera chip (#44,
+ *     a tile under the stats before it): motion per camera, from its own
+ *     device (`cameraMoving`), and a tap that opens the Page where the same
+ *     cameras are Placed as Feeds (`placedPageFor`, #29).
  *   - `Stats`'s `lightsOn` count and `ChipRow`'s `report` (the Verdict,
  *     `houseReport`) are **not** sourced from what is Placed in `glance`.
  *     Both are whole-house Derived facts -- "how many zones are lit
@@ -497,12 +495,22 @@ function GlanceView({ placed, labelOrder, part }: { placed: Placed[]; labelOrder
   );
 
   // Whole-house Derived, deliberately not narrowed to `placedEntities` -- see
-  // the header note above.
-  const lightsOn = [...entities.values()].filter(e => e.domain === 'light' && e.labels.includes('main') && e.state === 'on').length;
+  // the header note above. The lights stat counts the lit-zones Concern, so
+  // it and the Verdict count by the one rule (#44).
   const report = houseReport([...entities.values()]);
+  const lightsOn = report.lit?.count ?? 0;
 
   // Keyed on the Page: leaving it closes any Concern list open from here (#30).
-  const chips = <ChipRow key={page} report={report} alarm={alarm} />;
+  const chips = (
+    <ChipRow
+      key={page}
+      report={report}
+      cameras={cameras}
+      moving={cameras.filter(c => cameraMoving(c, entities.values()))}
+      onOpenCameras={feedsPage === null ? undefined : () => openPage(feedsPage)}
+      alarm={alarm}
+    />
+  );
   if (part === 'chips') return chips;
 
   return (
@@ -525,29 +533,15 @@ function GlanceView({ placed, labelOrder, part }: { placed: Placed[]; labelOrder
     // the height it asks for at every supported viewport, so "it never
     // scrolls" is a checked property rather than a hope.
     //
-    // Hero, ChipRow and Stats are therefore all plain `flexShrink: 0` boxes,
-    // and the scroll-snapping that used to live here is gone along with the
-    // scroller it existed to tame. `ChipRow` keeps its own *horizontal*
-    // snapping, which is a different mechanism for a different overflow --
-    // more concerns than fit on one line (see ChipRow.tsx).
-    //
     // On the wall the chips are not here at all: they are the status bar's
-    // (#41), and this block is the top of the left column. What follows is
-    // the order on a phone, which takes `glance` whole.
-    //
-    // The order stays Hero -> ChipRow -> Stats, which was variant D's
-    // hero/stats/chips reversed when this block became a scroller ("whatever
-    // is lowest is what starts out of view, and the verdict outranks the
-    // stats"). That justification is gone with the scroll -- nothing is out
-    // of view now -- so the order is a free choice, and it is kept because
-    // ADR-0004's ranking still describes what matters most: the chip that
-    // says something is wrong with the house belongs directly under the
-    // number you read on approach, not below the watts.
+    // (#41), the cameras' among them (#44), and this block is the top of the
+    // left column -- the Hero over the two StatCards, as Casa Panel's screen
+    // has them. A phone takes `glance` whole, with the chips under the stats.
     <div
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: t.space.sm,
+        gap: t.space[5],
       }}
     >
       <div style={{ flexShrink: 0 }}>
@@ -561,18 +555,9 @@ function GlanceView({ placed, labelOrder, part }: { placed: Placed[]; labelOrder
         reason unrelated to whether power is being drawn.
       */}
       <div style={{ flexShrink: 0 }}>
-        <Stats lightsOn={lightsOn} watts={placedWatts ?? watts} onOpen={powerPage === null ? undefined : () => openPage(powerPage)} />
+        <Stats lightsOn={lightsOn} watts={placedWatts ?? watts} onOpenPower={powerPage === null ? undefined : () => openPage(powerPage)} />
       </div>
-      {part === undefined && <div style={{ flexShrink: 0, paddingTop: 10 }}>{chips}</div>}
-      {cameras.length > 0 && (
-        <div style={{ flexShrink: 0, display: 'flex' }}>
-          <CameraGlance
-            cameras={cameras}
-            moving={cameras.filter(c => cameraMoving(c, entities.values()))}
-            onOpen={feedsPage === null ? undefined : () => openPage(feedsPage)}
-          />
-        </div>
-      )}
+      {part === undefined && <div style={{ flexShrink: 0 }}>{chips}</div>}
       {unplaceable.map(({ key, name }) => (
         <div key={key} style={{ flexShrink: 0, display: 'flex' }}>
           <FaultTile label={`Non previsto in glance: ${name}`} />

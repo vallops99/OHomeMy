@@ -29,7 +29,7 @@ const health = (level: Health['level'], entities: Entity[]): Health => ({
   entities,
 });
 
-const report = (verdict: Health, ...also: Health[]): HouseReport => ({ verdict, also });
+const report = (verdict: Health, ...also: Health[]): HouseReport => ({ verdict, also, lit: null });
 
 // ---- liveConcern -----------------------------------------------------------
 

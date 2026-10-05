@@ -1,26 +1,26 @@
 /**
- * The house's concerns (`HouseReport`, src/ha/health.ts) as a row of outline
- * chips, plus the alarm's own state.
+ * The status bar's chips (#44): Casa Panel's StatusChip, one per report
+ * `statusChips` decides -- a Fault, an open way in, the cameras, the alarm,
+ * in that order, each only when there is one to show.
  *
  * An earlier version turned the *entire* glance surface red the moment a
  * single light went Unavailable (CONTEXT.md) -- one unreachable bulb should
  * not read as "the house is on fire". That is disproportionate. Variant D
- * (#6) replaced the flood with a chip: a `fault`-level chip is still the
- * only warm-red thing anywhere on the panel, so it stays unmissable at 2 m,
- * but it is proportionate -- a small badge, not the whole sidebar.
+ * (#6) replaced the flood with a chip, and Casa Panel keeps it: the Fault
+ * chip is the only one in the `alert` tone, so it stays unmissable at 2 m,
+ * but it is proportionate -- a pill, not the whole sidebar. Every other chip
+ * is neutral, whatever it says.
  *
- * `HouseReport.verdict` leads (worst concern first, per health.ts), then
- * every entry in `report.also` gets its own chip. Dropping `also` once a
- * fault chip is showing would mean a fault silences an open gate -- exactly
- * the kind of thing someone standing at the door needs to still see on the
- * way out, so every concern keeps its own chip regardless of the verdict's
- * level.
+ * A fault does not silence an open gate: `statusChips` reads the verdict
+ * and every entry in `report.also`, and the gate keeps its own chip. Lit
+ * zones are not a chip any more; the lights StatCard states them.
  *
- * Every chip can be tapped (#30). A Concern chip opens a Concern list of
- * the entities behind that one Concern (`ConcernList`), and the alarm chip
+ * Every chip that leads somewhere can be tapped (#30). A Concern chip opens
+ * a Concern list of the entities behind that one Concern (`ConcernList`);
+ * the camera chip opens the Page of its cameras' Feeds (Derived), and with
+ * no such Page is not a control and does not look like one; the alarm chip
  * opens @hakit's entity Modal for the alarm, where arming and disarming
- * happen. Neither adds anything to the chip's look -- no chevron, no
- * affordance -- so the fixed box below is exactly as it was.
+ * happen. None adds a chevron: the chip is the affordance.
  *
  * The list is this row's own state, not a Popup's and not a Page's: only
  * the panel that was tapped shows it. It follows the live report while open
@@ -28,38 +28,33 @@
  * the current Page, so leaving the Page -- the idle return, a Tab change on
  * a phone, navigation from a Popup -- closes it too.
  */
-import { useState, type KeyboardEvent } from 'react';
-import type { Entity, Health, HealthLevel, HouseReport } from '../ha';
+import { useState } from 'react';
+import type { Entity, HealthLevel, HouseReport } from '../ha';
 import { ConcernList } from './ConcernList';
 import { liveConcern } from './concernList';
 import { AlarmModal } from './AlarmModal';
 import { Icon } from './Icon';
-import { alarmIcon } from './alarmState';
-import { LEVEL_ICON } from './levelIcon';
-import { stateLabel } from './stateLabel';
+import { pressable } from './pressable';
+import { statusChips, type StatusChip } from './statusChips';
 import { t } from './theme';
 
 export type ChipRowProps = {
   report: HouseReport;
+  /** The cameras Placed in `glance`; none, and there is no camera chip. */
+  cameras: Entity[];
+  /** Those of them whose device reports motion right now. */
+  moving: Entity[];
+  /** Opens the Page of the cameras' Feeds; absent when there is none. */
+  onOpenCameras?: () => void;
   /** The alarm panel entity, or null when the house has none. */
   alarm: Entity | null;
 };
 
-/** A chip's tap, for a pointer or a keyboard, with nothing changed about how it looks. */
-const pressable = (onPress: () => void) => ({
-  role: 'button',
-  tabIndex: 0,
-  onClick: onPress,
-  onKeyDown: (e: KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onPress();
-    }
-  },
-});
+/** Casa Panel's gap between two chips, and between a chip's icon and its words. */
+const CHIP_GAP = 10;
 
-export function ChipRow({ report, alarm }: ChipRowProps) {
-  const concerns = [report.verdict, ...report.also];
+export function ChipRow({ report, cameras, moving, onOpenCameras, alarm }: ChipRowProps) {
+  const chips = statusChips({ report, cameras, moving, alarm });
   const [openLevel, setOpenLevel] = useState<HealthLevel | null>(null);
   const [alarmOpen, setAlarmOpen] = useState(false);
 
@@ -69,8 +64,15 @@ export function ChipRow({ report, alarm }: ChipRowProps) {
   const concern = openLevel === null ? null : liveConcern(report, openLevel);
   if (openLevel !== null && concern === null) setOpenLevel(null);
 
+  const onPress = (chip: StatusChip): (() => void) | undefined => {
+    const opens = chip.opens;
+    if (opens.kind === 'concern') return () => setOpenLevel(opens.level);
+    if (opens.kind === 'alarm') return () => setAlarmOpen(true);
+    return onOpenCameras;
+  };
+
   return (
-    // One line, in the status bar (#41), scrolling sideways past what fits.
+    // One line, in the status bar (#41), never capped (#44).
     //
     // The row was once freely `flexWrap: 'wrap'`, which made it the one
     // element in the left column whose height was a function of *house
@@ -80,18 +82,18 @@ export function ChipRow({ report, alarm }: ChipRowProps) {
     // left column could afford. The status bar is one line tall, so the row
     // is one line again, and its height is still not house state's to move.
     //
-    // What yields is horizontal, and that is safe because of the ordering:
-    // `report.verdict` leads -- worst concern first (health.ts, ADR-0004's
-    // `fault > open > lit > ok`) -- so the chip scrolled out of view is
-    // always the least urgent one. The fault chip, the one that exists to be
-    // unmissable at 2 m, is never the one that goes. `scrollSnapType` with
-    // `scrollSnapAlign` per chip keeps the row resting on whole chips, never
-    // one sliced across the edge.
+    // All four chips fit beside the Clock at 1280 (`npm run measure`
+    // asserts it, with the longest date and each chip's longest wording).
+    // Past that -- a house whose words run longer -- what yields is
+    // horizontal: the row scrolls sideways, and that is safe because of the
+    // ordering. The Fault leads, so the chip scrolled out of view is always
+    // the least urgent one. `scrollSnapType` with `scrollSnapAlign` per chip
+    // keeps the row resting on whole chips once it is scrolled.
     <>
       <div
         style={{
           display: 'flex',
-          gap: t.space.sm,
+          gap: CHIP_GAP,
           minWidth: 0,
           overflowX: 'auto',
           overflowY: 'hidden',
@@ -100,40 +102,9 @@ export function ChipRow({ report, alarm }: ChipRowProps) {
           scrollbarWidth: 'none',
         }}
       >
-        {concerns.map((health, i) => (
-          <Chip
-            key={i}
-            health={health}
-            onPress={
-              // `ok` is a chip too, but not a Concern: it has nothing behind it to list.
-              health.level === 'ok' ? undefined : () => setOpenLevel(health.level)
-            }
-          />
+        {chips.map(chip => (
+          <Chip key={chip.key} chip={chip} onPress={onPress(chip)} />
         ))}
-        {alarm && (
-          <div
-            {...pressable(() => setAlarmOpen(true))}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: t.space.sm,
-              padding: `${t.space.sm}px ${t.space.md}px`,
-              borderRadius: t.radius.pill,
-              border: `1px solid ${t.color.border}`,
-              color: t.color.textSecondary,
-              fontSize: t.font.body,
-              // A chip holds its width and keeps its text on one line: what
-              // scrolls is the row, never the inside of a chip.
-              flex: '0 0 auto',
-              whiteSpace: 'nowrap',
-              scrollSnapAlign: 'start',
-              cursor: 'pointer',
-            }}
-          >
-            <Icon name={alarmIcon(alarm)} size={20} />
-            {stateLabel(alarm)}
-          </div>
-        )}
       </div>
       {concern && <ConcernList concern={concern} onClose={() => setOpenLevel(null)} />}
       {alarm && <AlarmModal alarm={alarm} open={alarmOpen} onClose={() => setAlarmOpen(false)} />}
@@ -141,31 +112,36 @@ export function ChipRow({ report, alarm }: ChipRowProps) {
   );
 }
 
-function Chip({ health, onPress }: { health: Health; onPress?: () => void }) {
-  const fault = health.level === 'fault';
+/** Casa Panel's StatusChip (`cp-chip`): `target-min` tall, a pill, in its tone. */
+function Chip({ chip, onPress }: { chip: StatusChip; onPress?: () => void }) {
+  const alert = chip.tone === 'alert';
+  const press = pressable(onPress);
   return (
     <div
-      {...(onPress ? pressable(onPress) : {})}
+      {...press}
       style={{
+        boxSizing: 'border-box',
+        height: t.size.targetMin,
+        padding: `0 20px 0 ${t.space[4]}px`,
+        borderRadius: t.radius.pill,
         display: 'inline-flex',
         alignItems: 'center',
-        gap: t.space.sm,
-        padding: `${t.space.sm}px ${t.space.md}px`,
-        borderRadius: t.radius.pill,
-        border: fault ? `2px solid ${t.color.faultLine}` : `1px solid ${t.color.border}`,
-        color: fault ? t.color.fault : t.color.textSecondary,
-        fontSize: t.font.body,
-        fontWeight: fault ? 700 : 400,
-        // See the row above: chips hold their size and scroll as whole
-        // units, snapping per chip.
+        gap: CHIP_GAP,
+        fontSize: t.type.body.size,
+        background: alert ? t.color.alertSurface : t.color.surface,
+        border: `1px solid ${alert ? t.color.alertLine : t.color.lineStrong}`,
+        color: alert ? t.color.alert : t.color.inkSoft,
+        fontWeight: alert ? 500 : 400,
+        // A chip holds its width and keeps its text on one line: what
+        // scrolls is the row, never the inside of a chip.
         flex: '0 0 auto',
         whiteSpace: 'nowrap',
         scrollSnapAlign: 'start',
-        ...(onPress ? { cursor: 'pointer' } : {}),
+        ...press.style,
       }}
     >
-      <Icon name={LEVEL_ICON[health.level]} size={20} />
-      {health.headline}
+      <Icon name={chip.icon} size={22} />
+      {chip.text}
     </div>
   );
 }

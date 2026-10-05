@@ -227,7 +227,7 @@ export function openerPage(entity: Entity): string | null {
  * *every* one of them is also Placed in `left` or `right`. Derived, with no
  * Label of its own: moving them moves where they lead.
  *
- * The camera glance calls it with its cameras (#29), so it opens their
+ * The camera chip calls it with its cameras (#29), so it opens their
  * Feeds. Everything else calls it with one entity (#32): a footer member's
  * chevron, and the temperature and consumption in `glance`.
  *

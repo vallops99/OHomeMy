@@ -1,16 +1,17 @@
 /**
- * The one number read on approach from 2 m (CONTEXT.md's "read at 1-2 m";
- * ADR-0001's 112 px hero). Variant D calls this "Arrivo, calmo" (#6): no
- * card, no border, no fill -- the temperature is just type sitting directly
- * on the ground, because a frame around it would be one more thing to read
- * before the number itself. That borderlessness is deliberate, not an
- * oversight -- do not wrap this in a Tile or give it a surface colour.
+ * The one number read on approach from 2 m (CONTEXT.md's "read at 1-2 m").
+ * Variant D called this "Arrivo calmo" (#6) and Casa Panel keeps it (#44):
+ * no card, no border, no fill -- the temperature is just type sitting
+ * directly on the ground, because a frame around it would be one more thing
+ * to read before the number itself. That borderlessness is deliberate, not
+ * an oversight -- do not wrap this in a Tile or give it a surface colour.
  *
- * Variant D's original prototype showed the outdoor reading here. This
- * restores it showing **indoor** instead (`interno`), since the entrance
- * panel's arrival question is "is the house I'm walking into comfortable",
- * not the weather outside.
+ * It shows the **indoor** temperature, since the entrance panel's arrival
+ * question is "is the house I'm walking into comfortable", not the weather
+ * outside -- and since Casa Panel it says so, "Interno" over the number, as
+ * the design's Casa screen does. Humidity follows under it.
  */
+import { Icon } from './Icon';
 import { pressable } from './pressable';
 import { t } from './theme';
 
@@ -28,52 +29,45 @@ export type HeroProps = {
 };
 
 export function Hero({ temperature, humidity, onOpen }: HeroProps) {
+  const { lineHeight, weight, letterSpacing } = t.type.tempHero;
+  const press = pressable(onOpen);
   return (
-    <div {...pressable(onOpen)}>
+    <div {...press} style={{ display: 'flex', flexDirection: 'column', gap: t.space[1], ...press.style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: t.space[2], fontSize: t.type.body.size, color: t.color.inkMuted }}>
+        <Icon name='mdi:thermometer' size={18} />
+        Interno
+      </div>
       <div
         style={{
+          // `font.hero`, not `tempHero.size`: 144 on the wall, and a phone's
+          // own size at arm's length (ADR-0011), which the type style has not.
           fontSize: t.font.hero,
-          fontWeight: 200,
-          // `1.15`, and nothing else. Below about 1.13 this box reports
-          // `scrollHeight` greater than `clientHeight` at 112 px / weight 200
-          // in the system-ui stack -- measured in 0.01 steps: 0.92 -> 13 px
-          // over, 1.0 -> 9, 1.1 -> 3, 1.13 -> 1, 1.15 -> 0. It does so with
-          // "21" alone, no degree sign, so it is the font's own line box, not
-          // a glyph problem.
-          //
-          // An earlier version kept 1.15 and pulled the extra 26 px back off
-          // with `marginTop/Bottom: -13`, on the reasoning that the reserve
-          // was empty space -- "blank font metrics costing the panel a real
-          // scrollbar". That reasoning was wrong, and ADR-0007 records how it
-          // was caught: a `Range` over this element's own text measures
-          // **130 px of ink in a 128.8 px box**, flush at both edges (1 px
-          // above, 0.2 px below). There is no empty reserve. The negative
-          // margins were not reclaiming dead space, they were making this
-          // element *claim* 103 px while painting 129 -- so 26 px of the
-          // number rendered outside its own box and over whatever sat next to
-          // it. At 1280x768 that was `Stats`, sliced horizontally by the gate
-          // slab below it, which is the defect ADR-0007 exists to fix.
-          //
-          // The honest box is what the layout is now measured against
-          // (`scripts/measure-panel.ts`), and the 26 px it costs is paid out
-          // of `t.layout.gateSlab` rather than by lying about this element's
-          // height. `fontSize` is untouched: "Arrivo calmo" (ADR-0001, #6)
-          // reads exactly as large as it always did.
-          lineHeight: 1.15,
-          letterSpacing: -3,
-          color: t.color.textPrimary,
+          fontWeight: weight,
+          // Casa Panel's `1`. The box then reports 21 px of `scrollHeight`
+          // over its 144, which is the font's content area (ascent plus
+          // descent), not paint: the glyphs of a temperature sit at least
+          // 18 px inside the box at both edges. ADR-0007's amendment records
+          // why that, and not `scrollHeight`, is the property, and
+          // `scripts/measure-panel.ts` asserts it. No negative margins: they
+          // once made this box smaller than its glyphs (ADR-0007).
+          lineHeight,
+          letterSpacing,
+          // The design's optical correction, -6 at 144 px: a big "2" carries
+          // its own side bearing, which would set it in from "Interno".
+          marginLeft: -Math.round(t.font.hero / 24),
+          color: t.color.ink,
         }}
       >
         {temperature != null ? Math.round(temperature) : '--'}°
       </div>
-      {/*
-        No "interno" label: the entrance panel's hero is the house's own
-        temperature, and saying so is stating the obvious in the largest
-        type on the screen. Humidity stands alone, and the line disappears
-        entirely when nothing reports one.
-      */}
+      {/* The line disappears entirely when nothing reports a humidity. */}
       {humidity != null && (
-        <div style={{ fontSize: t.font.glanceM, color: t.color.textSecondary, marginTop: t.space.sm }}>{Math.round(humidity)}% umidità</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: t.space[2], fontSize: 18, color: t.color.inkSecondary }}>
+          <span style={{ display: 'flex', color: t.color.inkMuted }}>
+            <Icon name='mdi:water' size={18} />
+          </span>
+          {Math.round(humidity)}% umidità
+        </div>
       )}
     </div>
   );

@@ -73,6 +73,47 @@ test('the lit Concern carries the lit main lights', () => {
   );
 });
 
+// ---- Lit zones (#44) ----
+//
+// Lit zones are no longer a chip: the lights StatCard states them. So the
+// report carries the lit-zones Concern on its own, whatever outranks it,
+// and it never rides along in `also`.
+
+test('a lit zone still leads the verdict when nothing louder is wrong', () => {
+  const report = houseReport([entity('light.salone', { state: 'on', labels: ['main'] })]);
+  assert.equal(report.verdict.level, 'on');
+  assert.equal(report.lit, report.verdict);
+});
+
+test('the lit-zones Concern is reported under a fault, for the lights stat', () => {
+  const lit = [entity('light.salone', { state: 'on', labels: ['main'] }), entity('light.cucina', { state: 'on', labels: ['main'] })];
+  const report = houseReport([down('light.a'), ...lit]);
+  assert.equal(report.verdict.level, 'fault');
+  assert.equal(report.lit?.count, 2);
+  assert.deepEqual(
+    report.lit?.entities.map(e => e.id),
+    ['light.salone', 'light.cucina']
+  );
+  assert.ok(report.also.every(h => h.level !== 'on'));
+});
+
+test('a house with nothing lit has no lit-zones Concern', () => {
+  assert.equal(houseReport([entity('light.salone', { labels: ['main'] })]).lit, null);
+  assert.equal(houseReport([down('light.a')]).lit, null);
+});
+
+test('a fault does not silence an open gate, and the lit zones stay out of `also`', () => {
+  const report = houseReport([
+    down('light.a'),
+    entity('lock.cancello', { state: 'unlocked' }),
+    entity('light.salone', { state: 'on', labels: ['main'] }),
+  ]);
+  assert.deepEqual(
+    [report.verdict, ...report.also].map(h => h.level),
+    ['fault', 'open']
+  );
+});
+
 test('a Page Opener never pressed is not a Fault', () => {
   // An `input_button` is `unknown` until its first press, and a Page
   // Opener is never pressed (ADR-0012).

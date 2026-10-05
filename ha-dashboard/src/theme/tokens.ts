@@ -227,9 +227,10 @@ function buildWallTokens() {
        * The hero temperature, read on approach from 2 m. Variant D sets this
        * as the one number the panel leads with (#6); it is a token rather
        * than a literal so ADR-0001's rule holds -- nothing downstream
-       * hardcodes a font size.
+       * hardcodes a font size. Casa Panel's `temp-hero` since #44 (112
+       * before); the phone keeps its own (`armTokens`).
        */
-      hero: 112,
+      hero: CASA.type.tempHero.size,
       glanceXL: 56, // the one number you read on approach
       glanceL: 34,
       glanceM: 22,

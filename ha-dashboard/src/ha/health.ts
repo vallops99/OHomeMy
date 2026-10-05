@@ -12,6 +12,10 @@
  * a fault the house cannot see past, then an open way in, then a light left
  * on. Everything else is not an answer to this question and belongs in a
  * secondary view.
+ *
+ * The ranking is the Verdict's, and it still counts lit zones. What changed
+ * (#44) is where they are said: not as a chip, but by the lights StatCard,
+ * which is why the report carries them as `lit` of their own.
  */
 import { groupMemberIds } from './placement';
 import type { Area, Entity } from './types';
@@ -46,8 +50,15 @@ export type Health = {
 export type HouseReport = {
   /** The headline verdict, and the colour the panel takes. */
   verdict: Health;
-  /** Lower-ranked concerns, still shown. Empty when there are none. */
+  /** Lower-ranked concerns, still shown as chips. Empty when there are none. Never lit zones. */
   also: Health[];
+  /**
+   * The lit-zones Concern, whatever outranks it, or null when no zone is lit.
+   * Not a chip (#44): the lights StatCard states it, and reads its count
+   * here so the card and the Verdict count by the one rule. The same object
+   * as `verdict` when it leads.
+   */
+  lit: Health | null;
 };
 
 /**
@@ -170,13 +181,15 @@ function concerns(entities: Entity[]): Health[] {
 /** The full report: the verdict, plus whatever else the panel should still say. */
 export function houseReport(entities: Entity[]): HouseReport {
   const found = concerns(entities);
+  const lit = found.find(h => h.level === 'on') ?? null;
   if (found.length === 0) {
-    return { verdict: { level: 'ok', headline: 'Tutto in ordine', detail: null, count: 0, entities: [] }, also: [] };
+    return { verdict: { level: 'ok', headline: 'Tutto in ordine', detail: null, count: 0, entities: [] }, also: [], lit };
   }
   // "Lights are on" is not a concern worth a second line once something
   // louder is already being reported -- it is normal in an occupied house.
+  // It is not lost, only not a chip: `lit` carries it to the lights stat.
   const also = found.slice(1).filter(h => h.level !== 'on');
-  return { verdict: found[0], also };
+  return { verdict: found[0], also, lit };
 }
 
 /**

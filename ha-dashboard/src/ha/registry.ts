@@ -234,7 +234,7 @@ export function usePower(): number | null {
  * Labels are added and removed.
  *
  * What picks between several Pages something could lead to (`placedPageFor`):
- * the camera glance's Feeds (#29), a footer member's chevron and the glance's
+ * the camera chip's Feeds (#29), a footer member's chevron and the glance's
  * temperature and consumption (#32). @hakit keeps no label registry of its
  * own, so this asks for it over the websocket and asks again whenever Home
  * Assistant announces a change. Empty until the first answer: a glance then

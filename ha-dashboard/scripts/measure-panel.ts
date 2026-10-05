@@ -36,6 +36,9 @@
  *      one line; however many chips there are, the bar stays
  *      `statusBarHeight`, the chips never paint over the Clock, and the
  *      ones that do not fit scroll.
+ *   6. **All four chips fit (#44).** A Fault, an open way in, the cameras
+ *      and the alarm, each in its longest wording, sit beside the longest
+ *      date with nothing scrolled and no chip clipped.
  *
  * All of it is asserted at 1280x768 (the shortest supported) and 1280x800 (the
  * wall panel's native size). Stated as a property of every viewport >= the
@@ -47,8 +50,9 @@
  * The real app needs a live Home Assistant (`.env` -> `VITE_HA_URL`), so
  * driving it here would make a layout check depend on the house being up. This
  * builds the panel's *shape* from the same tokens the components import,
- * with the fixture's own content (the Accessi card's two gates, three cameras, the two chips in
- * `fake-house/manifest.yaml`) hardcoded as markup.
+ * with the fixture's own content (the Accessi card's two gates, the three chips in
+ * `fake-house/manifest.yaml`) hardcoded as markup. Geist is loaded as the app
+ * loads it (index.html), since the chips' widths are the font's.
  *
  * The cost, recorded because it is real: this measures a reproduction, so a
  * component that changes its own internal structure can drift from what is
@@ -92,41 +96,51 @@ const VIEWPORTS = [
  *
  * Not arbitrary sample text: these are the entities `fake-house/manifest.yaml`
  * places in `glance` and `left` on `page:main` -- the gates in `left`, and
- * since #29 the cameras in `glance` as its camera tile -- with the strings the
+ * since #44 the cameras in `glance` as the camera chip -- with the strings the
  * panel actually renders ("Un guasto" is `houseReport`'s fault headline,
- * "Nessun movimento" is `CameraGlance`'s quiet state). Two chips rather than
- * one because that is what the house reports today, and the chip row's height
- * is the one thing house state can change.
+ * "3 telecamere · nessun movimento" is `statusChips`'s quiet camera chip).
  */
 type ChipSpec = { text: string; fault: boolean };
 
 /**
  * The two chip sets asserted.
  *
- * `quiet` is what `fake-house/manifest.yaml` reports today. `busy` adds the
- * third concern that once exposed a width defect, when the chips lived in the
- * left column: their combined `nowrap` width became the column's
- * `min-width: auto` floor and shoved `right` sideways. `overfull` is more
- * than the status bar holds. House state must change what the panel *says*,
- * never the geometry it says it in.
+ * `quiet` is what `fake-house/manifest.yaml` reports today. `busy` is every
+ * chip there can be (#44: Fault, open way in, cameras, alarm), each in its
+ * longest wording, which must fit whole: the row is never capped, so all
+ * four is a day the panel has to be ready for. `overfull` is more than the
+ * status bar holds -- a house whose words run longer -- which must scroll
+ * rather than push the Clock or grow the bar. House state must change what
+ * the panel *says*, never the geometry it says it in.
  */
-const CHIP_SETS: Record<string, ChipSpec[]> = {
-  quiet: [
-    { text: 'Un guasto', fault: true },
-    { text: 'Disinserito', fault: false },
-  ],
-  busy: [
-    { text: 'Un guasto', fault: true },
-    { text: 'Un accesso aperto', fault: false },
-    { text: 'Disinserito', fault: false },
-  ],
-  overfull: [
-    { text: 'Tre guasti', fault: true },
-    { text: 'Due accessi aperti', fault: false },
-    { text: 'Quattro luci accese', fault: false },
-    { text: 'Inserito fuori casa', fault: false },
-    { text: 'Un altro avviso ancora', fault: false },
-  ],
+const CHIP_SETS: Record<string, { chips: ChipSpec[]; fits: boolean }> = {
+  quiet: {
+    chips: [
+      { text: 'Un guasto', fault: true },
+      { text: '3 telecamere · nessun movimento', fault: false },
+      { text: 'Disinserito', fault: false },
+    ],
+    fits: true,
+  },
+  busy: {
+    chips: [
+      { text: '12 guasti', fault: true },
+      { text: '12 accessi aperti', fault: false },
+      { text: '3 telecamere · movimento rilevato', fault: false },
+      { text: 'Inserito fuori casa', fault: false },
+    ],
+    fits: true,
+  },
+  overfull: {
+    chips: [
+      { text: '12 guasti', fault: true },
+      { text: '12 accessi aperti', fault: false },
+      { text: '12 telecamere · 12 non disponibile', fault: false },
+      { text: 'Inserito fuori casa', fault: false },
+      { text: 'Un avviso che non esiste ancora', fault: false },
+    ],
+    fits: false,
+  },
 };
 
 /**
@@ -134,15 +148,17 @@ const CHIP_SETS: Record<string, ChipSpec[]> = {
  * line that scrolls sideways past what fits.
  */
 function statusBar(chips: ChipSpec[]): string {
+  // Casa Panel's StatusChip, as `ChipRow.tsx` draws it: `targetMin` tall.
   const chip = (text: string, fault: boolean) => `
     <div class="chip" style="
-      display:inline-flex; align-items:center; gap:${t.space.sm}px;
-      padding:${t.space.sm}px ${t.space.md}px; border-radius:${t.radius.pill}px;
-      border:${fault ? `2px solid ${t.color.fault}` : `1px solid ${t.color.border}`};
-      color:${fault ? t.color.fault : t.color.textSecondary};
-      font-size:${t.font.body}px; font-weight:${fault ? 700 : 400}; white-space:nowrap;
+      box-sizing:border-box; height:${t.size.targetMin}px; padding:0 20px 0 ${t.space[4]}px;
+      display:inline-flex; align-items:center; gap:10px; border-radius:${t.radius.pill}px;
+      background:${fault ? t.color.alertSurface : t.color.surface};
+      border:1px solid ${fault ? t.color.alertLine : t.color.lineStrong};
+      color:${fault ? t.color.alert : t.color.inkSoft};
+      font-size:${t.type.body.size}px; font-weight:${fault ? 500 : 400}; white-space:nowrap;
       flex:0 0 auto; scroll-snap-align:start;
-    "><span style="width:20px;height:20px;flex:0 0 20px;background:currentColor;border-radius:50%"></span>${text}</div>`;
+    "><span style="width:22px;height:22px;flex:0 0 22px;background:currentColor;border-radius:50%"></span>${text}</div>`;
 
   return `
   <div id="status" style="flex:0 0 ${t.size.statusBarHeight}px; display:flex; align-items:center; gap:${t.space[6]}px; min-width:0">
@@ -152,7 +168,7 @@ function statusBar(chips: ChipSpec[]): string {
     </div>
     <div style="flex:1; min-width:0; display:flex; justify-content:flex-end">
       <div id="chips" style="
-        display:flex; gap:${t.space.sm}px; min-width:0; overflow-x:auto; overflow-y:hidden;
+        display:flex; gap:10px; min-width:0; overflow-x:auto; overflow-y:hidden;
         scroll-snap-type:x mandatory; scrollbar-width:none;
       ">${chips.map(c => chip(c.text, c.fault)).join('')}</div>
     </div>
@@ -192,43 +208,45 @@ function leftColumn(): string {
       column's spare room goes to left instead. Panel.tsx is the
       source of this shape; keep the two in step.
     -->
-    <div id="glance" style="flex:0 0 auto; min-height:0; display:flex; flex-direction:column; gap:${t.space.sm}px">
-      <div id="hero" style="flex-shrink:0">
-        <!-- No negative margins: the box is the ink (ADR-0007). -->
-        <div id="hero-number" style="
-          font-size:${t.font.hero}px; font-weight:200; line-height:1.15;
-          letter-spacing:-3px; color:${t.color.textPrimary};
-        ">21°</div>
-        <div style="font-size:${t.font.glanceM}px; color:${t.color.textSecondary}; margin-top:${t.space.sm}px">47% umidità</div>
-      </div>
-      <div id="stats" style="flex-shrink:0; display:flex; gap:${t.space.xl}px">
-        <div>
-          <div style="font-size:${t.font.glanceL}px;font-weight:600;color:${t.color.textPrimary}">0</div>
-          <div style="font-size:${t.font.caption}px;color:${t.color.textSecondary};text-transform:uppercase;letter-spacing:1px">luci accese</div>
-        </div>
-        <div>
-          <div style="font-size:${t.font.glanceL}px;font-weight:600;color:${t.color.textPrimary}">320<span style="font-size:${t.font.body}px;color:${t.color.textSecondary}"> W</span></div>
-          <div style="font-size:${t.font.caption}px;color:${t.color.textSecondary};text-transform:uppercase;letter-spacing:1px">consumo</div>
-        </div>
-      </div>
+    <div id="glance" style="flex:0 0 auto; min-height:0; display:flex; flex-direction:column; gap:${t.space[5]}px">
       <!--
-        The camera glance (#29): the fixture's cameras are Placed in \`glance\`
-        now, rendered under the stats. A control since it opens the cameras'
-        Page, so its padding is \`sm\` rather than \`md\` -- 74 px, over
-        \`touch.primary\` and 12 px under what \`md\` cost, which the column did
-        not have at 768.
+        The Hero (#44): "Interno", the number at Casa Panel's \`temp-hero\`
+        (line-height 1, whose box holds the glyphs' ink but not the font's
+        whole content area -- see the hero ink rule in the probe), humidity.
       -->
-      <div id="camera-glance" style="
-        flex:0 0 auto; border-radius:${t.radius.tile}px; background:${t.color.surface};
-        border:1px solid ${t.color.border};
-        padding:${t.space.sm}px ${t.space.lg}px; box-sizing:border-box;
-        display:flex; flex-direction:column; justify-content:center; gap:${t.space.xs}px;
-      ">
-        <div style="display:flex;align-items:center;gap:${t.space.sm}px">
-          <span style="width:32px;height:32px;flex:0 0 32px;display:block;background:${t.color.textSecondary};border-radius:4px"></span>
-          <span style="font-size:${t.font.glanceM}px;font-weight:600;color:${t.color.textPrimary}">3 camere</span>
+      <div id="hero" style="flex-shrink:0; display:flex; flex-direction:column; gap:${t.space[1]}px">
+        <div style="display:flex; align-items:center; gap:${t.space[2]}px; font-size:${t.type.body.size}px; color:${t.color.inkMuted}">
+          <span style="width:18px;height:18px;flex:0 0 18px;display:block;background:currentColor;border-radius:4px"></span>Interno
         </div>
-        <span style="font-size:${t.font.body}px;color:${t.color.textPrimary};opacity:.85">Nessun movimento</span>
+        <div id="hero-number" style="
+          font-size:${t.font.hero}px; font-weight:${t.type.tempHero.weight}; line-height:${t.type.tempHero.lineHeight};
+          letter-spacing:${t.type.tempHero.letterSpacing}; margin-left:-${Math.round(t.font.hero / 24)}px; color:${t.color.ink};
+        ">21°</div>
+        <div style="display:flex; align-items:center; gap:${t.space[2]}px; font-size:18px; color:${t.color.inkSecondary}">
+          <span style="width:18px;height:18px;flex:0 0 18px;display:block;background:${t.color.inkMuted};border-radius:4px"></span>47% umidità
+        </div>
+      </div>
+      <!-- The two StatCards (#44), as \`Stats.tsx\` lays them out. -->
+      <div id="stats" style="flex-shrink:0; display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:${t.space[3]}px">
+        ${[
+          ['1', 'luci accese'],
+          ['320', 'W in uso'],
+        ]
+          .map(
+            ([value, unit]) => `
+        <div class="stat" style="
+          min-width:0; padding:${t.space[4]}px ${t.space[5]}px; border-radius:${t.radius.card}px;
+          background:${t.color.surface}; border:1px solid ${t.color.line};
+          display:flex; flex-direction:column; gap:${t.space[2]}px; color:${t.color.inkMuted};
+        ">
+          <span style="width:22px;height:22px;flex:0 0 22px;display:block;background:currentColor;border-radius:4px"></span>
+          <div style="display:flex; align-items:baseline; gap:6px; min-width:0">
+            <span style="font-size:${t.type.stat.size}px; line-height:${t.type.stat.lineHeight}; font-weight:${t.type.stat.weight}; letter-spacing:${t.type.stat.letterSpacing}; color:${t.color.ink}; font-variant-numeric:tabular-nums">${value}</span>
+            <span style="font-size:${t.type.body.size}px; color:${t.color.inkMuted}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${unit}</span>
+          </div>
+        </div>`
+          )
+          .join('')}
       </div>
     </div>
 
@@ -341,7 +359,8 @@ const FOOTERS: Record<string, { blocks: { name: string }[]; fits: boolean }> = {
 
 /** The whole panel, so each band is measured inside the real frame. */
 function panel(chips: ChipSpec[], footerBlocks: { name: string }[] = BUSY_FOOTER): string {
-  return `<body style="margin:0;font-family:${t.font.family};background:${t.color.ground}">
+  return `<head><link href="https://fonts.googleapis.com/css2?family=Geist:wght@200;300;400;500;600&display=swap" rel="stylesheet"></head>
+  <body style="margin:0;font-family:${t.font.family};background:${t.color.ground}">
     <div id="panel" style="
       display:flex; flex-direction:column; gap:${t.space[5]}px; padding:${t.space[6]}px ${t.space[7]}px;
       width:100%; height:100vh; box-sizing:border-box; overflow:auto;
@@ -366,7 +385,7 @@ type Failure = { viewport: string; rule: string; detail: string };
  * behaviour rather than the defect. Everything else in the column scrolling
  * means the column does not fit.
  */
-const probe = `(() => {
+const probe = (chipsFit: boolean) => `(() => {
   const OVERLAP_TOLERANCE = 0.5;
   const LEFT_COL_W = ${t.size.sidebarWidth};
   const failures = [];
@@ -374,12 +393,42 @@ const probe = `(() => {
   if (col === null) return [{ rule: 'setup', detail: 'no #left-col in the page' }];
 
   // Rule 1: nothing in the left column scrolls, except the region that yields.
+  // The Hero's number is checked by its ink instead, below.
   for (const el of [col, ...col.querySelectorAll('*')]) {
-    if (el.id === 'left') continue;
+    if (el.id === 'left' || el.id === 'hero-number') continue;
     const over = el.scrollHeight - el.clientHeight;
     if (over > OVERLAP_TOLERANCE) {
       const what = el.id !== '' ? '#' + el.id : el.tagName.toLowerCase() + '.' + el.className;
       failures.push({ rule: 'no scrollers in the left column', detail: what + ' overflows by ' + over + 'px' });
+    }
+  }
+
+  // Rule 1b: the Hero's box holds its ink (ADR-0007, amended by #44).
+  //
+  // At Casa Panel's line-height 1 the number's \`scrollHeight\` exceeds its
+  // box: that is the font's content area (ascent plus descent, about 1.15
+  // em), which a \`Range\` measures too -- not the glyphs. What may not leave
+  // the box is what paints, so the glyphs' own bounds are measured from the
+  // baseline with canvas \`TextMetrics\`, for the reading shown and for the
+  // tallest strings a temperature can make.
+  {
+    const hero = document.getElementById('hero-number');
+    const cs = getComputedStyle(hero);
+    const mark = document.createElement('span');
+    mark.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+    hero.appendChild(mark);
+    const baseline = mark.getBoundingClientRect().bottom;
+    mark.remove();
+    const box = hero.getBoundingClientRect();
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+    for (const text of [hero.textContent, '88°', '-5°', '--°']) {
+      const m = ctx.measureText(text);
+      const above = box.top - (baseline - m.actualBoundingBoxAscent);
+      const below = baseline + m.actualBoundingBoxDescent - box.bottom;
+      if (above > OVERLAP_TOLERANCE || below > OVERLAP_TOLERANCE) {
+        failures.push({ rule: 'the Hero holds its ink', detail: '"' + text + '" paints ' + Math.max(above, below).toFixed(1) + 'px outside #hero-number' });
+      }
     }
   }
 
@@ -452,6 +501,22 @@ const probe = `(() => {
   if (chipsEl.scrollHeight - chipsEl.clientHeight > OVERLAP_TOLERANCE) {
     failures.push({ rule: 'the chips are one line', detail: '#chips overflows by ' + (chipsEl.scrollHeight - chipsEl.clientHeight) + 'px' });
   }
+  // Rule 6: where the set fits (all four chips, #44), nothing scrolls and
+  // every chip is whole inside the row.
+  if (${chipsFit}) {
+    if (chipsEl.scrollWidth - chipsEl.clientWidth > OVERLAP_TOLERANCE) {
+      failures.push({ rule: 'all four chips fit', detail: '#chips needs ' + chipsEl.scrollWidth + ', has ' + chipsEl.clientWidth });
+    }
+    for (const c of chipsEl.querySelectorAll('.chip')) {
+      const r = c.getBoundingClientRect();
+      if (r.left < chipBox.left - OVERLAP_TOLERANCE || r.right > chipBox.right + OVERLAP_TOLERANCE || c.scrollWidth - c.clientWidth > OVERLAP_TOLERANCE) {
+        failures.push({ rule: 'no chip is clipped', detail: c.textContent.trim() + ' spans ' + r.left + '-' + r.right + ', the row ' + chipBox.left + '-' + chipBox.right });
+      }
+    }
+  } else if (chipsEl.scrollWidth - chipsEl.clientWidth <= OVERLAP_TOLERANCE) {
+    failures.push({ rule: 'an overfull row scrolls', detail: '#chips holds ' + chipsEl.scrollWidth + 'px in ' + chipsEl.clientWidth + 'px without scrolling' });
+  }
+
   const clockBox = document.getElementById('clock').getBoundingClientRect();
   if (chipBox.left < clockBox.right - OVERLAP_TOLERANCE) {
     failures.push({ rule: 'the chips clear the Clock', detail: '#chips starts at ' + chipBox.left + ', the Clock ends at ' + clockBox.right });
@@ -551,10 +616,11 @@ const browser = await chromium.launch({ executablePath, args: ['--no-sandbox', '
 const failures: Failure[] = [];
 
 for (const { w, h, why } of VIEWPORTS) {
-  for (const [setName, chips] of Object.entries(CHIP_SETS)) {
+  for (const [setName, { chips, fits }] of Object.entries(CHIP_SETS)) {
     const page = await browser.newPage({ viewport: { width: w, height: h } });
-    await page.setContent(panel(chips));
-    const found = (await page.evaluate(probe)) as { rule: string; detail: string }[];
+    await page.setContent(panel(chips), { waitUntil: 'networkidle' });
+    await page.evaluate(() => document.fonts.ready);
+    const found = (await page.evaluate(probe(fits))) as { rule: string; detail: string }[];
     const space = (await page.evaluate(headroom)) as {
       glanceNeeds: number;
       glanceHas: number;
@@ -580,7 +646,8 @@ for (const { w, h, why } of VIEWPORTS) {
   }
   for (const [footerName, { blocks, fits }] of Object.entries(FOOTERS)) {
     const page = await browser.newPage({ viewport: { width: w, height: h } });
-    await page.setContent(panel(CHIP_SETS.quiet, blocks));
+    await page.setContent(panel(CHIP_SETS.quiet.chips, blocks), { waitUntil: 'networkidle' });
+    await page.evaluate(() => document.fonts.ready);
     const found = (await page.evaluate(footerProbe(fits))) as { rule: string; detail: string }[];
     const space = (await page.evaluate(footerSpace)) as { needs: number; has: number; bar: number };
     const label = `${w}x${h} ${footerName} footer`;
