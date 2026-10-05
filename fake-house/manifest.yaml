@@ -10,9 +10,10 @@
 #
 # kind:  light | switch | lock | alarm | vacuum | select | sensor |
 #        binary_sensor | climate | media_player | camera | siren |
-#        event | button | button_lock | input_button | external
+#        event | button | button_lock | input_button | group | external
 #        (`external`: a real entity from a real integration, not a fake --
 #        generate.py skips it, apply-registry.py only labels it)
+# members: (group only) the entity ids the Group helper holds, in order.
 # dimmable: (light only) false for an on/off light with no brightness.
 #        Defaults to true.
 # device_of: (binary_sensor only) the entity whose device this one joins.
@@ -272,16 +273,27 @@ entities:
     labels: [main]
 
   # ---------------- gates ----------------
+  # On `page:main` the gates are the Accessi card, `lock.accessi` below,
+  # so they carry no `page:main:left` of their own (ADR-0014).
   - id: lock.esterno_cancello
     name: Cancello
     kind: lock
     area: esterno
-    labels: [gate, main, page:main:left, page:citofono:left, page:sicurezza:left]
+    labels: [gate, main, page:citofono:left, page:sicurezza:left]
   - id: lock.esterno_cancelletto
     name: Cancelletto
     kind: lock
     area: esterno
-    labels: [gate, page:main:left, page:citofono:left, page:sicurezza:left]
+    labels: [gate, page:citofono:left, page:sicurezza:left]
+  # A Lock group helper (ADR-0014): Placed, it is a titled card holding its
+  # members, and the panel never shows its own lock -- unlocking it would
+  # open both gates at once. Not a fake: the real house needs the same one.
+  - id: lock.accessi
+    name: Accessi
+    kind: group
+    area: null
+    members: [lock.esterno_cancello, lock.esterno_cancelletto]
+    labels: [page:main:left]
 
   # ---------------- doorbell & intercom (Ring) ----------------
   # Entity ids as the Ring integration names them

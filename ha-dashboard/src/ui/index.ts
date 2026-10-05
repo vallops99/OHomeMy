@@ -17,7 +17,6 @@ export { Slider, type SliderProps } from './Slider';
 export { Icon, DOMAIN_ICON, type IconProps } from './Icon';
 export { RoomTile } from './RoomTile';
 export { RoomGrid } from './RoomGrid';
-export { GateSlab, type GateSlabProps } from './GateSlab';
 export { ToggleTile, type ToggleTileProps } from './ToggleTile';
 export { Hero, type HeroProps } from './Hero';
 export { Stats, type StatsProps } from './Stats';

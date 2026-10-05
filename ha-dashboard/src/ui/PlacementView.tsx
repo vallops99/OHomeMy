@@ -11,7 +11,7 @@
  * because the Region, not the kind of thing, decides the shape.
  *
  * This lives in `src/ui/`, not `src/ha/`, because it imports components
- * (`RoomGrid`, `GateSlab`, ...) and makes component-selection judgement calls;
+ * (`RoomGrid`, `AccessRow`, ...) and makes component-selection judgement calls;
  * `placement.ts` stays free of JSX and of every one of these decisions.
  *
  * ## Per-Region rendering contracts
@@ -24,7 +24,7 @@
  *     same move as the cameras' `Feeds` below.
  *   - an entity -> dispatched by Domain, in `entitySlot` below, mirroring
  *     `screens/ScreenView.tsx`'s function of the same name: `lock` ->
- *     `GateSlab`, `alarm_control_panel` -> `AlarmPanel`, `camera` -> a Feed,
+ *     `AccessRow` (#43), `alarm_control_panel` -> `AlarmPanel`, `camera` -> a Feed,
  *     every camera of the Region together in one `Feeds` block (see the
  *     camera note below), `media_player` ->
  *     `MediaBar`, `light` and `switch` -> `ToggleTile` (#16). A Domain with
@@ -33,6 +33,12 @@
  *     bug worth seeing, same reasoning `ScreenView.tsx` used.
  *   - an `input_button` -> a Page Opener (ADR-0012): the same block an Area
  *     gets in `footer`, opening the Page its object id names.
+ *   - a Group (ADR-0014, #43) -> one `Card` titled with the helper's name,
+ *     its members as the rows, each by `memberSlot` in the shape its own
+ *     Domain takes here. The helper's own state and controls never render.
+ *     In `footer` and `glance` a Group is a `FaultTile` naming it.
+ *   - a `lock` -> an `AccessRow` (#43), in its Group's card or alone in a
+ *     card of its own: hold Apri to open, tap Chiudi to close.
  *   - where a Domain has a full and a compact form, `left`/`right` get the
  *     full one and `footer` the compact one (#31): `climate` -> `ClimateCard`
  *     / `ClimateBlock`, `sensor` -> `SensorTile` / `SensorBlock` (#33).
@@ -110,6 +116,7 @@
 import type { ReactNode } from 'react';
 import {
   cameraMoving,
+  groupMemberIds,
   houseReport,
   openerPage,
   placedPageFor,
@@ -124,16 +131,17 @@ import {
   type Region,
 } from '../ha';
 import { slugify } from '../ha/placement';
+import { AccessRow } from './AccessRow';
 import { AlarmPanel } from './AlarmPanel';
 import { AlarmTile } from './AlarmTile';
 import { BinarySensorBlock, BinarySensorTile } from './BinarySensorTile';
 import { CameraGlance } from './CameraGlance';
 import { openerIcon } from './dock';
+import { Card } from './Card';
 import { ClimateBlock, ClimateCard } from './ClimateCard';
 import { ChipRow } from './ChipRow';
 import { FaultTile } from './FaultTile';
 import { Feeds } from './Feeds';
-import { GateSlab } from './GateSlab';
 import { Hero } from './Hero';
 import { Icon } from './Icon';
 import { MediaBar } from './MediaBar';
@@ -178,7 +186,13 @@ function entitySlot(entity: Entity, region: Exclude<Region, 'glance'>) {
     return <PageOpenerBlock key={entity.id} entity={entity} page={opens} />;
   }
   if (entity.domain === 'lock') {
-    return <GateSlab key={entity.id} entity={entity} />;
+    // The same in every Region (docs/protocol.md): an `AccessRow` always
+    // has its card, so a lone gate gets one of its own, with no title.
+    return (
+      <Card key={entity.id}>
+        <AccessRow entity={entity} />
+      </Card>
+    );
   }
   if (entity.domain === 'alarm_control_panel') {
     return compact ? <AlarmTile key={entity.id} entity={entity} /> : <AlarmPanel key={entity.id} entity={entity} />;
@@ -214,12 +228,41 @@ function entitySlot(entity: Entity, region: Exclude<Region, 'glance'>) {
 }
 
 /**
+ * A Group in `left` or `right` (ADR-0014): one card, titled with the
+ * helper's name, and its members as the rows. Only the members are ever
+ * dispatched -- never the helper, whose controls would act on every member
+ * at once -- so the card shows them whatever state the helper is in,
+ * Unavailable included.
+ */
+function groupSlot(helper: Entity, members: Entity[], region: 'left' | 'right') {
+  return (
+    <Card key={helper.id} title={helper.name}>
+      {members.map(member => memberSlot(member, region))}
+    </Card>
+  );
+}
+
+/**
+ * One member of a Group, as its own Domain renders in the Region. A gate is
+ * the bare `AccessRow`, the card already being there; a member that is
+ * itself a Group would put that helper's controls in the card, so it is a
+ * fault instead. An Unavailable member renders in its own shape, as a Fault.
+ */
+function memberSlot(member: Entity, region: 'left' | 'right') {
+  if (groupMemberIds(member) !== null) {
+    return <FaultTile key={member.id} label={`Gruppo in un gruppo: ${member.name}`} />;
+  }
+  if (member.domain === 'lock') return <AccessRow key={member.id} entity={member} />;
+  return entitySlot(member, region);
+}
+
+/**
  * A block that opens a Page: what an Area becomes in `footer` (#14), and what
  * a Page Opener is in `left` and `right` (ADR-0012) -- and in `footer` where
  * there is no Dock. Built here rather than as its own `src/ui/`
  * component, because nothing outside this file renders one.
  *
- * Modelled on `GateSlab`'s slab shape (full tappable surface, icon over
+ * Modelled on the deleted `GateSlab`'s slab shape (full tappable surface, icon over
  * name) rather than on the Row's old row shape, because the footer is a strip
  * of equal-weight blocks (docs/protocol.md: "media, and the blocks that open
  * other pages"), not a vertical list -- the same reason the deleted
@@ -443,12 +486,12 @@ function GlanceView({ placed, labelOrder, part }: { placed: Placed[]; labelOrder
   const climatePage = placedClimate ? placedPageFor([placedClimate], labelOrder, page) : null;
   const powerPage = powerSensor ? placedPageFor([powerSensor], labelOrder, page) : null;
 
-  // An Area or a Page Opener has no shape in `glance` (see the header note):
-  // a visible fault, never a silent gap.
+  // An Area, a Page Opener or a Group has no shape in `glance` (see the
+  // header note): a visible fault, never a silent gap.
   const unplaceable = placed.flatMap(p =>
     p.kind === 'area'
       ? [{ key: `area:${p.area.id}`, name: p.area.name }]
-      : openerPage(p.entity) !== null
+      : p.kind === 'group' || openerPage(p.entity) !== null
         ? [{ key: p.entity.id, name: p.entity.name }]
         : []
   );
@@ -589,6 +632,11 @@ export function PlacementView({ region, placed, part }: { region: Region; placed
           // Region's Room Grid (#42) -- the rest are folded into it.
           if (i !== firstAreaIndex) return null;
           return <RoomGrid key='rooms' areas={areas} />;
+        }
+        if (item.kind === 'group') {
+          // A Group's card exists only in `left` and `right` (ADR-0014).
+          if (region === 'footer') return <FaultTile key={item.entity.id} label={`Non previsto in footer: ${item.entity.name}`} />;
+          return groupSlot(item.entity, item.members, region);
         }
         if (item.entity.domain === 'camera') {
           // Every camera renders once, together, as one `Feeds` -- the rest

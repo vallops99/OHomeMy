@@ -36,8 +36,13 @@ const REGION_BY_SLUG: ReadonlyMap<string, Region> = new Map([
   ['footer', 'footer'],
 ]);
 
-/** One thing Placed in a Region: an Area or an entity, keeping its identity. */
-export type Placed = { kind: 'area'; area: Area } | { kind: 'entity'; entity: Entity };
+/**
+ * One thing Placed in a Region: an Area, an entity, or a Group (ADR-0014) --
+ * the helper, kept for its name and identity and never for its controls, and
+ * the members it names, which are what the card shows.
+ */
+export type Placed =
+  { kind: 'area'; area: Area } | { kind: 'entity'; entity: Entity } | { kind: 'group'; entity: Entity; members: Entity[] };
 
 /** The four Regions of one Page, each already in protocol order. */
 export type PageLayout = Record<Region, Placed[]>;
@@ -115,6 +120,20 @@ function regionsOn(labels: Label[], pageSlug: string): Set<Region> {
 }
 
 /**
+ * A Group's members (ADR-0014): the `entity_id` attribute a Home Assistant
+ * Group helper carries, in its order, or `null` for anything that is not one.
+ * Every Placed entity with that attribute is a Group, whatever its Domain.
+ *
+ * An Unavailable helper loses `entity_id` and keeps only `group_entities`
+ * (seen on Home Assistant 2026.9, all of a Lock group's members down), and
+ * a Group must still show its members then, so that is read as well.
+ */
+export function groupMemberIds(entity: Entity): string[] | null {
+  const ids = entity.attributes.entity_id ?? entity.attributes.group_entities;
+  return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : null;
+}
+
+/**
  * The pure core: given the registries' current contents and a Page name,
  * produce that Page's layout. No React, no @hakit -- this is the reviewable
  * and testable half of the resolver, and `usePage` (`./registry`) is the
@@ -123,10 +142,17 @@ function regionsOn(labels: Label[], pageSlug: string): Set<Region> {
  * Each Placement Label is resolved on its own, so one thing can land in
  * several Regions of this Page (or none of them, if its Labels name other
  * Pages). Ordering follows docs/protocol.md exactly: within each Region,
- * every Placed Area first in registry order, then every Placed entity in
- * registry order. The two groups are never interleaved -- an entity cannot land between two
- * Areas in the same Region, so Areas are appended in one pass and entities in
- * a second.
+ * every Placed Area first in registry order, then every Group, then every
+ * other Placed entity, each in registry order. They are never interleaved --
+ * an entity cannot land between two Areas in the same Region, so Areas are
+ * appended in one pass and entities sorted into Groups and the rest in a
+ * second.
+ *
+ * A Group's members come from its `entity_id` attribute, not from Labels; a
+ * member the dashboard does not have (`ignored`, denylisted, unregistered)
+ * is left out. In `left` and `right`, where a Group is its card, a member
+ * also Placed there on its own renders only inside the card. In `footer`
+ * and `glance` a Group has no card to show it in, so nothing is removed.
  */
 export function resolvePage(areas: Area[], entities: Map<string, Entity>, page: string): PageLayout {
   const layout = emptyLayout();
@@ -146,6 +172,9 @@ export function resolvePage(areas: Area[], entities: Map<string, Entity>, page: 
     }
   }
 
+  // Groups, then the rest, behind every Area (docs/protocol.md, "Ordering").
+  const groups = emptyLayout();
+  const rest = emptyLayout();
   for (const entity of entities.values()) {
     // `ignored` entities never reach this function at all: useEntities()
     // (src/ha/registry.ts:104) already drops any entity carrying the Label,
@@ -160,10 +189,24 @@ export function resolvePage(areas: Area[], entities: Map<string, Entity>, page: 
     // (docs/protocol.md, "The Dock"). In `glance` it is a fault either way.
     const opens = openerPage(entity);
     const own = opens !== null && slugify(opens) === pageSlug;
+    const memberIds = groupMemberIds(entity);
     for (const region of regionsOn(entity.labels, pageSlug)) {
       if (own && (region === 'left' || region === 'right')) continue;
-      layout[region].push({ kind: 'entity', entity });
+      if (memberIds === null) {
+        rest[region].push({ kind: 'entity', entity });
+        continue;
+      }
+      const members = memberIds.flatMap(id => entities.get(id) ?? []);
+      groups[region].push({ kind: 'group', entity, members });
     }
+  }
+
+  for (const region of Object.keys(layout) as Region[]) {
+    const carded =
+      region === 'left' || region === 'right'
+        ? new Set(groups[region].flatMap(g => (g.kind === 'group' ? g.members.map(m => m.id) : [])))
+        : new Set<string>();
+    layout[region].push(...groups[region], ...rest[region].filter(p => p.kind !== 'entity' || !carded.has(p.entity.id)));
   }
 
   return layout;

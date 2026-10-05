@@ -47,7 +47,7 @@
  * The real app needs a live Home Assistant (`.env` -> `VITE_HA_URL`), so
  * driving it here would make a layout check depend on the house being up. This
  * builds the panel's *shape* from the same tokens the components import,
- * with the fixture's own content (two gates, three cameras, the two chips in
+ * with the fixture's own content (the Accessi card's two gates, three cameras, the two chips in
  * `fake-house/manifest.yaml`) hardcoded as markup.
  *
  * The cost, recorded because it is real: this measures a reproduction, so a
@@ -160,27 +160,26 @@ function statusBar(chips: ChipSpec[]): string {
 }
 
 function leftColumn(): string {
-  const slab = (name: string) => `
-    <div class="slab" style="
-      flex:0 0 auto; height:${t.layout.gateSlab}px; box-sizing:border-box;
-      border-radius:${t.radius.tile}px; background:${t.color.activeStrong};
-      padding:${t.space.md}px; display:flex; flex-direction:row;
-      align-items:center; justify-content:center; position:relative;
-      color:${t.color.onActiveStrong};
-    ">
-      <span style="
-        position:absolute; left:${t.layout.gateInset}px; top:50%; transform:translateY(-50%);
-        width:48px;height:48px;display:block;background:currentColor;border-radius:4px
-      "></span>
-      <div style="
-        display:flex;flex-direction:column;align-items:center;min-width:0;
-        width:100%; padding-left:${t.layout.gateInset + 48}px; padding-right:${t.layout.gateInset + 48}px;
-        box-sizing:border-box;
-      ">
-        <span style="font-size:${t.font.glanceL}px;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${name}</span>
-        <span style="font-size:${t.font.body}px">Chiuso</span>
+  // The Accessi card (#43): `Card.tsx` with a `SectionLabel`, and an
+  // `AccessRow` per gate, a hairline between them.
+  const row = (name: string) => `
+    <div class="access-row" style="display:flex; align-items:center; gap:14px; padding:10px 6px 10px 10px; min-width:0">
+      <span style="width:48px;height:48px;flex:0 0 48px;display:block;border-radius:${t.radius.well}px;background:${t.color.surfaceWell}"></span>
+      <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px">
+        <span style="font-size:${t.type.rowTitle.size}px;line-height:${t.type.rowTitle.lineHeight};font-weight:${t.type.rowTitle.weight};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${t.color.ink}">${name}</span>
+        <span style="font-size:${t.type.meta.size}px;line-height:${t.type.meta.lineHeight};white-space:nowrap;overflow:hidden;color:${t.color.inkMuted}">Chiuso</span>
       </div>
+      <span style="flex:0 0 auto; height:${t.size.targetControl}px; min-width:108px; padding:0 22px; box-sizing:border-box; border-radius:${t.radius.pill}px; background:${t.color.primary}; color:${t.color.onPrimary}; display:inline-flex; align-items:center; justify-content:center; font-size:${t.type.bodyLg.size}px; font-weight:600">Apri</span>
     </div>`;
+  const accessCard = (names: string[]) => `
+    <section id="accessi" style="
+      flex:0 0 auto; min-width:0; display:flex; flex-direction:column; box-sizing:border-box;
+      padding:6px ${t.space[2]}px; border-radius:${t.radius.tile}px;
+      background:${t.color.surface}; border:1px solid ${t.color.line};
+    ">
+      <div style="padding:12px 12px 4px; font-size:${t.type.label.size}px; line-height:${t.type.label.lineHeight}; font-weight:${t.type.label.weight}; letter-spacing:${t.type.label.letterSpacing}; text-transform:uppercase; color:${t.color.inkMuted}">Accessi</div>
+      ${names.map(row).join(`<div style="height:1px; background:${t.color.line}; margin:0 10px; flex-shrink:0"></div>`)}
+    </section>`;
 
   return `
   <div id="left-col" style="
@@ -242,7 +241,7 @@ function leftColumn(): string {
       flex:0 1 auto; margin-top:auto; min-height:0; overflow-y:auto;
       display:flex; flex-direction:column; gap:${t.space.sm}px;
     ">
-      ${slab('Cancello')}${slab('Cancelletto')}
+      ${accessCard(['Cancello', 'Cancelletto'])}
     </div>
   </div>`;
 }
@@ -391,10 +390,12 @@ const probe = `(() => {
   const parents = [col, ...col.querySelectorAll('*')].filter(e => e.children.length > 1);
   for (const parent of parents) {
     // Out-of-flow children are not stacked with anything, so the rule below
-    // does not apply to them: the gate slab's icon is positioned absolutely
-    // in its own reserved lane (GateSlab.tsx), and its rect legitimately
-    // overlaps the centred label whose padding keeps that lane clear. Left
-    // in, it reported 54.4 px of "overlap" where no ink can ever collide.
+    // does not apply to them. This was written for the gate slab's icon,
+    // positioned absolutely in its own reserved lane (the deleted
+    // GateSlab.tsx), whose rect overlapped the centred label that its padding
+    // kept clear: left in, it reported 54.4 px of "overlap" where no ink could
+    // ever collide. Apri's hold sweep (AccessRow.tsx) is the same kind of
+    // layer, under its label by design.
     // Only "position: absolute" is excluded, not "relative": a relatively
     // positioned element still occupies its place in the flow, so nudging
     // one over its neighbour is a real overlap this must still catch.
@@ -403,7 +404,7 @@ const probe = `(() => {
       const a = kids[i].getBoundingClientRect();
       const b = kids[i + 1].getBoundingClientRect();
       // Only vertically stacked siblings are checked. Horizontal rows -- the
-      // chip row, the two Stats, the icon and label inside a slab -- sit side
+      // chip row, the two Stats, the well, the name and Apri inside a gate's row -- sit side
       // by side by design, and their rects legitimately share the same band of
       // y. Stacking is therefore decided by horizontal separation, not by
       // comparing tops: if the two rects overlap horizontally at all, they are
