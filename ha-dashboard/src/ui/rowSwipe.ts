@@ -1,8 +1,10 @@
 /**
- * The Row swipe's decision, kept apart from the gesture binding (#27).
+ * The swipe's decision, kept apart from the gesture binding (#27). Born on
+ * the Row, which no longer swipes (#42, ADR-0010 amended); a footer member
+ * with a Page of its own still does (#32).
  *
- * `RoomRow` binds @use-gesture's `useDrag` and feeds it through here: how far
- * the Row follows the finger, and whether letting go opens the Area's Page or
+ * `SwipeToOpen` binds @use-gesture's `useDrag` and feeds it through here: how
+ * far the Row follows the finger, and whether letting go opens the Page or
  * springs back. Every number is justified, with sources, in
  * docs/research/row-swipe-gesture.md; this file only states them.
  */

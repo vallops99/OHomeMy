@@ -2,7 +2,7 @@
  * What a single light can be asked to do, read off its state.
  *
  * Kept apart from `ToggleTile` for the reason `alarmState.ts` is: a state is
- * interpreted once, and the Area's `RoomRow` slider and a lone Placed light's
+ * interpreted once, and an Area's Room Tile dimmer and a lone Placed light's
  * slider cannot disagree about what "50%" means.
  */
 import type { Entity } from '../ha';

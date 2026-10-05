@@ -61,7 +61,7 @@ export type Area = {
   labels: Label[];
   /**
    * The MDI icon Home Assistant's own area registry has for this Area (#13),
-   * or null when the registry has none set. `RoomRow` falls back to a generic
+   * or null when the registry has none set. `RoomTile` falls back to a generic
    * glyph when this is null -- see its own default. Carried through exactly
    * like `labels` above: the area registry already has the right answer
    * (`cucina` -> `mdi:stove`, `camera_chri` -> `mdi:bed`, ...), so a

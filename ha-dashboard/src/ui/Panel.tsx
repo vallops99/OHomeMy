@@ -42,47 +42,9 @@
  * decides what that content is). `PlacementView` (`src/ui/PlacementView.tsx`)
  * is what turns a Region's `Placed[]` into the nodes passed in here.
  */
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { t } from './theme';
-
-/**
- * Is this element scrolled short of its end? Drives the fade below.
- *
- * A `ResizeObserver` rather than a one-off measurement, because what makes
- * `left` overflow is a house adding a card -- a change in content,
- * not in viewport -- and a one-off read at mount would miss it. It observes
- * the scroller *and* its children, since the overflow condition changes when a
- * child resizes even though the scroller itself does not.
- */
-function useHasMoreBelow(ref: React.RefObject<HTMLDivElement | null>): boolean {
-  const [more, setMore] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (el === null) return;
-
-    const measure = () => {
-      // A 1 px tolerance: sub-pixel layout routinely leaves scrollHeight a
-      // fraction above clientHeight on an element that visually fits, and a
-      // fade over nothing is the same lie in the other direction.
-      const hidden = el.scrollHeight - el.clientHeight - el.scrollTop;
-      setMore(hidden > 1);
-    };
-
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    for (const child of el.children) observer.observe(child);
-    el.addEventListener('scroll', measure, { passive: true });
-
-    return () => {
-      observer.disconnect();
-      el.removeEventListener('scroll', measure);
-    };
-  });
-
-  return more;
-}
+import { useHasMoreBelow } from './useHasMoreBelow';
 
 export type PanelProps = {
   /** The top-left quadrant. Absent when the glance toggle is off -- see above. */

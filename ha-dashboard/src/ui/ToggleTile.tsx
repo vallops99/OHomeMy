@@ -1,15 +1,13 @@
 /**
  * One `light` or `switch`, Placed on its own (#16).
  *
- * Not a `RoomRow`: a Row collapses an Area and Derives its light from the
- * `main` Label, while this stands for exactly the entity that was Placed. It
- * takes the Row's *shape* -- a full-width row, marker, icon, name, control --
- * so a lone light standing next to an Area's Row in `right` reads as the same
- * kind of thing, one level down.
+ * Not a `RoomTile`: a Room Tile collapses an Area and Derives its light from
+ * the `main` Label, while this stands for exactly the entity that was Placed.
+ * It keeps the old Row's *shape* -- a full-width row, marker, icon, name,
+ * control (`rowShape.ts`).
  *
  * Pressing the body toggles the entity. A light that can be dimmed also gets
- * the brightness slider, with the same optimistic-drag handling as
- * `RoomRow` (`rowShape.ts`); anything else -- an on/off light, a switch -- shows its state in
+ * the brightness slider, with its optimistic drag (`rowShape.ts`); anything else -- an on/off light, a switch -- shows its state in
  * the slider's place instead. A slider that moves and dims nothing would be
  * a dead control that looks live (see `supportsBrightness`).
  */

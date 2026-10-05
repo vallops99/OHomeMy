@@ -1,5 +1,5 @@
 /**
- * A Row's temperature (CONTEXT.md, `main`): the room's, never a device's.
+ * A Room Tile's temperature (CONTEXT.md, `main`): the room's, never a device's.
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -28,7 +28,8 @@ test('a thermostat’s own reading is the room’s temperature', () => {
 
 test('a temperature sensor carrying `main` is the room’s temperature when there is no thermostat', () => {
   const sensor = entity('sensor.t', '19.26', { device_class: 'temperature', unit_of_measurement: '°C' }, ['main']);
-  assert.equal(roomTemperature(area(sensor)), '19,3°C');
+  // Degrees only, as a thermostat's reads: "20,5°" in a Room Tile's meta (#42).
+  assert.equal(roomTemperature(area(sensor)), '19,3°');
 });
 
 test('a temperature sensor without `main` is a device’s, not the room’s', () => {

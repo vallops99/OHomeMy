@@ -19,13 +19,13 @@
  * component. It is UI *state*, and the two things that need to read or write
  * it (`Dashboard`, which owns it and runs the idle-return timer against it,
  * and the things that call `openPage` -- `PlacementView`'s footer blocks and,
- * since #27, `RoomRow`) are all under `src/ui/`, so a `src/ui/` context is the
+ * since #42, `RoomTile`) are all under `src/ui/`, so a `src/ui/` context is the
  * honest home for it -- it never crosses ADR-0002's seam in either
  * direction.
  *
  * A context rather than prop-threading `openPage` through `PlacementView`
  * into `entitySlot` and every per-Region branch: only a few components
- * (`AreaOpenerBlock`, the home block, and `RoomRow`) ever call it, and
+ * (`AreaOpenerBlock`, the home block, and `RoomTile`) ever call it, and
  * `PlacementView` itself does not otherwise need to know navigation exists.
  * Threading a callback prop through `PlacementView` -> the `footer` render
  * branch -> `AreaOpenerBlock` would put a `openPage` parameter on every

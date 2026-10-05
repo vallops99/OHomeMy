@@ -15,6 +15,8 @@ export type Actions = {
   toggle: (entity: Entity) => void;
   /** 0-100. Lights only; below 1 the light is turned off instead. */
   setBrightness: (entity: Entity, percent: number) => void;
+  /** Turn every one of these off, in one call. Unavailable ones are skipped. */
+  turnOff: (entities: Entity[]) => void;
   lock: (entity: Entity) => void;
   unlock: (entity: Entity) => void;
   /** Set an `input_text` helper's value; `''` clears it. */
@@ -22,7 +24,7 @@ export type Actions = {
   /** Press a `button` or `input_button`. */
   press: (entityId: EntityId) => void;
   /** Escape hatch for Domains with no verb of their own yet. */
-  call: (domain: string, service: string, entityId: EntityId, data?: Record<string, unknown>) => void;
+  call: (domain: string, service: string, entityId: EntityId | EntityId[], data?: Record<string, unknown>) => void;
 };
 
 export function useActions(): Actions {
@@ -60,6 +62,16 @@ export function useActions(): Actions {
         // would otherwise keep the light on at its minimum.
         if (clamped < 1) call('light', 'turn_off', entity.id);
         else call('light', 'turn_on', entity.id, { brightness_pct: clamped });
+      },
+      turnOff: entities => {
+        // One call per Domain with every target in it, so *Spegni tutto*
+        // (#42) is one command to Home Assistant rather than one per light.
+        const byDomain = new Map<string, EntityId[]>();
+        for (const e of entities) {
+          if (e.unavailable) continue;
+          byDomain.set(e.domain, [...(byDomain.get(e.domain) ?? []), e.id]);
+        }
+        for (const [domain, ids] of byDomain) call(TOGGLEABLE.has(domain) ? domain : 'homeassistant', 'turn_off', ids);
       },
       lock: entity => {
         if (entity.unavailable) return;

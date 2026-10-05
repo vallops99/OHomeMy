@@ -6,20 +6,22 @@
  * Regions' ordered `Placed[]` -- it says *what* is in each Region, in what
  * order, and nothing about how it looks. This file is the other half: given
  * a `Placed` and the Region it came from, decide the component. The same
- * Area renders as a `RoomRow` in `left`/`right` and as a
+ * Area renders as a Room Tile in `left`/`right` and as a
  * tappable Page-opener in `footer` -- CONTEXT.md's "Rendering contract" --
  * because the Region, not the kind of thing, decides the shape.
  *
  * This lives in `src/ui/`, not `src/ha/`, because it imports components
- * (`RoomRow`, `GateSlab`, ...) and makes component-selection judgement calls;
+ * (`RoomGrid`, `GateSlab`, ...) and makes component-selection judgement calls;
  * `placement.ts` stays free of JSX and of every one of these decisions.
  *
  * ## Per-Region rendering contracts
  *
  * `left` / `right`:
- *   - an Area -> `RoomRow`, variant D's row (#6): name, lights-on count,
- *     slider, temperature, all Derived from the Area's own entities. Since
- *     #27 it also opens the Area's Page, on a swipe or its chevron.
+ *   - an Area -> a `RoomTile` (#42): name, lights-on count, temperature, a
+ *     switch and a dimmer for its `main` light, all Derived from the Area's
+ *     own entities; a tap opens the Area's Page. A Region's Areas render
+ *     together, as one `RoomGrid`, where the first of them would be -- the
+ *     same move as the cameras' `Feeds` below.
  *   - an entity -> dispatched by Domain, in `entitySlot` below, mirroring
  *     `screens/ScreenView.tsx`'s function of the same name: `lock` ->
  *     `GateSlab`, `alarm_control_panel` -> `AlarmPanel`, `camera` -> a Feed,
@@ -65,7 +67,7 @@
  *     `right` (`media_player` -> `MediaBar`). Its tap stays its own. When the
  *     same entity is also Placed in `left` or `right` on another Page, it
  *     gains a trailing chevron and a right swipe to that Page (#32,
- *     `FooterMember`), as a Row does; with no such Page, nothing is added.
+ *     `FooterMember`), as the Row did; with no such Page, nothing is added.
  *   - additionally, on every Page that is not `page:main`: a `HomeBlock`,
  *     prepended before anything Placed. See its own comment below for why it
  *     exists and why it sits outside the Areas-then-entities order.
@@ -128,7 +130,7 @@ import { MediaBar } from './MediaBar';
 import { MediaCard } from './MediaCard';
 import { useNavigation } from './NavigationContext';
 import { popupTitle } from './popup';
-import { RoomRow } from './RoomRow';
+import { RoomGrid } from './RoomGrid';
 import { SelectTile } from './SelectTile';
 import { SensorBlock, SensorTile } from './SensorTile';
 import { Stats } from './Stats';
@@ -208,7 +210,7 @@ function entitySlot(entity: Entity, region: Exclude<Region, 'glance'>) {
  * component, because nothing outside this file renders one.
  *
  * Modelled on `GateSlab`'s slab shape (full tappable surface, icon over
- * name) rather than on `RoomRow`'s row shape, because the footer is a strip
+ * name) rather than on the Row's old row shape, because the footer is a strip
  * of equal-weight blocks (docs/protocol.md: "media, and the blocks that open
  * other pages"), not a vertical list -- the same reason the deleted
  * `NavBar.tsx`'s destinations were also slabs in a row, not rows in a list.
@@ -276,7 +278,7 @@ function PageBlock({ name, icon, title, onOpen }: { name: string; icon: string; 
  * the protocol, not a separate mapping this file has to maintain.
  *
  * The icon is the Area's own registry icon when it has one (#13, the same
- * source RoomRow reads), recognisable as "that room" rather than as a
+ * source the Room Tile reads), recognisable as "that room" rather than as a
  * generic nav glyph; the arrow-box is the fallback for an Area with none.
  */
 function AreaOpenerBlock({ area }: { area: Area }) {
@@ -342,7 +344,7 @@ function HomeBlock() {
 /**
  * An entity in `footer` that leads to its own other Page (CONTEXT.md,
  * Derived; #32): the Page where it is also Placed in `left` or `right`. It
- * keeps its own component and its own tap, and gains the Row's way to a
+ * keeps its own component and its own tap, and gains the old Row's way to a
  * Page -- a trailing chevron, or a swipe right. With no such Page it is
  * rendered bare, with no chevron.
  *
@@ -398,7 +400,7 @@ function FooterMember({ entity, labelOrder, children }: { entity: Entity; labelO
  *     specifically for a `climate` entity among what is Placed, and only
  *     that Domain feeds Hero's temperature; a `temperature`-class `sensor`
  *     placed in `glance` is not a fallback for it (there being no Area to
- *     fall back to at the house level the way a Row's `roomTemperature` can)
+ *     fall back to at the house level the way a Room Tile's `roomTemperature` can)
  *     and is simply not consulted for temperature at all.
  *   - a `sensor` Placed in `glance` with `device_class: humidity` feeds
  *     `Hero`'s humidity line.
@@ -589,6 +591,9 @@ export function PlacementView({ region, placed, home = true }: { region: Region;
   // camera held -- computed up front rather than with a mutable flag toggled
   // during the `.map` below, which oxlint flags as unsafe render-time state.
   const firstCameraIndex = placed.findIndex(p => p.kind === 'entity' && p.entity.domain === 'camera');
+  // The Region's Areas, likewise: one `RoomGrid`, where the first Area was.
+  const areas = placed.flatMap(p => (p.kind === 'area' ? [p.area] : []));
+  const firstAreaIndex = placed.findIndex(p => p.kind === 'area');
 
   return (
     <>
@@ -606,13 +611,10 @@ export function PlacementView({ region, placed, home = true }: { region: Region;
           if (region === 'footer') {
             return <AreaOpenerBlock key={item.area.id} area={item.area} />;
           }
-          // left / right: the Row, unchanged from variant D.
-          // The icon comes from Home Assistant's own area registry (#13) --
-          // `useAreas()` now carries it alongside `labels` -- rather than
-          // from a hardcoded per-Area map the way `screens/home.ts` used to
-          // supply it; `undefined` (Area.icon is null) falls through to
-          // RoomRow's own generic default, unchanged.
-          return <RoomRow key={item.area.id} area={item.area} icon={item.area.icon ?? undefined} />;
+          // left / right: every Area renders once, together, as the
+          // Region's Room Grid (#42) -- the rest are folded into it.
+          if (i !== firstAreaIndex) return null;
+          return <RoomGrid key='rooms' areas={areas} />;
         }
         if (item.entity.domain === 'camera') {
           // Every camera renders once, together, as one `Feeds` -- the rest

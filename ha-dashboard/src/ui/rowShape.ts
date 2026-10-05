@@ -1,5 +1,6 @@
 /**
- * What `RoomRow` and `ToggleTile` share: the row surface with its state
+ * The old Row's shape, which `ToggleTile` and the read-only rows keep after
+ * the Row itself became a Room Tile (#42): the row surface with its state
  * marker, and the slider's optimistic drag. Two components rendering the
  * same shape must not drift apart one copied line at a time.
  */

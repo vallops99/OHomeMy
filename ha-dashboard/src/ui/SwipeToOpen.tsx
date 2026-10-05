@@ -1,8 +1,9 @@
 /**
  * Swipe right to open a Page, and the chevron that does the same on a tap
- * (#27, ADR-0010). A Row has both, and since #32 so does a footer entity
- * with a Page of its own (CONTEXT.md, Derived): the same mechanism and the
- * same look, so one learned gesture works everywhere it appears.
+ * (#27, ADR-0010). A footer entity with a Page of its own has both (#32,
+ * CONTEXT.md, Derived); the Row that had them first is a Room Tile now, and
+ * kept only the chevron (#42). The same mechanism and the same look
+ * wherever it appears, so one learned gesture works everywhere.
  *
  * The swipe is bound on this wrapper and never threaded into `Tile`:
  * `CardBase` spreads unknown props after its own long-press handlers, so
