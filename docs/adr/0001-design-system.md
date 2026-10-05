@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by ADR-0013
 ---
 
 # Design tokens are computed from a handful of knobs, not hand-picked

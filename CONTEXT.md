@@ -46,7 +46,7 @@ _Avoid_: Prefixed label, namespaced label, coordinate, key-value label
 **Placement**:
 One appearance of something on the panel: a Page and a Region together, spelled
 by one Placement Label. An Area or entity carrying one is **Placed**, and it may
-carry several -- the same Area is a Row on one Page and a footer block on
+carry several -- the same Area is a Room Tile on one Page and a footer block on
 another. Absence of Placement is the ordinary way to keep something off the
 panel.
 _Avoid_: Assignment, mapping, binding
@@ -57,7 +57,7 @@ Open-ended: a Page exists because something is labelled for it, and the renderer
 knows no list of them.
 `page:main` is the home screen by convention: where the panel rests, and
 where it returns to after a period idle elsewhere. Any other Page is either an
-**Area Page**, named by an Area's id and opened by that Area's block or Row,
+**Area Page**, named by an Area's id and opened by that Area's block or Room Tile,
 or a **Topic Page**, named after a subject rather than a place --
 `page:clima`, `page:sicurezza`, `page:media`.
 _Avoid_: Screen, view, route
@@ -71,13 +71,48 @@ _Avoid_: View, section, category page
 
 **Page Opener**:
 A Home Assistant `input_button` that stands for a Topic Page, the way an Area
-stands for its own: Placed like anything else, rendered as a block with its
-name and icon, and opening `page:<its object id>` when tapped --
-`input_button.sicurezza` opens `page:sicurezza`. The same block in `left`,
-`right` or `footer`; like an Area, it is skipped on its own Page and cannot
+stands for its own: Placed like anything else, shown with its name and icon,
+and opening `page:<its object id>` when tapped -- `input_button.sicurezza`
+opens `page:sicurezza`. In `footer` it is an item of the Dock; in `left` or
+`right` it is a block, skipped on its own Page as an Area's is. It cannot
 render in `glance`. It holds no state and controls nothing; pressing it in
 Home Assistant does nothing.
 _Avoid_: Shortcut, link, nav button, fake Area
+
+**Dock**:
+Where `footer`'s Page Openers go: a fixed bar of destinations, Casa first --
+the way home, supplied by the renderer and present on every Page, `page:main`
+included -- then the Page Openers in registry order. The item for the current
+Page stays and is marked as current; this is the one place a Page Opener is
+not skipped on its own Page. Everything else in `footer` sits beside it. On
+`page:main` a Dock that would hold only Casa is not shown.
+_Avoid_: Nav bar, tab bar (that is the phone's Tab), menu
+
+**Group**:
+A titled set of entities rendered together as one card, declared by a Home
+Assistant Group helper: the helper is what gets Placed, its name is the card's
+title, and its members are what the card shows, each in its own shape. The
+helper's own state and controls are never shown -- a lock Group would
+otherwise open every gate at once. One Domain per Group, because Home
+Assistant's helper allows no more, and a Group holds entities, never Areas.
+Renders in `left` and `right` only. A member Placed on its own in the same
+Region of the same Page shows inside the card only; an Unavailable member is
+a Fault in its own place in the card.
+_In this house_: Accessi, the two gates.
+_Avoid_: Section, card, category
+
+**Room Grid**:
+The Areas Placed in a Region, rendered together as one grid of Room Tiles under
+the title *Stanze*, with *Spegni tutto* beside it: every light in every one of
+those Areas off, and not a control while none is on. Not a Group: Areas cannot be a Group's members, and every
+Room Grid is a grid of rooms, so its title never varies.
+_Avoid_: Stanze card, area list
+
+**Clock**:
+The time and date at the top left of every Page, supplied by the renderer; a
+Popup has none. Not
+an entity, not Placed, not a control.
+_Avoid_: Header, status bar
 
 **Region**:
 One of the panel's four areas -- `glance`, `left`, `right`, `footer` -- named by
@@ -94,9 +129,8 @@ _Avoid_: Screen, section
 
 **Rendering contract**:
 What a Region promises to make of whatever is Placed in it. A Region decides
-the *shape* of a component, not only its position: an Area in `right` is a full
-row with a slider, while the same Area in `footer` is a block that opens that
-Area's Page. This is why the panel needs no separate navigation concept, and why
+the *shape* of a component, not only its position: an Area in `right` is a Room
+Tile, while the same Area in `footer` is a block that opens that Area's Page. This is why the panel needs no separate navigation concept, and why
 one Area with two Placements can be both at once. The Page never decides
 shape: the same thing in the same Region looks the same on every Page, and
 where a Domain needs a full and a compact form, the Regions choose between
@@ -105,16 +139,16 @@ them -- `left` and `right` the full one, `footer` the compact one. A
 `left` it stays the compact strip.
 _Avoid_: Renderer, variant, presentation mode
 
-**Row**:
-An Area rendered in `left` or `right`: its name, how many of its lights are on,
-a brightness slider, its temperature. The slider drives the Area's `main`
-light, so it is there only when that light can be dimmed; an Area whose `main`
-light is on/off only, or that has none, has no slider rather than one that
-moves and changes nothing. The one component that collapses an Area
-rather than standing for a single entity. Tapping it toggles the Area's `main`
-light; swiping it right, or tapping its trailing chevron, opens the Area's Page
--- the same Page its footer block opens. Holding it does nothing.
-_Avoid_: Tile, card, area widget
+**Room Tile**:
+An Area rendered in `left` or `right`: its name and a chevron, how many of
+its lights are on, its temperature, a switch for its `main` light and, when
+that light can be dimmed, a dimmer. An Area whose `main` light is on/off only
+has the switch and no dimmer; one with no `main` light has neither, and says
+it has no light. The one component that collapses an Area rather than
+standing for a single entity. Tapping the tile opens the Area's Page -- the
+same Page its footer block opens; the switch and dimmer control the light in
+place. Holding it does nothing.
+_Avoid_: Row, card, area widget
 
 **Popup**:
 A Page presented as an overlay on top of whatever Page is current, opened and
@@ -123,7 +157,8 @@ Placed like any other Page's; "popup" names how the Page is shown, not a Page.
 House-wide: every panel shows the same Popup, and closing it on one closes it
 on all. Closes on its close button, when Home Assistant closes it, or when
 something inside it navigates -- never on its own. At most one at a time: a new
-Popup replaces the current one.
+Popup replaces the current one. It shows only its own Regions: no Clock, no
+Dock, and nothing that leads off it but its close button.
 _Avoid_: Modal (that is @hakit's entity dialog), dialog, overlay, alert
 
 **Feed**:
@@ -146,8 +181,8 @@ _Avoid_: Stream (the transport, not the thing on the panel), video, snapshot
 **Derived**:
 Resolved from a registry query at render time rather than declared. Four
 Derived rules survive the protocol, and everything else is Placed explicitly:
-- A Row consults the `main` Label to find the light its slider drives and the
-  entity its temperature comes from.
+- A Room Tile consults the `main` Label to find the light its switch and
+  dimmer drive and the entity its temperature comes from.
 - A camera's motion is a `motion` binary_sensor on the camera's own
   **device**, not its Area: several cameras can share an Area, as the three
   outdoor ones share Esterno. A camera with no such sensor never shows motion.
@@ -157,7 +192,7 @@ Derived rules survive the protocol, and everything else is Placed explicitly:
 - Any other entity in `footer` leads to the other Page where that same
   entity is Placed in `left` or `right`, chosen as the camera glance chooses.
   Tapping it still does its own action, and a trailing chevron, or a swipe
-  right, opens the Page, as on a Row. With no such Page there is no chevron.
+  right, opens the Page. With no such Page there is no chevron.
   In `glance` the same rule opens on a tap, because nothing there has an
   action of its own: the temperature leads where its `climate` is Placed, the
   consumption where its power `sensor` is. The chips are exempt: they open
@@ -175,7 +210,9 @@ _Avoid_: Status, summary, overview
 **Concern**:
 One ranked kind of thing worth reporting at the door -- Faults, open ways in,
 lit zones -- and the entities behind it. The Verdict is the highest-ranked
-Concern; each Concern the panel still reports is one chip in `glance`.
+Concern; each Concern the panel still reports is one chip in `glance`, except
+lit zones, which the lights stat states instead. The chips are never capped: a
+Concern hidden to keep the row short would be a lie.
 _Avoid_: Issue, alert, warning, health
 
 **Concern list**:
@@ -216,9 +253,10 @@ any value and the renderer validates nothing; the Region is one of `glance`,
 `left`, `right`, `footer`. A thing carries one per Placement.
 
 **main**:
-Marks the entity a Row collapses its Area to -- the light its slider drives,
+Marks the entity a Room Tile collapses its Area to -- the light its switch
+and dimmer drive,
 the entity its temperature reads. Places nothing on its own; consulted only
-when an Area renders as a Row.
+when an Area renders as a Room Tile.
 
 **ignored**:
 A **mute** on a whole thing, every Placement at once. Overrides valid

@@ -4,6 +4,12 @@ status: accepted
 
 # Rows drop the long-press modal and gain a chevron
 
+> **Amended (2026-10-05).** The Row is now the **Room Tile** of
+> [ADR-0013](0013-casa-panel-replaces-the-computed-palette.md)'s design:
+> tapping the tile opens its Area's Page, its switch and dimmer drive the
+> `main` light, and the swipe is gone. The chevron stays, as the cue that the
+> tile navigates. Holding still opens nothing.
+
 A Row opens its Area's Page when it is swiped right
 ([#27](https://github.com/vallops99/homeassistant-frontend/issues/27)). Two
 things change with that swipe: holding a Row no longer opens @hakit's light

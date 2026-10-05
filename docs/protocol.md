@@ -5,6 +5,12 @@ which region, is declared in Home Assistant with labels on Areas and entities.
 This document is the normative grammar: it is what you need to know to label a
 house, and what the renderer is obliged to honour.
 
+> **Ahead of the renderer (2026-10-05).** This grammar already describes the
+> Casa Panel redesign ([ADR-0013](adr/0013-casa-panel-replaces-the-computed-palette.md),
+> [ADR-0014](adr/0014-groups-are-group-helpers.md)): the frame, the Dock,
+> Groups, the Room Grid, held gates and the chips. Until those slices land,
+> the panel still draws the previous layout.
+
 ## The placement label
 
 A **placement label** carries a whole placement in one string:
@@ -34,9 +40,9 @@ area salone:            [page:main:right, page:cucina:footer]
 media_player.ovunque:   [page:main:footer, page:salone:footer]
 ```
 
-Salone is a full row on the home screen and a tappable block in the cucina
+Salone is a Room Tile on the home screen and a tappable block in the cucina
 page's footer. The region decides the shape of each appearance independently,
-so the same Area is a row in one place and a nav block in another.
+so the same Area is a Room Tile in one place and a nav block in another.
 
 **Exact duplicates render once.** Two placement labels naming the same page
 *and* the same region are deduplicated. Two naming the same page and different
@@ -80,28 +86,32 @@ Page**, about a subject the Areas do not divide up: `page:clima`,
 
 Closed. Four values, and an unrecognised one places nothing.
 
-The panel is a 2x2: two stacked regions on the left, one tall region on the
-right, and a strip along the floor.
+The panel is three bands -- a status bar, the body, and a strip along the
+floor -- each split into a left and a right half. The four regions sit in that
+frame; the frame itself is the renderer's and is not labelled.
 
 ```
 +---------------------+--------------------------------+
-|  glance             |                                |
-|                     |  right                         |
-+---------------------+                                |
-|                     |                                |
-|  left               |                                |
-|                     |                                |
+|  clock              |           glance: the chips    |   status bar
 +---------------------+--------------------------------+
-|  footer                                              |
-+------------------------------------------------------+
+|  glance: hero,      |                                |
+|  stats              |  right                         |   body
+|---------------------|                                |
+|  left               |                                |
++---------------------+--------------------------------+
+|  footer             |  footer: the Dock              |   floor
++---------------------+--------------------------------+
 ```
+
+The **clock** -- the time and the date -- is supplied by the renderer on every
+page, and is not a control. A Popup has none.
 
 | region | what it is |
 | --- | --- |
-| `glance` | the top-left quadrant: temperature, humidity, lights on, consumption, and the house's concerns as chips. Read on approach from 2 m. |
-| `left` | the bottom-left quadrant. |
+| `glance` | split across the frame: the house's concerns as chips in the status bar, and temperature, humidity, lights on and consumption at the top of the left column. Read on approach from 2 m. |
+| `left` | the left column, below the glance. |
 | `right` | the right column. On `page:main` this is mostly Areas; on other pages it is whatever the page is about. |
-| `footer` | the strip along the floor: media, the blocks that open other pages, and — on every page but `page:main` — a renderer-supplied block back home. When more is placed than fits, it scrolls sideways and rests on whole blocks, never clipping one. |
+| `footer` | the strip along the floor. Page Openers go to the **Dock** on its right (see "The Dock", below); everything else sits on its left -- media, Area blocks, other blocks. When more is placed there than fits, it scrolls sideways and rests on whole blocks, never clipping one. |
 
 None of the four names contains an underscore, and that is load-bearing rather
 than cosmetic. Home Assistant slugifies a label's name into its id, collapsing
@@ -120,7 +130,7 @@ different regions produces two different components:
 
 | an Area in… | renders as |
 | --- | --- |
-| `right` | a full row — the Area's name, how many of its lights are on, a brightness slider, its temperature |
+| `left`, `right` | a **Room Tile** in the region's Room Grid -- the Area's name and a chevron, how many of its lights are on, its temperature, a switch for its `main` light and, when that light dims, a dimmer |
 | `footer` | a single tappable block that opens that Area's page |
 
 An entity's shape comes from its domain as well as its region. A camera is the
@@ -129,7 +139,7 @@ one that changes most:
 | a camera in… | renders as |
 | --- | --- |
 | `left`, `right` | a **Feed**: its live picture, over WebRTC. The region's cameras render together, where the first one would be: one big Feed, and beside it a strip of the others as 16:9 thumbnails, each captioned with its name and status. The big one is the camera last tapped, or else the first with motion, or else the first. Tapping a thumbnail makes it big. |
-| `glance` | the **motion glance**: one tile for all the region's cameras, saying how many there are and whether any of them sees motion. Tapping it opens the page where every one of those cameras is also placed in `left` or `right`, other than the current page. If several pages qualify, the one whose placement label comes first in Home Assistant's label registry wins. If none does, the tile is not a control and does not look like one. |
+| `glance` | the **camera chip**: one chip for all the region's cameras, saying how many there are and whether any of them sees motion. Tapping it opens the page where every one of those cameras is also placed in `left` or `right`, other than the current page. If several pages qualify, the one whose placement label comes first in Home Assistant's label registry wins. If none does, the chip is not a control and does not look like one. |
 
 A camera's motion is a `motion` binary_sensor on the camera's own device, not
 merely in its Area; a camera with no such sensor never shows motion. Nothing
@@ -145,7 +155,7 @@ naming the domain.
 
 | an entity in… | `left`, `right` | `footer` | `glance` |
 | --- | --- | --- | --- |
-| `lock` | a gate slab: tap to open or close | the same | — |
+| `lock` | a gate: **hold Apri for 700 ms to open**, tap Chiudi to close; a press too short says `Tieni premuto per aprire` for 2.5 s | the same | — |
 | `light`, `switch`, `siren` | a row: tap to toggle, a brightness slider when it dims | a block: state over name; tap to toggle | — |
 | `alarm_control_panel` | the full card: its state, and every arm mode it supports while disarmed, else a disarm — the same buttons as its Modal | a tile: tap to arm away or disarm | the alarm chip, which opens its arm/disarm Modal |
 | `binary_sensor` | a read-only row: name, and its state by device class — a door, window or opening reads `Aperta`/`Chiusa`, and an open one is drawn as the Verdict draws an open way in; a `problem` reads `Da ricaricare`/`OK` | a block: state over name | — |
@@ -164,10 +174,11 @@ scope.
 So the Areas are the navigation. There is no separate nav concept: a page
 button is an **Area** placed in a footer, and tapping it opens
 `page:<that area's id>` — the id from Home Assistant's area registry, not the
-display name, so `area salone` (named "Soggiorno") opens `page:salone`. A row
-leads to the same page: swipe it right, or tap the chevron at its end. Tapping
-the row itself still toggles its light. Neither route checks that the page has
-anything on it; an empty page says so (see "An empty page renders a message").
+display name, so `area salone` (named "Soggiorno") opens `page:salone`. A Room
+Tile leads to the same page: tapping the tile opens it, and the chevron after
+its name says so. Its switch and dimmer control the light in place. Neither
+route checks that the page has anything on it; an empty page says so (see "An
+empty page renders a message").
 
 A Topic Page has no Area to stand for it, so it has a **Page Opener**: an
 `input_button` whose object id names the page. `input_button.sicurezza` opens
@@ -177,7 +188,8 @@ Every placed `input_button` is a Page Opener.
 
 | a Page Opener in… | renders as |
 | --- | --- |
-| `left`, `right`, `footer` | the same block an Area gets in `footer`, with the helper's name and icon. Tapping it opens its page. |
+| `left`, `right` | the same block an Area gets in `footer`, with the helper's name and icon. Tapping it opens its page. |
+| `footer` | an item of the Dock: its icon over its name. Tapping it opens its page. |
 | `glance` | a visible fault tile, as an Area there does: neither has a shape in `glance`. |
 
 Areas and Page Openers navigate, and so do three Derived routes. None of them
@@ -186,7 +198,7 @@ is labelled:
 - **The camera glance** opens the page its cameras' Feeds are on (above).
 - **A footer member.** An entity in `footer` that is also placed in `left` or
   `right` on another page gets a chevron at its end, and a swipe right, to
-  that page, as a row does. Tapping the entity itself still does its own
+  that page. Tapping the entity itself still does its own
   action. `media_player.ovunque` in `page:main:footer` and in
   `page:media:left` is the transport strip with a chevron to `page:media`.
   An entity placed nowhere else in `left` or `right` gets no chevron.
@@ -210,22 +222,33 @@ hierarchy and no back stack. Going from one Area page to another is always
 corridoio page. The renderer skips it. This matters more than it used to:
 placing every Area in every page's footer is now one label each, and the
 self-referential one falls out of that move by accident every time. **A Page
-Opener does not appear on its own page** either, in any region:
-`input_button.clima` is skipped on `page:clima`.
+Opener does not appear on its own page** either, in `left` or `right`:
+`input_button.clima` is skipped there on `page:clima`. In the Dock it stays,
+marked as the current page (below).
+
+### The Dock
+
+The right half of the floor is the **Dock**: a fixed bar of destinations, each
+its icon over its name. Its first item is always **Casa**, supplied by the
+renderer, which opens `page:main`. After it come the Page Openers placed in
+that page's `footer`, in label-registry order. The item for the current page
+stays in the Dock and is marked as current -- on `page:main`, Casa; on
+`page:clima`, `input_button.clima`. This is the one place a Page Opener is not
+skipped on its own page: the Dock answers "where am I?", and an item that
+vanished on its own page could not.
+
+On `page:main`, a Dock that would hold only Casa is not shown: one highlighted
+item that goes nowhere is a dead control. On every other page it is always
+shown, even with Casa alone, because Casa is the way home. A page shown as a
+Popup has no Dock: its close button is the way out (see "Popups", below).
 
 ### Getting back
 
-You do not label a way home. On every page except `page:main`, the renderer
-prepends a "Casa" block to the footer, in front of whatever you placed there.
-Tapping it returns to `page:main`. `page:main` itself never gets one — it has
-nowhere to go back to. A page shown as a Popup doesn't get one either: its close
-button is the way out (see "Popups", below).
-
-This is the one piece of the panel's layout that is not declared by a label:
-every page needs a way out, and a page whose house-editor forgot to label a
-way home would otherwise be a dead end. So the renderer supplies it,
-unconditionally, on every page but the one that doesn't need it. (On a phone
-there is no "Casa" block: see "On a phone", below.)
+You do not label a way home. Casa, in the Dock, is the one piece of the
+panel's navigation that is not declared by a label: every page needs a way
+out, and a page whose house-editor forgot to label a way home would otherwise
+be a dead end. So the renderer supplies it, unconditionally. (On a phone there
+is no Dock: see "On a phone", below.)
 
 The panel also returns to `page:main` by itself: after 240 seconds with no
 touch on a page other than `page:main`, it navigates home on its own. The
@@ -237,8 +260,9 @@ A phone doesn't do this.
 
 `glance` resolves per page, exactly like every other region: it is whatever
 is placed into `page:<current>:glance`. A page with nothing placed in `glance`
-has no glance quadrant, and `right` takes the width of the panel — the same
-collapse the helper toggle below produces. If you want the house's verdict —
+has no glance quadrant — the same collapse the helper toggle below produces.
+`left` stays where it is: the left column goes only when `left` is empty too,
+and then `right` takes the width of the panel. If you want the house's verdict —
 temperature, alarm, faults — visible on a page other than `page:main`, label
 those entities into that page's glance too. A second placement label on the
 same entity is exactly how: `page:main:glance` and `page:clima:glance`
@@ -247,12 +271,62 @@ side by side. Nothing carries over automatically.
 `glance` is *also* gated by a Home Assistant helper entity — a toggle,
 changeable from a phone without rebuilding the frontend. With the toggle off,
 the glance quadrant is not rendered on any page, regardless of what is
-labelled into it, and `right` takes the width of the panel.
+labelled into it. `left` is unaffected, and `right` takes the width of the
+panel wherever `left` is empty.
+
+### The chips
+
+The status bar's chips are `glance`'s reports, in this order: a **Fault**, an
+**open way in**, the **cameras**, the **alarm** -- each only when there is one
+to show. Lit zones are not a chip: the lights stat says how many are on, in
+`accent` while any is. The row is never capped. On a day with all four it is
+longer than the design's usual three, because a Concern hidden to keep the
+row short would be a lie.
+
+## Groups and the Room Grid
+
+A **Group** is a Home Assistant **Group helper** (Settings → Helpers → Group),
+Placed like any entity. It renders as one titled card: the helper's name is
+the title, and its members -- the helper's `entity_id` attribute -- are the
+rows, each in the shape its own Domain takes in that Region. The members need
+no placement labels of their own. [ADR-0014](adr/0014-groups-are-group-helpers.md)
+records why.
+
+```yaml
+lock.accessi:   [page:main:left]   # a Lock group: Cancello, Cancelletto
+```
+
+- **One Domain per Group**, because Home Assistant's helper allows no more.
+- **The helper's own state and controls are never shown.** A lock Group opened
+  from the panel would open every gate at once; the card shows only its
+  members, and still shows them when the helper itself is Unavailable.
+- **`left` and `right` only.** A Group in `footer` or `glance` is a fault
+  tile naming it.
+- **A member is shown once.** Placed on its own in the same region of the
+  same page as its Group, it renders only inside the card. Placed anywhere
+  else, it renders there as usual.
+- **An Unavailable member** is a Fault in its own row of the card.
+
+A Group holds entities, never Areas. The Areas placed in a region instead form
+that region's **Room Grid**: their Room Tiles together, under the title
+*Stanze*, with *Spegni tutto* beside it. *Spegni tutto* turns off every light
+in every one of those Areas, and is not a control while none is on.
+
+The grid sizes itself to the number of Areas, and the tiles fill the region's
+height:
+
+| Areas | grid |
+| --- | --- |
+| 1–3 | one row, one column each |
+| 4–8 | two rows, half as many columns, rounded up -- 6 is 3×2, 5 is 3 + 2 |
+| 9 or more | four columns; the region scrolls, with a fade while more is below |
+
+An incomplete last row keeps the others' tile width and aligns left.
 
 ## Ordering
 
-Within a region: **Areas first, then entities.** Each group in its own Home
-Assistant registry sort order.
+Within a region: **the Room Grid first, then Groups, then the remaining
+entities.** Each in its own Home Assistant registry sort order.
 
 Each page×region is filled independently, so a thing with several placements
 takes its place in each region's order separately. Exact duplicates are
@@ -261,18 +335,19 @@ region once.
 
 This is a total order and it has a consequence worth stating plainly: an entity
 can never be placed between two Areas in the same region. A media player in the
-footer always follows every Area block there. If you need a different order,
+footer always follows every Area block there. In `footer` the order applies to
+what sits beside the Dock; the Dock keeps its own (above). If you need a different order,
 reorder the registries.
 
 ## `main`
 
 The first of the Derived rules. The others are a camera's motion and where
 something leads (see "The region decides the shape"). An Area rendered as a
-row in `right` has to know which light its slider drives and which entity
+Room Tile has to know which light its switch and dimmer drive and which entity
 reports its temperature. It takes them from the entities in that Area
 carrying the `main` label.
 
-`main` places nothing on its own. It is only consulted when an Area row
+`main` places nothing on its own. It is only consulted when a Room Tile
 collapses its Area.
 
 ## `ignored`
@@ -314,7 +389,7 @@ two are not distinguished: the message is true either way, and what you do next
 — go and look at the labels — is the same.
 
 The footer block that opens it still renders and still works; only the page
-on the other side of the tap is empty. It still gets the "Casa" block
+on the other side of the tap is empty. It still gets the Dock and its Casa
 described above, the same as any other page — a page with nothing on it is
 exactly the page you least want to be stuck on.
 
@@ -328,22 +403,22 @@ panel. A mistyped object id does the same, so the mistake is visible.
 Casa Carina's home screen, as the protocol expresses it:
 
 ```yaml
-# The Salone row: name, lights-on count, slider, temperature.
+# The Salone Room Tile: name, lights-on count, switch, dimmer, temperature.
 area salone:            [page:main:right]
-light.luci_salone:      [main]              # drives the row's slider
-climate.salone_termo:   [main]              # reports the row's temperature
+light.luci_salone:      [main]              # the tile's switch and dimmer
+climate.salone_termo:   [main]              # reports the tile's temperature
 
 # One specific light, standing alone next to that row.
 light.led_cucina:       [page:main:right]
 
-# The gates, in the bottom-left quadrant.
-lock.esterno_cancello:     [page:main:left]
-lock.esterno_cancelletto:  [page:main:left]
+# The gates, as the Accessi card in the left column: a Lock group helper
+# whose members are the two gates. The gates themselves carry no placement.
+lock.accessi:              [page:main:left]
 
-# Esterno itself is not labelled at all, so it has no row. It is on the
+# Esterno itself is not labelled at all, so it has no Room Tile. It is on the
 # panel as its gates and its cameras, which is what that Area is.
 
-# The footer: media, and a block that opens the corridoio page.
+# The footer: media, and a block that opens the corridoio page, beside the Dock.
 media_player.ovunque:   [page:main:footer]
 area corridoio:         [page:main:footer]   # tap -> page:corridoio
 
@@ -423,13 +498,13 @@ A Popup does not use the 2x2. The regions are read like this:
 | `glance` | not shown. A Popup has no glance quadrant, as if the helper toggle were off. |
 
 Everything in the bottom row keeps its own region's rendering contract: a lock
-is a gate, an Area in `left` or `right` is a row, and an Area in `footer` is
+is a gate, a Group is its card, an Area in `left` or `right` is a Room Tile, and an Area in `footer` is
 the block that opens its page.
 
 Across the top: the title on the left and a round close button on the right.
 The title is the Area's name when the page is an Area's page (`salone` reads
 "Soggiorno"), and otherwise the page name itself, capitalised: `citofono` reads
-"Citofono". There is **no "Casa" block**: the close button is the way out, and
+"Citofono". There is **no Dock and no clock**: the close button is the way out, and
 tapping the background does nothing.
 
 At 1280x800 the bottom row holds three gates at full width. A fourth fits by
@@ -591,10 +666,10 @@ nothing about labelling changes:
 
 A tab with nothing placed in its Regions on `page:main` is not shown.
 
-Tapping a Row's chevron, swiping it, or tapping a footer block opens that Page
+Tapping a Room Tile or a footer block opens that Page
 *inside the tab you are on*, with a back arrow at the top. It shows all the
 Page's Regions in one column: `glance`, `left`, `right`, `footer`. There is no
-"Casa" block on a phone. The back arrow, the phone's back gesture and the tab
+Dock on a phone. The back arrow, the phone's back gesture and the tab
 bar are the way home. Each tab keeps its own place, and tapping the tab you
 are on goes back to its root. The phone does not return to `page:main` by
 itself after 240 seconds. Popups open on a phone too.
