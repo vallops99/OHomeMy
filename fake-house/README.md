@@ -43,6 +43,7 @@ generator picks per domain. All three routes produce genuine entities:
 | lock over a button (`button_lock`) | `template` lock that presses the button; the real house needs the same wrapper (docs/protocol.md, "Popups") |
 | binary_sensor with `device_of` | `template` **helper** (a config entry) linked to that entity's device, created by `apply-registry.py` |
 | input_button (a Page Opener) | a YAML `input_button`, keyed by its object id: a helper the real house needs too, not a fake |
+| `group` (a Group, ADR-0014) | the `group` platform's YAML form over the manifest's `members`: the same entity a Group helper made in Home Assistant's UI is, and one the real house needs too, not a fake |
 | `external` | nothing: a real entity from a real integration (the met.no weather), only labelled |
 
 A camera's motion is the motion sensor on the camera's own device (CONTEXT.md,

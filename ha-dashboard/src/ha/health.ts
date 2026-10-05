@@ -13,6 +13,7 @@
  * on. Everything else is not an answer to this question and belongs in a
  * secondary view.
  */
+import { groupMemberIds } from './placement';
 import type { Area, Entity } from './types';
 
 /** Worst first: the panel shows the highest-ranked concern it finds. */
@@ -62,6 +63,9 @@ export type HouseReport = {
  */
 const NEVER_FAULT = new Set(['event', 'person', 'tts', 'button', 'input_button', 'update', 'stt', 'conversation']);
 
+/** Whether the house has put this somewhere the dashboard could render it: an Area, or a Label. */
+const isPlaced = (e: Entity) => e.areaId !== null || e.labels.length > 0;
+
 /**
  * Whether a fault in this entity is one the panel should report.
  *
@@ -70,8 +74,13 @@ const NEVER_FAULT = new Set(['event', 'person', 'tts', 'button', 'input_button',
  * not actionable from here and belongs to Home Assistant's own repairs page.
  * This is the same backend-driven rule as everywhere else -- the house says
  * what it contains by putting things in Areas and giving them Labels.
+ *
+ * A Group's members need neither (ADR-0014): the Group's card shows them,
+ * so a member of a Group the house has placed is rendered, and `grouped`
+ * holds their ids.
  */
-const isReportableFault = (e: Entity) => e.unavailable && !NEVER_FAULT.has(e.domain) && (e.areaId !== null || e.labels.length > 0);
+const isReportableFault = (e: Entity, grouped: Set<string>) =>
+  e.unavailable && !NEVER_FAULT.has(e.domain) && (isPlaced(e) || grouped.has(e.id));
 
 /** A door, window or gate standing open is a way into the house. */
 const OPENING_CLASSES = new Set(['door', 'window', 'garage', 'opening']);
@@ -101,10 +110,19 @@ const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 function concerns(entities: Entity[]): Health[] {
   const out: Health[] = [];
 
+  // A Group helper is never shown, only its members (ADR-0014), and they
+  // report for it: an Unavailable helper is not a Fault of its own, and an
+  // unlocked one would count its open gate twice. It stays in for the lit
+  // Concern, where a `main` light that is a light group is what a Room Tile
+  // drives.
+  const helpers = entities.filter(e => groupMemberIds(e) !== null);
+  const grouped = new Set(helpers.filter(isPlaced).flatMap(e => groupMemberIds(e) ?? []));
+  const shown = entities.filter(e => groupMemberIds(e) === null);
+
   // Unavailable first: an entity Home Assistant cannot reach means the panel
   // does not actually know whether the house is okay, which outranks
   // everything it does know (map Notes).
-  const faults = entities.filter(isReportableFault);
+  const faults = shown.filter(e => isReportableFault(e, grouped));
   if (faults.length > 0) {
     out.push({
       level: 'fault',
@@ -118,7 +136,7 @@ function concerns(entities: Entity[]): Health[] {
     });
   }
 
-  const open = entities.filter(e => isOpenDoor(e) || isOpenGate(e));
+  const open = shown.filter(e => isOpenDoor(e) || isOpenGate(e));
   if (open.length > 0) {
     out.push({
       level: 'open',

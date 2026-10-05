@@ -6,7 +6,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { openerPage, placedPageFor, resolvePage, type PageLayout, type Region } from './placement';
+import { groupMemberIds, openerPage, placedPageFor, resolvePage, type PageLayout, type Region } from './placement';
 import type { Area, Entity } from './types';
 
 const entity = (id: string, labels: string[]): Entity => ({
@@ -30,7 +30,13 @@ const ids = (layout: PageLayout): Record<Region, string[]> =>
   Object.fromEntries(
     Object.entries(layout).map(([region, placed]) => [
       region,
-      placed.map(p => (p.kind === 'area' ? `area:${p.area.id}` : `entity:${p.entity.id}`)),
+      placed.map(p =>
+        p.kind === 'area'
+          ? `area:${p.area.id}`
+          : p.kind === 'group'
+            ? `group:${p.entity.id}[${p.members.map(m => m.id).join(',')}]`
+            : `entity:${p.entity.id}`
+      ),
     ])
   ) as Record<Region, string[]>;
 
@@ -222,4 +228,88 @@ test('a Page Opener’s own Page is compared by slug', () => {
   const opener = entity('input_button.sala_tv', ['page_sala_tv_footer']);
 
   assert.deepEqual(ids(resolvePage([], entities(opener), 'sala-tv')), empty);
+});
+
+// ---- Groups (ADR-0014) ----
+
+/** A Group helper: a Placed entity whose `entity_id` attribute names its members. */
+const group = (id: string, members: string[], labels: string[]): Entity => ({ ...entity(id, labels), attributes: { entity_id: members } });
+
+test('an entity with an `entity_id` attribute is a Group, its members in the attribute’s order', () => {
+  assert.deepEqual(groupMemberIds(group('lock.accessi', ['lock.b', 'lock.a'], [])), ['lock.b', 'lock.a']);
+});
+
+test('an Unavailable Group, which has lost `entity_id`, is still one through `group_entities`', () => {
+  const helper = {
+    ...entity('lock.accessi', []),
+    state: 'unavailable',
+    unavailable: true,
+    attributes: { group_entities: ['lock.a', 'lock.b'] },
+  };
+  assert.deepEqual(groupMemberIds(helper), ['lock.a', 'lock.b']);
+});
+
+test('an entity without one is not a Group', () => {
+  assert.equal(groupMemberIds(entity('lock.cancello', [])), null);
+  assert.equal(groupMemberIds({ ...entity('lock.cancello', []), attributes: { entity_id: 'lock.a' } }), null);
+});
+
+test('a Placed Group carries its members, in the attribute’s order, which need no Labels', () => {
+  const cancello = entity('lock.cancello', []);
+  const cancelletto = entity('lock.cancelletto', []);
+  const accessi = group('lock.accessi', ['lock.cancelletto', 'lock.cancello'], ['page_main_left']);
+
+  assert.deepEqual(ids(resolvePage([], entities(cancello, cancelletto, accessi), 'main')), {
+    ...empty,
+    left: ['group:lock.accessi[lock.cancelletto,lock.cancello]'],
+  });
+});
+
+test('a member the dashboard does not have is left out of its Group', () => {
+  const cancello = entity('lock.cancello', []);
+  const accessi = group('lock.accessi', ['lock.cancello', 'lock.ignorato'], ['page_main_left']);
+
+  assert.deepEqual(ids(resolvePage([], entities(cancello, accessi), 'main')).left, ['group:lock.accessi[lock.cancello]']);
+});
+
+test('a member Placed on its own in its Group’s Region shows only inside the card', () => {
+  const cancello = entity('lock.cancello', ['page_main_left']);
+  const accessi = group('lock.accessi', ['lock.cancello'], ['page_main_left']);
+
+  assert.deepEqual(ids(resolvePage([], entities(cancello, accessi), 'main')).left, ['group:lock.accessi[lock.cancello]']);
+});
+
+test('a member Placed anywhere else renders there as usual', () => {
+  const cancello = entity('lock.cancello', ['page_main_right', 'page_citofono_left']);
+  const accessi = group('lock.accessi', ['lock.cancello'], ['page_main_left']);
+
+  assert.deepEqual(ids(resolvePage([], entities(cancello, accessi), 'main')), {
+    ...empty,
+    left: ['group:lock.accessi[lock.cancello]'],
+    right: ['entity:lock.cancello'],
+  });
+  assert.deepEqual(ids(resolvePage([], entities(cancello, accessi), 'citofono')).left, ['entity:lock.cancello']);
+});
+
+test('in footer and glance a Group has no card, so its members Placed there still render', () => {
+  const lamp = entity('light.lamp', ['page_main_footer']);
+  const luci = group('light.luci', ['light.lamp'], ['page_main_footer']);
+
+  assert.deepEqual(ids(resolvePage([], entities(lamp, luci), 'main')).footer, ['group:light.luci[light.lamp]', 'entity:light.lamp']);
+});
+
+test('within a Region: Areas, then Groups, then the remaining entities, each in registry order', () => {
+  const lamp = entity('light.lamp', ['page_main_left']);
+  const zeta = group('lock.zeta', [], ['page_main_left']);
+  const sensor = entity('sensor.t', ['page_main_left']);
+  const alfa = group('light.alfa', [], ['page_main_left']);
+  const ingresso = area('ingresso', ['page_main_left']);
+
+  assert.deepEqual(ids(resolvePage([ingresso], entities(lamp, zeta, sensor, alfa), 'main')).left, [
+    'area:ingresso',
+    'group:lock.zeta[]',
+    'group:light.alfa[]',
+    'entity:light.lamp',
+    'entity:sensor.t',
+  ]);
 });

@@ -66,6 +66,7 @@ class Builder:
         self.media_player: list = []
         self.camera: list = []
         self.climate: list = []
+        self.group: dict = {}
 
     # -- helper plumbing -------------------------------------------------
     def online_helper(self, e: dict) -> str:
@@ -383,6 +384,20 @@ class Builder:
         # its object id, which is what makes it `input_button.<id>`.
         self.input_button[e["id"].split(".", 1)[1]] = {"name": e["name"], "icon": e["icon"]}
 
+    def _group(self, e: dict) -> None:
+        # A Group helper (ADR-0014), which is not a fake of a device either:
+        # the real house makes the same one in Settings -> Helpers -> Group.
+        # Here it is the group platform's YAML form, the same entity with the
+        # same `entity_id` attribute, keyed by the members' Domain. Its name
+        # is what makes it `<domain>.<object id>`.
+        domain = e["id"].split(".", 1)[0]
+        self.group.setdefault(domain, []).append({
+            "platform": "group",
+            "name": e["name"],
+            "unique_id": slug(e["id"]),
+            "entities": e["members"],
+        })
+
     def _external(self, e: dict) -> None:
         # A real entity from a real integration (the met.no weather): there
         # is nothing to fake. apply-registry.py only labels it.
@@ -500,6 +515,8 @@ def main() -> int:
         write("climate", {"climate": b.climate})
     if b.camera:
         write("camera", {"camera": b.camera})
+    if b.group:
+        write("group", b.group)
 
     total = len(manifest["entities"])
     helpers = (len(b.input_boolean) + len(b.input_number) + len(b.input_select)

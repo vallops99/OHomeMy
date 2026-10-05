@@ -251,7 +251,7 @@ async def run(url: str, token: str, dry_run: bool) -> int:
                 # bootstrap-helpers.py created, whose unique_id we do control.
                 if entry is None:
                     for platform in ("template", "universal", "generic",
-                                     "generic_thermostat"):
+                                     "generic_thermostat", "group"):
                         entry = next((r for r in registry
                                       if (r.get("platform"), r.get("unique_id"))
                                       == (platform, slug(want_id))), None)

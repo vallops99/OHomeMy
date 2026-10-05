@@ -6,3 +6,10 @@
   0%, 100% { opacity: 0.45; }
   50% { opacity: 0.8; }
 }
+
+/* Casa Panel's press feedback (`cp-press`, #43): a quick scale to 0.96, and
+   a disabled control at 0.38 with none. Touch only, so no hover state. */
+.casa-press { cursor: pointer; transition: transform .12s ease, opacity .2s ease; -webkit-tap-highlight-color: transparent; }
+.casa-press:active:not(:disabled) { transform: scale(.96); }
+.casa-press:disabled { opacity: .38; cursor: default; }
+.casa-press:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }

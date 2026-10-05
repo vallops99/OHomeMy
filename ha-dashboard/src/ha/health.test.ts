@@ -79,3 +79,42 @@ test('a Page Opener never pressed is not a Fault', () => {
   const report = houseReport([down('input_button.clima', { state: 'unknown', areaId: null, labels: ['page_main_footer'] })]);
   assert.equal(report.verdict.level, 'ok');
 });
+
+// ---- Groups (ADR-0014) ----
+
+const accessi = (parts: Partial<Entity> = {}) =>
+  entity('lock.accessi', {
+    areaId: null,
+    labels: ['page_main_left'],
+    state: 'locked',
+    attributes: { entity_id: ['lock.cancello'] },
+    ...parts,
+  });
+
+test('an Unavailable member of a Placed Group is a Fault, though it carries no Area or Label', () => {
+  const report = houseReport([accessi(), down('lock.cancello', { areaId: null })]);
+  assert.equal(report.verdict.level, 'fault');
+  assert.deepEqual(
+    report.verdict.entities.map(e => e.id),
+    ['lock.cancello']
+  );
+});
+
+test('a member of a Group Placed nowhere is not rendered, so not a Fault', () => {
+  const report = houseReport([accessi({ labels: [] }), down('lock.cancello', { areaId: null })]);
+  assert.equal(report.verdict.level, 'ok');
+});
+
+test('a Group helper is never shown, so it is not a Fault when Unavailable', () => {
+  const report = houseReport([accessi({ state: 'unavailable', unavailable: true }), entity('lock.cancello', { state: 'locked' })]);
+  assert.equal(report.verdict.level, 'ok');
+});
+
+test('an open gate is counted once, not again through its Group', () => {
+  const report = houseReport([accessi({ state: 'unlocked' }), entity('lock.cancello', { state: 'unlocked' })]);
+  assert.equal(report.verdict.level, 'open');
+  assert.deepEqual(
+    report.verdict.entities.map(e => e.id),
+    ['lock.cancello']
+  );
+});

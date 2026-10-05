@@ -13,7 +13,6 @@ export { Strip, type StripProps } from './Strip';
 export { Slider, type SliderProps } from './Slider';
 export { Icon, DOMAIN_ICON, type IconProps } from './Icon';
 export { RoomRow, type RoomRowProps } from './RoomRow';
-export { GateSlab, type GateSlabProps } from './GateSlab';
 export { ToggleTile, type ToggleTileProps } from './ToggleTile';
 export { Hero, type HeroProps } from './Hero';
 export { Stats, type StatsProps } from './Stats';

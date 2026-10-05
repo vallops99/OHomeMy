@@ -22,7 +22,7 @@ export {
 } from './registry';
 export { houseReport, houseTemperature, houseHumidity, type Health, type HealthLevel, type HouseReport } from './health';
 export { useActions, type Actions } from './actions';
-export { resolvePage, placedPageFor, openerPage, type Region, type Placed, type PageLayout } from './placement';
+export { resolvePage, placedPageFor, openerPage, groupMemberIds, type Region, type Placed, type PageLayout } from './placement';
 export { cameraMoving } from './motion';
 export { climateHumidity } from './climateHumidity';
 export { useFeed, type Feed } from './useFeed';
