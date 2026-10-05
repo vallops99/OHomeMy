@@ -22,14 +22,28 @@
  * composes all four Regions and the `Panel` shell around them, so it is the
  * natural place to decide *which* Page's Regions are being composed this
  * render. `NavigationContext` (`src/ui/NavigationContext.tsx`) carries that
- * decision down to the two footer blocks that need to change it
- * (`AreaOpenerBlock`, `HomeBlock`) without threading an `openPage` prop
+ * decision down to what needs to change it (`AreaOpenerBlock`, the Dock,
+ * the Room Rows) without threading an `openPage` prop
  * through `PlacementView`'s every Region branch -- see that file's header
  * comment for the full reasoning on why a context and not prop-threading.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useActions, usePage, useEntityState } from './ha';
-import { EmptyPageMessage, IDLE_RETURN_MS, isPhone, NavigationProvider, Panel, PhoneShell, PlacementView, Popup, popupPage } from './ui';
+import {
+  besideDock,
+  Clock,
+  Dock,
+  dockItems,
+  EmptyPageMessage,
+  IDLE_RETURN_MS,
+  isPhone,
+  NavigationProvider,
+  Panel,
+  PhoneShell,
+  PlacementView,
+  Popup,
+  popupPage,
+} from './ui';
 
 /** The Page the panel opens on, and the one Page the idle timer below never fires on. */
 const MAIN_PAGE = 'main';
@@ -168,6 +182,12 @@ function Dashboard() {
   // docs/protocol.md's "malformed placement renders nothing" rule.
   const isEmpty = Object.values(page).every(placed => placed.length === 0);
 
+  // `footer` splits across the floor (#41): its Page Openers go to the Dock,
+  // after Casa, and everything else sits beside it. Only the wall has a
+  // Dock; a phone and a Popup take `footer` whole.
+  const dock = dockItems(page.footer, currentPage);
+  const beside = besideDock(page.footer);
+
   // Over the Page, not instead of it: the Page underneath stays mounted
   // and running, and the idle return above keeps its own clock -- if it
   // fires, the panel goes home under the Popup, which stays on top. A
@@ -186,18 +206,23 @@ function Dashboard() {
   return (
     <NavigationProvider value={{ page: currentPage, openPage }}>
       <Panel
-        glance={glanceOn && glancePlaced ? <PlacementView region='glance' placed={page.glance} /> : undefined}
+        clock={<Clock />}
+        // `glance` splits across the frame (#41): its chips in the status
+        // bar, the rest at the top of the left column. Both go together.
+        chips={glanceOn && glancePlaced ? <PlacementView region='glance' placed={page.glance} part='chips' /> : undefined}
+        glance={glanceOn && glancePlaced ? <PlacementView region='glance' placed={page.glance} part='column' /> : undefined}
         // Passed only when something is Placed there: `Panel` keeps the left
         // column while `glance` or `left` is present, so `left` survives a
         // Page with nothing in `glance` and the toggle alike.
         left={page.left.length > 0 ? <PlacementView region='left' placed={page.left} /> : undefined}
         right={isEmpty ? <EmptyPageMessage /> : <PlacementView region='right' placed={page.right} />}
-        // The footer is never swapped for the empty-Page message, even when
-        // `isEmpty` is true: `PlacementView` already renders the `HomeBlock`
-        // for any non-main Page regardless of what is Placed in `footer`
-        // (it is not Placed itself, see PlacementView.tsx), so the way home
-        // survives exactly the situation decision 6 exists to guard against.
-        footer={<PlacementView region='footer' placed={page.footer} />}
+        footer={beside.length > 0 ? <PlacementView region='footer' placed={beside} /> : undefined}
+        // The Dock is never swapped for the empty-Page message, even when
+        // `isEmpty` is true: Casa is not Placed (`dock.ts`), so it is there
+        // on every Page but `page:main` whatever is Placed in `footer`, and
+        // the way home survives exactly the situation decision 6 exists to
+        // guard against.
+        dock={dock === null ? undefined : <Dock items={dock} />}
       />
       {popupLayer}
     </NavigationProvider>

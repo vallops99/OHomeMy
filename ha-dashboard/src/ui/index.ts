@@ -9,6 +9,9 @@
  */
 export { Tile, type TileProps } from './Tile';
 export { Panel, type PanelProps } from './Panel';
+export { Clock } from './Clock';
+export { Dock } from './Dock';
+export { besideDock, dockItems, type DockItem } from './dock';
 export { Strip, type StripProps } from './Strip';
 export { Slider, type SliderProps } from './Slider';
 export { Icon, DOMAIN_ICON, type IconProps } from './Icon';

@@ -8,6 +8,9 @@
  * Region's Rendering contract via `PlacementView`. The header carries the
  * title, the Feed's status, and the one way out, the close button.
  *
+ * It never goes through `Panel`'s frame, so it has no Clock and no Dock
+ * (#41): a footer's Page Openers here are blocks, as on a phone.
+ *
  * The background is the camera's live Feed (#29), its session opened when
  * the Popup mounts and closed when it unmounts -- for the Ring, a cloud
  * session that keeps the doorbell streaming, so it must not outlive the
@@ -190,7 +193,7 @@ export function Popup({ page, onClose, onActivity }: PopupProps) {
                   flexDirection: 'column',
                 }}
               >
-                <PlacementView region={slot.region} placed={slot.placed} home={false} />
+                <PlacementView region={slot.region} placed={slot.placed} />
               </div>
             ))}
           </div>

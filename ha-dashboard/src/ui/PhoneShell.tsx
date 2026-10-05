@@ -40,8 +40,10 @@ const column: CSSProperties = { display: 'flex', flexDirection: 'column', gap: t
 
 /**
  * Regions in order, each as the wall renders it, stacked. The footer's blocks
- * wrap rather than run off the screen, and never carry the "Casa" block: the
- * header's back arrow and the tab bar are the way home here.
+ * wrap rather than run off the screen. There is no Dock (#41): the header's
+ * back arrow and the tab bar are the way home here, so the footer's Page
+ * Openers stay blocks among the rest, as `PlacementView` draws them where no
+ * Dock takes them.
  */
 function Regions({ regions, layout, glanceOn }: { regions: Region[]; layout: Record<Region, Placed[]>; glanceOn: boolean }) {
   return regions.map(region => {
@@ -51,7 +53,7 @@ function Regions({ regions, layout, glanceOn }: { regions: Region[]; layout: Rec
     if (region === 'footer')
       return (
         <div key={region} style={{ display: 'flex', flexWrap: 'wrap', gap: t.space.sm, minHeight: t.layout.footerH }}>
-          <PlacementView region={region} placed={placed} home={false} />
+          <PlacementView region={region} placed={placed} />
         </div>
       );
     return (

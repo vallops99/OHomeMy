@@ -51,8 +51,8 @@
  *     `NavigationContext`. Before #14 this block rendered enabled-looking but
  *     inert, admitting as much through its `title`; that admission is gone
  *     because it is no longer true, but the principle behind it survives
- *     unchanged and now governs two other decisions in this file: see
- *     `HomeBlock` and `EmptyPageMessage` below for where it resurfaces. That
+ *     unchanged and now governs another decision in this file: see
+ *     `EmptyPageMessage` below for where it resurfaces. That
  *     principle, inherited from the deleted `NavBar.tsx`
  *     (#8) and worth restating here since nothing points at that file any
  *     more: **a dead control that looks live is worse than one that admits
@@ -62,15 +62,20 @@
  *     the house's owner, so the control has to be discoverable and
  *     unambiguous without a hidden gesture, and it must not overload a tile
  *     whose press already toggles a light.
- *   - a Page Opener -> the same block as an Area, opening its Page.
+ *   - a Page Opener -> on the wall, an item of the Dock (#41): `Dashboard`
+ *     splits it off with `besideDock`/`dockItems` (`dock.ts`) before this
+ *     file sees the footer, so it never reaches here. On a phone, which has
+ *     no Dock, and in a Popup, which has none either, it is still the same
+ *     block as an Area, opening its Page -- and there it is skipped on its own
+ *     Page, as it is in `left` and `right`: the Dock is the one place it
+ *     stays, marked current, and these have no Dock.
  *   - any other entity -> the same `entitySlot` dispatch as `left` and
  *     `right` (`media_player` -> `MediaBar`). Its tap stays its own. When the
  *     same entity is also Placed in `left` or `right` on another Page, it
  *     gains a trailing chevron and a right swipe to that Page (#32,
  *     `FooterMember`), as the Row did; with no such Page, nothing is added.
- *   - additionally, on every Page that is not `page:main`: a `HomeBlock`,
- *     prepended before anything Placed. See its own comment below for why it
- *     exists and why it sits outside the Areas-then-entities order.
+ *   - the renderer's own way home is no longer here: it is Casa, the Dock's
+ *     first item (#41, `Dock.tsx`), so the footer holds only what is Placed.
  *
  * `glance`:
  *   - **Judgement call, since neither docs/protocol.md nor ADR-0005 specifies
@@ -98,6 +103,9 @@
  *     one `CameraGlance`, the motion glance that opens its cameras' Feeds
  *     (#29). Since #32 a tap on `Hero` opens the Page its `climate` is
  *     Placed on, and a tap on `Stats` the Page of its power `sensor`.
+ *   - on the wall `glance` is split across the frame (#41): its chips go to
+ *     the status bar and the rest to the top of the left column, so `Panel`
+ *     asks for each half by `part`. A phone takes it whole, in one column.
  */
 import type { ReactNode } from 'react';
 import {
@@ -115,10 +123,12 @@ import {
   type Placed,
   type Region,
 } from '../ha';
+import { slugify } from '../ha/placement';
 import { AlarmPanel } from './AlarmPanel';
 import { AlarmTile } from './AlarmTile';
 import { BinarySensorBlock, BinarySensorTile } from './BinarySensorTile';
 import { CameraGlance } from './CameraGlance';
+import { openerIcon } from './dock';
 import { ClimateBlock, ClimateCard } from './ClimateCard';
 import { ChipRow } from './ChipRow';
 import { FaultTile } from './FaultTile';
@@ -204,9 +214,9 @@ function entitySlot(entity: Entity, region: Exclude<Region, 'glance'>) {
 }
 
 /**
- * A block that opens a Page: what an Area becomes in `footer` (#14), what a
- * Page Opener is in `left`, `right` or `footer` (ADR-0012), and the
- * renderer's own "Casa" block. Built here rather than as its own `src/ui/`
+ * A block that opens a Page: what an Area becomes in `footer` (#14), and what
+ * a Page Opener is in `left` and `right` (ADR-0012) -- and in `footer` where
+ * there is no Dock. Built here rather than as its own `src/ui/`
  * component, because nothing outside this file renders one.
  *
  * Modelled on `GateSlab`'s slab shape (full tappable surface, icon over
@@ -302,43 +312,7 @@ function AreaOpenerBlock({ area }: { area: Area }) {
  */
 function PageOpenerBlock({ entity, page }: { entity: Entity; page: string }) {
   const { openPage } = useNavigation();
-  const icon =
-    typeof entity.attributes.icon === 'string' && entity.attributes.icon ? entity.attributes.icon : 'mdi:arrow-right-bold-box-outline';
-  return <PageBlock name={entity.name} icon={icon} title={`Apri ${entity.name}`} onOpen={() => openPage(page)} />;
-}
-
-/**
- * The renderer-supplied home block (#14, decision 2): not Placed by any
- * Label, prepended to the footer of every Page except `page:main` itself.
- *
- * Why this is the one exception to "the frontend holds no layout"
- * (CONTEXT.md, ADR-0005): every other Page exists because an Area or entity
- * was labelled `page:<name>`, but nothing symmetric labels a way *back*.
- * Without this block, each new Page is a dead end the moment someone taps
- * into it unless whoever is labelling the house remembers to also place a
- * `page:main` block pointing at it -- and forgetting one traps whoever is
- * standing at the panel next, on a wall-mounted pane with no back gesture
- * (#8 ruled that out for the same discoverability reason the deleted `NavBar.tsx`
- * originally chose a bar) and no address bar to type their way out of.
- * Decision 5 (flat navigation, no history stack) makes "go home" the only
- * universal escape, so the renderer supplies it itself rather than trust it
- * to be labelled correctly on every Page, forever.
- *
- * It does not violate docs/protocol.md's ordering rule ("Areas first, then
- * entities, each in registry order"): that rule governs *Placed* things, and
- * this block is not Placed -- it carries no Placement Label, is
- * not read from any registry, and does not appear in the `Placed[]`
- * `usePage` hands to `PlacementView`. It is prepended in
- * `PlacementView`'s render below, outside and before the ordered list, which
- * is why it can sit before every Area block without bending the order those
- * blocks are in.
- *
- * The same block as an Area's, told apart as *home*: `mdi:home` and the
- * Italian "Casa" rather than an Area's icon and name.
- */
-function HomeBlock() {
-  const { openPage } = useNavigation();
-  return <PageBlock name='Casa' icon='mdi:home' title='Torna alla pagina principale' onOpen={() => openPage('main')} />;
+  return <PageBlock name={entity.name} icon={openerIcon(entity)} title={`Apri ${entity.name}`} onOpen={() => openPage(page)} />;
 }
 
 /**
@@ -430,7 +404,7 @@ function FooterMember({ entity, labelOrder, children }: { entity: Entity; labelO
  *     always did, is what keeps that ranking intact rather than narrowing it
  *     to whatever happens to be labelled into `glance`.
  */
-function GlanceView({ placed, labelOrder }: { placed: Placed[]; labelOrder: Label[] }) {
+function GlanceView({ placed, labelOrder, part }: { placed: Placed[]; labelOrder: Label[]; part?: GlancePart }) {
   const entities = useEntities();
   const watts = usePower();
   const { page, openPage } = useNavigation();
@@ -484,6 +458,10 @@ function GlanceView({ placed, labelOrder }: { placed: Placed[]; labelOrder: Labe
   const lightsOn = [...entities.values()].filter(e => e.domain === 'light' && e.labels.includes('main') && e.state === 'on').length;
   const report = houseReport([...entities.values()]);
 
+  // Keyed on the Page: leaving it closes any Concern list open from here (#30).
+  const chips = <ChipRow key={page} report={report} alarm={alarm} />;
+  if (part === 'chips') return chips;
+
   return (
     // The glance block holds its own height and never scrolls (ADR-0007).
     //
@@ -509,6 +487,10 @@ function GlanceView({ placed, labelOrder }: { placed: Placed[]; labelOrder: Labe
     // scroller it existed to tame. `ChipRow` keeps its own *horizontal*
     // snapping, which is a different mechanism for a different overflow --
     // more concerns than fit on one line (see ChipRow.tsx).
+    //
+    // On the wall the chips are not here at all: they are the status bar's
+    // (#41), and this block is the top of the left column. What follows is
+    // the order on a phone, which takes `glance` whole.
     //
     // The order stays Hero -> ChipRow -> Stats, which was variant D's
     // hero/stats/chips reversed when this block became a scroller ("whatever
@@ -538,10 +520,7 @@ function GlanceView({ placed, labelOrder }: { placed: Placed[]; labelOrder: Labe
       <div style={{ flexShrink: 0 }}>
         <Stats lightsOn={lightsOn} watts={placedWatts ?? watts} onOpen={powerPage === null ? undefined : () => openPage(powerPage)} />
       </div>
-      <div style={{ flexShrink: 0, paddingTop: 10 }}>
-        {/* Keyed on the Page: leaving it closes any Concern list open from here (#30). */}
-        <ChipRow key={page} report={report} alarm={alarm} />
-      </div>
+      {part === undefined && <div style={{ flexShrink: 0, paddingTop: 10 }}>{chips}</div>}
       {cameras.length > 0 && (
         <div style={{ flexShrink: 0, display: 'flex' }}>
           <CameraGlance
@@ -560,6 +539,9 @@ function GlanceView({ placed, labelOrder }: { placed: Placed[]; labelOrder: Labe
   );
 }
 
+/** Which half of `glance` the wall's frame is asking for (#41): see `PlacementView`. */
+type GlancePart = 'chips' | 'column';
+
 /**
  * One Region's contents, dispatched to its rendering contract.
  *
@@ -570,19 +552,20 @@ function GlanceView({ placed, labelOrder }: { placed: Placed[]; labelOrder: Labe
  * Cameras are pulled out ahead of the per-item dispatch and rendered as one
  * `Feeds`, in the slot the first camera occupied -- see the note on
  * `entitySlot` above. `useNavigation()` (#14) is read unconditionally
- * (hooks cannot be conditional) to know the current Page name: it decides
- * whether the `footer` Region also gets a `HomeBlock`, and it keys `Feeds`,
- * so which Feed is big starts over each time a Page is opened.
+ * (hooks cannot be conditional) to know the current Page name: it skips a
+ * footer's Page Opener on its own Page, and it keys `Feeds`, so which Feed is
+ * big starts over each time a Page is opened.
  *
- * `home={false}` drops that `HomeBlock` whatever the Page: a Popup has no
- * "Casa" block, because its close button is the way out (#28).
+ * `part` is for `glance` on the wall, which the frame splits in two (#41):
+ * `chips` for the status bar, `column` for the top of the left column.
+ * Without it, `glance` renders whole, as a phone stacks it.
  */
-export function PlacementView({ region, placed, home = true }: { region: Region; placed: Placed[]; home?: boolean }) {
+export function PlacementView({ region, placed, part }: { region: Region; placed: Placed[]; part?: GlancePart }) {
   const { page } = useNavigation();
   const labelOrder = useLabelOrder();
 
   if (region === 'glance') {
-    return <GlanceView placed={placed} labelOrder={labelOrder} />;
+    return <GlanceView placed={placed} labelOrder={labelOrder} part={part} />;
   }
 
   const cameras = placed.filter((p): p is { kind: 'entity'; entity: Entity } => p.kind === 'entity' && p.entity.domain === 'camera');
@@ -597,15 +580,6 @@ export function PlacementView({ region, placed, home = true }: { region: Region;
 
   return (
     <>
-      {/*
-        The home block, prepended before anything Placed -- see `HomeBlock`'s
-        own comment for why it exists and why sitting outside the ordered
-        `placed.map` below does not violate docs/protocol.md's ordering rule.
-        `page !== 'main'` is decision 2's stated exception: `page:main` is
-        already home, so a block that opens it there would be a control
-        pointing at the screen already on screen.
-      */}
-      {home && region === 'footer' && page !== 'main' && <HomeBlock key='home' />}
       {placed.map((item, i) => {
         if (item.kind === 'area') {
           if (region === 'footer') {
@@ -622,7 +596,13 @@ export function PlacementView({ region, placed, home = true }: { region: Region;
           if (i !== firstCameraIndex) return null;
           return <Feeds key={`feeds:${page}`} cameras={cameras.map(c => c.entity)} />;
         }
-        if (region === 'footer' && openerPage(item.entity) === null) {
+        const opens = openerPage(item.entity);
+        // A footer's Page Opener reaches here only where there is no Dock --
+        // a phone, a Popup -- and there it is a block, which on its own Page
+        // would open the Page already on screen. `resolvePage` keeps it in
+        // `footer` for the Dock, so the skip is made here.
+        if (region === 'footer' && opens !== null && slugify(opens) === slugify(page)) return null;
+        if (region === 'footer' && opens === null) {
           return (
             <FooterMember key={item.entity.id} entity={item.entity} labelOrder={labelOrder}>
               {entitySlot(item.entity, 'footer')}
@@ -652,7 +632,7 @@ export function PlacementView({ region, placed, home = true }: { region: Region;
  *
  * The distinction is the same one the deleted `NavBar.tsx` drew between an
  * unbuilt destination and a broken one, and its surviving principle applies
- * again here for the same reason `AreaOpenerBlock` and `HomeBlock` cite it: a
+ * again here for the same reason `AreaOpenerBlock` cites it: a
  * dead control that looks live is worse than one that admits it is not
  * there. Four silent, empty Regions would look like a rendering failure --
  * indistinguishable from the panel being broken -- while this message is the
@@ -660,14 +640,13 @@ export function PlacementView({ region, placed, home = true }: { region: Region;
  * panel looks broken; a message is an admission.
  *
  * `Dashboard.tsx` decides *when* to show this (all four Regions empty) and
- * is responsible for making sure the footer -- home block included -- still
- * renders around it: the footer's own `Placed[]` for this Page is part of
- * "all four Regions empty" too, but the `HomeBlock` is not Placed (see its
- * own comment) and so is unaffected by the Page having nothing Placed on it.
- * Every non-main Page therefore keeps its way home even when it has nothing
- * else -- exactly the trap decision 2 exists to prevent, and the reason this
- * message does not substitute for the footer, only for the four Regions'
- * absent content above it.
+ * is responsible for making sure the Dock still renders around it: the
+ * footer's own `Placed[]` for this Page is part of "all four Regions empty"
+ * too, but Casa is not Placed (`dock.ts`) and so is unaffected by the Page
+ * having nothing Placed on it. Every non-main Page therefore keeps its way
+ * home even when it has nothing else -- exactly the trap #14's decision 2
+ * exists to prevent, and the reason this message stands in for the body's
+ * absent content only, never for the floor.
  */
 export function EmptyPageMessage() {
   return (
