@@ -31,6 +31,7 @@
 import { useState } from 'react';
 import type { Entity, HealthLevel, HouseReport } from '../ha';
 import { ConcernList } from './ConcernList';
+import { isPhone } from './device';
 import { liveConcern } from './concernList';
 import { AlarmModal } from './AlarmModal';
 import { Icon } from './Icon';
@@ -89,23 +90,38 @@ export function ChipRow({ report, cameras, moving, onOpenCameras, alarm }: ChipR
     // ordering. The Fault leads, so the chip scrolled out of view is always
     // the least urgent one. `scrollSnapType` with `scrollSnapAlign` per chip
     // keeps the row resting on whole chips once it is scrolled.
+    //
+    // A phone wraps instead (#45). At 390 px the row holds one chip and a
+    // half: snapping rests it on whole chips only once it is scrolled, and
+    // at rest the second chip was cut mid-way with nothing to say it went
+    // on. A phone's column scrolls anyway, so the row's height being house
+    // state's there costs nothing, and every chip is shown whole.
+    //
+    // With no chip to show there is no row at all, so an empty one leaves
+    // no gap in the phone's column.
     <>
-      <div
-        style={{
-          display: 'flex',
-          gap: CHIP_GAP,
-          minWidth: 0,
-          overflowX: 'auto',
-          overflowY: 'hidden',
-          scrollSnapType: 'x mandatory',
-          // Fully Kiosk hides scrollbars anyway, and the snapping says there is more.
-          scrollbarWidth: 'none',
-        }}
-      >
-        {chips.map(chip => (
-          <Chip key={chip.key} chip={chip} onPress={onPress(chip)} />
-        ))}
-      </div>
+      {chips.length > 0 && (
+        <div
+          style={
+            isPhone
+              ? { display: 'flex', flexWrap: 'wrap', gap: CHIP_GAP }
+              : {
+                  display: 'flex',
+                  gap: CHIP_GAP,
+                  minWidth: 0,
+                  overflowX: 'auto',
+                  overflowY: 'hidden',
+                  scrollSnapType: 'x mandatory',
+                  // Fully Kiosk hides scrollbars anyway, and the snapping says there is more.
+                  scrollbarWidth: 'none',
+                }
+          }
+        >
+          {chips.map(chip => (
+            <Chip key={chip.key} chip={chip} onPress={onPress(chip)} />
+          ))}
+        </div>
+      )}
       {concern && <ConcernList concern={concern} onClose={() => setOpenLevel(null)} />}
       {alarm && <AlarmModal alarm={alarm} open={alarmOpen} onClose={() => setAlarmOpen(false)} />}
     </>
@@ -133,15 +149,18 @@ function Chip({ chip, onPress }: { chip: StatusChip; onPress?: () => void }) {
         color: alert ? t.color.alert : t.color.inkSoft,
         fontWeight: alert ? 500 : 400,
         // A chip holds its width and keeps its text on one line: what
-        // scrolls is the row, never the inside of a chip.
+        // scrolls is the row, never the inside of a chip. On a phone a
+        // wording wider than the screen is the one case left, and there the
+        // chip stops at the column's edge and its words end in an ellipsis.
         flex: '0 0 auto',
+        maxWidth: '100%',
         whiteSpace: 'nowrap',
         scrollSnapAlign: 'start',
         ...press.style,
       }}
     >
       <Icon name={chip.icon} size={22} />
-      {chip.text}
+      <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{chip.text}</span>
     </div>
   );
 }

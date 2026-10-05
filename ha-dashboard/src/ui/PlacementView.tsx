@@ -111,7 +111,8 @@
  *     consumption's StatCard the Page of its power `sensor`.
  *   - on the wall `glance` is split across the frame (#41): its chips go to
  *     the status bar and the rest to the top of the left column, so `Panel`
- *     asks for each half by `part`. A phone takes it whole, in one column.
+ *     asks for each half by `part`. A phone asks for both too, and stacks
+ *     them in the same order: the chips, then the rest (#45).
  */
 import type { ReactNode } from 'react';
 import {
@@ -536,7 +537,8 @@ function GlanceView({ placed, labelOrder, part }: { placed: Placed[]; labelOrder
     // On the wall the chips are not here at all: they are the status bar's
     // (#41), the cameras' among them (#44), and this block is the top of the
     // left column -- the Hero over the two StatCards, as Casa Panel's screen
-    // has them. A phone takes `glance` whole, with the chips under the stats.
+    // has them. A phone stacks the two halves, chips first (#45); only a
+    // Popup takes `glance` whole, with the chips under the stats.
     <div
       style={{
         display: 'flex',
@@ -585,8 +587,9 @@ type GlancePart = 'chips' | 'column';
  * big starts over each time a Page is opened.
  *
  * `part` is for `glance` on the wall, which the frame splits in two (#41):
- * `chips` for the status bar, `column` for the top of the left column.
- * Without it, `glance` renders whole, as a phone stacks it.
+ * `chips` for the status bar, `column` for the top of the left column. A
+ * phone asks for the same two halves (#45). Without it, `glance` renders
+ * whole, as a Popup's slot stacks it.
  */
 export function PlacementView({ region, placed, part }: { region: Region; placed: Placed[]; part?: GlancePart }) {
   const { page } = useNavigation();

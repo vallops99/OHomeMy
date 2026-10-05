@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { PageLayout, Placed } from '../ha';
-import { back, currentPage, initialNav, openPage, selectTab, visibleTabs } from './phoneNav';
+import { back, currentPage, initialNav, openPage, selectTab, tabBarItems, visibleTabs } from './phoneNav';
 
 test('a Page opens inside the current tab, over its root', () => {
   const nav = openPage(selectTab(initialNav, 'stanze'), 'soggiorno');
@@ -59,4 +59,34 @@ test('a tab with nothing Placed in its Regions is not shown', () => {
 test('glance only fills Casa while the glance toggle is on', () => {
   assert.deepEqual(visibleTabs(layout({ glance: one }), false), []);
   assert.deepEqual(visibleTabs(layout({ glance: one, left: one }), false), ['casa']);
+});
+
+test('the tab bar marks the current tab, and the others with a Page open in them', () => {
+  let nav = openPage(selectTab(initialNav, 'stanze'), 'soggiorno');
+  nav = openPage(selectTab(nav, 'casa'), 'clima');
+  const items = tabBarItems(nav, ['casa', 'stanze', 'altro']);
+  assert.deepEqual(
+    items.map(({ key, current, pageOpen }) => ({ key, current, pageOpen })),
+    [
+      // The current tab's own open Page is on screen, under its header: no dot.
+      { key: 'casa', current: true, pageOpen: false },
+      { key: 'stanze', current: false, pageOpen: true },
+      { key: 'altro', current: false, pageOpen: false },
+    ]
+  );
+  assert.deepEqual(
+    items.map(x => [x.label, x.icon]),
+    [
+      ['Casa', 'mdi:home'],
+      ['Stanze', 'mdi:sofa'],
+      ['Altro', 'mdi:dots-grid'],
+    ]
+  );
+});
+
+test('the tab bar shows only the visible tabs, in their fixed order', () => {
+  assert.deepEqual(
+    tabBarItems(initialNav, ['altro', 'casa']).map(x => x.key),
+    ['casa', 'altro']
+  );
 });

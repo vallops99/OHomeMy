@@ -110,7 +110,8 @@ _Avoid_: Stanze card, area list
 
 **Clock**:
 The time and date at the top left of every Page, supplied by the renderer; a
-Popup has none. Not
+Popup has none. On a phone it tops the Casa Tab only: a Page opened in a Tab
+has its name there instead. Not
 an entity, not Placed, not a control.
 _Avoid_: Header, status bar
 

@@ -4,6 +4,14 @@ status: accepted
 
 # On a phone, the panel's Regions are tabs
 
+> **Amended (2026-10-05).** Restyled with Casa Panel
+> ([ADR-0013](0013-casa-panel-replaces-the-computed-palette.md), #45), the
+> decisions unchanged: the tab bar is drawn as the wall's Dock, the Clock tops
+> the Casa tab, and `glance` puts its chips first and wraps them. Decision 7's
+> "touch sizes do not change" no longer holds in one direction: the phone's
+> touch floor is Casa Panel's `target-min`, 52 px, over the wall's older 44,
+> because the restyle was done when every target on a phone reached 52.
+
 Below a width breakpoint the panel stops being the wall's 2x2. `page:main`'s
 four Regions become three tabs along the bottom: **Casa** (`glance` and
 `left`), **Stanze** (`right`) and **Altro** (`footer`). A Page opened from a

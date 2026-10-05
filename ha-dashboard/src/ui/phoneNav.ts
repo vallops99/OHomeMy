@@ -61,3 +61,25 @@ export function selectTab(nav: PhoneNav, tab: Tab): PhoneNav {
 export function visibleTabs(main: PageLayout, glanceOn: boolean): Tab[] {
   return TABS.filter(({ regions }) => regions.some(r => (r !== 'glance' || glanceOn) && main[r].length > 0)).map(x => x.key);
 }
+
+/** One item of the phone's tab bar (#45). */
+export type TabBarItem = {
+  key: Tab;
+  label: string;
+  icon: string;
+  /** The tab on screen: Casa Panel's `primary` pill, as the Dock marks its current Page. */
+  current: boolean;
+  /**
+   * Another tab with a Page open inside it, waiting where it was left: a dot.
+   * The current tab's own open Page is on screen already, under its header.
+   */
+  pageOpen: boolean;
+};
+
+/** The tab bar: the visible tabs, always in `TABS`' order, so the thumb learns where each one is. */
+export function tabBarItems(nav: PhoneNav, visible: Tab[]): TabBarItem[] {
+  return TABS.filter(x => visible.includes(x.key)).map(({ key, label, icon }) => {
+    const current = key === nav.tab;
+    return { key, label, icon, current, pageOpen: !current && nav.stacks[key].length > 0 };
+  });
+}

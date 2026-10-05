@@ -101,3 +101,9 @@ test("the legacy names read Casa Panel's values", () => {
 test('only sizes change on a phone, never colour', () => {
   assert.deepEqual(buildTokens('arm').color, buildTokens('wall').color);
 });
+
+test("a phone's touch floor is Casa Panel's target-min (#45)", () => {
+  // The wall's 44 predates Casa Panel; the phone's done criterion is 52.
+  assert.equal(buildTokens('arm').touch.floor, CASA.size.targetMin);
+  assert.ok(buildTokens('arm').touch.primary >= CASA.size.targetMin);
+});

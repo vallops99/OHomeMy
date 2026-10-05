@@ -136,8 +136,9 @@ export function buildTokens(scale: Scale = 'wall') {
 }
 
 /**
- * The phone's sizes, as changes to the wall's. Only size changes; colour and
- * touch sizing do not (a thumb is not smaller than a finger at a wall).
+ * The phone's sizes, as changes to the wall's. Only size changes; colour
+ * does not, and touch sizing only grows (a thumb is not smaller than a
+ * finger at a wall).
  *
  * The display sizes shrink by about a third: they were extrapolated for 1-2 m,
  * and a 112 px hero at 40 cm is a third of the screen for one number. Body
@@ -149,6 +150,12 @@ function armTokens(wall: ReturnType<typeof buildWallTokens>): ReturnType<typeof 
   return {
     ...wall,
     font: { ...wall.font, hero: 72, glanceXL: 40, glanceL: 26, glanceM: 19, body: 16, caption: 13 },
+    // The one touch size that moves, and it grows (#45): the ADR-0001 floor
+    // of 44 predates Casa Panel, whose `target-min` is 52, and the phone's
+    // restyle was done when every target on it reached 52. The wall's
+    // controls still at 44 (a transport, a setpoint step) go when they are
+    // ported, and the wall's measured fit with them.
+    touch: { ...wall.touch, floor: CASA.size.targetMin },
     layout: {
       ...wall.layout,
       // Sized against the wall's hero, which shrank.

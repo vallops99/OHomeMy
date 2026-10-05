@@ -5,12 +5,6 @@ which region, is declared in Home Assistant with labels on Areas and entities.
 This document is the normative grammar: it is what you need to know to label a
 house, and what the renderer is obliged to honour.
 
-> **Ahead of the renderer (2026-10-05).** This grammar describes the Casa
-> Panel redesign ([ADR-0013](adr/0013-casa-panel-replaces-the-computed-palette.md),
-> [ADR-0014](adr/0014-groups-are-group-helpers.md)), and the wall panel draws
-> all of it. Only the phone's restyle is pending: until it lands, a phone
-> (see "On a phone") still lays its tabs out the previous way.
-
 ## The placement label
 
 A **placement label** carries a whole placement in one string:
@@ -664,13 +658,18 @@ nothing about labelling changes:
 | Stanze | `right` |
 | Altro | `footer` |
 
-A tab with nothing placed in its Regions on `page:main` is not shown.
+A tab with nothing placed in its Regions on `page:main` is not shown. The
+tab bar is drawn as the wall's Dock is: each tab its icon over its name, the
+current one a filled pill. The Clock tops the Casa tab, and only that tab.
+`glance` keeps the wall's reading order: the chips first, wrapping onto as
+many lines as they need, then the temperature and the stats.
 
 Tapping a Room Tile or a footer block opens that Page
-*inside the tab you are on*, with a back arrow at the top. It shows all the
-Page's Regions in one column: `glance`, `left`, `right`, `footer`. There is no
-Dock on a phone. The back arrow, the phone's back gesture and the tab
-bar are the way home. Each tab keeps its own place, and tapping the tab you
+*inside the tab you are on*, under a header with a back arrow and the Page's
+name. It shows all the Page's Regions in one column: `glance`, `left`,
+`right`, `footer`. There is no Dock on a phone: Page Openers in `footer` are
+blocks in the Altro tab, as Areas there are. The back arrow, the phone's back
+gesture and the tab bar are the way home. Each tab keeps its own place, and tapping the tab you
 are on goes back to its root. The phone does not return to `page:main` by
 itself after 240 seconds. Popups open on a phone too.
 
