@@ -220,3 +220,27 @@ can be served without a live Home Assistant.
   because a measurement nobody can re-run is indistinguishable from a guess
   the moment the code around it changes. The rule this ADR adds: a sizing
   claim in a comment must name the committed check that verifies it.
+
+## Amendment (2026-10-05): Casa Panel's column, and what "ink" means (#44)
+
+The column this ADR measured is gone, and its figures with it: since
+[ADR-0013](0013-casa-panel-replaces-the-computed-palette.md) it is 380 px
+wide, the gates are `AccessRow`s in the Accessi card (201 px for two;
+`gateSlab` no longer sizes anything in it), the chips are in the status bar
+rather than the column, and the camera glance is a chip there too. The glance
+block is the Hero over two StatCards: 315 px, with 16 px to spare at 1280x768
+(`npm run measure`). The decisions stand -- `glance` pinned, `left` yields,
+the measurement committed.
+
+Decision 3 does not, as worded. The Hero is now Casa Panel's `temp-hero`:
+144 px, weight 200, **line-height 1**, which `scrollHeight` reports as 21 px
+over its 144 px box. That is not ink. A `Range` over the text measures the
+font's content area -- ascent plus descent, about 1.15 em -- and so does
+`scrollHeight`; the "130 px of ink in a 128.8 px box" above was that box, not
+the glyphs. The glyphs of a temperature, measured from the baseline with
+canvas `TextMetrics`, sit at least 18 px inside the box at both edges. What
+the negative margins did was still a defect: they made the box smaller than
+the glyphs. What `measure` asserts now is the property that matters --
+the Hero's *glyphs* stay inside its box, for the reading shown and for the
+tallest a temperature can be -- and the rest of the column keeps the
+`scrollHeight` rule.

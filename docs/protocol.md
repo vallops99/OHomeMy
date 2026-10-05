@@ -5,11 +5,11 @@ which region, is declared in Home Assistant with labels on Areas and entities.
 This document is the normative grammar: it is what you need to know to label a
 house, and what the renderer is obliged to honour.
 
-> **Ahead of the renderer (2026-10-05).** This grammar already describes the
-> Casa Panel redesign ([ADR-0013](adr/0013-casa-panel-replaces-the-computed-palette.md),
-> [ADR-0014](adr/0014-groups-are-group-helpers.md)): the frame, the Dock,
-> Groups, the Room Grid, held gates and the chips. Until those slices land,
-> the panel still draws the previous layout.
+> **Ahead of the renderer (2026-10-05).** This grammar describes the Casa
+> Panel redesign ([ADR-0013](adr/0013-casa-panel-replaces-the-computed-palette.md),
+> [ADR-0014](adr/0014-groups-are-group-helpers.md)), and the wall panel draws
+> all of it. Only the phone's restyle is pending: until it lands, a phone
+> (see "On a phone") still lays its tabs out the previous way.
 
 ## The placement label
 
