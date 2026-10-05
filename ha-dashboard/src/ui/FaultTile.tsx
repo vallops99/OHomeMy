@@ -34,7 +34,7 @@ export function FaultTile({ label }: FaultTileProps) {
         padding: t.space.md,
         boxSizing: 'border-box',
         borderRadius: t.radius.tile,
-        border: `1px solid ${t.color.fault}`,
+        border: `1px solid ${t.color.faultLine}`,
         background: t.color.faultSurface,
         color: t.color.fault,
         textAlign: 'center',

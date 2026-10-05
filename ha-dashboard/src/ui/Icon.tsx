@@ -1,12 +1,15 @@
 /**
- * An MDI icon. ADR-0001 chose MDI over emoji because MDI tints with
- * `currentColor`: a fault icon turns red, an icon on an active surface takes
- * the active foreground, with no per-state icon set.
+ * A line icon, drawn from Lucide (ADR-0013).
  *
- * Names mirror the Home Assistant area registry (`mdi:sofa`), so the
- * registry-driven pipeline resolves them rather than a hardcoded map.
+ * Callers still name icons in MDI, because that is what Home Assistant hands
+ * over (`mdi:sofa` on an Area, `mdi:gate` on a gate); `iconMap.ts` translates
+ * the name, and an unknown one gets a neutral line glyph. Lucide strokes with
+ * `currentColor`, so ADR-0001's reason for MDI survives the swap: a fault
+ * icon turns `alert`, an icon on an on surface takes its foreground, with no
+ * per-state icon set.
  */
-import { Icon as HakitIcon } from '@iconify/react';
+import { createElement } from 'react';
+import { lucideFor } from './iconMap';
 
 export type IconProps = {
   /** An MDI name, with or without the `mdi:` prefix. */
@@ -15,9 +18,16 @@ export type IconProps = {
   color?: string;
 };
 
+/**
+ * Casa Panel's stroke widths, on Lucide's 24 px grid: 1.6 by default, 1.5 at
+ * room-tile size and above, heavier for small glyphs that must still read.
+ */
+const strokeFor = (size: number) => (size >= 30 ? 1.5 : size <= 20 ? 1.8 : 1.6);
+
 export function Icon({ name, size = 28, color }: IconProps) {
-  const full = name.includes(':') ? name : `mdi:${name}`;
-  return <HakitIcon icon={full} width={size} height={size} color={color} />;
+  // `createElement` rather than JSX on a local: the glyph is a module-level
+  // Lucide component looked up by name, not a component made per render.
+  return createElement(lucideFor(name), { size, color: color ?? 'currentColor', strokeWidth: strokeFor(size), 'aria-hidden': true });
 }
 
 /**

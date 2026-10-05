@@ -50,7 +50,7 @@ export function FeedFrame({ camera, feed, size }: FeedFrameProps) {
       : {
           position: 'relative',
           borderRadius: t.radius.tile,
-          border: `1px solid ${fault ? t.color.fault : t.color.border}`,
+          border: `1px solid ${fault ? t.color.faultLine : t.color.border}`,
           // A phone's column scrolls, so there is no height to fill: the big Feed takes 16:9 too.
           ...(size === 'big' && !isPhone ? { flex: 1, minHeight: 0 } : { aspectRatio: '16 / 9' }),
         };

@@ -76,7 +76,7 @@ export function ConcernList({ concern, onClose }: ConcernListProps) {
                 width: CARD_W,
                 maxHeight: '80%',
                 borderRadius: t.radius.tile,
-                border: `1px solid ${fault ? t.color.fault : t.color.border}`,
+                border: `1px solid ${fault ? t.color.faultLine : t.color.border}`,
               }),
         }}
       >

@@ -114,6 +114,9 @@ export function Slider({ value, onChange, onChangeApplied, disabled, thickness, 
   return (
     <div
       data-gesture-owner
+      // Casa Panel's dimmer colours, applied over @hakit's in HakitTheme.tsx.
+      className='casa-dimmer'
+      data-disabled={disabled || undefined}
       style={{ width: '100%', overflow: 'hidden', display: 'flex' }}
       onPointerDown={handleDown}
       onTouchStart={handleDown}

@@ -39,7 +39,7 @@ export function ReadingBlock({ icon, value, detail, name, unavailable = false, a
         padding: `${t.space.sm}px ${t.space.md}px`,
         boxSizing: 'border-box',
         borderRadius: t.radius.tile,
-        border: `1px solid ${unavailable ? t.color.fault : t.color.border}`,
+        border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
         background: unavailable ? t.color.faultSurface : t.color.surface,
         color: fg,
       }}

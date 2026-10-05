@@ -2,8 +2,8 @@
  * A gate, rendered as a large filled slab.
  *
  * Gates are the most-touched control while arriving or leaving (CONTEXT.md),
- * so this uses `strong` -- the lifted accent floored at 42% lightness -- which
- * ADR-0001 requires for filled controls that must be picked out at 2 m.
+ * so it is a filled control (`strong`, `alwaysFilled`): `primary` while
+ * closed, the accent while open (ADR-0013), picked out at 2 m either way.
  */
 import { useActions, type Entity } from '../ha';
 import { entityIcon, Icon } from './Icon';
@@ -65,7 +65,7 @@ export function GateSlab({ entity }: GateSlabProps) {
   const open = entity.state === 'unlocked';
   const unavailable = entity.unavailable;
   // Filled in both states -- see `alwaysFilled` on Tile.
-  const fg = onSurfaceFor({ active: true, unavailable, strong: true });
+  const fg = onSurfaceFor({ active: open, filled: true, unavailable, strong: true });
 
   return (
     <Tile

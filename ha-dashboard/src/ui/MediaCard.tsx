@@ -46,7 +46,7 @@ export function MediaCard({ entity }: MediaCardProps) {
         padding: t.space.md,
         boxSizing: 'border-box',
         borderRadius: t.radius.tile,
-        border: `1px solid ${unavailable ? t.color.fault : t.color.border}`,
+        border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
         background: unavailable ? t.color.faultSurface : t.color.surface,
       }}
     >

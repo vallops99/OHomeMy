@@ -6,7 +6,7 @@
  * render. But @hakit also renders surfaces we never author: the long-press
  * entity modal, which it mounts into `<body>` itself. Those read @hakit's own
  * CSS variables, so with a bare `<ThemeProvider />` the modal came up in its
- * stock navy-and-orange over our dark-neutral green panel (#7 verified that
+ * stock navy-and-orange over our own dark panel (#7 verified that
  * the modal *opens*, never what it looked like -- the gap this closes).
  *
  * @hakit derives its entire ~700-variable palette from a few roots, so
@@ -15,36 +15,53 @@
  * `globalStyles` below, keyed to @hakit's own class names.
  */
 import { ThemeProvider } from '@hakit/components';
-import { KNOBS } from '../theme/tokens';
+import { hexToHsl } from '../theme/color';
+import { cssVariables } from '../theme/tokens';
 import { t } from './theme';
+
+const ground = hexToHsl(t.color.surface);
+const accent = hexToHsl(t.color.accent);
 
 /**
  * @hakit builds its surfaces from `--ha-h/--ha-s/--ha-l` and its accent from
- * the `A*` scale. Feeding it our ground hue and accent makes its own
- * components land in our palette without us restyling them one by one.
+ * the `A*` scale. Feeding it Casa Panel's card surface and accent makes its
+ * own components land in our palette without us restyling them one by one.
  */
 const roots = `
-  --ha-h: ${KNOBS.groundHue};
-  --ha-s: ${KNOBS.groundSat};
-  --ha-l: 9;
-  --ha-A400-h: ${KNOBS.accentHue};
-  --ha-A400-s: ${KNOBS.accentSat}%;
-  --ha-A400-l: ${Math.max(KNOBS.accentLight + 18, 42)}%;
-  --ha-A700-h: ${KNOBS.accentHue};
-  --ha-A700-s: ${KNOBS.accentSat}%;
-  --ha-A700-l: ${KNOBS.accentLight}%;
+  --ha-h: ${ground.h};
+  --ha-s: ${ground.s};
+  --ha-l: ${ground.l};
+  --ha-A400-h: ${accent.h};
+  --ha-A400-s: ${accent.s}%;
+  --ha-A400-l: ${accent.l}%;
+  --ha-A700-h: ${accent.h};
+  --ha-A700-s: ${accent.s}%;
+  --ha-A700-l: ${accent.l}%;
 `;
 
 export function HakitTheme() {
   return (
     <ThemeProvider
       theme={{
-        // @hakit ships Roboto; ADR-0001's scale is set in the system stack.
+        // @hakit ships Roboto; Casa Panel is set in Geist.
         font: { family: t.font.family, size: `${t.font.body}px` },
       }}
       globalStyles={`
         :root, html, body {
           ${roots}
+        }
+
+        /* Casa Panel's tokens under its own names (ADR-0013), for any
+           stylesheet written against them, and the page shell it asks for. */
+        :root {
+          ${cssVariables()}
+        }
+        body {
+          margin: 0;
+          background: var(--bg);
+          color: var(--ink);
+          font-family: var(--font-sans);
+          -webkit-font-smoothing: antialiased;
         }
 
         /* The modal is @hakit's own surface, mounted outside our tree. Bring
@@ -56,7 +73,7 @@ export function HakitTheme() {
         .modal-container, .modal-inner {
           background-color: ${t.color.surface} !important;
           color: ${t.color.textPrimary} !important;
-          border: 1px solid ${t.color.border};
+          border: 1px solid ${t.color.line};
           border-radius: ${t.radius.tile}px !important;
         }
         .modal-header, .modal-header * {
@@ -68,7 +85,18 @@ export function HakitTheme() {
            wall panel every control should read from the same palette. */
         .modal-container .slider-track-background,
         .modal-container .slider-track-bar {
-          background-color: ${t.color.activeStrong} !important;
+          background-color: ${t.color.accent} !important;
+        }
+
+        /* Casa Panel's dimmer (ADR-0013): a surface-control track under an
+           accent-soft fill. @hakit tints its track from the fill colour
+           at 20%, which on the accent read as "on" while the light was off. */
+        .casa-dimmer .slider-track-background {
+          background: ${t.color.surfaceControl} !important;
+          opacity: 1 !important;
+        }
+        .casa-dimmer:not([data-disabled]) .slider-track-bar {
+          background-color: ${t.color.accentSoft} !important;
         }
       `}
     />

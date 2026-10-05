@@ -13,18 +13,19 @@ import { CardBase } from '@hakit/components';
 import type { ReactNode } from 'react';
 import type { Entity } from '../ha';
 import { stateLabel } from './stateLabel';
-import { surfaceFor, t } from './theme';
+import { lineFor, surfaceFor, t } from './theme';
 
 export type TileProps = {
   /** The entity this tile stands for. Drives active/fault styling and the modal. */
   entity?: Entity | null;
   active?: boolean;
-  /** Use the lifted accent, for controls that must read as "on" at 2 m (ADR-0001). */
+  /** A filled control: the accent fills it while it is on (ADR-0013). */
   strong?: boolean;
   /**
-   * Fill the tile with the accent even when inactive. Gates are the panel's
-   * primary affordance (CONTEXT.md) and must read as a control from 2 m
-   * whether open or closed, so they do not fade into the inactive surface.
+   * Fill the tile even when inactive. Gates are the panel's primary
+   * affordance (CONTEXT.md) and must read as a control from 2 m whether open
+   * or closed, so they do not fade into the inactive surface: off, the fill
+   * is `primary`, and only on is it the accent (`surfaceFor`).
    */
   alwaysFilled?: boolean;
   /**
@@ -49,9 +50,9 @@ export function Tile({ entity, active, strong, alwaysFilled, row, onClick, disab
 
   const surface = {
     boxSizing: 'border-box' as const,
-    border: `1px solid ${unavailable ? t.color.fault : t.color.border}`,
+    border: `1px solid ${lineFor({ active, filled: alwaysFilled, unavailable, strong })}`,
     borderRadius: t.radius.tile,
-    background: surfaceFor({ active: active || alwaysFilled, unavailable, strong }),
+    background: surfaceFor({ active, filled: alwaysFilled, unavailable, strong }),
     padding: t.space.md,
     overflow: 'hidden',
     minHeight: t.touch.primary,
@@ -167,9 +168,9 @@ export function Tile({ entity, active, strong, alwaysFilled, row, onClick, disab
          * radius and padding, instead of on the text.
          */
         & .ripple-parent, & .ripple-inner { overflow: visible !important; }
-        border: 1px solid ${unavailable ? t.color.fault : t.color.border};
+        border: 1px solid ${lineFor({ active, filled: alwaysFilled, unavailable, strong })};
         border-radius: ${t.radius.tile}px;
-        background: ${surfaceFor({ active: active || alwaysFilled, unavailable, strong })};
+        background: ${surfaceFor({ active, filled: alwaysFilled, unavailable, strong })};
         padding: ${t.space.md}px;
         overflow: hidden;
         cursor: ${unavailable ? 'not-allowed' : 'pointer'};

@@ -36,7 +36,7 @@ export function rowStyle({ active, unavailable }: { active: boolean; unavailable
     // side of its outline against the rounded corner, and the card read
     // as broken. As a gradient the marker sits within the padding box and
     // all four sides keep the same 1 px border.
-    backgroundImage: `linear-gradient(to right, ${unavailable ? t.color.fault : active ? t.color.active : 'transparent'} 0 6px, transparent 6px)`,
+    backgroundImage: `linear-gradient(to right, ${unavailable ? t.color.fault : active ? t.color.accent : 'transparent'} 0 6px, transparent 6px)`,
   };
 }
 

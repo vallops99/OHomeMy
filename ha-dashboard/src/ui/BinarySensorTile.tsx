@@ -27,7 +27,7 @@ export function BinarySensorTile({ entity }: BinarySensorTileProps) {
         alignItems: 'center',
         padding: `0 ${t.space.md}px`,
         boxSizing: 'border-box',
-        border: `1px solid ${unavailable ? t.color.fault : t.color.border}`,
+        border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
       }}
     >
       <span

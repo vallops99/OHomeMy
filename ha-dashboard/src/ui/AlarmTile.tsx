@@ -32,7 +32,7 @@ export function AlarmTile({ entity }: AlarmTileProps) {
   // A triggered alarm is the loudest thing the panel can say, so it borrows
   // the fault treatment rather than the accent: it must not read as a
   // normal "on" state.
-  const fg = triggered ? t.color.fault : onSurfaceFor({ active: armed, unavailable, strong: true });
+  const fg = triggered ? t.color.fault : onSurfaceFor({ active: armed, filled: true, unavailable, strong: true });
 
   return (
     <Tile
@@ -40,7 +40,7 @@ export function AlarmTile({ entity }: AlarmTileProps) {
       active={armed}
       strong
       alwaysFilled={!triggered}
-      style={triggered ? { background: t.color.faultSurface, borderColor: t.color.fault } : undefined}
+      style={triggered ? { background: t.color.faultSurface, borderColor: t.color.faultLine } : undefined}
       onClick={() => actions.call('alarm_control_panel', armed ? 'alarm_disarm' : 'alarm_arm_away', entity.id)}
     >
       <div

@@ -175,7 +175,7 @@ function Chip({ health, onPress }: { health: Health; onPress?: () => void }) {
         gap: t.space.sm,
         padding: `${t.space.sm}px ${t.space.md}px`,
         borderRadius: t.radius.pill,
-        border: fault ? `2px solid ${t.color.fault}` : `1px solid ${t.color.border}`,
+        border: fault ? `2px solid ${t.color.faultLine}` : `1px solid ${t.color.border}`,
         color: fault ? t.color.fault : t.color.textSecondary,
         fontSize: t.font.body,
         fontWeight: fault ? 700 : 400,

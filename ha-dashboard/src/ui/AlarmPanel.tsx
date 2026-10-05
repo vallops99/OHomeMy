@@ -33,7 +33,7 @@ export function AlarmPanel({ entity }: AlarmPanelProps) {
         padding: t.space.md,
         boxSizing: 'border-box',
         borderRadius: t.radius.tile,
-        border: `1px solid ${alarming ? t.color.fault : t.color.border}`,
+        border: `1px solid ${alarming ? t.color.faultLine : t.color.border}`,
         background: alarming ? t.color.faultSurface : t.color.surface,
       }}
     >

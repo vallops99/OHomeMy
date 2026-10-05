@@ -30,7 +30,7 @@ export function SensorTile({ entity }: SensorTileProps) {
         alignItems: 'center',
         padding: `0 ${t.space.md}px`,
         boxSizing: 'border-box',
-        border: `1px solid ${unavailable ? t.color.fault : t.color.border}`,
+        border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
       }}
     >
       <span style={{ width: 34, display: 'flex', justifyContent: 'center', color: unavailable ? t.color.fault : t.color.textSecondary }}>
