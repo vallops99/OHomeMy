@@ -154,11 +154,14 @@ export function resolvePage(areas: Area[], entities: Map<string, Entity>, page: 
     // this layer, when for entities it has already happened upstream.
     //
     // A Page Opener on its own Page would open the Page it is already on,
-    // like an Area in its own footer -- in every Region, since it is the
-    // same block in each (ADR-0012).
+    // like an Area in its own footer -- but only in `left` and `right`, where
+    // it is a block (ADR-0012). In `footer` it is an item of the Dock, which
+    // keeps it and marks it current: the Dock answers "where am I?"
+    // (docs/protocol.md, "The Dock"). In `glance` it is a fault either way.
     const opens = openerPage(entity);
-    if (opens !== null && slugify(opens) === pageSlug) continue;
+    const own = opens !== null && slugify(opens) === pageSlug;
     for (const region of regionsOn(entity.labels, pageSlug)) {
+      if (own && (region === 'left' || region === 'right')) continue;
       layout[region].push({ kind: 'entity', entity });
     }
   }

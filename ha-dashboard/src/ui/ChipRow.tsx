@@ -45,17 +45,6 @@ export type ChipRowProps = {
   alarm: Entity | null;
 };
 
-/**
- * The chip box's height: whole lines, plus the gaps between them.
- *
- * Derived from the tokens rather than written as a number, so the box and
- * the line height cannot drift apart -- the same failure `gateSlab` had
- * (ADR-0007), where a component computed locally what a token claimed to
- * own. `scripts/measure-panel.ts` asserts the column against this same
- * arithmetic.
- */
-const CHIP_BOX_H = t.layout.chipRowFloor * t.layout.chipRowLines + t.space.sm * (t.layout.chipRowLines - 1);
-
 /** A chip's tap, for a pointer or a keyboard, with nothing changed about how it looks. */
 const pressable = (onPress: () => void) => ({
   role: 'button',
@@ -81,46 +70,34 @@ export function ChipRow({ report, alarm }: ChipRowProps) {
   if (openLevel !== null && concern === null) setOpenLevel(null);
 
   return (
-    // Wraps, inside a box of fixed height (`chipRowLines` x `chipRowFloor`,
-    // plus the gap between the lines).
+    // One line, in the status bar (#41), scrolling sideways past what fits.
     //
-    // Both halves of that matter, and the history is why. The row was once
-    // freely `flexWrap: 'wrap'`, which made it the one element in the left
-    // column whose height was a function of *house state*: a third concern
-    // wrapped it and pushed everything below it down, so no fit could be
-    // proven at build time. ADR-0007 fixed that by banning the wrap outright
-    // -- one line, `overflowX: auto` -- which held the height constant but
-    // spent a whole second line of room the column now has.
+    // The row was once freely `flexWrap: 'wrap'`, which made it the one
+    // element in the left column whose height was a function of *house
+    // state*: a third concern wrapped it and pushed everything below it down,
+    // so no fit could be proven at build time. ADR-0007 bounded it to one
+    // line; a later pass let it wrap inside a fixed two-line box, which the
+    // left column could afford. The status bar is one line tall, so the row
+    // is one line again, and its height is still not house state's to move.
     //
-    // The box is the third option: chips wrap as they like *within* a height
-    // that house state cannot change. The column's fit is still provable
-    // (the box is a constant, asserted in `scripts/measure-panel.ts`) and a
-    // third concern is now simply visible rather than scrolled to.
-    //
-    // What yields is the same as before and for the same reason: chips past
-    // the box's capacity are reached by scrolling, and they are always the
-    // least urgent ones, because `report.verdict` leads -- worst concern
-    // first (health.ts, ADR-0004's `fault > open > lit > ok`). The fault
-    // chip, the one that exists to be unmissable at 2 m, is never the one
-    // that goes.
-    //
-    // The scroll is vertical now, not horizontal, because that is the axis
-    // the wrap overflows along; `scrollSnapType: 'y mandatory'` with
-    // `scrollSnapAlign` per chip keeps the row resting on whole lines, so a
-    // chip is either fully readable or fully scrolled to, never sliced in
-    // half across the box's edge.
+    // What yields is horizontal, and that is safe because of the ordering:
+    // `report.verdict` leads -- worst concern first (health.ts, ADR-0004's
+    // `fault > open > lit > ok`) -- so the chip scrolled out of view is
+    // always the least urgent one. The fault chip, the one that exists to be
+    // unmissable at 2 m, is never the one that goes. `scrollSnapType` with
+    // `scrollSnapAlign` per chip keeps the row resting on whole chips, never
+    // one sliced across the edge.
     <>
       <div
         style={{
           display: 'flex',
-          flexWrap: 'wrap',
           gap: t.space.sm,
-          alignContent: 'flex-start',
-          flex: `0 0 ${CHIP_BOX_H}px`,
-          height: CHIP_BOX_H,
-          overflowX: 'hidden',
-          overflowY: 'auto',
-          scrollSnapType: 'y mandatory',
+          minWidth: 0,
+          overflowX: 'auto',
+          overflowY: 'hidden',
+          scrollSnapType: 'x mandatory',
+          // Fully Kiosk hides scrollbars anyway, and the snapping says there is more.
+          scrollbarWidth: 'none',
         }}
       >
         {concerns.map((health, i) => (
@@ -146,7 +123,7 @@ export function ChipRow({ report, alarm }: ChipRowProps) {
               color: t.color.textSecondary,
               fontSize: t.font.body,
               // A chip holds its width and keeps its text on one line: what
-              // wraps is the row, never the inside of a chip.
+              // scrolls is the row, never the inside of a chip.
               flex: '0 0 auto',
               whiteSpace: 'nowrap',
               scrollSnapAlign: 'start',
@@ -179,7 +156,7 @@ function Chip({ health, onPress }: { health: Health; onPress?: () => void }) {
         color: fault ? t.color.fault : t.color.textSecondary,
         fontSize: t.font.body,
         fontWeight: fault ? 700 : 400,
-        // See the row above: chips hold their size and wrap as whole
+        // See the row above: chips hold their size and scroll as whole
         // units, snapping per chip.
         flex: '0 0 auto',
         whiteSpace: 'nowrap',

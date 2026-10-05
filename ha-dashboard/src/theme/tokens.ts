@@ -207,8 +207,8 @@ function buildWallTokens() {
      * Sizes that place things -- the font sizes below, `space`'s named steps,
      * `touch` and `layout` -- keep the values the current frame was measured
      * against (`npm run measure`), so restyling onto Casa Panel moves no
-     * Region. The frame's own rebuild takes up Casa's `type`, numbered
-     * `space` and `size` instead, which sit beside them already.
+     * Region. The frame (`Panel.tsx`, #41) has taken up Casa's numbered
+     * `space` and `size`; the components inside it follow as they are ported.
      */
     type: CASA.type,
     size: CASA.size,
@@ -266,9 +266,8 @@ function buildWallTokens() {
      * #13 replaces the two-region layout above with the protocol's 2x2
      * (docs/protocol.md, ADR-0005): `glance` top-left, `left`
      * bottom-left, `right` the full-height right column, `footer`
-     * along the floor. `leftColW` reuses `sidebarW`'s value rather than a new
-     * number -- 420 px was already the arrival column's measured width and
-     * nothing about the 2x2 changes what a comfortable left column is.
+     * along the floor. #41 replaced the 2x2 with the design system's frame
+     * -- status bar, body, floor -- sized by `size` above, not by these.
      *
      * The 2x2 inherits variant D's obligation (ADR-0004's amendment): these
      * are starting sizes, not a row/column arithmetic that is claimed to sum
@@ -279,7 +278,8 @@ function buildWallTokens() {
      * minimum) needed those 32 px back, and nothing in the footer --
      * `MediaBar`, `AreaOpenerBlock` -- needs more than the ADR-0001 touch
      * floor to remain a full touch target. Measured, not guessed: see the
-     * #13 agent's report for the harness output.
+     * #13 agent's report for the harness output. Since #41 the wall's floor
+     * is `size.dockHeight` (84); `footerH` is the phone's footer floor only.
      *
      * `gateSlab` (ADR-0007) was a lie for the whole life of this file.
      * Nothing read it: `GateSlab.tsx` computed its own height locally
@@ -304,38 +304,6 @@ function buildWallTokens() {
      * is still far above `touch.primary` (64). Re-derive with `npm run
      * measure` rather than assuming this number survives a change to the
      * column's contents.
-     *
-     * `chipRowLines` (2) is how many rows of chips the box holds, and with
-     * `chipRowFloor` it is the box's whole height: two lines plus the
-     * `space.sm` between them. The row wraps within that box and scrolls
-     * vertically past it, so house state changes which chips are *visible*
-     * and never how tall the column is -- ADR-0007's property, kept while
-     * allowing the second line the one-line row refused.
-     *
-     * Two rather than three, and the budget is why: the left column has
-     * 48 px spare at 1280x768 once `glance` and `left` have taken
-     * theirs, and a second chip line costs exactly 48 (`chipRowFloor` plus
-     * the `space.sm` gap). It fits at the floor with nothing left over; a
-     * third line does not fit at all. The room came from `gateSlab` dropping
-     * 120 -> 100 in the same pass -- two slabs, 20 px each. If the slab
-     * grows back, this must return to one line: re-derive with
-     * `npm run measure` rather than assuming the second line still fits.
-     *
-     * `chipRowFloor` (panel layout defect pass, following #14): `ChipRow`
-     * was the left column's one flexible element -- `flex: 1; minHeight: 0`
-     * in `GlanceView` -- so it silently absorbed whatever the rest of the
-     * column did not use, down to a measured 8 px at 1280x768 while a real
-     * chip ("Un guasto") is 40 px tall. A chip sliced to 8 px is unreadable,
-     * which is a worse failure than the column needing to scroll. 40 is not
-     * a guess: it is `chip.getBoundingClientRect().height` read directly off
-     * the rendered "Un guasto" chip at 1280x800 (`ChipRow.tsx`'s `Chip`:
-     * `body` text at `space.sm` padding top and bottom, `alignItems: center`
-     * against a 20 px icon) -- close to but deliberately not reusing
-     * `touch.floor` (44), because that is a touch-target minimum for
-     * controls and a chip is not pressable; the two numbers coinciding would
-     * be a coincidence this token does not want to depend on. If a future
-     * chip's contents change height, remeasure and update this number rather
-     * than assume it still matches.
      *
      * `popupSlotW` (#28) is one slot of a Popup's bottom row, sized for a
      * `GateSlab`. Measured on the real app at 1280x800 and 1280x768 with
@@ -370,10 +338,7 @@ function buildWallTokens() {
       gateSlab: 100,
       /** A GateSlab icon's inset from the slab's edge. */
       gateInset: 34,
-      leftColW: 420,
       footerH: 64,
-      chipRowFloor: 40,
-      chipRowLines: 2,
       popupSlotW: 412,
       popupClose: 80,
       feedThumbW: 300,

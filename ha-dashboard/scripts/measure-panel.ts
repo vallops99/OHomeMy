@@ -1,5 +1,5 @@
 /**
- * The left column's fit, asserted rather than claimed (ADR-0007).
+ * The panel's fit, asserted rather than claimed (ADR-0007).
  *
  * Every sizing number in `src/theme/tokens.ts` carries a comment saying it was
  * "measured, not guessed" -- and every one of those measurements came from a
@@ -20,15 +20,22 @@
  *      neighbour, which is the failure the negative-margin Hero produced and
  *      the one `scrollHeight`-only probes cannot see.
  *
- * And since #32, the footer:
+ * Since #32, the footer, and since #41 the frame around it all -- a status
+ * bar, the body, and the floor (`Panel.tsx`):
  *
- *   3. **The busy footer fits.** `MediaBar` (with its chevron to
- *      `page:media`), one Area block and four Page Openers sit in one strip
- *      with nothing scrolled, clipped or taller than `footerH`, and the
- *      strip keeps at least `mediaBarMinW`.
+ *   3. **The busy floor fits.** Beside the Dock, `MediaBar` (with its
+ *      chevron to `page:media`) and one Area block sit in one strip with
+ *      nothing scrolled, clipped or taller than the floor, and the strip
+ *      keeps at least `mediaBarMinW`. The Dock -- Casa and the fixture's four
+ *      Page Openers -- shows every item whole.
  *   4. **An overfull footer scrolls rather than clips.** With more blocks
- *      than fit, the footer scrolls sideways, every block keeps its whole
- *      label, and the strip still keeps `mediaBarMinW`.
+ *      than fit, the strip beside the Dock scrolls sideways, every block
+ *      keeps its whole label, the strip still keeps `mediaBarMinW`, and the
+ *      Dock is not squeezed.
+ *   5. **The status bar holds its height.** The Clock and the chips share
+ *      one line; however many chips there are, the bar stays
+ *      `statusBarHeight`, the chips never paint over the Clock, and the
+ *      ones that do not fit scroll.
  *
  * All of it is asserted at 1280x768 (the shortest supported) and 1280x800 (the
  * wall panel's native size). Stated as a property of every viewport >= the
@@ -39,7 +46,7 @@
  *
  * The real app needs a live Home Assistant (`.env` -> `VITE_HA_URL`), so
  * driving it here would make a layout check depend on the house being up. This
- * builds the left column's *shape* from the same tokens the components import,
+ * builds the panel's *shape* from the same tokens the components import,
  * with the fixture's own content (two gates, three cameras, the two chips in
  * `fake-house/manifest.yaml`) hardcoded as markup.
  *
@@ -70,16 +77,6 @@ import { buildTokens } from '../src/theme/tokens.ts';
 const t = buildTokens();
 
 /**
- * The chip box's height, the same arithmetic `src/ui/ChipRow.tsx` uses.
- *
- * Whole lines plus the gaps between them. Repeated here rather than imported
- * because this harness imports only `tokens.ts` and never a component (see
- * the header): if the component's formula changes, this must change with it
- * in the same commit.
- */
-const CHIP_BOX_H = t.layout.chipRowFloor * t.layout.chipRowLines + t.space.sm * (t.layout.chipRowLines - 1);
-
-/**
  * The viewports asserted. 768 is the floor the property is stated against --
  * the shortest the panel is ever asked to be -- and 800 is the wall panel's
  * own native size. A fit that holds at the floor holds above it, so these two
@@ -107,12 +104,11 @@ type ChipSpec = { text: string; fault: boolean };
  * The two chip sets asserted.
  *
  * `quiet` is what `fake-house/manifest.yaml` reports today. `busy` adds the
- * third concern that exposed the width defect: `ChipRow`'s chips are
- * `nowrap`, so their combined intrinsic width became the left column's
- * `min-width: auto` floor and widened the column from 420 to 440 px,
- * shoving `right` sideways. House state must change what the panel
- * *says*, never the geometry it says it in -- which is ADR-0007's property
- * for the column's height, asserted here for its width too.
+ * third concern that once exposed a width defect, when the chips lived in the
+ * left column: their combined `nowrap` width became the column's
+ * `min-width: auto` floor and shoved `right` sideways. `overfull` is more
+ * than the status bar holds. House state must change what the panel *says*,
+ * never the geometry it says it in.
  */
 const CHIP_SETS: Record<string, ChipSpec[]> = {
   quiet: [
@@ -124,9 +120,20 @@ const CHIP_SETS: Record<string, ChipSpec[]> = {
     { text: 'Un accesso aperto', fault: false },
     { text: 'Disinserito', fault: false },
   ],
+  overfull: [
+    { text: 'Tre guasti', fault: true },
+    { text: 'Due accessi aperti', fault: false },
+    { text: 'Quattro luci accese', fault: false },
+    { text: 'Inserito fuori casa', fault: false },
+    { text: 'Un altro avviso ancora', fault: false },
+  ],
 };
 
-function leftColumn(chips: ChipSpec[]): string {
+/**
+ * The status bar (#41): the Clock on the left, `ChipRow` on the right as one
+ * line that scrolls sideways past what fits.
+ */
+function statusBar(chips: ChipSpec[]): string {
   const chip = (text: string, fault: boolean) => `
     <div class="chip" style="
       display:inline-flex; align-items:center; gap:${t.space.sm}px;
@@ -134,8 +141,25 @@ function leftColumn(chips: ChipSpec[]): string {
       border:${fault ? `2px solid ${t.color.fault}` : `1px solid ${t.color.border}`};
       color:${fault ? t.color.fault : t.color.textSecondary};
       font-size:${t.font.body}px; font-weight:${fault ? 700 : 400}; white-space:nowrap;
+      flex:0 0 auto; scroll-snap-align:start;
     "><span style="width:20px;height:20px;flex:0 0 20px;background:currentColor;border-radius:50%"></span>${text}</div>`;
 
+  return `
+  <div id="status" style="flex:0 0 ${t.size.statusBarHeight}px; display:flex; align-items:center; gap:${t.space[6]}px; min-width:0">
+    <div id="clock" style="flex:0 0 auto; display:flex; align-items:baseline; gap:${t.space.md}px; white-space:nowrap">
+      <span style="font-size:${t.type.clock.size}px; line-height:${t.type.clock.lineHeight}; font-weight:${t.type.clock.weight}">21:45</span>
+      <span style="font-size:${t.type.bodyLg.size}px; line-height:${t.type.bodyLg.lineHeight}">Mercoledì 30 settembre</span>
+    </div>
+    <div style="flex:1; min-width:0; display:flex; justify-content:flex-end">
+      <div id="chips" style="
+        display:flex; gap:${t.space.sm}px; min-width:0; overflow-x:auto; overflow-y:hidden;
+        scroll-snap-type:x mandatory; scrollbar-width:none;
+      ">${chips.map(c => chip(c.text, c.fault)).join('')}</div>
+    </div>
+  </div>`;
+}
+
+function leftColumn(): string {
   const slab = (name: string) => `
     <div class="slab" style="
       flex:0 0 auto; height:${t.layout.gateSlab}px; box-sizing:border-box;
@@ -160,7 +184,7 @@ function leftColumn(chips: ChipSpec[]): string {
 
   return `
   <div id="left-col" style="
-    flex:0 0 ${t.layout.leftColW}px; display:flex; flex-direction:column;
+    flex:0 0 ${t.size.sidebarWidth}px; min-width:0; display:flex; flex-direction:column;
     gap:${t.space.sm}px; min-height:0;
   ">
     <!--
@@ -189,20 +213,8 @@ function leftColumn(chips: ChipSpec[]): string {
         </div>
       </div>
       <!--
-        The chip row is bounded to one line and scrolls horizontally within it
-        (ADR-0007), so house state can never change the column's height.
-      -->
-      <div style="flex-shrink:0; padding-top:10px">
-        <div id="chips" style="
-          flex:0 0 ${CHIP_BOX_H}px; height:${CHIP_BOX_H}px;
-          display:flex; flex-wrap:wrap; gap:${t.space.sm}px;
-          overflow-x:hidden; overflow-y:auto;
-          scroll-snap-type:y mandatory; align-content:flex-start;
-        ">${chips.map(c => chip(c.text, c.fault)).join('')}</div>
-      </div>
-      <!--
         The camera glance (#29): the fixture's cameras are Placed in \`glance\`
-        now, rendered under the chips. A control since it opens the cameras'
+        now, rendered under the stats. A control since it opens the cameras'
         Page, so its padding is \`sm\` rather than \`md\` -- 74 px, over
         \`touch.primary\` and 12 px under what \`md\` cost, which the column did
         not have at 768.
@@ -236,14 +248,16 @@ function leftColumn(chips: ChipSpec[]): string {
 }
 
 /**
- * The footer, as `Panel.tsx` and `PlacementView.tsx` build it: a strip that
- * scrolls sideways with snapping, `PageBlock`s sized to their labels, and
- * `MediaBar` inside a `FooterMember` -- the swipe surface and the chevron to
- * the Page it is also Placed on (#32). The strip plays something, since its
- * playing form is the wider one, with a title longer than it can show: a
- * title must ellipsise, never widen the strip into a scroll.
+ * The floor, as `Panel.tsx`, `PlacementView.tsx` and `Dock.tsx` build it: on
+ * the left a strip that scrolls sideways with snapping, `PageBlock`s sized to
+ * their labels, and `MediaBar` inside a `FooterMember` -- the swipe surface
+ * and the chevron to the Page it is also Placed on (#32); on the right the
+ * Dock (#41), Casa then the Page Openers, 100 px each. The strip plays
+ * something, since its playing form is the wider one, with a title longer
+ * than it can show: a title must ellipsise, never widen the strip into a
+ * scroll.
  */
-function footer(blocks: { name: string }[]): string {
+function floor(blocks: { name: string }[], dock: string[]): string {
   const block = (name: string) => `
     <div class="footer-item" style="display:flex; flex:0 0 auto; min-width:0; scroll-snap-align:start">
       <div class="block" style="
@@ -284,23 +298,40 @@ function footer(blocks: { name: string }[]): string {
         </div>
       </div>
     </div>`;
+  const PAD = 6;
+  const item = (name: string, current: boolean) => `
+    <div class="dock-item" style="
+      width:100px; flex-shrink:0; border-radius:${t.radius.dock - PAD}px;
+      background:${current ? t.color.primary : 'transparent'}; color:${current ? t.color.onPrimary : t.color.inkSecondary};
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+      font-size:${t.type.label.size}px; line-height:${t.type.label.lineHeight}; font-weight:${current ? 600 : 500}; white-space:nowrap;
+    "><span style="width:22px;height:22px;display:block;background:currentColor;border-radius:4px"></span>${name}</div>`;
   return `
-    <div id="footer" style="
-      flex-shrink:0; min-height:${t.layout.footerH}px; display:flex; align-items:stretch; gap:${t.space.sm}px;
-      overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scrollbar-width:none;
-    ">${block(blocks[0].name)}${media}${blocks
-      .slice(1)
-      .map(b => block(b.name))
-      .join('')}</div>`;
+    <div id="floor" style="flex:0 0 auto; min-height:${t.size.dockHeight}px; display:flex; gap:${t.space[3]}px; min-width:0">
+      <div id="footer" style="
+        flex:1; min-width:0; display:flex; align-items:stretch; gap:${t.space.sm}px;
+        overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scrollbar-width:none;
+      ">${block(blocks[0].name)}${media}${blocks
+        .slice(1)
+        .map(b => block(b.name))
+        .join('')}</div>
+      <div id="dock" style="
+        flex:0 0 auto; display:flex; gap:${t.space[1]}px; padding:${PAD}px; box-sizing:border-box;
+        height:${t.size.dockHeight}px; border-radius:${t.radius.dock}px; background:${t.color.surface};
+        border:1px solid ${t.color.line};
+      ">${dock.map((name, i) => item(name, i === 0)).join('')}</div>
+    </div>`;
 }
 
 /**
- * The footers asserted. `busy` is what `fake-house/manifest.yaml` Places in
- * `page:main:footer` once every Topic Page has its Opener (#32): Corridoio,
- * then Ovunque's strip, then the four Openers. `overfull` is a house that
- * places more than fits, which must scroll rather than clip.
+ * The floors asserted. `busy` is what `fake-house/manifest.yaml` Places in
+ * `page:main:footer` once every Topic Page has its Opener (#32): Corridoio
+ * and Ovunque's strip beside the Dock, and the four Openers in it after Casa.
+ * `overfull` is a house that places more than fits beside it, which must
+ * scroll rather than clip.
  */
-const BUSY_FOOTER = ['Corridoio', 'Clima', 'Sicurezza', 'Media', 'Servizi'].map(name => ({ name }));
+const BUSY_FOOTER = [{ name: 'Corridoio' }];
+const DOCK = ['Casa', 'Clima', 'Sicurezza', 'Media', 'Servizi'];
 const FOOTERS: Record<string, { blocks: { name: string }[]; fits: boolean }> = {
   busy: { blocks: BUSY_FOOTER, fits: true },
   overfull: {
@@ -309,18 +340,19 @@ const FOOTERS: Record<string, { blocks: { name: string }[]; fits: boolean }> = {
   },
 };
 
-/** The whole panel, so the left column is measured inside the real shell. */
+/** The whole panel, so each band is measured inside the real frame. */
 function panel(chips: ChipSpec[], footerBlocks: { name: string }[] = BUSY_FOOTER): string {
   return `<body style="margin:0;font-family:${t.font.family};background:${t.color.ground}">
     <div id="panel" style="
-      display:flex; flex-direction:column; gap:${t.space.lg}px; padding:${t.space.lg}px;
+      display:flex; flex-direction:column; gap:${t.space[5]}px; padding:${t.space[6]}px ${t.space[7]}px;
       width:100%; height:100vh; box-sizing:border-box; overflow:auto;
     ">
-      <div style="display:flex; flex:1; gap:${t.space.lg}px; min-height:0">
-        ${leftColumn(chips)}
+      ${statusBar(chips)}
+      <div style="display:flex; flex:1; gap:${t.space[6]}px; min-height:0">
+        ${leftColumn()}
         <div id="right" style="flex:1; min-height:0; overflow:auto"></div>
       </div>
-      ${footer(footerBlocks)}
+      ${floor(footerBlocks, DOCK)}
     </div>
   </body>`;
 }
@@ -337,14 +369,14 @@ type Failure = { viewport: string; rule: string; detail: string };
  */
 const probe = `(() => {
   const OVERLAP_TOLERANCE = 0.5;
-  const LEFT_COL_W = ${t.layout.leftColW};
+  const LEFT_COL_W = ${t.size.sidebarWidth};
   const failures = [];
   const col = document.getElementById('left-col');
   if (col === null) return [{ rule: 'setup', detail: 'no #left-col in the page' }];
 
   // Rule 1: nothing in the left column scrolls, except the region that yields.
   for (const el of [col, ...col.querySelectorAll('*')]) {
-    if (el.id === 'left' || el.id === 'chips') continue;
+    if (el.id === 'left') continue;
     const over = el.scrollHeight - el.clientHeight;
     if (over > OVERLAP_TOLERANCE) {
       const what = el.id !== '' ? '#' + el.id : el.tagName.toLowerCase() + '.' + el.className;
@@ -404,14 +436,34 @@ const probe = `(() => {
     });
   }
 
+  // Rule 5: the status bar holds its height, and the chips stay on its one
+  // line, beside the Clock rather than over it -- scrolling sideways when
+  // there are more than fit.
+  const status = document.getElementById('status').getBoundingClientRect();
+  if (Math.abs(status.height - ${t.size.statusBarHeight}) > OVERLAP_TOLERANCE) {
+    failures.push({ rule: 'the status bar holds its height', detail: '#status is ' + status.height.toFixed(1) + 'px, not ${t.size.statusBarHeight}' });
+  }
+  const chipsEl = document.getElementById('chips');
+  const chipBox = chipsEl.getBoundingClientRect();
+  if (chipBox.top < status.top - OVERLAP_TOLERANCE || chipBox.bottom > status.bottom + OVERLAP_TOLERANCE) {
+    failures.push({ rule: 'the chips stay in the status bar', detail: '#chips spans ' + chipBox.top + '-' + chipBox.bottom + ', the bar ' + status.top + '-' + status.bottom });
+  }
+  if (chipsEl.scrollHeight - chipsEl.clientHeight > OVERLAP_TOLERANCE) {
+    failures.push({ rule: 'the chips are one line', detail: '#chips overflows by ' + (chipsEl.scrollHeight - chipsEl.clientHeight) + 'px' });
+  }
+  const clockBox = document.getElementById('clock').getBoundingClientRect();
+  if (chipBox.left < clockBox.right - OVERLAP_TOLERANCE) {
+    failures.push({ rule: 'the chips clear the Clock', detail: '#chips starts at ' + chipBox.left + ', the Clock ends at ' + clockBox.right });
+  }
+
   return failures;
 })()`;
 
 /**
- * The footer's assertions (#32). `fits` says which footer this is: the busy
- * one must not scroll at all; the overfull one must, and only sideways.
- * Either way no block is clipped, the strip holds `footerH`, and `MediaBar`
- * keeps its floor.
+ * The floor's assertions (#32, #41). `fits` says which footer this is: the
+ * busy one must not scroll at all; the overfull one must, and only sideways.
+ * Either way no block is clipped, the floor holds `dockHeight`, `MediaBar`
+ * keeps its floor, and the Dock shows every item whole.
  */
 const footerProbe = (fits: boolean) => `(() => {
   const TOLERANCE = 0.5;
@@ -427,9 +479,19 @@ const footerProbe = (fits: boolean) => `(() => {
   if (!${fits} && !scrolls) {
     failures.push({ rule: 'an overfull footer scrolls', detail: '#footer holds ' + footer.scrollWidth + 'px in ' + footer.clientWidth + 'px without scrolling' });
   }
-  const height = footer.getBoundingClientRect().height;
-  if (Math.abs(height - ${t.layout.footerH}) > TOLERANCE) {
-    failures.push({ rule: 'the footer holds its height', detail: '#footer is ' + height.toFixed(1) + 'px, not ${t.layout.footerH}' });
+  const height = document.getElementById('floor').getBoundingClientRect().height;
+  if (Math.abs(height - ${t.size.dockHeight}) > TOLERANCE) {
+    failures.push({ rule: 'the floor holds its height', detail: '#floor is ' + height.toFixed(1) + 'px, not ${t.size.dockHeight}' });
+  }
+  const dock = document.getElementById('dock');
+  if (dock.scrollWidth - dock.clientWidth > TOLERANCE) {
+    failures.push({ rule: 'the Dock is not squeezed', detail: '#dock needs ' + dock.scrollWidth + ', has ' + dock.clientWidth });
+  }
+  for (const el of dock.querySelectorAll('.dock-item')) {
+    const w = el.getBoundingClientRect().width;
+    if (Math.abs(w - 100) > TOLERANCE || el.scrollWidth - el.clientWidth > TOLERANCE || el.scrollHeight - el.clientHeight > TOLERANCE) {
+      failures.push({ rule: 'every Dock item is whole', detail: el.textContent.trim() + ' is ' + w.toFixed(1) + 'px wide, needs ' + el.scrollWidth + 'x' + el.scrollHeight });
+    }
   }
   for (const el of footer.querySelectorAll('.block')) {
     const label = el.textContent.trim();
@@ -539,4 +601,4 @@ if (failures.length > 0) {
   for (const f of failures) console.error(`  ${f.viewport}  ${f.rule}: ${f.detail}`);
   process.exit(1);
 }
-console.log('\nThe left column and the footer fit at every asserted viewport.');
+console.log('\nThe status bar, the left column and the floor fit at every asserted viewport.');

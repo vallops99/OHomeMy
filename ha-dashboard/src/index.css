@@ -6,3 +6,9 @@
   0%, 100% { opacity: 0.45; }
   50% { opacity: 0.8; }
 }
+
+/* The Dock's items (#41): Casa Panel's press feedback, a quick scale to 0.96.
+   Here rather than inline because `:active` has no inline form. */
+.dock-item { transition: transform .12s ease; }
+.dock-item:active { transform: scale(.96); }
+.dock-item:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }

@@ -210,16 +210,26 @@ test('nothing else is a Page Opener', () => {
   assert.equal(openerPage(entity('script.sicurezza', [])), null);
 });
 
-test('a Page Opener is skipped on its own Page, in every Region, and only there', () => {
-  const opener = entity('input_button.clima', ['page_main_footer', 'page_clima_footer', 'page_clima_right', 'page_clima_glance']);
-  const other = entity('input_button.media', ['page_clima_footer']);
+test('a Page Opener is skipped on its own Page in left and right, and only there', () => {
+  const opener = entity('input_button.clima', ['page_main_footer', 'page_clima_left', 'page_clima_right']);
+  const other = entity('input_button.media', ['page_clima_right']);
 
-  assert.deepEqual(ids(resolvePage([], entities(opener, other), 'clima')), { ...empty, footer: ['entity:input_button.media'] });
+  assert.deepEqual(ids(resolvePage([], entities(opener, other), 'clima')), { ...empty, right: ['entity:input_button.media'] });
   assert.deepEqual(ids(resolvePage([], entities(opener, other), 'main')), { ...empty, footer: ['entity:input_button.clima'] });
 });
 
+test('a Page Opener stays in its own Page’s footer, where the Dock marks it current', () => {
+  const opener = entity('input_button.clima', ['page_clima_footer', 'page_clima_glance']);
+
+  assert.deepEqual(ids(resolvePage([], entities(opener), 'clima')), {
+    ...empty,
+    glance: ['entity:input_button.clima'],
+    footer: ['entity:input_button.clima'],
+  });
+});
+
 test('a Page Opener’s own Page is compared by slug', () => {
-  const opener = entity('input_button.sala_tv', ['page_sala_tv_footer']);
+  const opener = entity('input_button.sala_tv', ['page_sala_tv_right']);
 
   assert.deepEqual(ids(resolvePage([], entities(opener), 'sala-tv')), empty);
 });
