@@ -43,3 +43,4 @@ export {
   type Exported,
 } from './document';
 export { usePublished, useSaveDocument, useDocumentAdmin, type DocumentAdmin } from './useDocument';
+export { useHouse } from './useHouse';
