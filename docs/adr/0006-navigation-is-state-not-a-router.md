@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted, in part superseded by ADR-0015
 ---
 
 # Navigation is state, not a router, and the renderer supplies the way home

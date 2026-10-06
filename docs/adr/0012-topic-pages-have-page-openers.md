@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by ADR-0015
 ---
 
 # Topic Pages are reached by Page Openers, not by fake Areas

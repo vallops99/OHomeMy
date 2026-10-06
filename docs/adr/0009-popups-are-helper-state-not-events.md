@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted, in part superseded by ADR-0015
 ---
 
 # Popups are opened by helper state, not by events

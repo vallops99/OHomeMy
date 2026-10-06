@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by ADR-0015
 supersedes: ADR-0003, and ADR-0004's region model
 ---
 

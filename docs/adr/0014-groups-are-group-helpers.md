@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by ADR-0015
 ---
 
 # Groups are Home Assistant Group helpers; Areas get the Room Grid

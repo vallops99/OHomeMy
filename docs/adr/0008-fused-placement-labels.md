@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by ADR-0015
 supersedes: ADR-0005's label grammar and region names
 ---
 

@@ -1,5 +1,10 @@
 # The placement protocol
 
+> **Superseded by [ADR-0015](adr/0015-ohomemy-a-builder-owns-the-layout.md).**
+> Layout moves into a document edited in OHomeMy Builder, and labels carry
+> none. This grammar describes the label-driven renderer until the cutover
+> removes it, and is deleted with it.
+
 The frontend holds no layout. What appears on the panel, on which page, in
 which region, is declared in Home Assistant with labels on Areas and entities.
 This document is the normative grammar: it is what you need to know to label a
