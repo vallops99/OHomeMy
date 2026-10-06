@@ -11,6 +11,7 @@
  */
 import { useHass, useRegistryData } from '@hakit/core';
 import { useEffect, useMemo, useState } from 'react';
+import { effectiveAreaId } from './area';
 import { deviceBattery } from './battery';
 import { resolvePage, type PageLayout } from './placement';
 import type { Area, AreaId, Entity, EntityId, Label } from './types';
@@ -87,6 +88,7 @@ type RegistryEntry = {
  */
 export function useEntities(): Map<EntityId, Entity> {
   const registry = useRegistryData('entitiesRegistryDisplay');
+  const devices = useRegistryData('devices');
   const states = useHass(s => s.entities);
 
   return useMemo(() => {
@@ -120,7 +122,8 @@ export function useEntities(): Map<EntityId, Entity> {
         id,
         domain,
         name: (attributes.friendly_name as string) ?? id,
-        areaId: entry.area_id ?? null,
+        // The effective Area: the entity's own, else its device's (#38).
+        areaId: effectiveAreaId(entry.area_id, entry.device_id, devices),
         deviceId: entry.device_id ?? null,
         labels,
         state,
@@ -129,7 +132,7 @@ export function useEntities(): Map<EntityId, Entity> {
       });
     });
     return out;
-  }, [registry, states]);
+  }, [registry, devices, states]);
 }
 
 /**
