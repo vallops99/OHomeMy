@@ -1,6 +1,5 @@
 """OHomeMy: house dashboards laid out in a Builder, served as panels (ADR-0015)."""
 
-from homeassistant.components import frontend, panel_custom
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
@@ -13,7 +12,8 @@ from .bundles import (
     async_module_url,
     async_register_static_path,
 )
-from .const import DATA_PUBLISHED, DOMAIN, PLACEHOLDER_DASHBOARD_ID, PLACEHOLDER_PANEL
+from .const import DATA_PUBLISHED, DOMAIN
+from .panels import Panels
 from .store import Published
 from .websocket import async_register_commands
 
@@ -32,8 +32,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Register the placeholder Dashboard's panel."""
+type OHomeMyConfigEntry = ConfigEntry[Panels]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: OHomeMyConfigEntry) -> bool:
+    """Register a panel for each Dashboard, and keep them in step with the
+    document until the entry is unloaded."""
     try:
         module_url = await async_module_url(hass, DASHBOARD)
     except BundleMissing as err:
@@ -41,23 +45,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"The Dashboard's frontend is not built: {err} is missing"
         ) from err
 
-    # `embed_iframe=False` and one id in `config`, as every Dashboard's panel
-    # will be (docs/research/hakit-in-a-panel.md).
-    await panel_custom.async_register_panel(
-        hass,
-        frontend_url_path=PLACEHOLDER_PANEL,
-        webcomponent_name=DASHBOARD.element,
-        module_url=module_url,
-        sidebar_title="OHomeMy",
-        sidebar_icon="mdi:home-variant-outline",
-        require_admin=False,
-        embed_iframe=False,
-        config={"dashboard_id": PLACEHOLDER_DASHBOARD_ID},
+    published = hass.data[DATA_PUBLISHED]
+    panels = entry.runtime_data = Panels(hass, module_url)
+    panels.async_show(published.document)
+    entry.async_on_unload(
+        published.async_listen(
+            lambda _revision, document: panels.async_show(document)
+        )
     )
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Remove the panel. Panels live only in memory, so nothing else is left."""
-    frontend.async_remove_panel(hass, PLACEHOLDER_PANEL, warn_if_unknown=False)
+async def async_unload_entry(hass: HomeAssistant, entry: OHomeMyConfigEntry) -> bool:
+    """Remove the panels. Panels live only in memory, so nothing else is left."""
+    entry.runtime_data.async_remove_all()
     return True

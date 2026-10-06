@@ -1,15 +1,34 @@
-"""Setting up and removing the entry: the bundles served, the panel registered."""
+"""Setting up and removing the entry: the bundles served, the panels registered.
+
+Which panels, and how they follow the document, is `test_panels.py`.
+"""
 
 from pathlib import Path
+from typing import Any
 
+import pytest
 from homeassistant.components.frontend import DATA_PANELS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.ohomemy.const import DOMAIN, PLACEHOLDER_PANEL
+from custom_components.ohomemy.const import DOMAIN
 
+from .documents import dashboard
+
+PANEL = "ohomemy-wall"
 ENTRY_URL = "/ohomemy_static/ohomemy-dashboard/ohomemy-dashboard.js"
+
+
+@pytest.fixture(autouse=True)
+def stored(hass_storage: dict[str, Any]) -> None:
+    """One Dashboard published before Home Assistant started."""
+    hass_storage["ohomemy.document"] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "ohomemy.document",
+        "data": {"revision": 1, "document": {"dashboards": [dashboard("wall")]}},
+    }
 
 
 async def add_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -20,19 +39,13 @@ async def add_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-async def test_setup_registers_the_placeholder_panel(
+async def test_setup_loads_the_entry_with_the_bundle(
     hass: HomeAssistant, built: Path
 ) -> None:
     entry = await add_entry(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    panel = hass.data[DATA_PANELS][PLACEHOLDER_PANEL]
-    assert panel.component_name == "custom"
-    assert panel.require_admin is False
-    assert panel.config["dashboard_id"] == "placeholder"
-    custom = panel.config["_panel_custom"]
-    assert custom["name"] == "ohomemy-dashboard"
-    assert custom["embed_iframe"] is False
+    custom = hass.data[DATA_PANELS][PANEL].config["_panel_custom"]
     assert custom["module_url"].startswith(f"{ENTRY_URL}?v=")
 
 
@@ -40,7 +53,7 @@ async def test_the_module_url_changes_with_the_build(
     hass: HomeAssistant, built: Path
 ) -> None:
     entry = await add_entry(hass)
-    before = hass.data[DATA_PANELS][PLACEHOLDER_PANEL].config["_panel_custom"]
+    before = hass.data[DATA_PANELS][PANEL].config["_panel_custom"]
 
     (built / "ohomemy-dashboard" / "ohomemy-dashboard.js").write_text(
         "import './chunk-def.js';\n"
@@ -48,7 +61,7 @@ async def test_the_module_url_changes_with_the_build(
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
-    after = hass.data[DATA_PANELS][PLACEHOLDER_PANEL].config["_panel_custom"]
+    after = hass.data[DATA_PANELS][PANEL].config["_panel_custom"]
     assert after["module_url"] != before["module_url"]
 
 
@@ -57,7 +70,7 @@ async def test_the_bundle_and_its_chunks_are_served(
 ) -> None:
     await add_entry(hass)
     client = await hass_client()
-    module_url = hass.data[DATA_PANELS][PLACEHOLDER_PANEL].config["_panel_custom"][
+    module_url = hass.data[DATA_PANELS][PANEL].config["_panel_custom"][
         "module_url"
     ]
 
@@ -70,7 +83,7 @@ async def test_the_bundle_and_its_chunks_are_served(
     assert response.status == 200
 
 
-async def test_removing_the_entry_removes_the_panel(
+async def test_removing_the_entry_removes_the_panels(
     hass: HomeAssistant, built: Path
 ) -> None:
     entry = await add_entry(hass)
@@ -78,21 +91,21 @@ async def test_removing_the_entry_removes_the_panel(
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert PLACEHOLDER_PANEL not in hass.data[DATA_PANELS]
+    assert PANEL not in hass.data[DATA_PANELS]
 
 
-async def test_unloaded_then_reloaded_registers_the_panel_again(
+async def test_unloaded_then_reloaded_registers_the_panels_again(
     hass: HomeAssistant, built: Path
 ) -> None:
     entry = await add_entry(hass)
 
     await hass.config_entries.async_unload(entry.entry_id)
-    assert PLACEHOLDER_PANEL not in hass.data[DATA_PANELS]
+    assert PANEL not in hass.data[DATA_PANELS]
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
-    assert PLACEHOLDER_PANEL in hass.data[DATA_PANELS]
+    assert PANEL in hass.data[DATA_PANELS]
 
 
 async def test_an_unbuilt_dashboard_fails_setup(
@@ -101,4 +114,4 @@ async def test_an_unbuilt_dashboard_fails_setup(
     entry = await add_entry(hass)
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
-    assert PLACEHOLDER_PANEL not in hass.data.get(DATA_PANELS, {})
+    assert PANEL not in hass.data.get(DATA_PANELS, {})
