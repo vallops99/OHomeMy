@@ -100,6 +100,27 @@ export const strings = {
     exportFailed: (message: string) => `Export failed: ${message}`,
   },
 
+  defaults: {
+    title: 'Default Dashboards',
+    body: 'The Dashboard each person lands on when they open Home Assistant. A change applies at once, without Publish.',
+    loading: 'Loading users…',
+    failed: (message: string) => `Default Dashboards could not be loaded: ${message}`,
+    setFailed: (name: string, message: string) => `The default for ${name} was not changed: ${message}`,
+    system: 'Everyone else',
+    systemMeta: 'Anyone without a Default Dashboard of their own',
+    systemName: 'everyone else',
+    admin: 'Admin',
+    inactive: 'Inactive',
+    choose: (name: string) => `Default Dashboard for ${name}`,
+    haDefault: "Home Assistant's default",
+    other: (urlPath: string) => `Another panel: /${urlPath}`,
+    publishFirst: (name: string) => `${name} (Publish it first)`,
+    lostTitle: 'Default Dashboards will be cleared',
+    lost: (name: string, who: string[]) =>
+      `“${name}” is deleted in this Draft, and it is the Default Dashboard of ${who.join(', ')}. ` +
+      "When you Publish, they go back to Home Assistant's default.",
+  },
+
   confirm: 'Confirm',
   cancel: 'Cancel',
 

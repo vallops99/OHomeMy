@@ -11,6 +11,7 @@ import type { OHomeMyDocument } from '../document/types';
 import { useDocumentAdmin, usePublished, type ImportOutcome } from '../ha';
 import { usePanelProps } from '../panel/panelProps';
 import { DashboardList } from './DashboardList';
+import { DefaultsSection } from './DefaultsSection';
 import { HistorySection } from './HistorySection';
 import { messageOf } from './messageOf';
 import { canPublish, inConflict, isDirty, sessionReducer, type PublishOutcome, type Session } from './session';
@@ -116,6 +117,8 @@ export function Builder() {
           edit={edit => dispatch({ type: 'edited', edit })}
           ask={setConfirmation}
         />
+
+        <DefaultsSection session={session} />
 
         <HistorySection
           admin={admin}

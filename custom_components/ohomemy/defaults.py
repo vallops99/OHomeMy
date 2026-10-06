@@ -1,0 +1,303 @@
+"""Default Dashboards: which Dashboard each Home Assistant user lands on (#57).
+
+Home Assistant keeps a user's default panel in that user's frontend data, as
+`default_panel` inside the `core` item, and a system-wide one, for everyone
+without their own, in the frontend's system data. Its own pickers list only
+built-in and Lovelace dashboards, and `frontend/set_user_data` only writes
+the calling user's data, so an admin cannot give another user an OHomeMy
+Dashboard from HA's UI (docs/research/layout-storage.md §7.3, §7.4).
+
+The integration writes those same stores from Python, through the frontend
+component's `storage.async_user_store` and `storage.async_system_store`: the
+very stores `frontend/set_user_data` and `frontend/set_system_data` write.
+A write notifies the frontend's own subscriptions, so the user's open
+browsers switch live. Neither helper is public API; `tests/test_defaults.py`
+pins both, and if they move these commands answer `unavailable` instead of
+the integration failing to load.
+
+`core` also holds the frontend's onboarding and survey keys, so every write
+merges into it and touches `default_panel` alone.
+
+| command                        | who   | does                                       |
+|--------------------------------|-------|--------------------------------------------|
+| `ohomemy/defaults/subscribe`   | admin | an event `{system, users}` now and after   |
+|                                |       | any default or user changes                |
+| `ohomemy/defaults/set_user`    | admin | `{user_id, dashboard_id \\| null}`          |
+| `ohomemy/defaults/set_system`  | admin | `{dashboard_id \\| null}`                   |
+
+`null` clears the default: a user falls back to the system default, and the
+system to Home Assistant's own (`home`).
+
+When a Publish deletes a Dashboard, every default pointing at its panel is
+cleared. Left alone, HA would send those users to `home`, not to the system
+default (its fallback is per panel lookup, not per level), and a later
+Dashboard given the same slug would silently become their default.
+"""
+
+from __future__ import annotations
+
+import logging
+from collections.abc import Callable
+from typing import Any, Protocol
+
+from homeassistant.auth.models import User
+from homeassistant.components import websocket_api
+from homeassistant.core import Event, HomeAssistant, callback
+
+from .const import DATA_PUBLISHED
+from .panels import URL_PREFIX
+from .store import Published
+
+_LOGGER = logging.getLogger(__name__)
+
+CORE = "core"
+DEFAULT_PANEL = "default_panel"
+
+ERR_UNAVAILABLE = "unavailable"
+ERR_UNKNOWN_DASHBOARD = "unknown_dashboard"
+
+# Fired by `homeassistant.auth` when a user is added, changed or removed.
+USER_EVENTS = ("user_added", "user_updated", "user_removed")
+
+
+class FrontendStore(Protocol):
+    """What this module needs of HA's `UserStore` and `SystemStore`."""
+
+    data: dict[str, Any]
+
+    async def async_set_item(self, key: str, value: Any) -> None: ...
+
+    def async_subscribe(
+        self, key: str, on_update_callback: Callable[[], None]
+    ) -> Callable[[], None]: ...
+
+
+class Unavailable(Exception):
+    """Home Assistant no longer has the frontend storage this relies on."""
+
+
+def _storage() -> Any:
+    # Imported on use, not at load: if HA moves it, only these commands fail.
+    try:
+        from homeassistant.components.frontend import storage  # noqa: PLC0415
+    except ImportError as err:
+        raise Unavailable(str(err)) from err
+    if not all(
+        hasattr(storage, name) for name in ("async_user_store", "async_system_store")
+    ):
+        raise Unavailable("homeassistant.components.frontend.storage has changed")
+    return storage
+
+
+async def async_user_store(hass: HomeAssistant, user_id: str) -> FrontendStore:
+    """The user's frontend data: what `frontend/set_user_data` writes."""
+    return await _storage().async_user_store(hass, user_id)
+
+
+async def async_system_store(hass: HomeAssistant) -> FrontendStore:
+    """The frontend's system data: what `frontend/set_system_data` writes."""
+    return await _storage().async_system_store(hass)
+
+
+def default_of(store: FrontendStore) -> str | None:
+    """The panel URL path a store holds as its default, if any."""
+    core = store.data.get(CORE)
+    value = core.get(DEFAULT_PANEL) if isinstance(core, dict) else None
+    return value if isinstance(value, str) and value else None
+
+
+async def async_set_default(store: FrontendStore, url_path: str | None) -> None:
+    """Set or (`None`) clear `default_panel`, keeping the rest of `core`."""
+    core = store.data.get(CORE)
+    core = dict(core) if isinstance(core, dict) else {}
+    if url_path is None:
+        if DEFAULT_PANEL not in core:
+            return
+        del core[DEFAULT_PANEL]
+    else:
+        core[DEFAULT_PANEL] = url_path
+    await store.async_set_item(CORE, core)
+
+
+async def async_people(hass: HomeAssistant) -> list[User]:
+    """The users a person logs in as. HA's own system users are not."""
+    users = await hass.auth.async_get_users()
+    return sorted(
+        (u for u in users if not u.system_generated),
+        key=lambda u: ((u.name or "").casefold(), u.id),
+    )
+
+
+async def async_state(hass: HomeAssistant) -> dict[str, Any]:
+    """`{system, users}`: every default, as the panel URL path it names."""
+    system = await async_system_store(hass)
+    users = []
+    for user in await async_people(hass):
+        store = await async_user_store(hass, user.id)
+        users.append(
+            {
+                "id": user.id,
+                "name": user.name,
+                "is_admin": user.is_admin,
+                "is_active": user.is_active,
+                "default_panel": default_of(store),
+            }
+        )
+    return {"system": default_of(system), "users": users}
+
+
+def url_paths(document: dict[str, Any]) -> dict[str, str]:
+    """Each Dashboard's panel URL path, by Dashboard id."""
+    return {d["id"]: f"{URL_PREFIX}{d['slug']}" for d in document["dashboards"]}
+
+
+async def async_clear(hass: HomeAssistant, gone: set[str]) -> None:
+    """Clear every default, user or system, naming a panel in `gone`."""
+    stores = [await async_system_store(hass)]
+    stores += [await async_user_store(hass, u.id) for u in await async_people(hass)]
+    for store in stores:
+        if default_of(store) in gone:
+            await async_set_default(store, None)
+    _LOGGER.debug("Cleared the defaults naming %s", ", ".join(sorted(gone)))
+
+
+@callback
+def async_follow_publishes(hass: HomeAssistant, published: Published) -> None:
+    """After each Publish, clear the defaults of the Dashboards it deleted."""
+    before = url_paths(published.document)
+
+    @callback
+    def on_publish(_revision: int, document: dict[str, Any]) -> None:
+        nonlocal before
+        after = url_paths(document)
+        # By id, not by path: a Dashboard deleted while a new one takes its
+        # slug in the same Publish is still a different Dashboard.
+        gone = {path for id, path in before.items() if id not in after}
+        before = after
+        if gone:
+            hass.async_create_task(async_clear(hass, gone), eager_start=True)
+
+    published.async_listen(on_publish)
+
+
+@callback
+def async_register_commands(hass: HomeAssistant) -> None:
+    """Register the commands, once for the life of Home Assistant."""
+    for command, handler in (
+        ("subscribe", ws_subscribe),
+        ("set_user", ws_set_user),
+        ("set_system", ws_set_system),
+    ):
+        websocket_api.async_register_command(
+            hass, f"ohomemy/defaults/{command}", handler, _any_fields
+        )
+
+
+def _any_fields(msg: dict[str, Any]) -> dict[str, Any]:
+    return msg
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+async def ws_subscribe(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    msg_id = msg["id"]
+    unsubs: list[Callable[[], None]] = []
+
+    def unsubscribe_stores() -> None:
+        while unsubs:
+            unsubs.pop()()
+
+    async def watch_and_send() -> None:
+        # Each store is watched for `core`, which a user's own profile also
+        # writes, so the Builder never shows a stale default.
+        unsubscribe_stores()
+        stores = [await async_system_store(hass)]
+        stores += [await async_user_store(hass, u.id) for u in await async_people(hass)]
+        unsubs.extend(store.async_subscribe(CORE, changed) for store in stores)
+        await send()
+
+    async def send() -> None:
+        connection.send_message(
+            websocket_api.event_message(msg_id, await async_state(hass))
+        )
+
+    @callback
+    def changed() -> None:
+        hass.async_create_task(send(), eager_start=False)
+
+    @callback
+    def users_changed(_event: Event) -> None:
+        hass.async_create_task(watch_and_send(), eager_start=False)
+
+    try:
+        await watch_and_send()
+    except Unavailable as err:
+        unsubscribe_stores()
+        connection.send_error(msg_id, ERR_UNAVAILABLE, str(err))
+        return
+    unsubs_bus = [hass.bus.async_listen(e, users_changed) for e in USER_EVENTS]
+
+    @callback
+    def unsubscribe() -> None:
+        unsubscribe_stores()
+        for unsub in unsubs_bus:
+            unsub()
+
+    connection.subscriptions[msg_id] = unsubscribe
+    connection.send_result(msg_id)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+async def ws_set_user(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    user_id = msg.get("user_id")
+    user = await hass.auth.async_get_user(user_id) if isinstance(user_id, str) else None
+    if user is None or user.system_generated:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, f"No user {user_id!r}"
+        )
+        return
+    await _set(hass, connection, msg, lambda: async_user_store(hass, user.id))
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+async def ws_set_system(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    await _set(hass, connection, msg, lambda: async_system_store(hass))
+
+
+async def _set(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+    store: Callable[[], Any],
+) -> None:
+    """Point a default at `msg["dashboard_id"]`'s panel, or clear it on `null`.
+
+    Only a published Dashboard has a panel to land on, so one that exists
+    only in a Draft is refused.
+    """
+    dashboard_id = msg.get("dashboard_id")
+    url_path = None
+    if dashboard_id is not None:
+        url_path = url_paths(hass.data[DATA_PUBLISHED].document).get(dashboard_id)
+        if url_path is None:
+            connection.send_error(
+                msg["id"],
+                ERR_UNKNOWN_DASHBOARD,
+                f"No published Dashboard {dashboard_id!r}",
+            )
+            return
+    try:
+        await async_set_default(await store(), url_path)
+    except Unavailable as err:
+        connection.send_error(msg["id"], ERR_UNAVAILABLE, str(err))
+        return
+    connection.send_result(msg["id"], {"default_panel": url_path})
+
