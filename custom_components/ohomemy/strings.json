@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "OHomeMy",
+        "description": "Add OHomeMy to build dashboards for this house. Admins lay them out in OHomeMy Builder."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  }
+}

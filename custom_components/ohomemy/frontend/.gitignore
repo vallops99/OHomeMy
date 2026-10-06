@@ -1,0 +1,4 @@
+# Built bundles, copied in by scripts/dev-integration.sh or the release
+# workflow; never committed (see bundles.py).
+*
+!.gitignore

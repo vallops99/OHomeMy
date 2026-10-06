@@ -1,0 +1,11 @@
+# Python tests for custom_components/ohomemy (tests/):
+#
+#     uv venv --python 3.14 .venv
+#     uv pip install --python .venv/bin/python -r requirements_test.txt
+#     .venv/bin/python -m pytest
+#
+# pytest-homeassistant-custom-component pins the Home Assistant release it
+# tests against. The integration depends on `frontend`, which needs the
+# frontend package that release's `frontend/manifest.json` names.
+pytest-homeassistant-custom-component
+home-assistant-frontend==20260826.7

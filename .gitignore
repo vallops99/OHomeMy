@@ -16,3 +16,7 @@ dist
 
 # Python bytecode from the fake-house scripts.
 __pycache__/
+
+# The Python test venv (tests/).
+.venv
+.pytest_cache
