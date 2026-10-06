@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { BedDouble, CookingPot, Fence, Sofa } from 'lucide-react';
-import { FALLBACK_ICON, isMapped, lucideFor } from './iconMap';
+import { FALLBACK_ICON, iconChoices, isMapped, lucideFor } from './iconMap';
 
 test('an MDI name resolves to its Lucide glyph, with or without the prefix', () => {
   assert.equal(lucideFor('mdi:sofa'), Sofa);
@@ -44,4 +44,12 @@ test('every MDI name the source itself spells is mapped', () => {
   assert.ok(names.size > 50, 'the scan found the source');
   const unmapped = [...names].filter(n => !isMapped(n));
   assert.deepEqual(unmapped, []);
+});
+
+test('the Builder is offered one valid, drawn name per glyph', () => {
+  const choices = iconChoices();
+  assert.ok(choices.includes('mdi:sofa') && choices.includes('mdi:home'));
+  assert.ok(!choices.includes('mdi:sofa-outline'), 'the same glyph as mdi:sofa');
+  assert.equal(new Set(choices.map(lucideFor)).size, choices.length);
+  for (const name of choices) assert.match(name, /^[a-z]+:[a-z0-9-]+$/);
 });

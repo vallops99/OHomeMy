@@ -365,3 +365,17 @@ export function lucideFor(name: string): LucideIcon {
   const key = bare(name);
   return (key !== null && MDI_TO_LUCIDE[key]) || FALLBACK_ICON;
 }
+
+/**
+ * One MDI name per glyph this map draws, with its `mdi:` prefix, in the
+ * map's order: what the Builder offers wherever an icon is chosen (#56), so
+ * every choice is drawn and none is two names for one picture.
+ */
+export function iconChoices(): string[] {
+  const seen = new Set<LucideIcon>();
+  return Object.entries(MDI_TO_LUCIDE).flatMap(([name, glyph]) => {
+    if (seen.has(glyph)) return [];
+    seen.add(glyph);
+    return [`mdi:${name}`];
+  });
+}

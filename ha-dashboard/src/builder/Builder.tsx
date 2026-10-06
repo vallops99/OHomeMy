@@ -1,6 +1,7 @@
 /**
  * OHomeMy Builder (#55): the Dashboards in a Draft, Publish, history and
- * export/import. Laying out a Dashboard's Pages is #56's, on this frame.
+ * export/import; and, for one Dashboard at a time, laying out its Pages by
+ * dragging on a preview (#56, `Editor.tsx`), in place of the sections.
  *
  * All the rules are in `session.ts` (the Draft against the published
  * document), `draft.ts` (what an edit does) and `history.ts`; this file
@@ -11,8 +12,10 @@ import type { OHomeMyDocument } from '../document/types';
 import { useDocumentAdmin, usePublished, type ImportOutcome } from '../ha';
 import { usePanelProps } from '../panel/panelProps';
 import { DashboardList } from './DashboardList';
+import { DashboardEditor } from './Editor';
 import { HistorySection } from './HistorySection';
 import { messageOf } from './messageOf';
+import { mapDashboard } from './pages';
 import { canPublish, inConflict, isDirty, sessionReducer, type PublishOutcome, type Session } from './session';
 import { strings } from './strings';
 import { TransferSection } from './TransferSection';
@@ -26,6 +29,8 @@ export function Builder() {
   const admin = useDocumentAdmin();
   const [session, dispatch] = useReducer(sessionReducer, null);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
+  /** The Dashboard being laid out, by id, or `null` for the list. */
+  const [editing, setEditing] = useState<string | null>(null);
 
   useEffect(() => {
     if (published) dispatch({ type: 'received', published });
@@ -48,6 +53,7 @@ export function Builder() {
   const base = session.base.revision;
   const dirty = isDirty(session);
   const conflict = inConflict(session);
+  const edited = editing === null ? undefined : session.draft.dashboards.find(d => d.id === editing);
 
   return (
     <div className='b-app'>
@@ -63,7 +69,7 @@ export function Builder() {
         }
       />
 
-      <main className='b-main'>
+      <main className='b-main' data-editing={!!edited}>
         {conflict && (
           <Banner tone='alert' role='alert'>
             <strong className='b-banner-title'>{strings.conflict.title}</strong>
@@ -109,12 +115,25 @@ export function Builder() {
           </Banner>
         )}
 
+        {/* While a Dashboard is laid out, the sections are hidden (`editor.css`), not unmounted. */}
+        {edited && (
+          <DashboardEditor
+            key={edited.id}
+            dashboard={edited}
+            edit={f => dispatch({ type: 'edited', edit: d => mapDashboard(d, edited.id, f) })}
+            ask={setConfirmation}
+            disabled={!!session.publishing || conflict}
+            onClose={() => setEditing(null)}
+          />
+        )}
+
         <DashboardList
           base={session.base.document}
           draft={session.draft}
           disabled={!!session.publishing || conflict}
           edit={edit => dispatch({ type: 'edited', edit })}
           ask={setConfirmation}
+          onEdit={setEditing}
         />
 
         <HistorySection

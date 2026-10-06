@@ -6,6 +6,7 @@
  * string here that ends up in the document is `homePageName`, the name a new
  * Dashboard's first Page starts with, which the admin may change.
  */
+import { editorStrings } from './editorStrings';
 import type { SlugProblem } from './slug';
 
 export const strings = {
@@ -99,6 +100,9 @@ export const strings = {
     notJson: (file: string) => `“${file}” is not a JSON file.`,
     exportFailed: (message: string) => `Export failed: ${message}`,
   },
+
+  /** The Dashboard editor's (#56), kept in `editorStrings.ts`. */
+  editor: editorStrings,
 
   confirm: 'Confirm',
   cancel: 'Cancel',

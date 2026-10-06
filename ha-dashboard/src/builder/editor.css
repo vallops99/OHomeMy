@@ -1,0 +1,555 @@
+/*
+ * The Dashboard editor (#56), in Casa Panel's tokens as `builder.css` is.
+ *
+ * Colour still means state: `alert` marks only what is wrong (a Widget not
+ * shown, one that does not fit, a drop that would overlap), and `primary`
+ * marks what is selected, as the Navbar marks the current Page. The preview
+ * itself is the renderer's, in the Dashboard's own Theme.
+ */
+
+.b-main[data-editing='true'] {
+  max-width: none;
+}
+
+.b-main[data-editing='true'] > .b-section {
+  display: none;
+}
+
+.b-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.b-editor-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.b-editor-title {
+  margin: 0;
+  font-size: var(--type-row-title-size);
+  line-height: var(--type-row-title-line);
+  font-weight: var(--type-row-title-weight);
+}
+
+.b-pages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.b-page-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target-min);
+  padding: 0 var(--space-4);
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  font: inherit;
+  cursor: pointer;
+}
+
+.b-page-tab[aria-selected='true'] {
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.b-page-tab[aria-selected='true'] .b-chip {
+  color: inherit;
+  border-color: currentColor;
+}
+
+.b-editor-body {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) 360px;
+  align-items: start;
+  gap: var(--space-4);
+}
+
+@media (max-width: 1200px) {
+  .b-editor-body {
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+  .b-palette {
+    grid-column: 1 / -1;
+  }
+  .b-palette-list {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 860px) {
+  .b-editor-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.b-palette,
+.b-side,
+.b-canvas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.b-palette,
+.b-side {
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+}
+
+/* Beside the preview, the palette keeps in view while the Builder scrolls,
+   so any kind can be dragged onto it. */
+@media (min-width: 1201px) {
+  .b-palette {
+    position: sticky;
+    /* Below the Builder's sticky header: its padding and one control. */
+    --b-header: calc(2 * var(--space-5) + var(--target-min));
+    top: calc(var(--b-header) + var(--space-4));
+    max-height: calc(100vh - var(--b-header) - 2 * var(--space-4));
+    overflow: auto;
+  }
+}
+
+.b-panel-title {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-line);
+  font-weight: var(--type-label-weight);
+  letter-spacing: var(--type-label-tracking);
+  text-transform: uppercase;
+}
+
+.b-subhead {
+  margin: var(--space-3) 0 0;
+  color: var(--ink-muted);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-line);
+  font-weight: var(--type-label-weight);
+  letter-spacing: var(--type-label-tracking);
+  text-transform: uppercase;
+}
+
+.b-palette-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.b-palette-item {
+  user-select: none;
+  width: 100%;
+  min-height: var(--target-min);
+  padding: 0 var(--space-4);
+  color: var(--ink-soft);
+  background: var(--surface-control);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  font: inherit;
+  text-align: start;
+  cursor: grab;
+  touch-action: none;
+}
+
+.b-palette-item:active:not(:disabled) {
+  cursor: grabbing;
+  transform: scale(0.96);
+}
+
+.b-palette-item:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.b-canvas-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.b-fit-summary {
+  color: var(--ink-muted);
+  font-size: var(--type-meta-size);
+  line-height: var(--type-meta-line);
+}
+
+.b-fit-summary[data-fits='false'] {
+  color: var(--alert);
+}
+
+.b-segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: var(--surface-well);
+  border-radius: var(--radius-control);
+}
+
+.b-segmented > button {
+  min-height: calc(var(--target-min) - 8px);
+  padding: 0 var(--space-4);
+  color: var(--ink-secondary);
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius-control) - 4px);
+  font: inherit;
+  cursor: pointer;
+}
+
+.b-segmented > button[aria-checked='true'],
+.b-segmented > button[aria-selected='true'] {
+  color: var(--on-primary);
+  background: var(--primary);
+}
+
+.b-side-tabs {
+  display: flex;
+}
+
+.b-side-tabs > button {
+  flex: 1;
+}
+
+/* --- The preview ---------------------------------------------------------- */
+
+.b-stage {
+  width: 100%;
+  min-width: 0;
+}
+
+.b-stage-box {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+}
+
+.b-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.b-shown {
+  height: 100%;
+}
+
+.b-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.b-layer > .ohm-page {
+  height: 100%;
+}
+
+.b-guide {
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-well);
+  pointer-events: none;
+}
+
+.b-frame {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  min-height: 0;
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-tile);
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+}
+
+.b-frame:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.b-frame[data-selected='true'] {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+.b-frame[data-dragging='true'] {
+  opacity: 0.4;
+}
+
+.b-frame[data-problem='true'] {
+  border-style: dashed;
+  border-color: var(--alert-line);
+  background: var(--alert-surface);
+}
+
+.b-frame[data-fits='false'] {
+  border-color: var(--alert);
+}
+
+.b-frame-tag {
+  position: absolute;
+  z-index: 1;
+  bottom: calc(100% + 2px);
+  left: 0;
+  max-width: calc(100% - 2 * var(--space-1));
+  padding: 2px var(--space-2);
+  overflow: hidden;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  font-size: var(--type-meta-size);
+  line-height: var(--type-meta-line);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+/* The tag would cover the Widget's own title, so it shows only when it has
+   something to say: which Widget is selected, or what is wrong with one. */
+.b-frame:not([data-selected='true'], [data-problem='true'], [data-fits='false']) .b-frame-tag {
+  display: none;
+}
+
+.b-frame-fit {
+  display: none;
+}
+
+.b-frame[data-fits='false'] .b-frame-fit {
+  display: inline;
+}
+
+.b-frame[data-fits='false'] .b-frame-tag,
+.b-frame[data-problem='true'] .b-frame-tag,
+.b-ghost[data-valid='false'] .b-frame-tag {
+  color: var(--alert);
+  border-color: var(--alert-line);
+}
+
+.b-frame-problem {
+  position: absolute;
+  inset: var(--space-3);
+  overflow: hidden;
+  color: var(--alert);
+  font-size: var(--type-meta-size);
+  line-height: var(--type-meta-line);
+  pointer-events: none;
+}
+
+.b-handle {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  width: 28px;
+  height: 28px;
+  background: var(--primary);
+  border: 3px solid var(--bg);
+  border-radius: var(--radius-pill);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.b-ghost {
+  position: relative;
+  z-index: 2;
+  border: 2px dashed var(--primary);
+  border-radius: var(--radius-tile);
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  pointer-events: none;
+}
+
+.b-ghost[data-valid='false'] {
+  border-color: var(--alert);
+  background: var(--alert-surface);
+}
+
+/* --- The side panels ------------------------------------------------------ */
+
+.b-panel-body,
+.b-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.b-inspector .b-section-head {
+  margin: 0;
+}
+
+.b-inspector > .b-meta {
+  margin: 0;
+}
+
+.b-note {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-control);
+  font-size: var(--type-meta-size);
+  line-height: var(--type-meta-line);
+}
+
+.b-note[data-tone='alert'] {
+  color: var(--alert);
+  background: var(--alert-surface);
+  border: 1px solid var(--alert-line);
+}
+
+.b-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.b-pair > .b-field {
+  min-width: 0;
+}
+
+.b-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.b-number,
+.b-select {
+  width: 100%;
+  min-width: 0;
+}
+
+.b-input[aria-invalid='true'] {
+  border-color: var(--alert);
+}
+
+.b-switch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--target-min);
+  cursor: pointer;
+}
+
+.b-switch input {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--primary);
+}
+
+.b-title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.b-row-inline {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.b-row-inline > .b-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.b-icon-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.b-icon-picker > .b-select {
+  flex: 1;
+}
+
+.b-icon-shown {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--target-min);
+  height: var(--target-min);
+  color: var(--ink-secondary);
+  background: var(--surface-well);
+  border-radius: var(--radius-control);
+}
+
+.b-ordered {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.b-ordered-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.b-ordered-item,
+.b-nav-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--surface-well);
+  border-radius: var(--radius-control);
+}
+
+.b-ordered-item[data-missing='true'] {
+  color: var(--alert);
+}
+
+.b-ordered-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 8em;
+  overflow-wrap: anywhere;
+}
+
+.b-nav-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.b-nav-item > .b-actions {
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+}
+
+.b-subsection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}

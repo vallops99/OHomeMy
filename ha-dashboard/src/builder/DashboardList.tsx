@@ -29,12 +29,15 @@ export function DashboardList({
   disabled,
   edit,
   ask,
+  onEdit,
 }: {
   base: OHomeMyDocument;
   draft: OHomeMyDocument;
   disabled: boolean;
   edit: Edit;
   ask: Ask;
+  /** Opens the Dashboard's layout in the editor (#56). */
+  onEdit: (id: string) => void;
 }) {
   const [form, setForm] = useState<Form | null>(null);
   const { changes, deleted } = dashboardChanges(base, draft);
@@ -85,6 +88,9 @@ export function DashboardList({
                 <span className='b-chip'>{changes.get(dashboard.id) === 'new' ? strings.dashboards.new : strings.dashboards.changed}</span>
               )}
               <div className='b-actions'>
+                <button className='b-button b-primary' disabled={!!form} onClick={() => onEdit(dashboard.id)}>
+                  {strings.editor.edit}
+                </button>
                 {published.has(dashboard.id) && (
                   <a className='b-button' href={strings.form.url(dashboard.slug)}>
                     {strings.dashboards.open}
