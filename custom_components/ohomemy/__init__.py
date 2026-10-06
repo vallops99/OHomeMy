@@ -7,6 +7,7 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from . import defaults
 from .bundles import (
     BUILDER,
     DASHBOARD,
@@ -35,6 +36,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await published.async_load()
     hass.data[DATA_PUBLISHED] = published
     async_register_commands(hass)
+    defaults.async_register_commands(hass)
+    defaults.async_follow_publishes(hass, published)
     return True
 
 

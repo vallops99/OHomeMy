@@ -21,7 +21,7 @@ import {
   type SaveOutcome,
 } from './document';
 
-function useDocumentChannel(): DocumentChannel | null {
+export function useDocumentChannel(): DocumentChannel | null {
   const connection = useHass(s => s.connection);
   return useMemo(
     () =>

@@ -291,3 +291,14 @@
   color: var(--alert);
   font-size: var(--type-meta-size);
 }
+
+/* Default Dashboards (#57). */
+
+.b-defaults-select {
+  min-width: 14em;
+  max-width: 100%;
+}
+
+.b-defaults-lost {
+  margin-top: var(--space-3);
+}
