@@ -35,7 +35,14 @@ export function Page({ page, overflow }: { page: PageType; overflow: Overflow })
     <div className='ohm-page' data-overflow={overflow}>
       <div className='ohm-grid' style={gridVariables(page.grid)}>
         {shown.map(({ widget, kind, settings }) => (
-          <div key={widget.id} className='ohm-widget' data-kind={widget.kind} data-variant={widget.variant} style={cellPlacement(widget)}>
+          <div
+            key={widget.id}
+            className='ohm-widget'
+            data-widget={widget.id}
+            data-kind={widget.kind}
+            data-variant={widget.variant}
+            style={cellPlacement(widget)}
+          >
             <SkipOnError widget={widget}>
               <kind.Component widget={widget} settings={settings} />
             </SkipOnError>
