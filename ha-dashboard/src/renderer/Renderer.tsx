@@ -16,7 +16,8 @@ import type { ReactNode } from 'react';
 import { usePublished } from '../ha';
 import { usePanelProps } from '../panel/panelProps';
 import { DEFAULT_THEME, themeCss } from '../theme/themes';
-import { WIDGETS_CSS } from '../widgets/registry';
+import { WIDGETS_CSS, widgetKind } from '../widgets/registry';
+import { DashboardConcerns } from './concerns';
 import { RENDERER_CSS } from './grid';
 import { Page } from './Page';
 import { dashboardRef, selectHomePage } from './select';
@@ -56,6 +57,13 @@ export function Renderer() {
   if (selection.state !== 'page') body = <Notice {...NOTICES[selection.state]} />;
   else if (selection.page.widgets.length === 0) body = <Notice {...NOTICES.empty} />;
   else body = <Page page={selection.page} overflow={selection.dashboard.settings.overflow} />;
+  // Concerns are the whole Dashboard's, on any of its Pages (#53).
+  if (selection.state === 'page')
+    body = (
+      <DashboardConcerns dashboard={selection.dashboard} schemaOf={schemaOf}>
+        {body}
+      </DashboardConcerns>
+    );
 
   return (
     <>
@@ -66,6 +74,8 @@ export function Renderer() {
     </>
   );
 }
+
+const schemaOf = (kind: string) => widgetKind(kind)?.schema;
 
 function Notice({ title, detail }: { title: string; detail: string }) {
   return (

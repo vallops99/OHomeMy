@@ -40,10 +40,15 @@ export type FieldSpec =
    * than `min` (default 1) are left.
    */
   | { type: 'entities'; domains: readonly string[]; min?: number }
-  /** One Area, by its id in Home Assistant's area registry. */
-  | { type: 'area'; optional?: boolean }
+  /**
+   * One Area, by its id in Home Assistant's area registry. `shows` is the
+   * Domains of the Area's entities the Widget puts on screen without naming
+   * them, as a Room Tile counts its lights: they count as shown for Faults
+   * and Concerns (`./shows`). None by default.
+   */
+  | { type: 'area'; optional?: boolean; shows?: readonly string[] }
   /** An ordered set of Areas; dropped and counted as `entities` is. */
-  | { type: 'areas'; min?: number }
+  | { type: 'areas'; min?: number; shows?: readonly string[] }
   | { type: 'boolean'; default: boolean }
   | { type: 'choice'; options: readonly string[]; default: string }
   | { type: 'number'; min: number; max: number; default: number; integer?: boolean }
