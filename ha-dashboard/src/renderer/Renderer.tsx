@@ -1,24 +1,28 @@
 /**
  * The document-driven renderer (ADR-0015, #50): one Dashboard, read through
- * `ohomemy/document/subscribe` and redrawn on every Publish, showing its Home
- * Page. Navigation between Pages is #54's.
+ * `ohomemy/document/subscribe` and redrawn on every Publish, in its frame,
+ * opening on its Home Page (`DashboardView.tsx`, #54).
  *
  * Inside Home Assistant the panel's `config.dashboard_id` names the
  * Dashboard; on the dev server `?dashboard=<slug>` does (`select.ts`).
  *
- * Three `<style>`s go in with it, and so into the shadow root: the theme's
- * custom properties, the grid's stylesheet and every Widget kind's own. They
+ * Four `<style>`s go in with it, and so into the shadow root: the theme's
+ * custom properties, the grid's and the frame's stylesheets and every Widget
+ * kind's own. They
  * are plain elements in the tree, which React 19 leaves in place (it hoists
  * only a `<style>` given `href` and `precedence`), so they move with the tree
  * on each remount.
  */
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import type { Id } from '../document/types';
 import { usePublished } from '../ha';
 import { usePanelProps } from '../panel/panelProps';
 import { DEFAULT_THEME, themeCss } from '../theme/themes';
 import { WIDGETS_CSS } from '../widgets/registry';
+import { DashboardView } from './DashboardView';
+import { FRAME_CSS } from './Frame';
 import { RENDERER_CSS } from './grid';
-import { Page } from './Page';
+import type { Nav } from './navigation';
 import { dashboardRef, selectHomePage } from './select';
 
 /**
@@ -44,6 +48,8 @@ const NOTICES = {
 export function Renderer() {
   const published = usePublished();
   const { panel } = usePanelProps();
+  // Where each Dashboard was left, for coming back to its panel.
+  const [places] = useState(() => new Map<Id, Nav>());
 
   // Nothing at all until the first answer, rather than a notice that is
   // about to be wrong.
@@ -54,13 +60,16 @@ export function Renderer() {
 
   let body: ReactNode;
   if (selection.state !== 'page') body = <Notice {...NOTICES[selection.state]} />;
-  else if (selection.page.widgets.length === 0) body = <Notice {...NOTICES.empty} />;
-  else body = <Page page={selection.page} overflow={selection.dashboard.settings.overflow} />;
+  else
+    body = (
+      <DashboardView key={selection.dashboard.id} dashboard={selection.dashboard} places={places} empty={<Notice {...NOTICES.empty} />} />
+    );
 
   return (
     <>
       <style>{themeCss(theme.name, theme.mode)}</style>
       <style>{RENDERER_CSS}</style>
+      <style>{FRAME_CSS}</style>
       <style>{WIDGETS_CSS}</style>
       <div className='ohm-dashboard'>{body}</div>
     </>

@@ -39,16 +39,28 @@ export const IDLE_RETURN_MS = 240_000;
  * and the `select` picker (#36).
  */
 export function useIdleClose(onClose: () => void) {
-  const onCloseRef = useRef(onClose);
+  useIdleAfter(IDLE_RETURN_MS, onClose);
+}
+
+/**
+ * Calls `onIdle` after `ms` with no touch and no key anywhere on the page,
+ * the timer starting again on each; `null` runs no timer. A touch inside the
+ * Dashboard's shadow root counts: `pointerdown` is composed, and is heard
+ * here in the capture phase, before anything can stop it. For the
+ * Dashboard's idle return (#54), whose spell is its own setting.
+ */
+export function useIdleAfter(ms: number | null, onIdle: () => void) {
+  const onIdleRef = useRef(onIdle);
   useEffect(() => {
-    onCloseRef.current = onClose;
+    onIdleRef.current = onIdle;
   });
 
   useEffect(() => {
-    let timer = setTimeout(() => onCloseRef.current(), IDLE_RETURN_MS);
+    if (ms === null) return;
+    let timer = setTimeout(() => onIdleRef.current(), ms);
     const onActivity = () => {
       clearTimeout(timer);
-      timer = setTimeout(() => onCloseRef.current(), IDLE_RETURN_MS);
+      timer = setTimeout(() => onIdleRef.current(), ms);
     };
     document.addEventListener('pointerdown', onActivity, true);
     document.addEventListener('keydown', onActivity, true);
@@ -57,5 +69,5 @@ export function useIdleClose(onClose: () => void) {
       document.removeEventListener('pointerdown', onActivity, true);
       document.removeEventListener('keydown', onActivity, true);
     };
-  }, []);
+  }, [ms]);
 }

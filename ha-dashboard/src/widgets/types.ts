@@ -29,6 +29,20 @@ export type WidgetKind<F extends Fields = Fields> = {
    * Class names start with `ohm-<kind>-` so kinds never collide.
    */
   css?: string;
+  /**
+   * What a tap on the Widget does of itself, which decides how the renderer
+   * honours its `on_tap` (#54; the README's "Tapping a Widget"):
+   *
+   * - `own` (the default): the kind acts on a tap (a toggle toggles), and
+   *   keeps it. A Widget with `on_tap` gets an Open button beside it, a
+   *   chevron, as a Row's entity kept its action and gained one (ADR-0010).
+   * - `none`: a tap does nothing (a clock). With `on_tap` the whole box opens
+   *   the Page.
+   * - `page`: the kind is only a way to a Page (the Link): as `none`, and a
+   *   Widget of it without an `on_tap` is skipped, since it would be a dead
+   *   control.
+   */
+  tap?: 'own' | 'none' | 'page';
 };
 
 /** Declares a kind with its settings' types carried from schema to component. */

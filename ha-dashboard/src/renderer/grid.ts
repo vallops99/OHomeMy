@@ -35,10 +35,13 @@ export type Overflow = DashboardSettings['overflow'];
  *   shrinking to 12 on a phone.
  * - `.ohm-page` is the scroller, or not, and the size container rows are
  *   measured against.
+ * - `.ohm-cell` is a Widget's place on the grid. It holds the Widget's box
+ *   and, when the Widget opens a Page beside a tap of its own, the Open
+ *   button (`tap.ts`), so the box a kind adapts to is the box it has.
  * - `.ohm-widget` is each Widget's box. It is a size container named
  *   `widget`, which is what a kind's container queries ask about, and it
  *   scrolls its own content when that does not fit, so a Page that fits
- *   never does.
+ *   never does. `data-opens` marks one whose whole box opens a Page.
  */
 export const RENDERER_CSS = `
   .ohm-dashboard {
@@ -72,7 +75,14 @@ export const RENDERER_CSS = `
     grid-template-rows: repeat(var(--ohm-rows), var(--ohm-row));
     grid-auto-rows: var(--ohm-row);
   }
+  .ohm-cell {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    gap: var(--space-2);
+  }
   .ohm-widget {
+    flex: 1;
     container: widget / size;
     min-width: 0;
     min-height: 0;
@@ -81,6 +91,27 @@ export const RENDERER_CSS = `
     overscroll-behavior: contain;
   }
   .ohm-widget > * { flex: 1; min-width: 0; }
+  .ohm-widget[data-opens] { cursor: pointer; transition: transform .12s ease; }
+  .ohm-widget[data-opens]:active { transform: scale(.96); }
+  .ohm-widget[data-opens]:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: var(--radius-tile); }
+  .ohm-open {
+    flex: none;
+    width: var(--target-min);
+    padding: 0;
+    box-sizing: border-box;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-tile);
+    background: transparent;
+    color: var(--ink-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform .12s ease;
+  }
+  .ohm-open:active { transform: scale(.96); }
+  .ohm-open:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
   .ohm-notice {
     height: 100%;
     display: flex;

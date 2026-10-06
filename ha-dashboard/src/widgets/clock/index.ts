@@ -5,6 +5,8 @@ import { clockSchema } from './schema';
 export default defineWidget({
   schema: clockSchema,
   Component: ClockWidget,
+  // Nothing happens on a tap, so an `on_tap` makes the whole clock a way to its Page.
+  tap: 'none',
   // Time and date share a baseline, as in Casa Panel's status bar, and the
   // date wraps under the time when the box is too narrow for both. Sizes
   // follow the box, never below the design system's `clock` and `body-lg`.

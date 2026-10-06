@@ -4,19 +4,31 @@
  * a Variant it lacks, a setting it does not take, an entity Home Assistant no
  * longer has) is skipped without a word, and so is one whose component
  * throws: a gap in the grid, never a broken Page.
+ *
+ * Each Widget's `on_tap` is honoured here, the same for every kind
+ * (`tap.ts`): the whole box opens its Page when the kind does nothing on a
+ * tap, and an Open button beside the box does when the kind acts on one.
  */
 import { Component, useMemo, type ReactNode } from 'react';
+import { Icon } from '../ui/Icon';
+import { pressable } from '../ui/pressable';
 import { validateWidget, type Fields, type SettingsOf } from '../document/schema';
 import type { Page as PageType, Widget } from '../document/types';
 import { useHouse } from '../ha';
 import { widgetKind } from '../widgets/registry';
 import type { WidgetKind } from '../widgets/types';
 import { cellPlacement, gridVariables, type Overflow } from './grid';
+import { useDashboardNavigation } from './navigationContext';
+import { widgetTap, type WidgetTap } from './tap';
 
-type Shown = { widget: Widget; kind: WidgetKind; settings: SettingsOf<Fields> };
+type Shown = { widget: Widget; kind: WidgetKind; settings: SettingsOf<Fields>; tap: WidgetTap };
+
+/** What the Open button says to a screen reader. English until the strings module (#59). */
+const openLabel = (page: string) => `Open ${page}`;
 
 export function Page({ page, overflow }: { page: PageType; overflow: Overflow }) {
   const house = useHouse();
+  const navigation = useDashboardNavigation();
   const shown = useMemo(
     () =>
       page.widgets.flatMap((widget): Shown[] => {
@@ -26,19 +38,41 @@ export function Page({ page, overflow }: { page: PageType; overflow: Overflow })
           if (import.meta.env.DEV) console.debug(`OHomeMy: skipped Widget ${widget.id}: ${valid.ok ? 'unknown kind' : valid.reason}`);
           return [];
         }
-        return [{ widget, kind, settings: valid.settings }];
+        const tap = widgetTap(kind.tap, widget.on_tap, p => navigation.pageName(p) !== undefined);
+        if (tap.as === 'skipped') {
+          if (import.meta.env.DEV) console.debug(`OHomeMy: skipped Widget ${widget.id}: a ${widget.kind} with no Page to open`);
+          return [];
+        }
+        return [{ widget, kind, settings: valid.settings, tap }];
       }),
-    [page, overflow, house]
+    [page, overflow, house, navigation]
   );
 
   return (
     <div className='ohm-page' data-overflow={overflow}>
       <div className='ohm-grid' style={gridVariables(page.grid)}>
-        {shown.map(({ widget, kind, settings }) => (
-          <div key={widget.id} className='ohm-widget' data-kind={widget.kind} data-variant={widget.variant} style={cellPlacement(widget)}>
-            <SkipOnError widget={widget}>
-              <kind.Component widget={widget} settings={settings} />
-            </SkipOnError>
+        {shown.map(({ widget, kind, settings, tap }) => (
+          <div key={widget.id} className='ohm-cell' style={cellPlacement(widget)}>
+            <div
+              className='ohm-widget'
+              data-kind={widget.kind}
+              data-variant={widget.variant}
+              {...(tap.as === 'box' && { ...pressable(() => navigation.open(tap.page)), style: undefined, 'data-opens': true })}
+            >
+              <SkipOnError widget={widget}>
+                <kind.Component widget={widget} settings={settings} />
+              </SkipOnError>
+            </div>
+            {tap.as === 'button' && (
+              <button
+                type='button'
+                className='ohm-open'
+                aria-label={openLabel(navigation.pageName(tap.page) ?? '')}
+                onClick={() => navigation.open(tap.page)}
+              >
+                <Icon name='mdi:chevron-right' size={20} />
+              </button>
+            )}
           </div>
         ))}
       </div>

@@ -24,13 +24,33 @@ Run `npm run build` and it will build the files for you, you can then upload the
 - `src/renderer/grid.ts` is the proportional grid: a Page's columns share its width, its rows share one screen's height, and each Widget's box is a size container named `widget`.
 - `src/theme/themes.ts` holds the themes, applied as CSS custom properties on the shadow root (`:host`), in light, dark or `auto`.
 
+### Navigation (#54)
+
+Which Page is on screen is React state, not a URL (ADR-0006): `src/renderer/navigation.ts` holds the rules, `DashboardView.tsx` the state, one per Dashboard, kept while another Dashboard's panel is open. The same rules run on every device; only the document's settings differ.
+
+- **The trail.** Every Page opened is pushed on a trail over the Home Page. Opening the Home Page, or a Page already in the trail, goes back to it. With the Navbar in **Tabs mode** each item keeps its own trail over its own Page: switching items keeps each where it was (a dot marks an item left with a Page open), tapping the current item takes it back to its Page, and a Page opens inside the item it was opened from.
+- **The Navbar** (`Frame.tsx`) sits on its edge, horizontal on top or bottom and vertical on the left or right, each item its icon over its Page's name, the current one a `primary` pill. The Page's grid fills the rest.
+- **`back_history`.** On: while the trail has somewhere to go back to, one history entry at the same URL sits over the page's own, and the back gesture or button steps back one Page (`backGesture.ts`, ADR-0011's mechanism). Off: no entry is made, and back leaves the Dashboard.
+- **`idle_return`.** After that many seconds with no touch or key, the Dashboard returns to how it opened: the Home Page, every trail empty. `null` never returns.
+- **Home Assistant's sidebar.** A custom panel gets no toolbar, so where Home Assistant reports `narrow` (it has hidden its sidebar), the frame offers a Menu control that fires Home Assistant's own `hass-toggle-menu`: first in the Navbar, or floating at the top left without one. On a wide screen there is none, and a user set to always hide the sidebar keeps it hidden.
+
+#### Tapping a Widget
+
+Every Widget has `on_tap`, and the renderer honours it (`src/renderer/tap.ts`), so a kind never implements it. One rule decides how, by what the kind does with a tap of its own, declared as `tap` in its `index.ts`:
+
+- `own` (the default): the kind acts on a tap (a toggle toggles) and keeps it. A Widget with `on_tap` gets an **Open button**, a chevron, beside its box, as a Row's entity kept its action and gained a chevron (ADR-0010). The box the kind lays out in is what is left.
+- `none`: a tap does nothing (the clock). With `on_tap` the whole box opens the Page, with Casa Panel's press feedback.
+- `page`: the kind is only a way to a Page (the Link): as `none`, and a Widget without `on_tap` is skipped rather than drawn as a dead control.
+
+A tap never does two things, and a Widget's own control is never covered. The **Link** (`src/widgets/link/`) opens its own `on_tap`; its Default title is that Page's name.
+
 ### Adding a Widget kind
 
 A kind is one folder, `src/widgets/<kind>/`, named exactly as `Widget.kind` (`room_tile`, `camera_wall`). Nothing else needs editing: `src/widgets/registry.ts` finds every `src/widgets/*/index.ts` by itself.
 
 1. **`schema.ts`**: the kind's `defineSchema({ kind, variants, titled, settings })`. Settings are written in the field types of `src/document/schema.ts` (`entity`, `entities`, `area`, `areas`, `boolean`, `choice`, `number`, `text`, `icon`). If none fits, add the new type there, with its check and its value type, and a test. No React here, so a `schema.test.ts` beside it runs under `npm test`.
 2. **The component**, e.g. `RoomTileWidget.tsx`: it receives `{ widget, settings }` (`WidgetProps`), with the settings already checked, defaults filled in and entities Home Assistant no longer has dropped. It fills its box at any size, from the smallest to the largest screen of a Dashboard's supported range: adapt with container queries on `widget`, never with the screen size or `isPhone`. Take colour, radius and type from the theme's custom properties (`var(--lit-surface)`, `var(--radius-tile)`, `var(--type-meta-size)`), not from values. A `null` `widget.title` shows the kind's Default title (`shownTitle`); `''` shows none. Import @hakit only through `src/ui` and `src/ha`; take building blocks from their own modules (`../../ui/Tile`) so two kinds added at once do not both edit `src/ui/index.ts`.
-3. **`index.ts`**: `export default defineWidget({ schema, Component, css })`. `css` is the kind's own stylesheet, put once into the shadow root; start its classes with `ohm-<kind>-`.
+3. **`index.ts`**: `export default defineWidget({ schema, Component, css, tap })`. `tap` says what a tap does of itself (see "Tapping a Widget"); leave it out when the kind acts on a tap. `css` is the kind's own stylesheet, put once into the shadow root; start its classes with `ohm-<kind>-`.
 
 `src/widgets/clock/` and `src/widgets/toggle/` are the two to copy from.
 
