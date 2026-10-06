@@ -6,6 +6,7 @@
  *
  * Not a `Tile`, like `SensorTile`: nothing happens on a tap.
  */
+import type { CSSProperties } from 'react';
 import type { Entity } from '../ha';
 import { binarySensorView } from './binarySensorState';
 import { Icon } from './Icon';
@@ -13,9 +14,13 @@ import { ReadingBlock } from './ReadingBlock';
 import { rowStyle } from './rowShape';
 import { t } from './theme';
 
-export type BinarySensorTileProps = { entity: Entity };
+export type BinarySensorTileProps = {
+  entity: Entity;
+  /** Overrides on the root box: a Widget sizes it to its own (`src/widgets`). */
+  style?: CSSProperties;
+};
 
-export function BinarySensorTile({ entity }: BinarySensorTileProps) {
+export function BinarySensorTile({ entity, style }: BinarySensorTileProps) {
   const { label, icon, open } = binarySensorView(entity);
   const unavailable = entity.unavailable;
   return (
@@ -28,6 +33,7 @@ export function BinarySensorTile({ entity }: BinarySensorTileProps) {
         padding: `0 ${t.space.md}px`,
         boxSizing: 'border-box',
         border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
+        ...style,
       }}
     >
       <span
@@ -70,7 +76,7 @@ export function BinarySensorTile({ entity }: BinarySensorTileProps) {
 }
 
 /** A `binary_sensor` in `footer`: its state over its name. */
-export function BinarySensorBlock({ entity }: BinarySensorTileProps) {
+export function BinarySensorBlock({ entity, style }: BinarySensorTileProps) {
   const { label, icon } = binarySensorView(entity);
-  return <ReadingBlock icon={icon} value={label} name={entity.name} unavailable={entity.unavailable} />;
+  return <ReadingBlock icon={icon} value={label} name={entity.name} unavailable={entity.unavailable} style={style} />;
 }

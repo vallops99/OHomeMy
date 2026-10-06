@@ -7,6 +7,7 @@
  * otherwise. The row takes the Row's shape (`rowShape.ts`) so a reading
  * beside an Area's Row reads as the same kind of thing.
  */
+import type { CSSProperties } from 'react';
 import type { Entity } from '../ha';
 import { Icon } from './Icon';
 import { ReadingBlock } from './ReadingBlock';
@@ -14,9 +15,13 @@ import { rowStyle } from './rowShape';
 import { sensorIcon, sensorReading } from './sensorValue';
 import { t } from './theme';
 
-export type SensorTileProps = { entity: Entity };
+export type SensorTileProps = {
+  entity: Entity;
+  /** Overrides on the root box: a Widget sizes it to its own (`src/widgets`). */
+  style?: CSSProperties;
+};
 
-export function SensorTile({ entity }: SensorTileProps) {
+export function SensorTile({ entity, style }: SensorTileProps) {
   const { value, unit } = sensorReading(entity);
   const unavailable = entity.unavailable;
   return (
@@ -31,6 +36,7 @@ export function SensorTile({ entity }: SensorTileProps) {
         padding: `0 ${t.space.md}px`,
         boxSizing: 'border-box',
         border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
+        ...style,
       }}
     >
       <span style={{ width: 34, display: 'flex', justifyContent: 'center', color: unavailable ? t.color.fault : t.color.textSecondary }}>
@@ -67,9 +73,16 @@ export function SensorTile({ entity }: SensorTileProps) {
 }
 
 /** A `sensor` in `footer`: its value over its name. */
-export function SensorBlock({ entity }: SensorTileProps) {
+export function SensorBlock({ entity, style }: SensorTileProps) {
   const { value, unit } = sensorReading(entity);
   return (
-    <ReadingBlock icon={sensorIcon(entity)} value={value} detail={unit ?? undefined} name={entity.name} unavailable={entity.unavailable} />
+    <ReadingBlock
+      icon={sensorIcon(entity)}
+      value={value}
+      detail={unit ?? undefined}
+      name={entity.name}
+      unavailable={entity.unavailable}
+      style={style}
+    />
   );
 }

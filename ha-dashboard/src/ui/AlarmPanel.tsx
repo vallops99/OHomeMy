@@ -7,6 +7,7 @@
  *
  * Not a `Tile`: the card is not a control, its buttons are. No PIN (#8).
  */
+import type { CSSProperties } from 'react';
 import type { Entity } from '../ha';
 import { AlarmCommands } from './AlarmCommands';
 import { alarmIcon, isArmed, isTriggered } from './alarmState';
@@ -14,9 +15,13 @@ import { Icon } from './Icon';
 import { stateLabel } from './stateLabel';
 import { t } from './theme';
 
-export type AlarmPanelProps = { entity: Entity };
+export type AlarmPanelProps = {
+  entity: Entity;
+  /** Overrides on the root box: a Widget sizes it to its own (`src/widgets`). */
+  style?: CSSProperties;
+};
 
-export function AlarmPanel({ entity }: AlarmPanelProps) {
+export function AlarmPanel({ entity, style }: AlarmPanelProps) {
   const unavailable = entity.unavailable;
   // A triggered alarm borrows the fault treatment, as `AlarmTile` does: it
   // must not read as a normal "on".
@@ -35,6 +40,7 @@ export function AlarmPanel({ entity }: AlarmPanelProps) {
         borderRadius: t.radius.tile,
         border: `1px solid ${alarming ? t.color.faultLine : t.color.border}`,
         background: alarming ? t.color.faultSurface : t.color.surface,
+        ...style,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: t.space.sm, minWidth: 0 }}>

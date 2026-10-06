@@ -9,19 +9,24 @@
  * battery sensor on it, no battery shows. Not a `Tile`: the card is not a
  * control, its buttons are. Unavailable is a Fault, with nothing to press.
  */
+import type { CSSProperties } from 'react';
 import { useActions, useDeviceBattery, type Entity } from '../ha';
 import { entityIcon, Icon } from './Icon';
 import { stateLabel } from './stateLabel';
 import { t } from './theme';
 import { vacuumControls } from './vacuumState';
 
-export type VacuumCardProps = { entity: Entity };
+export type VacuumCardProps = {
+  entity: Entity;
+  /** Overrides on the root box: a Widget sizes it to its own (`src/widgets`). */
+  style?: CSSProperties;
+};
 
 /** Home Assistant's battery glyph for a level, in tens. */
 const batteryIcon = (level: number) =>
   level >= 95 ? 'mdi:battery' : level < 5 ? 'mdi:battery-outline' : `mdi:battery-${Math.round(level / 10) * 10}`;
 
-export function VacuumCard({ entity }: VacuumCardProps) {
+export function VacuumCard({ entity, style }: VacuumCardProps) {
   const actions = useActions();
   const battery = useDeviceBattery(entity);
   const controls = vacuumControls(entity);
@@ -41,6 +46,7 @@ export function VacuumCard({ entity }: VacuumCardProps) {
         borderRadius: t.radius.tile,
         border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
         background: unavailable ? t.color.faultSurface : t.color.surface,
+        ...style,
       }}
     >
       <span style={{ display: 'flex', color: unavailable ? t.color.fault : cleaning ? t.color.activeStrong : t.color.textSecondary }}>

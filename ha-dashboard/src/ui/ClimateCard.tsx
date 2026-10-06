@@ -15,7 +15,7 @@
  * between buttons would be a dead control that looks live. An Unavailable
  * climate is a Fault: the card says so, and offers nothing to press.
  */
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { climateHumidity, useActions, useEntities, type Entity } from '../ha';
 import { climateReading, degrees, hvacActionLabel, hvacModes, stepSetpoint } from './climateState';
 import { Icon } from './Icon';
@@ -23,7 +23,11 @@ import { ReadingBlock } from './ReadingBlock';
 import { stateLabel } from './stateLabel';
 import { t } from './theme';
 
-export type ClimateCardProps = { entity: Entity };
+export type ClimateCardProps = {
+  entity: Entity;
+  /** Overrides on the root box: a Widget sizes it to its own (`src/widgets`). */
+  style?: CSSProperties;
+};
 
 /**
  * The setpoint as the finger left it, until Home Assistant reports the new
@@ -39,7 +43,7 @@ function useSetpoint(live: number | null) {
   };
 }
 
-export function ClimateCard({ entity }: ClimateCardProps) {
+export function ClimateCard({ entity, style }: ClimateCardProps) {
   const actions = useActions();
   const { current, target } = climateReading(entity);
   const setpoint = useSetpoint(target);
@@ -66,6 +70,7 @@ export function ClimateCard({ entity }: ClimateCardProps) {
         borderRadius: t.radius.tile,
         border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
         background: unavailable ? t.color.faultSurface : t.color.surface,
+        ...style,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: t.space.sm, minWidth: 0 }}>
@@ -192,7 +197,7 @@ function StepButton({ icon, label, onPress, disabled }: { icon: string; label: s
  * on another Page too, it gets the chevron to that Page like any footer
  * member.
  */
-export function ClimateBlock({ entity }: ClimateCardProps) {
+export function ClimateBlock({ entity, style }: ClimateCardProps) {
   const { current, target } = climateReading(entity);
   return (
     <ReadingBlock
@@ -201,6 +206,7 @@ export function ClimateBlock({ entity }: ClimateCardProps) {
       detail={entity.unavailable ? undefined : `→ ${degrees(target)}`}
       name={entity.name}
       unavailable={entity.unavailable}
+      style={style}
     />
   );
 }

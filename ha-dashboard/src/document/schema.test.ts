@@ -131,6 +131,22 @@ test('a list left shorter than its minimum is invalid', () => {
   assert.match(reason(validateWidget(w, needsOne, { house })), /cameras: fewer than 1/);
 });
 
+test('a list of one Domain: members of two Domains are invalid, however many are left', () => {
+  const group = defineSchema({
+    kind: 'group',
+    variants: ['full'],
+    titled: true,
+    settings: { members: { type: 'entities', domains: ['light', 'lock'], sameDomain: true } },
+  });
+  const w = (members: string[]) => widget({ kind: 'group', settings: { members } });
+  assert.equal(validateWidget(w(['light.a', 'light.b']), group).ok, true);
+  assert.match(reason(validateWidget(w(['light.a', 'lock.b']), group)), /members: not all of one Domain/);
+  // Checked before the house drops anything, so a Group never changes Domain
+  // because a member was deleted.
+  const one: House = { hasEntity: id => id === 'light.a', hasArea: () => false };
+  assert.match(reason(validateWidget(w(['light.a', 'lock.gone']), group, { house: one })), /not all of one Domain/);
+});
+
 test('the grid: inside the columns always, inside the rows only when the Dashboard fits', () => {
   const fit = { columns: 12, rows: 8, overflow: 'fit' } as const;
   const scroll = { ...fit, overflow: 'scroll' } as const;

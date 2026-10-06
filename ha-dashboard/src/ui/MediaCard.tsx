@@ -9,6 +9,7 @@
  * Not a `Tile`: the card is not a control, its buttons and slider are. Off,
  * idle and Unavailable each say so; Unavailable is a Fault.
  */
+import type { CSSProperties } from 'react';
 import { useActions, useHassUrl, type Entity } from '../ha';
 import { isPhone } from './device';
 import { Icon } from './Icon';
@@ -17,12 +18,16 @@ import { Slider } from './Slider';
 import { stateLabel } from './stateLabel';
 import { t } from './theme';
 
-export type MediaCardProps = { entity: Entity };
+export type MediaCardProps = {
+  entity: Entity;
+  /** Overrides on the root box: a Widget sizes it to its own (`src/widgets`). */
+  style?: CSSProperties;
+};
 
 /** The artwork's side, and the row's content height. */
 const ART = 64;
 
-export function MediaCard({ entity }: MediaCardProps) {
+export function MediaCard({ entity, style }: MediaCardProps) {
   const actions = useActions();
   const hassUrl = useHassUrl();
   const controls = mediaControls(entity);
@@ -40,14 +45,17 @@ export function MediaCard({ entity }: MediaCardProps) {
         alignItems: 'center',
         // On a phone the row folds in two, as a Row's does (ADR-0011): the
         // artwork and what is playing on one line, the volume and the
-        // buttons under it. Its one row sums past a phone's width.
-        flexWrap: isPhone ? 'wrap' : 'nowrap',
+        // buttons under it. Its one row sums past a phone's width. A Widget
+        // folds it by its box instead, through these custom properties
+        // (`src/widgets/media`); without them the device decides, as before.
+        flexWrap: `var(--ohm-media-wrap, ${isPhone ? 'wrap' : 'nowrap'})` as CSSProperties['flexWrap'],
         gap: t.space.md,
         padding: t.space.md,
         boxSizing: 'border-box',
         borderRadius: t.radius.tile,
         border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
         background: unavailable ? t.color.faultSurface : t.color.surface,
+        ...style,
       }}
     >
       <div
@@ -72,7 +80,7 @@ export function MediaCard({ entity }: MediaCardProps) {
       <div
         style={{
           // On a phone, the rest of the first line, so the controls wrap under.
-          flex: isPhone ? `1 1 calc(100% - ${ART + t.space.md}px)` : 1,
+          flex: `var(--ohm-media-text-flex, ${isPhone ? `1 1 calc(100% - ${ART + t.space.md}px)` : '1'})`,
           minWidth: 0,
           display: 'flex',
           flexDirection: 'column',
@@ -124,7 +132,8 @@ export function MediaCard({ entity }: MediaCardProps) {
             display: 'flex',
             alignItems: 'center',
             gap: t.space.xs,
-            ...(isPhone ? { flex: 1, minWidth: 0 } : { width: 180, flexShrink: 0 }),
+            flex: `var(--ohm-media-volume-flex, ${isPhone ? '1' : '0 0 180px'})`,
+            minWidth: 0,
             color: t.color.textSecondary,
           }}
         >
