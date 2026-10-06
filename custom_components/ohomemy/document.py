@@ -38,6 +38,9 @@ MAX_ID = 64
 MAX_SLUG = 40
 MAX_GRID = 96
 
+# `select.ohomemy_popup`'s option for no Popup open, so no Popup may take it.
+NO_POPUP = "none"
+
 
 class InvalidDocument(Exception):
     """The document's structure is wrong at `path`."""
@@ -194,6 +197,10 @@ def _page(value: Any, path: str, overflow: str) -> None:
     _str(page["name"], f"{path}.name")
     if page["popup"] is not None:
         _str(page["popup"], f"{path}.popup")
+        if page["popup"] == NO_POPUP:
+            raise InvalidDocument(
+                f"{path}.popup", f"{NO_POPUP!r} is the name for no Popup open"
+            )
     grid = _obj(page["grid"], f"{path}.grid", {"columns", "rows"})
     columns = _int(grid["columns"], f"{path}.grid.columns", minimum=1, maximum=MAX_GRID)
     rows = _int(grid["rows"], f"{path}.grid.rows", minimum=1, maximum=MAX_GRID)

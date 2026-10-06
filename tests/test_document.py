@@ -110,6 +110,10 @@ def broken(path: str, change: Callable[[dict[str, Any]], None]) -> Any:
             lambda doc: doc["dashboards"][0]["pages"][1].update(popup="doorbell"),
         ),
         broken(
+            "dashboards[0].pages[2].popup",
+            lambda doc: doc["dashboards"][0]["pages"][2].update(popup="none"),
+        ),
+        broken(
             "dashboards[0].pages[0].grid.columns",
             lambda doc: doc["dashboards"][0]["pages"][0]["grid"].update(columns=0),
         ),

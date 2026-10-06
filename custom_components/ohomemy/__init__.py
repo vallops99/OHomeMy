@@ -1,6 +1,7 @@
 """OHomeMy: house dashboards laid out in a Builder, served as panels (ADR-0015)."""
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
@@ -19,6 +20,10 @@ from .store import Published
 from .websocket import async_register_commands
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+# The Popup's two entities: the select that opens one, and the button the
+# panel presses on a touch inside it.
+PLATFORMS = [Platform.BUTTON, Platform.SELECT]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -56,10 +61,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: OHomeMyConfigEntry) -> b
             lambda _revision, document: panels.async_show(document)
         )
     )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: OHomeMyConfigEntry) -> bool:
-    """Remove the panels. Panels live only in memory, so nothing else is left."""
+    """Remove the panels and the Popup's entities. Panels live only in
+    memory, so nothing else is left."""
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        return False
     entry.runtime_data.async_remove_all()
     return True

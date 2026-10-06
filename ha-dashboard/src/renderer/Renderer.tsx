@@ -1,16 +1,18 @@
 /**
  * The document-driven renderer (ADR-0015, #50): one Dashboard, read through
  * `ohomemy/document/subscribe` and redrawn on every Publish, showing its Home
- * Page. Navigation between Pages is #54's.
+ * Page. Navigation between Pages is #54's. Over it, the Popup layer shows
+ * whichever Popup Home Assistant has open, if this Dashboard lays it out
+ * (`PopupLayer.tsx`, #58).
  *
  * Inside Home Assistant the panel's `config.dashboard_id` names the
  * Dashboard; on the dev server `?dashboard=<slug>` does (`select.ts`).
  *
- * Three `<style>`s go in with it, and so into the shadow root: the theme's
- * custom properties, the grid's stylesheet and every Widget kind's own. They
- * are plain elements in the tree, which React 19 leaves in place (it hoists
- * only a `<style>` given `href` and `precedence`), so they move with the tree
- * on each remount.
+ * Four `<style>`s go in with it, and so into the shadow root: the theme's
+ * custom properties, the grid's stylesheet, every Widget kind's own and the
+ * Popup layer's. They are plain elements in the tree, which React 19 leaves
+ * in place (it hoists only a `<style>` given `href` and `precedence`), so
+ * they move with the tree on each remount.
  */
 import type { ReactNode } from 'react';
 import { usePublished } from '../ha';
@@ -20,6 +22,7 @@ import { WIDGETS_CSS, widgetKind } from '../widgets/registry';
 import { DashboardConcerns } from './concerns';
 import { RENDERER_CSS } from './grid';
 import { Page } from './Page';
+import { POPUP_CSS, PopupLayer } from './PopupLayer';
 import { dashboardRef, selectHomePage } from './select';
 
 /**
@@ -70,7 +73,11 @@ export function Renderer() {
       <style>{themeCss(theme.name, theme.mode)}</style>
       <style>{RENDERER_CSS}</style>
       <style>{WIDGETS_CSS}</style>
-      <div className='ohm-dashboard'>{body}</div>
+      <style>{POPUP_CSS}</style>
+      <div className='ohm-dashboard'>
+        {body}
+        {selection.state === 'page' && <PopupLayer dashboard={selection.dashboard} />}
+      </div>
     </>
   );
 }

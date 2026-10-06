@@ -146,6 +146,7 @@ export type Page = {
    * The Popup this Page lays out, by name, or `null` for an ordinary Page.
    * Unique in the Dashboard. A Popup Page is opened by Home Assistant
    * (`select.ohomemy_popup`), never by a tap, the Navbar or as the Home Page.
+   * Never `none`: that is the select's option for no Popup open.
    */
   popup: string | null;
   /** Each between 1 and 96. */
