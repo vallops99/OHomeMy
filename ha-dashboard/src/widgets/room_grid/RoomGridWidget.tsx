@@ -1,0 +1,73 @@
+/**
+ * The Room Grid Widget (#51), ported from `ui/RoomGrid.tsx`: its chosen
+ * Areas as Room Tiles under its title, with *All off* beside it.
+ *
+ * *All off* turns off every light that is on in every one of these Areas
+ * (`lightsOn`), not only the chosen ones, so a lamp no tile switches goes off
+ * too; while none is on it is visibly not a control: opacity .38, no press,
+ * no handler.
+ *
+ * The tiles share the box's height, never below a tile's floor; past it the
+ * grid scrolls, and admits it with a fade at the foot, since a tile cut off
+ * by an unannounced scroll boundary is a room that exists with no sign that
+ * it does (ADR-0007). How many columns is the old Region's table
+ * (`roomGridShape`), cut down in a narrow box (`index.ts`).
+ *
+ * Its tiles open nothing: a Widget has one `on_tap` (#54), and a Room Grid
+ * is one Widget, so with `on_tap` it gets one Open button beside it.
+ */
+import { useMemo, useRef } from 'react';
+import { shownTitle } from '../../document/schema';
+import { useActions, useAreas, type Area } from '../../ha';
+import { Icon } from '../../ui/Icon';
+import { lightsOn, roomGridShape } from '../../ui/roomGrid';
+import { SectionLabel } from '../../ui/SectionLabel';
+import { useHasMoreBelow } from '../../ui/useHasMoreBelow';
+import { RoomTile } from '../room_tile/RoomTile';
+import type { WidgetProps } from '../types';
+import { chosenIn, STRINGS } from './roomGrid';
+import type { roomGridSchema } from './schema';
+
+function AllOff({ areas }: { areas: Area[] }) {
+  const actions = useActions();
+  const on = lightsOn(areas);
+  const disabled = on.length === 0;
+  return (
+    <button type='button' className='ohm-room-grid-off' disabled={disabled} onClick={() => actions.turnOff(on)}>
+      <Icon name='mdi:power' size={20} />
+      {STRINGS.allOff}
+    </button>
+  );
+}
+
+export function RoomGridWidget({ widget, settings }: WidgetProps<(typeof roomGridSchema)['settings']>) {
+  const all = useAreas();
+  const areas = useMemo(() => settings.areas.flatMap(id => all.find(a => a.id === id) ?? []), [all, settings.areas]);
+  const tilesRef = useRef<HTMLDivElement>(null);
+  const hasMore = useHasMoreBelow(tilesRef);
+  const title = shownTitle(widget.title, STRINGS.defaultTitle);
+
+  return (
+    <section className='ohm-room-grid' aria-label={title || STRINGS.defaultTitle}>
+      <SectionLabel action={<AllOff areas={areas} />}>{title}</SectionLabel>
+      <div
+        ref={tilesRef}
+        className='ohm-room-grid-tiles'
+        data-variant={widget.variant}
+        data-columns={roomGridShape(areas.length).columns}
+        data-more={hasMore}
+      >
+        {areas.map(area => (
+          <RoomTile
+            key={area.id}
+            area={area}
+            name={area.name}
+            light={chosenIn(area, settings.lights)}
+            temperature={chosenIn(area, settings.temperatures)}
+            variant={widget.variant}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}

@@ -13,6 +13,7 @@ import { useDocumentAdmin, usePublished, type ImportOutcome } from '../ha';
 import { usePanelProps } from '../panel/panelProps';
 import { DashboardList } from './DashboardList';
 import { DashboardEditor } from './Editor';
+import { DefaultsSection } from './DefaultsSection';
 import { HistorySection } from './HistorySection';
 import { messageOf } from './messageOf';
 import { mapDashboard } from './pages';
@@ -135,6 +136,8 @@ export function Builder() {
           ask={setConfirmation}
           onEdit={setEditing}
         />
+
+        <DefaultsSection session={session} />
 
         <HistorySection
           admin={admin}
