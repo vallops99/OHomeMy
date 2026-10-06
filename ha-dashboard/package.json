@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:panel": "tsc -b && vite build --config vite.panel.config.ts --mode panel",
     "lint": "oxlint",
     "test": "npx tsx --test 'src/**/*.test.ts'",
     "preview": "vite preview",
@@ -16,6 +17,7 @@
     "measure": "npx tsx scripts/measure-panel.ts"
   },
   "dependencies": {
+    "@emotion/cache": "^11.14.0",
     "@fullcalendar/core": "6.1.21",
     "@fullcalendar/daygrid": "6.1.21",
     "@fullcalendar/interaction": "6.1.21",
@@ -27,7 +29,8 @@
     "fullcalendar": "6.1.21",
     "lucide-react": "^1.52.0",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "stylis": "^4.2.0"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",

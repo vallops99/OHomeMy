@@ -14,6 +14,8 @@ npm >=7.0.0
 ## Building
 Run `npm run build` and it will build the files for you, you can then upload them to your home assistant instance using the deploy script mentioned below.
 
+`npm run build:panel` builds the same renderer as a Home Assistant panel instead: `dist-panel/ohomemy-dashboard.js` defines the `<ohomemy-dashboard>` element for a `panel_custom` with `embed_iframe: false`. See `docs/research/hakit-in-a-panel.md` for why it is built differently.
+
 ## Deploy to Home Assistant via SSH
 1. Replace the values in the .env file provided with your `VITE_SSH_USERNAME`, `VITE_SSH_HOSTNAME` and `VITE_SSH_PASSWORD`.
 2. To automatically deploy to your home assistant instance, you can run `npm run deploy` after you've retrieved the SSH information specified [here](https://shannonhochkins.github.io/ha-component-kit/?path=/docs/introduction-deploying--docs), NOTE! The script has already been created for you, you just need to run it after you've updated the .env values.

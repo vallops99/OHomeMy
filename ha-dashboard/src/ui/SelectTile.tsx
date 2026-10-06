@@ -12,7 +12,7 @@
  */
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useActions, type Entity } from '../ha';
+import { useActions, usePortalRoot, type Entity } from '../ha';
 import { CloseButton } from './CloseButton';
 import { isPhone } from './device';
 import { entityIcon, Icon } from './Icon';
@@ -99,6 +99,7 @@ export function SelectTile({ entity }: SelectTileProps) {
 function SelectPicker({ entity, onClose }: { entity: Entity; onClose: () => void }) {
   const actions = useActions();
   useIdleClose(onClose);
+  const portalRoot = usePortalRoot();
 
   return createPortal(
     // The backdrop: a tap on it, and not on the card, closes the picker.
@@ -198,6 +199,6 @@ function SelectPicker({ entity, onClose }: { entity: Entity; onClose: () => void
         </div>
       </div>
     </div>,
-    document.body
+    portalRoot
   );
 }

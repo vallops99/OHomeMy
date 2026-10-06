@@ -299,6 +299,15 @@ export function useHassUrl(): (path: string) => string {
 }
 
 /**
+ * Where an overlay portals to. Inside a Home Assistant panel this is a node
+ * in the Dashboard's shadow root (#46), because `document.body` is outside it
+ * and nothing styled there reaches it; standalone it is `document.body`.
+ */
+export function usePortalRoot(): HTMLElement {
+  return useHass(s => s.portalRoot) ?? document.body;
+}
+
+/**
  * The battery level of an entity's device (#36): its `battery` sensor, even a
  * `diagnostic` one `useEntities` never returns. `null` with no device or no
  * such sensor -- and then nothing shows a battery, rather than a fake one.

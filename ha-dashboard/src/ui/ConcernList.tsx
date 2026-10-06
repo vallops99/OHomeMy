@@ -21,7 +21,7 @@
  * Rows are information, never controls: a tap on one does nothing.
  */
 import { createPortal } from 'react-dom';
-import { useAreas, type Health } from '../ha';
+import { useAreas, usePortalRoot, type Health } from '../ha';
 import { CloseButton } from './CloseButton';
 import { concernRows } from './concernList';
 import { isPhone } from './device';
@@ -43,6 +43,7 @@ export function ConcernList({ concern, onClose }: ConcernListProps) {
   const rows = concernRows(concern, useAreas());
   const fault = concern.level === 'fault';
   useIdleClose(onClose);
+  const portalRoot = usePortalRoot();
 
   return createPortal(
     // The backdrop: a tap on it, and not on the card, closes the list.
@@ -134,6 +135,6 @@ export function ConcernList({ concern, onClose }: ConcernListProps) {
         </ul>
       </div>
     </div>,
-    document.body
+    portalRoot
   );
 }
