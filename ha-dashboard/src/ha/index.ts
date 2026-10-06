@@ -31,3 +31,4 @@ export { useForecast } from './useForecast';
 export type { ForecastDay } from './forecast';
 export { getDocument, subscribeDocument, saveDocument, type DocumentChannel, type SaveOutcome } from './document';
 export { usePublished, useSaveDocument } from './useDocument';
+export { useHouse } from './useHouse';

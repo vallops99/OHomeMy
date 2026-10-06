@@ -1,5 +1,6 @@
 import { HassConnect } from '@hakit/core';
 import Dashboard from './Dashboard';
+import { Renderer } from './renderer/Renderer';
 import { HakitTheme } from './ui';
 
 type AppProps = {
@@ -22,6 +23,14 @@ type AppProps = {
  */
 const PANEL_RESUME = { suspendWhenHidden: false };
 
+/**
+ * The dev server reaches the document-driven renderer with
+ * `?dashboard=<slug>` (src/renderer/select.ts); without it, it still shows
+ * the label-driven `Dashboard` until the cutover (#61). Inside Home Assistant
+ * a panel is always a Dashboard of the document.
+ */
+const DEV_DASHBOARD = new URLSearchParams(window.location.search).has('dashboard');
+
 function App({ panel }: AppProps) {
   return (
     <HassConnect
@@ -39,7 +48,7 @@ function App({ panel }: AppProps) {
       {/* Drives @hakit's own surfaces -- the entity modal above all -- from
           our tokens. See src/ui/HakitTheme.tsx. */}
       <HakitTheme />
-      <Dashboard />
+      {panel || DEV_DASHBOARD ? <Renderer /> : <Dashboard />}
     </HassConnect>
   );
 }

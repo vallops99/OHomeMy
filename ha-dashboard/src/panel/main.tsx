@@ -32,8 +32,17 @@ const ELEMENT = 'ohomemy-dashboard';
  */
 const FONTS = 'https://fonts.googleapis.com/css2?family=Geist:wght@200;300;400;500;600;700&display=swap';
 
-/** The element fills the panel area Home Assistant gives it. */
-const HOST_CSS = ':host { display: block; height: 100%; }';
+/**
+ * The element fills the panel area Home Assistant gives it, which for a
+ * custom panel is the whole viewport (it has no toolbar). In the viewport's
+ * units, not `100%`: `ha-panel-custom` sits in an inline
+ * `partial-panel-resolver` and has no definite height, so `100%` is only as
+ * tall as the content, and a proportional grid takes its rows from the
+ * height it is given, not the reverse (#50, measured: 0 px). Important,
+ * because @hakit's global `html, body { height: 100% }` becomes a `:host`
+ * rule too (`hostSelectors.ts`) and is inserted after this one.
+ */
+const HOST_CSS = ':host { display: block; height: 100vh !important; height: 100dvh !important; }';
 
 function style(css: string) {
   const node = document.createElement('style');

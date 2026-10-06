@@ -112,15 +112,33 @@ const kebab = (name: string | number) => String(name).replace(/[A-Z]/g, m => `-$
  * `HakitTheme`.
  */
 export function cssVariables(): string {
+  return Object.entries(casaVariables())
+    .map(([name, value]) => `--${name}: ${value};`)
+    .join('\n');
+}
+
+/**
+ * The same tokens as a record, custom property name (without `--`) to value,
+ * plus each named type style as `type-<name>-size`, `-line`, `-weight` and
+ * `-tracking`. The document's themes (`themes.ts`) are built from it.
+ */
+export function casaVariables(): Record<string, string> {
   const px = (group: string, values: Record<string | number, number>) =>
-    Object.entries(values).map(([k, v]) => `--${group}${kebab(k)}: ${v}px;`);
-  return [
-    ...Object.entries(CASA.color).map(([k, v]) => `--${kebab(k)}: ${v};`),
-    `--font-sans: ${CASA.font.sans};`,
+    Object.entries(values).map(([k, v]) => [`${group}${kebab(k)}`, `${v}px`]);
+  const type = Object.entries(CASA.type).flatMap(([name, s]) => [
+    [`type-${kebab(name)}-size`, `${s.size}px`],
+    [`type-${kebab(name)}-line`, typeof s.lineHeight === 'number' ? String(s.lineHeight) : s.lineHeight],
+    [`type-${kebab(name)}-weight`, String(s.weight)],
+    [`type-${kebab(name)}-tracking`, s.letterSpacing],
+  ]);
+  return Object.fromEntries([
+    ...Object.entries(CASA.color).map(([k, v]) => [kebab(k), v]),
+    ['font-sans', CASA.font.sans],
     ...px('space-', CASA.space),
     ...px('radius-', CASA.radius),
     ...px('', CASA.size),
-  ].join('\n');
+    ...type,
+  ]);
 }
 
 /**

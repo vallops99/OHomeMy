@@ -6,21 +6,9 @@
  * Laid out as the design system's Dashboard has it: the time in `clock`, the
  * date beside it on the same baseline in `bodyLg`, muted.
  */
-import { useEffect, useState } from 'react';
-import { clockText, msToNextMinute } from './clock';
+import { clockText } from './clock';
 import { t } from './theme';
-
-/** The current time, re-read on every turn of the minute. */
-function useNow(): Date {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    // A chain of timeouts rather than an interval: each one is re-aimed at
-    // the next minute, so the Clock never drifts off it.
-    const id = setTimeout(() => setNow(new Date()), msToNextMinute(new Date()));
-    return () => clearTimeout(id);
-  }, [now]);
-  return now;
-}
+import { useNow } from './useNow';
 
 export function Clock() {
   const { time, date } = clockText(useNow());
