@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { OHomeMyDocument, Published } from '../document/types';
-import { getDocument, saveDocument, subscribeDocument, type DocumentChannel } from './document';
+import { exportDocument, getDocument, getHistory, importDocument, saveDocument, subscribeDocument, type DocumentChannel } from './document';
 
 type Msg = Record<string, unknown>;
 
@@ -83,4 +83,32 @@ test('a structural error comes back as invalid, naming where', async () => {
 test('anything else, like a non-admin refused, rejects', async () => {
   const house = fakeHouse(() => refusal('unauthorized', 'Unauthorized'));
   await assert.rejects(saveDocument(house.channel, empty, 0), { code: 'unauthorized' });
+});
+
+test('history answers the entries, newest first', async () => {
+  const entry = { revision: 2, saved_at: '2026-10-06T10:00:00+00:00', user_id: 'u1', document: empty };
+  const house = fakeHouse(() => ({ history: [entry] }));
+  assert.deepEqual(await getHistory(house.channel), [entry]);
+  assert.deepEqual(house.requests, [{ type: 'ohomemy/document/history' }]);
+});
+
+test('export answers the document labelled with its version', async () => {
+  const exported = { version: 1, minor_version: 1, revision: 4, document: empty };
+  const house = fakeHouse(() => exported);
+  assert.deepEqual(await exportDocument(house.channel), exported);
+  assert.deepEqual(house.requests, [{ type: 'ohomemy/document/export' }]);
+});
+
+test('import sends the file as it was, over its base revision', async () => {
+  const house = fakeHouse(() => ({ revision: 7 }));
+  const data = { version: 1, minor_version: 0, revision: 2, document: empty };
+  assert.deepEqual(await importDocument(house.channel, data, 6), { outcome: 'published', revision: 7 });
+  assert.deepEqual(house.requests, [{ type: 'ohomemy/document/import', base_revision: 6, data }]);
+});
+
+test('an import is refused as a Publish is, or as unsupported', async () => {
+  const conflict = fakeHouse(() => refusal('conflict', 'stale'));
+  assert.equal((await importDocument(conflict.channel, {}, 0)).outcome, 'conflict');
+  const newer = fakeHouse(() => refusal('unsupported_version', 'The document is version 2.0'));
+  assert.deepEqual(await importDocument(newer.channel, {}, 0), { outcome: 'unsupported', message: 'The document is version 2.0' });
 });

@@ -8,7 +8,18 @@
 import { useHass } from '@hakit/core';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { OHomeMyDocument, Published } from '../document/types';
-import { saveDocument, subscribeDocument, type DocumentChannel, type SaveOutcome } from './document';
+import {
+  exportDocument,
+  getHistory,
+  importDocument,
+  saveDocument,
+  subscribeDocument,
+  type DocumentChannel,
+  type Exported,
+  type HistoryEntry,
+  type ImportOutcome,
+  type SaveOutcome,
+} from './document';
 
 function useDocumentChannel(): DocumentChannel | null {
   const connection = useHass(s => s.connection);
@@ -53,4 +64,27 @@ export function useSaveDocument(): ((document: OHomeMyDocument, baseRevision: nu
   const channel = useDocumentChannel();
   const save = useCallback((document: OHomeMyDocument, baseRevision: number) => saveDocument(channel!, document, baseRevision), [channel]);
   return channel ? save : null;
+}
+
+/** Everything the Builder does to the document, bound to the connection. Admin only. */
+export type DocumentAdmin = {
+  save: (document: OHomeMyDocument, baseRevision: number) => Promise<SaveOutcome>;
+  history: () => Promise<HistoryEntry[]>;
+  export: () => Promise<Exported>;
+  import: (data: unknown, baseRevision: number) => Promise<ImportOutcome>;
+};
+
+/** The Builder's commands (#55); `null` while there is no connection. */
+export function useDocumentAdmin(): DocumentAdmin | null {
+  const channel = useDocumentChannel();
+  return useMemo(
+    () =>
+      channel && {
+        save: (document, baseRevision) => saveDocument(channel, document, baseRevision),
+        history: () => getHistory(channel),
+        export: () => exportDocument(channel),
+        import: (data, baseRevision) => importDocument(channel, data, baseRevision),
+      },
+    [channel]
+  );
 }

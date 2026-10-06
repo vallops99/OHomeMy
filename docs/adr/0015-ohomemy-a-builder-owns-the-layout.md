@@ -201,8 +201,16 @@ the first piece of work must confirm before working around them:
 - The Verdict's ranking, and the rule that a Fault is only reportable if it is
   rendered.
 
-## Open
+## Settled later
 
-- ADR-0009's `input_button.panel_popup_activity` lets the Popup automation see
-  touches. Whether the integration provides its own entity for this, as it
-  does for the trigger, is decided in the Popup issue.
+- **The Popup's activity is an integration entity too** (#58). ADR-0009's
+  `input_button.panel_popup_activity` becomes `button.ohomemy_popup_activity`,
+  which the panel presses, at most every few seconds, on a touch inside an
+  open Popup. An automation restarts its auto-close wait when the button's
+  state changes. The house then needs no helper of its own for Popups, and
+  the button exists exactly when the select does. A `button` rather than an
+  `event` entity, because the panel can press a button with an ordinary
+  service call that any user may make, and an `event` entity has no service
+  to trigger it from outside the integration.
+- **A Popup cannot be named `none`**, the select's option for no Popup open.
+  The server refuses such a document.

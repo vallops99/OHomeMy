@@ -1,0 +1,293 @@
+/*
+ * The Builder, in Casa Panel's tokens (ADR-0013): the colour, space, radius
+ * and size variables `HakitTheme` puts on the host, and the type variables
+ * `main.tsx` adds. No colour, radius or font size is written here as a value.
+ *
+ * The Builder is a desk tool as much as a wall one, but it keeps Casa
+ * Panel's touch floors (52 px controls) and its rule that colour means
+ * state: `alert` only for a Draft that cannot be Published or a refusal,
+ * never for decoration. Nothing here is "on", so the accent is unused.
+ */
+
+.b-app,
+.b-loading {
+  box-sizing: border-box;
+  height: 100%;
+  overflow: auto;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line);
+  -webkit-font-smoothing: antialiased;
+}
+
+.b-app *,
+.b-app *::before,
+.b-app *::after {
+  box-sizing: border-box;
+}
+
+.b-loading {
+  display: grid;
+  place-items: center;
+  color: var(--ink-muted);
+}
+
+.b-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-7);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+.b-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.b-heading h1 {
+  margin: 0;
+  font-size: var(--type-tile-title-size);
+  line-height: var(--type-tile-title-line);
+  font-weight: var(--type-tile-title-weight);
+  letter-spacing: var(--type-tile-title-tracking);
+}
+
+.b-status {
+  margin: var(--space-1) 0 0;
+  color: var(--ink-muted);
+  font-size: var(--type-meta-size);
+  line-height: var(--type-meta-line);
+}
+
+.b-status[data-state='conflict'] {
+  color: var(--alert);
+}
+
+.b-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-7) var(--space-7);
+}
+
+.b-section {
+  padding: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+}
+
+.b-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.b-section h2 {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-line);
+  font-weight: var(--type-label-weight);
+  letter-spacing: var(--type-label-tracking);
+  text-transform: uppercase;
+}
+
+.b-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.b-row + .b-row {
+  border-top: 1px solid var(--line);
+}
+
+.b-row-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+
+.b-row-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 12em;
+}
+
+.b-row-title {
+  font-size: var(--type-row-title-size);
+  line-height: var(--type-row-title-line);
+  font-weight: var(--type-row-title-weight);
+  overflow-wrap: anywhere;
+}
+
+.b-meta {
+  color: var(--ink-muted);
+  font-size: var(--type-meta-size);
+  line-height: var(--type-meta-line);
+  overflow-wrap: anywhere;
+}
+
+.b-section > .b-meta {
+  margin: 0;
+}
+
+.b-empty {
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: var(--type-meta-size);
+}
+
+.b-chip {
+  padding: var(--space-1) var(--space-3);
+  color: var(--ink-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  font-size: var(--type-meta-size);
+  line-height: var(--type-meta-line);
+}
+
+.b-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.b-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--target-min);
+  padding: 0 var(--space-5);
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  font: inherit;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 80ms ease-out;
+}
+
+.b-button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.b-button:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.b-button:focus-visible,
+.b-input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.b-primary {
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.b-icon {
+  width: var(--target-min);
+  padding: 0;
+}
+
+.b-banner {
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-card);
+}
+
+.b-banner p {
+  margin: 0 0 var(--space-3);
+}
+
+.b-banner[data-tone='alert'] {
+  color: var(--alert);
+  background: var(--alert-surface);
+  border-color: var(--alert-line);
+}
+
+.b-banner-title {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: var(--type-row-title-size);
+  line-height: var(--type-row-title-line);
+  font-weight: var(--type-row-title-weight);
+}
+
+.b-banner-note {
+  font-size: var(--type-meta-size);
+}
+
+.b-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface-well);
+  border-radius: var(--radius-control);
+}
+
+.b-form h3 {
+  margin: 0;
+  font-size: var(--type-row-title-size);
+  line-height: var(--type-row-title-line);
+  font-weight: var(--type-row-title-weight);
+}
+
+.b-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.b-label {
+  color: var(--ink-secondary);
+  font-size: var(--type-meta-size);
+}
+
+.b-input {
+  min-height: var(--target-min);
+  padding: 0 var(--space-4);
+  color: var(--ink);
+  background: var(--surface-control);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  font: inherit;
+}
+
+.b-error:empty {
+  display: none;
+}
+
+.b-error {
+  margin: 0;
+  color: var(--alert);
+  font-size: var(--type-meta-size);
+}

@@ -13,14 +13,21 @@
  * grid placement with it. Nothing here needs `CardBase`'s behaviour either,
  * since there is no entity to open a modal for.
  */
+import type { CSSProperties } from 'react';
 import { Icon } from './Icon';
 import { t } from './theme';
 
 export type FaultTileProps = {
   label: string;
+  /** Under the label, in capitals: an Unavailable entity's state. */
+  detail?: string;
+  /** The default is the 'something is missing' glyph; an Unavailable entity takes the alert one. */
+  icon?: string;
+  /** Overrides on the root box: a Widget sizes it to its own (`src/widgets`). */
+  style?: CSSProperties;
 };
 
-export function FaultTile({ label }: FaultTileProps) {
+export function FaultTile({ label, detail, icon = 'mdi:help-rhombus-outline', style }: FaultTileProps) {
   return (
     <div
       style={{
@@ -38,10 +45,12 @@ export function FaultTile({ label }: FaultTileProps) {
         background: t.color.faultSurface,
         color: t.color.fault,
         textAlign: 'center',
+        ...style,
       }}
     >
-      <Icon name='mdi:help-rhombus-outline' size={36} />
+      <Icon name={icon} size={36} />
       <span style={{ fontSize: t.font.body, fontWeight: 600 }}>{label}</span>
+      {detail !== undefined && <span style={{ fontSize: t.font.caption, fontWeight: 700 }}>{detail.toUpperCase()}</span>}
     </div>
   );
 }

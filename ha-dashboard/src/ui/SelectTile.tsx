@@ -10,7 +10,7 @@
  * outnumber the room), closing on a choice, its close button, a tap outside,
  * or the idle spell. An Unavailable select is a Fault and opens nothing.
  */
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { useActions, usePortalRoot, type Entity } from '../ha';
 import { CloseButton } from './CloseButton';
@@ -23,7 +23,11 @@ import { rowStyle } from './rowShape';
 import { stateLabel } from './stateLabel';
 import { t } from './theme';
 
-export type SelectTileProps = { entity: Entity };
+export type SelectTileProps = {
+  entity: Entity;
+  /** Overrides on the root box: a Widget sizes it to its own (`src/widgets`). */
+  style?: CSSProperties;
+};
 
 /** The picker card's width on the wall: wide enough for a long option. */
 const PICKER_W = 480;
@@ -31,7 +35,7 @@ const PICKER_W = 480;
 const optionsOf = (entity: Entity): string[] =>
   Array.isArray(entity.attributes.options) ? (entity.attributes.options as unknown[]).map(String) : [];
 
-export function SelectTile({ entity }: SelectTileProps) {
+export function SelectTile({ entity, style }: SelectTileProps) {
   const [open, setOpen] = useState(false);
   const unavailable = entity.unavailable;
   const press = pressable(unavailable ? undefined : () => setOpen(true));
@@ -51,6 +55,7 @@ export function SelectTile({ entity }: SelectTileProps) {
           boxSizing: 'border-box',
           border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
           ...press.style,
+          ...style,
         }}
       >
         <span style={{ width: 34, display: 'flex', justifyContent: 'center', color: unavailable ? t.color.fault : t.color.textSecondary }}>

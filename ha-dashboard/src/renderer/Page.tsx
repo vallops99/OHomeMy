@@ -52,7 +52,7 @@ export function Page({ page, overflow }: { page: PageType; overflow: Overflow })
     <div className='ohm-page' data-overflow={overflow}>
       <div className='ohm-grid' style={gridVariables(page.grid)}>
         {shown.map(({ widget, kind, settings, tap }) => (
-          <div key={widget.id} className='ohm-cell' style={cellPlacement(widget)}>
+          <div key={widget.id} className='ohm-cell' data-widget={widget.id} style={cellPlacement(widget)}>
             <div
               className='ohm-widget'
               data-kind={widget.kind}
@@ -67,6 +67,7 @@ export function Page({ page, overflow }: { page: PageType; overflow: Overflow })
               <button
                 type='button'
                 className='ohm-open'
+                data-opens
                 aria-label={openLabel(navigation.pageName(tap.page) ?? '')}
                 onClick={() => navigation.open(tap.page)}
               >

@@ -18,6 +18,10 @@ from .documents import dashboard
 
 PANEL = "ohomemy-wall"
 ENTRY_URL = "/ohomemy_static/ohomemy-dashboard/ohomemy-dashboard.js"
+# Not `ohomemy-builder`: that is the URL a Dashboard with the slug `builder`
+# would have.
+BUILDER = "ohomemy_builder"
+BUILDER_URL = "/ohomemy_static/ohomemy-builder/ohomemy-builder.js"
 
 
 @pytest.fixture(autouse=True)
@@ -115,3 +119,43 @@ async def test_an_unbuilt_dashboard_fails_setup(
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
     assert PANEL not in hass.data.get(DATA_PANELS, {})
+
+
+async def test_an_unbuilt_builder_fails_setup(
+    hass: HomeAssistant, built: Path
+) -> None:
+    for path in (built / "ohomemy-builder").iterdir():
+        path.unlink()
+    entry = await add_entry(hass)
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert BUILDER not in hass.data.get(DATA_PANELS, {})
+
+
+async def test_setup_registers_the_builder_for_admins_only(
+    hass: HomeAssistant, built: Path
+) -> None:
+    await add_entry(hass)
+
+    builder = hass.data[DATA_PANELS][BUILDER]
+    assert builder.component_name == "custom"
+    assert builder.sidebar_title == "OHomeMy Builder"
+    assert builder.require_admin is True
+    assert builder.show_in_sidebar is True
+    custom = builder.config["_panel_custom"]
+    assert custom["name"] == "ohomemy-builder"
+    assert custom["embed_iframe"] is False
+    assert custom["module_url"].startswith(f"{BUILDER_URL}?v=")
+
+
+async def test_unloading_removes_the_builder(
+    hass: HomeAssistant, built: Path
+) -> None:
+    entry = await add_entry(hass)
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    assert BUILDER not in hass.data[DATA_PANELS]
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert BUILDER in hass.data[DATA_PANELS]

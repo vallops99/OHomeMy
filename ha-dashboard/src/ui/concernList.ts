@@ -31,9 +31,9 @@ const byName = (a: string, b: string) => a.localeCompare(b, 'it', { sensitivity:
 /**
  * A Concern's entities as rows: by Area name, then entity name, with the
  * rows in no Area last whatever their name sorts as. The same order for
- * every Concern.
+ * every Concern. `noArea` names the rows in no Area.
  */
-export function concernRows(concern: Health, areas: Area[]): ConcernRow[] {
+export function concernRows(concern: Pick<Health, 'entities'>, areas: Area[], noArea: string = NO_AREA): ConcernRow[] {
   const names = new Map(areas.map(a => [a.id, a.name]));
   const rows = concern.entities.map(entity => ({
     entity,
@@ -44,5 +44,5 @@ export function concernRows(concern: Health, areas: Area[]): ConcernRow[] {
     if (a.inArea !== b.inArea) return a.inArea ? -1 : 1;
     return byName(a.areaName ?? '', b.areaName ?? '') || byName(a.entity.name, b.entity.name);
   });
-  return rows.map(r => ({ entity: r.entity, areaName: r.areaName ?? NO_AREA }));
+  return rows.map(r => ({ entity: r.entity, areaName: r.areaName ?? noArea }));
 }

@@ -20,7 +20,17 @@ import { atRest, back, canGoBack, currentPage, initialNav, navbarItems, open, re
 import { DashboardNavigationProvider, type DashboardNavigation } from './navigationContext';
 import { Page } from './Page';
 
-export function DashboardView({ dashboard, places, empty }: { dashboard: Dashboard; places: Map<Id, Nav>; empty: ReactNode }) {
+type Props = {
+  dashboard: Dashboard;
+  /** Where each Dashboard was left, kept by the renderer across Dashboards. */
+  places: Map<Id, Nav>;
+  /** What an empty Page shows, inside the frame so the Navbar stays. */
+  empty: ReactNode;
+  /** Drawn over the frame inside the Dashboard's navigation: the Popup layer, whose Widgets open Pages here too. */
+  overlay?: ReactNode;
+};
+
+export function DashboardView({ dashboard, places, empty, overlay }: Props) {
   const [saved, setNav] = useState(() => places.get(dashboard.id) ?? initialNav(dashboard));
   // A Publish may have taken Pages or items away since; forget them.
   const nav = reconcile(saved, dashboard);
@@ -65,6 +75,7 @@ export function DashboardView({ dashboard, places, empty }: { dashboard: Dashboa
           <Page key={page.id} page={page} overflow={dashboard.settings.overflow} />
         )}
       </Frame>
+      {overlay}
     </DashboardNavigationProvider>
   );
 }

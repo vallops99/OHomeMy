@@ -1,28 +1,31 @@
 /**
  * The document-driven renderer (ADR-0015, #50): one Dashboard, read through
  * `ohomemy/document/subscribe` and redrawn on every Publish, in its frame,
- * opening on its Home Page (`DashboardView.tsx`, #54).
+ * opening on its Home Page (`DashboardView.tsx`, #54). Over it, the Popup
+ * layer shows whichever Popup Home Assistant has open, if this Dashboard
+ * lays it out (`PopupLayer.tsx`, #58).
  *
  * Inside Home Assistant the panel's `config.dashboard_id` names the
  * Dashboard; on the dev server `?dashboard=<slug>` does (`select.ts`).
  *
  * Four `<style>`s go in with it, and so into the shadow root: the theme's
- * custom properties, the grid's and the frame's stylesheets and every Widget
- * kind's own. They
- * are plain elements in the tree, which React 19 leaves in place (it hoists
- * only a `<style>` given `href` and `precedence`), so they move with the tree
- * on each remount.
+ * custom properties, the grid's and the frame's stylesheets, every Widget
+ * kind's own and the Popup layer's. They are plain elements in the tree,
+ * which React 19 leaves in place (it hoists only a `<style>` given `href`
+ * and `precedence`), so they move with the tree on each remount.
  */
 import { useState, type ReactNode } from 'react';
 import type { Id } from '../document/types';
 import { usePublished } from '../ha';
 import { usePanelProps } from '../panel/panelProps';
 import { DEFAULT_THEME, themeCss } from '../theme/themes';
-import { WIDGETS_CSS } from '../widgets/registry';
+import { WIDGETS_CSS, widgetKind } from '../widgets/registry';
+import { DashboardConcerns } from './concerns';
 import { DashboardView } from './DashboardView';
 import { FRAME_CSS } from './Frame';
 import { RENDERER_CSS } from './grid';
 import type { Nav } from './navigation';
+import { POPUP_CSS, PopupLayer } from './PopupLayer';
 import { dashboardRef, selectHomePage } from './select';
 
 /**
@@ -62,7 +65,18 @@ export function Renderer() {
   if (selection.state !== 'page') body = <Notice {...NOTICES[selection.state]} />;
   else
     body = (
-      <DashboardView key={selection.dashboard.id} dashboard={selection.dashboard} places={places} empty={<Notice {...NOTICES.empty} />} />
+      // Concerns are the whole Dashboard's, on any of its Pages (#53). The
+      // Popup layer goes inside the Dashboard's navigation, so a Widget on a
+      // Popup opens a Page underneath.
+      <DashboardConcerns dashboard={selection.dashboard} schemaOf={schemaOf}>
+        <DashboardView
+          key={selection.dashboard.id}
+          dashboard={selection.dashboard}
+          places={places}
+          empty={<Notice {...NOTICES.empty} />}
+          overlay={<PopupLayer dashboard={selection.dashboard} />}
+        />
+      </DashboardConcerns>
     );
 
   return (
@@ -71,10 +85,13 @@ export function Renderer() {
       <style>{RENDERER_CSS}</style>
       <style>{FRAME_CSS}</style>
       <style>{WIDGETS_CSS}</style>
+      <style>{POPUP_CSS}</style>
       <div className='ohm-dashboard'>{body}</div>
     </>
   );
 }
+
+const schemaOf = (kind: string) => widgetKind(kind)?.schema;
 
 function Notice({ title, detail }: { title: string; detail: string }) {
   return (

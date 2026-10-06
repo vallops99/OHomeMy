@@ -8,7 +8,7 @@
  * would say otherwise. A footer member's chevron, when it has one, is added
  * beside it (`FooterMember`), never inside.
  */
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { Icon } from './Icon';
 import { t } from './theme';
 
@@ -22,9 +22,11 @@ export type ReadingBlockProps = {
   unavailable?: boolean;
   /** Draw the value in the accent: a door open, a siren sounding. */
   active?: boolean;
+  /** Overrides on the root box: a Widget sizes it to its own (`src/widgets`). */
+  style?: CSSProperties;
 };
 
-export function ReadingBlock({ icon, value, detail, name, unavailable = false, active = false }: ReadingBlockProps) {
+export function ReadingBlock({ icon, value, detail, name, unavailable = false, active = false, style }: ReadingBlockProps) {
   const fg = unavailable ? t.color.fault : active ? t.color.activeStrong : t.color.textPrimary;
   return (
     <div
@@ -42,6 +44,7 @@ export function ReadingBlock({ icon, value, detail, name, unavailable = false, a
         border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
         background: unavailable ? t.color.faultSurface : t.color.surface,
         color: fg,
+        ...style,
       }}
     >
       <Icon name={unavailable ? 'mdi:alert-circle' : icon} size={26} />

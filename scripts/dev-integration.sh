@@ -26,6 +26,7 @@ COMPONENT="$ROOT/custom_components/ohomemy"
 # directory under frontend/ (custom_components/ohomemy/bundles.py).
 BUNDLES=(
   "build:panel dist-panel ohomemy-dashboard"
+  "build:builder dist-builder ohomemy-builder"
 )
 
 for bundle in "${BUNDLES[@]}"; do

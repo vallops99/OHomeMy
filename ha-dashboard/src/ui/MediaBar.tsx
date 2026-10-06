@@ -10,6 +10,7 @@
  * Which player it shows is Derived: the first one reporting `playing`, in
  * registry order. Nothing here names an entity id.
  */
+import type { CSSProperties } from 'react';
 import { useActions, type Entity } from '../ha';
 import { Icon } from './Icon';
 import { mediaControls } from './mediaState';
@@ -19,6 +20,8 @@ import { onSurfaceFor, t } from './theme';
 export type MediaBarProps = {
   /** Every media player the screen placed here. The playing one wins. */
   entities: Entity[];
+  /** Overrides on the root box: a Widget sizes it to its own (`src/widgets`). */
+  style?: CSSProperties;
 };
 
 /** What is worth showing: something actually making sound. */
@@ -40,7 +43,7 @@ function nowPlaying(entity: Entity): string {
  */
 const box = { flex: 1, minWidth: t.layout.mediaBarMinW, minHeight: t.touch.primary, display: 'flex' } as const;
 
-export function MediaBar({ entities }: MediaBarProps) {
+export function MediaBar({ entities, style }: MediaBarProps) {
   const actions = useActions();
   const playing = playingOf(entities);
 
@@ -57,6 +60,7 @@ export function MediaBar({ entities }: MediaBarProps) {
           border: `1px solid ${t.color.border}`,
           color: t.color.textSecondary,
           boxSizing: 'border-box',
+          ...style,
         }}
       >
         <Icon name='mdi:music-note-off' size={24} color={t.color.textSecondary} />
@@ -71,7 +75,7 @@ export function MediaBar({ entities }: MediaBarProps) {
   const controls = mediaControls(playing);
 
   return (
-    <div style={box}>
+    <div style={{ ...box, ...style }}>
       {/*
         `sm` top and bottom, not the tile's `md`: the transport's 44 px
         buttons plus `md` made the strip 74 px, past `layout.footerH` (a

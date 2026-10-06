@@ -10,6 +10,7 @@
  * past the gate, and a PIN on the wall panel protects nothing an intruder
  * standing at it has not already defeated.
  */
+import type { CSSProperties } from 'react';
 import { useActions, type Entity } from '../ha';
 import { alarmIcon, isArmed, isTriggered } from './alarmState';
 import { Icon } from './Icon';
@@ -19,11 +20,13 @@ import { onSurfaceFor, t } from './theme';
 
 export type AlarmTileProps = {
   entity: Entity;
+  /** Overrides on the root box: a Widget sizes it to its own (`src/widgets`). */
+  style?: CSSProperties;
 };
 
 /** Every state Home Assistant reports as "this alarm is watching". */
 
-export function AlarmTile({ entity }: AlarmTileProps) {
+export function AlarmTile({ entity, style }: AlarmTileProps) {
   const actions = useActions();
   const armed = isArmed(entity);
   const triggered = isTriggered(entity);
@@ -40,7 +43,7 @@ export function AlarmTile({ entity }: AlarmTileProps) {
       active={armed}
       strong
       alwaysFilled={!triggered}
-      style={triggered ? { background: t.color.faultSurface, borderColor: t.color.faultLine } : undefined}
+      style={{ ...(triggered ? { background: t.color.faultSurface, borderColor: t.color.faultLine } : {}), ...style }}
       onClick={() => actions.call('alarm_control_panel', armed ? 'alarm_disarm' : 'alarm_arm_away', entity.id)}
     >
       <div
