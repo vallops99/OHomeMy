@@ -21,6 +21,11 @@ A room or zone of a house, as registered in Home Assistant's area registry. The
 dashboard never invents Areas and holds no list of them; the registry is the
 source of truth. _In this house, at the time of writing_: Ingresso, Corridoio,
 Salone, Camera Chri, Esterno, Cucina, Camera, Ufficio.
+An entity is in the Area it is assigned to; failing that, its device's Area;
+failing that, its device's parent device's Area. This is Home Assistant's own
+rule, applied to every Domain alike, so an entity is in the same Area here as
+in Home Assistant. An entity that shows up in the wrong Area is fixed in Home
+Assistant, by giving it an Area of its own or the `ignored` Label.
 _Avoid_: Room, zone, space
 
 **Domain**:
