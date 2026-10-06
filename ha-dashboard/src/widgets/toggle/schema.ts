@@ -1,6 +1,6 @@
 /**
- * One thing that is on or off, toggled by a tap: a light, a switch, a fan or
- * an `input_boolean`. A light that can be dimmed also gets its dimmer.
+ * One thing that is on or off, toggled by a tap: a light, a switch, a fan, a
+ * siren or an `input_boolean`. A light that can be dimmed also gets its dimmer.
  *
  * - `full`: a row, icon, title and state, with the dimmer beside them or,
  *   in a narrow box, under them.
@@ -10,12 +10,13 @@
  * Its Default title is the entity's own name.
  */
 import { defineSchema } from '../../document/schema';
+import { KIND_DOMAINS } from '../shared/domains';
 
 export const toggleSchema = defineSchema({
   kind: 'toggle',
   variants: ['full', 'compact'],
   titled: true,
   settings: {
-    entity: { type: 'entity', domains: ['light', 'switch', 'fan', 'input_boolean'] },
+    entity: { type: 'entity', domains: KIND_DOMAINS.toggle },
   },
 });

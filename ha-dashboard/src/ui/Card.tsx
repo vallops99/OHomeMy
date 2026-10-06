@@ -6,16 +6,18 @@
  * its members as the rows (ADR-0014) -- and what a lone gate sits in, so an
  * `AccessRow` always has its card around it.
  */
-import { Children, Fragment, isValidElement, type ReactNode } from 'react';
+import { Children, Fragment, isValidElement, type CSSProperties, type ReactNode } from 'react';
 import { t } from './theme';
 
 export type CardProps = {
   /** The `SectionLabel`: a noun, set in capitals by the style. None for a lone row. */
   title?: string;
   children?: ReactNode;
+  /** Overrides on the root box: a Widget sizes it to its own (`src/widgets`). */
+  style?: CSSProperties;
 };
 
-export function Card({ title, children }: CardProps) {
+export function Card({ title, children, style }: CardProps) {
   // `Children.toArray` drops the `null`s a dispatch may hand back, so a
   // divider never stands next to nothing.
   const rows = Children.toArray(children);
@@ -32,6 +34,7 @@ export function Card({ title, children }: CardProps) {
         borderRadius: t.radius.tile,
         background: t.color.surface,
         border: `1px solid ${t.color.line}`,
+        ...style,
       }}
     >
       {title !== undefined && <SectionLabel>{title}</SectionLabel>}

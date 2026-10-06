@@ -39,7 +39,13 @@ export type FieldSpec =
    * longer has are dropped, not fatal; the Widget is skipped only if fewer
    * than `min` (default 1) are left.
    */
-  | { type: 'entities'; domains: readonly string[]; min?: number }
+  | {
+      type: 'entities';
+      domains: readonly string[];
+      min?: number;
+      /** Every member of one Domain, whichever of `domains` it is: a Group. */
+      sameDomain?: boolean;
+    }
   /**
    * One Area, by its id in Home Assistant's area registry. `shows` is the
    * Domains of the Area's entities the Widget puts on screen without naming
@@ -181,6 +187,9 @@ function checkField(spec: FieldSpec, value: unknown, house: House | undefined): 
         if (ids.includes(id)) return no(`${id} twice`);
         ids.push(id);
       }
+      // On every id written, before any is dropped, so a Group never turns
+      // valid, or changes Domain, because a member left Home Assistant.
+      if (spec.type === 'entities' && spec.sameDomain && new Set(ids.map(domainOf)).size > 1) return no('not all of one Domain');
       const present = house ? ids.filter(id => exists(one, id, house)) : ids;
       const min = spec.min ?? 1;
       return present.length >= min ? ok(present) : no(`fewer than ${min}`);
@@ -210,10 +219,12 @@ function checkField(spec: FieldSpec, value: unknown, house: House | undefined): 
 function checkId(spec: { type: 'entity'; domains: readonly string[] } | { type: 'area' }, value: unknown): string | Checked {
   if (spec.type === 'area') return typeof value === 'string' && AREA_ID.test(value) ? value : no('not an Area id');
   if (typeof value !== 'string' || !ENTITY_ID.test(value)) return no('not an entity id');
-  const domain = value.slice(0, value.indexOf('.'));
+  const domain = domainOf(value);
   if (spec.domains.length > 0 && !spec.domains.includes(domain)) return no(`${value} is not a ${spec.domains.join(' or ')}`);
   return value;
 }
+
+const domainOf = (entityId: string) => entityId.slice(0, entityId.indexOf('.'));
 
 const exists = (spec: { type: 'entity' | 'area' }, id: string, house: House) =>
   spec.type === 'entity' ? house.hasEntity(id) : house.hasArea(id);
