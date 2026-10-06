@@ -29,3 +29,5 @@ export { climateHumidity } from './climateHumidity';
 export { useFeed, type Feed } from './useFeed';
 export { useForecast } from './useForecast';
 export type { ForecastDay } from './forecast';
+export { getDocument, subscribeDocument, saveDocument, type DocumentChannel, type SaveOutcome } from './document';
+export { usePublished, useSaveDocument } from './useDocument';

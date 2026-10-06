@@ -3,7 +3,7 @@
   "name": "OHomeMy",
   "codeowners": ["@vallops99"],
   "config_flow": true,
-  "dependencies": ["http", "frontend", "panel_custom"],
+  "dependencies": ["http", "frontend", "panel_custom", "websocket_api"],
   "documentation": "https://github.com/vallops99/homeassistant-frontend",
   "integration_type": "service",
   "iot_class": "calculated",

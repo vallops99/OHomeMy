@@ -39,6 +39,9 @@ done
 # Copied, not symlinked: the container sees only its bind-mounted config dir.
 echo "==> install into $HA_CONFIG/custom_components/ohomemy"
 mkdir -p "$HA_CONFIG/custom_components"
+# Home Assistant compiles the component as root, so its __pycache__ is
+# removed from inside the container.
+docker exec "$HA_CONTAINER" rm -rf /config/custom_components/ohomemy/__pycache__ 2>/dev/null || true
 rm -rf "$HA_CONFIG/custom_components/ohomemy"
 cp -r "$COMPONENT" "$HA_CONFIG/custom_components/ohomemy"
 find "$HA_CONFIG/custom_components/ohomemy" -name __pycache__ -prune -exec rm -rf {} +

@@ -13,14 +13,22 @@ from .bundles import (
     async_module_url,
     async_register_static_path,
 )
-from .const import DOMAIN, PLACEHOLDER_DASHBOARD_ID, PLACEHOLDER_PANEL
+from .const import DATA_PUBLISHED, DOMAIN, PLACEHOLDER_DASHBOARD_ID, PLACEHOLDER_PANEL
+from .store import Published
+from .websocket import async_register_commands
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Serve the built frontends, whether or not the entry is loaded."""
+    """Serve the built frontends and the document, whether or not the entry
+    is loaded: neither a static path nor a websocket command can be
+    unregistered, and a subscriber must outlive a reload of the entry."""
     await async_register_static_path(hass)
+    published = Published(hass)
+    await published.async_load()
+    hass.data[DATA_PUBLISHED] = published
+    async_register_commands(hass)
     return True
 
 
