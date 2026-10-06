@@ -7,13 +7,14 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .bundles import (
+    BUILDER,
     DASHBOARD,
     BundleMissing,
     async_module_url,
     async_register_static_path,
 )
 from .const import DATA_PUBLISHED, DOMAIN
-from .panels import Panels
+from .panels import Panels, async_register_builder, async_remove_builder
 from .store import Published
 from .websocket import async_register_commands
 
@@ -36,14 +37,16 @@ type OHomeMyConfigEntry = ConfigEntry[Panels]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OHomeMyConfigEntry) -> bool:
-    """Register a panel for each Dashboard, and keep them in step with the
-    document until the entry is unloaded."""
+    """Register the Builder and a panel for each Dashboard, and keep the
+    Dashboards' panels in step with the document until the entry is unloaded."""
     try:
         module_url = await async_module_url(hass, DASHBOARD)
+        builder_url = await async_module_url(hass, BUILDER)
     except BundleMissing as err:
-        raise ConfigEntryError(
-            f"The Dashboard's frontend is not built: {err} is missing"
-        ) from err
+        raise ConfigEntryError(f"A frontend is not built: {err} is missing") from err
+
+    async_register_builder(hass, builder_url)
+    entry.async_on_unload(lambda: async_remove_builder(hass))
 
     published = hass.data[DATA_PUBLISHED]
     panels = entry.runtime_data = Panels(hass, module_url)

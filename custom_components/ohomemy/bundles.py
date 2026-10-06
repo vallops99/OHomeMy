@@ -6,6 +6,7 @@ the release workflow). They are never committed. All of `frontend/` is served
 under one static path, so a new bundle is one more `Bundle` here:
 
     frontend/ohomemy-dashboard/ohomemy-dashboard.js   (+ its chunks)
+    frontend/ohomemy-builder/ohomemy-builder.js       (+ its chunks)
 
 The entry's URL carries a hash of its contents. Vite names every chunk by its
 own contents and the entry imports them by name, so a changed build always
@@ -37,6 +38,9 @@ class Bundle:
 
 # The renderer: `npm run build:panel`, defining `<ohomemy-dashboard>`.
 DASHBOARD = Bundle("ohomemy-dashboard")
+
+# The Builder: `npm run build:builder`, defining `<ohomemy-builder>`.
+BUILDER = Bundle("ohomemy-builder")
 
 
 class BundleMissing(Exception):

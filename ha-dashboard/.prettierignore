@@ -6,3 +6,4 @@
 **/*.md
 **/*.mjs
 /dist-panel
+/dist-builder

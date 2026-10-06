@@ -27,7 +27,7 @@
   },
   "overrides": [
     {
-      "files": ["src/ha/*.ts", "src/ui/*.tsx", "src/ui/*.ts", "src/App.tsx"],
+      "files": ["src/ha/*.ts", "src/ui/*.tsx", "src/ui/*.ts", "src/App.tsx", "src/BuilderApp.tsx"],
       "rules": {
         "no-restricted-imports": "off"
       }

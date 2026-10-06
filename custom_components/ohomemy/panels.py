@@ -13,6 +13,10 @@ showing recreates its element there, so a panel is touched only when what it
 was registered with changes: its title or its place in the sidebar, never a
 Widget moved on one of its Pages. The layout reaches the element over
 `ohomemy/document/subscribe`; the panel's `config` holds only the id.
+
+The Builder is one more panel, admin-only, at `/ohomemy_builder`. The
+underscore keeps it out of the Dashboards' namespace: no slug holds one, so
+no Dashboard can be given the Builder's URL.
 """
 
 from __future__ import annotations
@@ -24,7 +28,7 @@ from typing import Any
 from homeassistant.components import frontend
 from homeassistant.core import HomeAssistant, callback
 
-from .bundles import DASHBOARD
+from .bundles import BUILDER, DASHBOARD
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +36,42 @@ URL_PREFIX = "ohomemy-"
 
 # The document has no icon for a Dashboard; every one shows this.
 ICON = "mdi:home-variant-outline"
+
+BUILDER_URL_PATH = "ohomemy_builder"
+BUILDER_TITLE = "OHomeMy Builder"
+BUILDER_ICON = "mdi:view-dashboard-edit-outline"
+
+
+@callback
+def async_register_builder(hass: HomeAssistant, module_url: str) -> None:
+    """Register the Builder's panel.
+
+    `require_admin` only keeps it out of a non-admin's sidebar and panel
+    list. What makes the Builder admin-only is that every command writing the
+    document is (`websocket.py`).
+    """
+    frontend.async_register_built_in_panel(
+        hass,
+        "custom",
+        sidebar_title=BUILDER_TITLE,
+        sidebar_icon=BUILDER_ICON,
+        frontend_url_path=BUILDER_URL_PATH,
+        config={
+            "_panel_custom": {
+                "name": BUILDER.element,
+                "module_url": module_url,
+                "embed_iframe": False,
+                "trust_external": False,
+            },
+        },
+        require_admin=True,
+    )
+
+
+@callback
+def async_remove_builder(hass: HomeAssistant) -> None:
+    """Remove the Builder's panel."""
+    frontend.async_remove_panel(hass, BUILDER_URL_PATH, warn_if_unknown=False)
 
 
 @dataclass(frozen=True, slots=True)

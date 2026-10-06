@@ -20,7 +20,7 @@ const EMOTION_CACHE = fileURLToPath(new URL('./src/panel/emotionCache.ts', impor
  * instead, which sends all emotion output into the Dashboard's shadow root.
  * That module itself still gets the real package.
  */
-function emotionIntoShadowRoot(): Plugin {
+export function emotionIntoShadowRoot(): Plugin {
   return {
     name: 'ohomemy:emotion-into-shadow-root',
     enforce: 'pre',

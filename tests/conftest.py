@@ -22,9 +22,10 @@ def frontend_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 @pytest.fixture
 def built(frontend_dir: Path) -> Path:
-    """`frontend/` with the Dashboard bundle built into it."""
-    bundle = frontend_dir / "ohomemy-dashboard"
-    bundle.mkdir()
-    (bundle / "ohomemy-dashboard.js").write_text("import './chunk-abc.js';\n")
-    (bundle / "chunk-abc.js").write_text("export {};\n")
+    """`frontend/` with the Dashboard's and the Builder's bundles built in."""
+    for element in ("ohomemy-dashboard", "ohomemy-builder"):
+        bundle = frontend_dir / element
+        bundle.mkdir()
+        (bundle / f"{element}.js").write_text("import './chunk-abc.js';\n")
+        (bundle / "chunk-abc.js").write_text("export {};\n")
     return frontend_dir
