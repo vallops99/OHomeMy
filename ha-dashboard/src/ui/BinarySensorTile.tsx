@@ -12,7 +12,7 @@ import { binarySensorView } from './binarySensorState';
 import { Icon } from './Icon';
 import { ReadingBlock } from './ReadingBlock';
 import { rowStyle } from './rowShape';
-import { t } from './theme';
+import { v } from './vars';
 
 export type BinarySensorTileProps = {
   entity: Entity;
@@ -27,12 +27,12 @@ export function BinarySensorTile({ entity, style }: BinarySensorTileProps) {
     <div
       style={{
         ...rowStyle({ active: false, unavailable }),
-        maxHeight: t.layout.tileMaxH,
+        maxHeight: v.layout.tileMaxH,
         display: 'flex',
         alignItems: 'center',
-        padding: `0 ${t.space.md}px`,
+        padding: `0 ${v.space.md}`,
         boxSizing: 'border-box',
-        border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
+        border: `1px solid ${unavailable ? v.color.alertLine : v.color.line}`,
         ...style,
       }}
     >
@@ -41,7 +41,7 @@ export function BinarySensorTile({ entity, style }: BinarySensorTileProps) {
           width: 34,
           display: 'flex',
           justifyContent: 'center',
-          color: unavailable ? t.color.fault : open ? t.color.textPrimary : t.color.textSecondary,
+          color: unavailable ? v.color.alert : open ? v.color.ink : v.color.inkMuted,
         }}
       >
         <Icon name={icon} size={26} />
@@ -52,9 +52,9 @@ export function BinarySensorTile({ entity, style }: BinarySensorTileProps) {
         style={{
           flex: 1,
           minWidth: 0,
-          fontSize: t.font.glanceM,
+          fontSize: v.font.glanceM,
           fontWeight: 600,
-          color: t.color.textPrimary,
+          color: v.color.ink,
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -65,9 +65,9 @@ export function BinarySensorTile({ entity, style }: BinarySensorTileProps) {
       <span
         style={{
           flexShrink: 0,
-          fontSize: t.font.body,
+          fontSize: v.font.body,
           fontWeight: unavailable || open ? 700 : 400,
-          color: unavailable ? t.color.fault : open ? t.color.textPrimary : t.color.textSecondary,
+          color: unavailable ? v.color.alert : open ? v.color.ink : v.color.inkMuted,
         }}
       >
         {unavailable ? label.toUpperCase() : label}

@@ -13,7 +13,7 @@ import { Icon } from './Icon';
 import { ReadingBlock } from './ReadingBlock';
 import { rowStyle } from './rowShape';
 import { sensorIcon, sensorReading } from './sensorValue';
-import { t } from './theme';
+import { v } from './vars';
 
 export type SensorTileProps = {
   entity: Entity;
@@ -30,16 +30,16 @@ export function SensorTile({ entity, style }: SensorTileProps) {
         ...rowStyle({ active: false, unavailable }),
         // The row's box and surface, and the rest of what `Tile` would give
         // it: a border, a padding, and the same cap on its height.
-        maxHeight: t.layout.tileMaxH,
+        maxHeight: v.layout.tileMaxH,
         display: 'flex',
         alignItems: 'center',
-        padding: `0 ${t.space.md}px`,
+        padding: `0 ${v.space.md}`,
         boxSizing: 'border-box',
-        border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
+        border: `1px solid ${unavailable ? v.color.alertLine : v.color.line}`,
         ...style,
       }}
     >
-      <span style={{ width: 34, display: 'flex', justifyContent: 'center', color: unavailable ? t.color.fault : t.color.textSecondary }}>
+      <span style={{ width: 34, display: 'flex', justifyContent: 'center', color: unavailable ? v.color.alert : v.color.inkMuted }}>
         <Icon name={unavailable ? 'mdi:alert-circle' : sensorIcon(entity)} size={26} />
       </span>
       <span
@@ -48,9 +48,9 @@ export function SensorTile({ entity, style }: SensorTileProps) {
         style={{
           flex: 1,
           minWidth: 0,
-          fontSize: t.font.glanceM,
+          fontSize: v.font.glanceM,
           fontWeight: 600,
-          color: t.color.textPrimary,
+          color: v.color.ink,
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -61,14 +61,14 @@ export function SensorTile({ entity, style }: SensorTileProps) {
       <span
         style={{
           flexShrink: 0,
-          fontSize: unavailable ? t.font.body : t.font.glanceM,
+          fontSize: unavailable ? v.font.body : v.font.glanceM,
           fontWeight: unavailable ? 700 : 400,
-          color: unavailable ? t.color.fault : t.color.textPrimary,
+          color: unavailable ? v.color.alert : v.color.ink,
         }}
       >
         {unavailable ? value.toUpperCase() : value}
         {unit && (
-          <span style={{ fontSize: t.font.body, color: t.color.textSecondary }}>
+          <span style={{ fontSize: v.font.body, color: v.color.inkMuted }}>
             {' '}
             <bdi>{unit}</bdi>
           </span>

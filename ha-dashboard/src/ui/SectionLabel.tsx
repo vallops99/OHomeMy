@@ -5,7 +5,7 @@
  * moves what is under it.
  */
 import type { ReactNode } from 'react';
-import { t } from './theme';
+import { v } from './vars';
 
 export function SectionLabel({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
@@ -14,7 +14,7 @@ export function SectionLabel({ children, action }: { children: ReactNode; action
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        minHeight: t.size.targetMin,
+        minHeight: v.size.targetMin,
         flexShrink: 0,
       }}
     >
@@ -23,12 +23,12 @@ export function SectionLabel({ children, action }: { children: ReactNode; action
         dir='auto'
         style={{
           minWidth: 0,
-          fontSize: t.type.label.size,
-          lineHeight: t.type.label.lineHeight,
-          fontWeight: t.type.label.weight,
-          letterSpacing: t.type.label.letterSpacing,
+          fontSize: v.type.label.size,
+          lineHeight: v.type.label.lineHeight,
+          fontWeight: v.type.label.weight,
+          letterSpacing: v.type.label.letterSpacing,
           textTransform: 'uppercase',
-          color: t.color.inkMuted,
+          color: v.color.inkMuted,
         }}
       >
         {children}

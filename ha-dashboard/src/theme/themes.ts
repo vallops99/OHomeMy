@@ -7,8 +7,10 @@
  * shadow root, so the properties land on the panel element (`:host`) and
  * every Widget, and every portal in the same root, inherits them. Widgets
  * read colour, radius and type only through these properties
- * (`var(--accent)`), never as values, which is what lets a theme or a mode
- * change restyle them.
+ * (`var(--accent)`, or `v.color.accent` from `ui/vars.ts` in an inline
+ * style), never as values, which is what lets a theme or a mode change
+ * restyle them; `widgets/look.test.ts` holds every module a Widget reaches to
+ * it (#62). What sizes a Widget is its box, not the theme (`ui/vars.ts`).
  *
  * A theme is added by adding an entry to `THEMES`; its token names must be
  * Casa Panel's, since those are the names every Widget reads.

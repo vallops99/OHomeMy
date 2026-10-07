@@ -7,7 +7,7 @@
  * `AccessRow` always has its card around it.
  */
 import { Children, Fragment, isValidElement, type CSSProperties, type ReactNode } from 'react';
-import { t } from './theme';
+import { v } from './vars';
 
 export type CardProps = {
   /** The `SectionLabel`: a noun, set in capitals by the style. None for a lone row. */
@@ -30,17 +30,17 @@ export function Card({ title, children, style }: CardProps) {
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
-        padding: `6px ${t.space[2]}px`,
-        borderRadius: t.radius.tile,
-        background: t.color.surface,
-        border: `1px solid ${t.color.line}`,
+        padding: `6px ${v.space[2]}`,
+        borderRadius: v.radius.tile,
+        background: v.color.surface,
+        border: `1px solid ${v.color.line}`,
         ...style,
       }}
     >
       {title !== undefined && <SectionLabel>{title}</SectionLabel>}
       {rows.map((row, i) => (
         <Fragment key={isValidElement(row) && row.key !== null ? row.key : i}>
-          {i > 0 && <div style={{ height: 1, background: t.color.line, margin: '0 10px', flexShrink: 0 }} />}
+          {i > 0 && <div style={{ height: 1, background: v.color.line, margin: '0 10px', flexShrink: 0 }} />}
           {row}
         </Fragment>
       ))}
@@ -50,7 +50,7 @@ export function Card({ title, children, style }: CardProps) {
 
 /** Casa Panel's `SectionLabel` inside a card: 14 px, 500, tracked, capitals, muted. */
 function SectionLabel({ children }: { children: ReactNode }) {
-  const { size, lineHeight, weight, letterSpacing } = t.type.label;
+  const { size, lineHeight, weight, letterSpacing } = v.type.label;
   return (
     <div
       // A title someone wrote, in its own direction (#59).
@@ -62,7 +62,7 @@ function SectionLabel({ children }: { children: ReactNode }) {
         fontWeight: weight,
         letterSpacing,
         textTransform: 'uppercase',
-        color: t.color.inkMuted,
+        color: v.color.inkMuted,
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis',

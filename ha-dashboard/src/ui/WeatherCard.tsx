@@ -12,7 +12,7 @@ import { useForecast, type Entity } from '../ha';
 import { fmt } from '../i18n';
 import { Icon } from './Icon';
 import { stateLabel } from './stateLabel';
-import { t } from './theme';
+import { v } from './vars';
 import { conditionIcon, conditionLabel, dayLabel } from './weatherState';
 
 export type WeatherCardProps = {
@@ -38,30 +38,28 @@ export function WeatherCard({ entity, style }: WeatherCardProps) {
         flex: '0 0 auto',
         display: 'flex',
         flexDirection: 'column',
-        gap: t.space.md,
-        padding: t.space.md,
+        gap: v.space.md,
+        padding: v.space.md,
         boxSizing: 'border-box',
-        borderRadius: t.radius.tile,
-        border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
-        background: unavailable ? t.color.faultSurface : t.color.surface,
+        borderRadius: v.radius.tile,
+        border: `1px solid ${unavailable ? v.color.alertLine : v.color.line}`,
+        background: unavailable ? v.color.alertSurface : v.color.surface,
         ...style,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: t.space.md, minWidth: 0 }}>
-        <span style={{ display: 'flex', color: unavailable ? t.color.fault : t.color.textPrimary }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: v.space.md, minWidth: 0 }}>
+        <span style={{ display: 'flex', color: unavailable ? v.color.alert : v.color.ink }}>
           <Icon name={unavailable ? 'mdi:alert-circle' : conditionIcon(entity.state)} size={48} />
         </span>
         {!unavailable && (
-          <span style={{ fontSize: t.font.glanceXL, fontWeight: 300, lineHeight: 1.15, color: t.color.textPrimary }}>
-            {whole(temperature)}
-          </span>
+          <span style={{ fontSize: v.font.glanceXL, fontWeight: 300, lineHeight: 1.15, color: v.color.ink }}>{whole(temperature)}</span>
         )}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <span
             style={{
-              fontSize: t.font.glanceM,
+              fontSize: v.font.glanceM,
               fontWeight: 600,
-              color: unavailable ? t.color.fault : t.color.textPrimary,
+              color: unavailable ? v.color.alert : v.color.ink,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -72,8 +70,8 @@ export function WeatherCard({ entity, style }: WeatherCardProps) {
           <span
             dir='auto'
             style={{
-              fontSize: t.font.body,
-              color: t.color.textSecondary,
+              fontSize: v.font.body,
+              color: v.color.inkMuted,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -85,7 +83,7 @@ export function WeatherCard({ entity, style }: WeatherCardProps) {
       </div>
 
       {!unavailable && (
-        <div style={{ display: 'flex', gap: t.space.sm, minHeight: 92 }}>
+        <div style={{ display: 'flex', gap: v.space.sm, minHeight: 92 }}>
           {(forecast ?? []).map(day => (
             <div
               key={day.datetime}
@@ -95,17 +93,17 @@ export function WeatherCard({ entity, style }: WeatherCardProps) {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: t.space.xs,
-                color: t.color.textPrimary,
+                gap: v.space.xs,
+                color: v.color.ink,
               }}
             >
-              <span style={{ fontSize: t.font.caption, color: t.color.textSecondary, textTransform: 'capitalize' }}>
+              <span style={{ fontSize: v.font.caption, color: v.color.inkMuted, textTransform: 'capitalize' }}>
                 {dayLabel(day.datetime)}
               </span>
               <Icon name={conditionIcon(day.condition)} size={30} />
-              <span style={{ fontSize: t.font.body, fontWeight: 600, whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: v.font.body, fontWeight: 600, whiteSpace: 'nowrap' }}>
                 {whole(day.high)}
-                {day.low !== null && <span style={{ color: t.color.textSecondary, fontWeight: 400 }}> {whole(day.low)}</span>}
+                {day.low !== null && <span style={{ color: v.color.inkMuted, fontWeight: 400 }}> {whole(day.low)}</span>}
               </span>
             </div>
           ))}

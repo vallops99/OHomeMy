@@ -21,7 +21,7 @@ import { Z_PICKER } from './layers';
 import { pressable } from './pressable';
 import { rowStyle } from './rowShape';
 import { stateLabel } from './stateLabel';
-import { t } from './theme';
+import { v } from './vars';
 
 export type SelectTileProps = {
   entity: Entity;
@@ -47,18 +47,18 @@ export function SelectTile({ entity, style }: SelectTileProps) {
         aria-haspopup='dialog'
         style={{
           ...rowStyle({ active: false, unavailable }),
-          maxHeight: t.layout.tileMaxH,
+          maxHeight: v.layout.tileMaxH,
           display: 'flex',
           alignItems: 'center',
-          gap: t.space.md,
-          padding: `0 ${t.space.md}px`,
+          gap: v.space.md,
+          padding: `0 ${v.space.md}`,
           boxSizing: 'border-box',
-          border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
+          border: `1px solid ${unavailable ? v.color.alertLine : v.color.line}`,
           ...press.style,
           ...style,
         }}
       >
-        <span style={{ width: 34, display: 'flex', justifyContent: 'center', color: unavailable ? t.color.fault : t.color.textSecondary }}>
+        <span style={{ width: 34, display: 'flex', justifyContent: 'center', color: unavailable ? v.color.alert : v.color.inkMuted }}>
           <Icon name={unavailable ? 'mdi:alert-circle' : entityIcon(entity)} size={26} />
         </span>
         <span
@@ -67,9 +67,9 @@ export function SelectTile({ entity, style }: SelectTileProps) {
           style={{
             flex: 1,
             minWidth: 0,
-            fontSize: t.font.glanceM,
+            fontSize: v.font.glanceM,
             fontWeight: 600,
-            color: t.color.textPrimary,
+            color: v.color.ink,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -82,9 +82,9 @@ export function SelectTile({ entity, style }: SelectTileProps) {
           style={{
             flexShrink: 0,
             maxWidth: '45%',
-            fontSize: t.font.body,
+            fontSize: v.font.body,
             fontWeight: unavailable ? 700 : 600,
-            color: unavailable ? t.color.fault : t.color.textPrimary,
+            color: unavailable ? v.color.alert : v.color.ink,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -93,7 +93,7 @@ export function SelectTile({ entity, style }: SelectTileProps) {
           {unavailable ? stateLabel(entity).toUpperCase() : entity.state}
         </span>
         {!unavailable && (
-          <span style={{ display: 'flex', flexShrink: 0, color: t.color.textSecondary }}>
+          <span style={{ display: 'flex', flexShrink: 0, color: v.color.inkMuted }}>
             <Icon name='mdi:chevron-down' size={28} />
           </span>
         )}
@@ -118,7 +118,7 @@ function SelectPicker({ entity, onClose }: { entity: Entity; onClose: () => void
         position: 'fixed',
         inset: 0,
         zIndex: Z_PICKER,
-        background: t.color.backdrop,
+        background: v.color.backdrop,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -130,13 +130,18 @@ function SelectPicker({ entity, onClose }: { entity: Entity; onClose: () => void
         style={{
           display: 'flex',
           flexDirection: 'column',
-          background: t.color.surface,
-          color: t.color.textPrimary,
+          background: v.color.surface,
+          color: v.color.ink,
           boxSizing: 'border-box',
           // Never past the viewport: the card is capped and its list scrolls.
+          //
+          // The one place a Widget's code asks about the device (#62): the
+          // picker covers the whole screen, so the screen is its box. A
+          // phone's fills it; a wall's is a card in the middle. Its type
+          // follows the page root's scale, which is the device's too.
           ...(isPhone
             ? { width: '100%', maxHeight: '100dvh' }
-            : { width: PICKER_W, maxWidth: '100%', maxHeight: '90%', borderRadius: t.radius.tile, border: `1px solid ${t.color.border}` }),
+            : { width: PICKER_W, maxWidth: '100%', maxHeight: '90%', borderRadius: v.radius.tile, border: `1px solid ${v.color.line}` }),
         }}
       >
         <header
@@ -145,15 +150,15 @@ function SelectPicker({ entity, onClose }: { entity: Entity; onClose: () => void
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: t.space.md,
-            padding: t.space.md,
-            borderBottom: `1px solid ${t.color.border}`,
+            gap: v.space.md,
+            padding: v.space.md,
+            borderBottom: `1px solid ${v.color.line}`,
           }}
         >
           <span
             dir='auto'
             style={{
-              fontSize: t.font.glanceM,
+              fontSize: v.font.glanceM,
               fontWeight: 700,
               minWidth: 0,
               overflow: 'hidden',
@@ -167,7 +172,7 @@ function SelectPicker({ entity, onClose }: { entity: Entity; onClose: () => void
         </header>
         <div
           role='listbox'
-          style={{ display: 'flex', flexDirection: 'column', gap: t.space.sm, padding: t.space.md, overflowY: 'auto', minHeight: 0 }}
+          style={{ display: 'flex', flexDirection: 'column', gap: v.space.sm, padding: v.space.md, overflowY: 'auto', minHeight: 0 }}
         >
           {optionsOf(entity).map(option => {
             const current = option === entity.state;
@@ -183,17 +188,17 @@ function SelectPicker({ entity, onClose }: { entity: Entity; onClose: () => void
                 }}
                 style={{
                   flexShrink: 0,
-                  minHeight: t.touch.primary,
+                  minHeight: v.touch.primary,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  gap: t.space.md,
-                  padding: `0 ${t.space.md}px`,
-                  borderRadius: t.radius.sm,
-                  border: `1px solid ${current ? 'transparent' : t.color.border}`,
-                  background: current ? t.color.activeStrong : t.color.surfaceRaised,
-                  color: current ? t.color.onActiveStrong : t.color.textPrimary,
-                  fontSize: t.font.glanceM,
+                  gap: v.space.md,
+                  padding: `0 ${v.space.md}`,
+                  borderRadius: v.radius.sm,
+                  border: `1px solid ${current ? 'transparent' : v.color.line}`,
+                  background: current ? v.color.accent : v.color.surfaceWell,
+                  color: current ? v.color.onAccent : v.color.ink,
+                  fontSize: v.font.glanceM,
                   fontWeight: 600,
                   textAlign: 'start',
                   cursor: 'pointer',

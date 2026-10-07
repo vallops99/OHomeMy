@@ -12,12 +12,11 @@
 import type { CSSProperties } from 'react';
 import { useActions, useHassUrl, type Entity } from '../ha';
 import { tr } from '../i18n';
-import { isPhone } from './device';
 import { Icon } from './Icon';
 import { mediaControls, mediaNowPlaying } from './mediaState';
 import { Slider } from './Slider';
 import { stateLabel } from './stateLabel';
-import { t } from './theme';
+import { v } from './vars';
 
 export type MediaCardProps = {
   entity: Entity;
@@ -44,18 +43,19 @@ export function MediaCard({ entity, style }: MediaCardProps) {
         flex: '0 0 auto',
         display: 'flex',
         alignItems: 'center',
-        // On a phone the row folds in two, as a Row's does (ADR-0011): the
-        // artwork and what is playing on one line, the volume and the
-        // buttons under it. Its one row sums past a phone's width. A Widget
-        // folds it by its box instead, through these custom properties
-        // (`src/widgets/media`); without them the device decides, as before.
-        flexWrap: `var(--ohm-media-wrap, ${isPhone ? 'wrap' : 'nowrap'})` as CSSProperties['flexWrap'],
-        gap: t.space.md,
-        padding: t.space.md,
+        // In a narrow box the row folds in two, as a Row's does on a phone
+        // (ADR-0011): the artwork and what is playing on one line, the
+        // volume and the buttons under it. Its one row sums past a phone's
+        // width. A Widget's box sets these custom properties
+        // (`src/widgets/media`), and the label-driven Dashboard's page root
+        // does on a phone (`HakitTheme`); unset, the row is one line.
+        flexWrap: 'var(--ohm-media-wrap, nowrap)' as CSSProperties['flexWrap'],
+        gap: v.space.md,
+        padding: v.space.md,
         boxSizing: 'border-box',
-        borderRadius: t.radius.tile,
-        border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
-        background: unavailable ? t.color.faultSurface : t.color.surface,
+        borderRadius: v.radius.tile,
+        border: `1px solid ${unavailable ? v.color.alertLine : v.color.line}`,
+        background: unavailable ? v.color.alertSurface : v.color.surface,
         ...style,
       }}
     >
@@ -64,15 +64,15 @@ export function MediaCard({ entity, style }: MediaCardProps) {
           width: ART,
           height: ART,
           flexShrink: 0,
-          borderRadius: t.radius.sm,
-          background: t.color.surfaceRaised,
+          borderRadius: v.radius.sm,
+          background: v.color.surfaceWell,
           backgroundImage: picture && !unavailable ? `url("${hassUrl(picture)}")` : undefined,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: unavailable ? t.color.fault : playing ? t.color.activeStrong : t.color.textSecondary,
+          color: unavailable ? v.color.alert : playing ? v.color.accent : v.color.inkMuted,
         }}
       >
         {(!picture || unavailable) && <Icon name={unavailable ? 'mdi:alert-circle' : playing ? 'mdi:music' : 'mdi:speaker'} size={32} />}
@@ -80,8 +80,8 @@ export function MediaCard({ entity, style }: MediaCardProps) {
 
       <div
         style={{
-          // On a phone, the rest of the first line, so the controls wrap under.
-          flex: `var(--ohm-media-text-flex, ${isPhone ? `1 1 calc(100% - ${ART + t.space.md}px)` : '1'})`,
+          // Folded, the rest of the first line, so the controls wrap under.
+          flex: 'var(--ohm-media-text-flex, 1)',
           minWidth: 0,
           display: 'flex',
           flexDirection: 'column',
@@ -90,9 +90,9 @@ export function MediaCard({ entity, style }: MediaCardProps) {
         <span
           dir='auto'
           style={{
-            fontSize: t.font.caption,
+            fontSize: v.font.caption,
             fontWeight: 600,
-            color: t.color.textSecondary,
+            color: v.color.inkMuted,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -103,9 +103,9 @@ export function MediaCard({ entity, style }: MediaCardProps) {
         <span
           dir='auto'
           style={{
-            fontSize: t.font.glanceM,
+            fontSize: v.font.glanceM,
             fontWeight: 600,
-            color: unavailable ? t.color.fault : t.color.textPrimary,
+            color: unavailable ? v.color.alert : v.color.ink,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -118,8 +118,8 @@ export function MediaCard({ entity, style }: MediaCardProps) {
           <span
             dir='auto'
             style={{
-              fontSize: t.font.body,
-              color: t.color.textSecondary,
+              fontSize: v.font.body,
+              color: v.color.inkMuted,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -135,17 +135,17 @@ export function MediaCard({ entity, style }: MediaCardProps) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: t.space.xs,
-            flex: `var(--ohm-media-volume-flex, ${isPhone ? '1' : '0 0 180px'})`,
+            gap: v.space.xs,
+            flex: 'var(--ohm-media-volume-flex, 0 0 180px)',
             minWidth: 0,
-            color: t.color.textSecondary,
+            color: v.color.inkMuted,
           }}
         >
           <Icon name='mdi:volume-high' size={22} />
           <div style={{ flex: 1, minWidth: 0 }} data-gesture-owner>
             <Slider
               value={controls.volume}
-              thickness={t.touch.floor}
+              thickness={v.touch.floor}
               onChangeApplied={v => media('volume_set', { volume_level: v / 100 })}
             />
           </div>
@@ -153,7 +153,7 @@ export function MediaCard({ entity, style }: MediaCardProps) {
       )}
 
       {(controls.previous || controls.playPause || controls.next) && (
-        <div style={{ display: 'flex', gap: t.space.sm, flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: v.space.sm, flexShrink: 0 }}>
           {controls.previous && (
             <CardButton icon='mdi:skip-previous' label={tr('media.previous')} onPress={() => media('media_previous_track')} />
           )}
@@ -184,16 +184,16 @@ function CardButton({ icon, label, onPress, active = false }: { icon: string; la
       onClick={onPress}
       style={{
         flexShrink: 0,
-        width: t.touch.floor,
-        height: t.touch.floor,
+        width: v.touch.floor,
+        height: v.touch.floor,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: 0,
-        borderRadius: t.radius.sm,
-        border: `1px solid ${t.color.border}`,
-        background: t.color.surfaceRaised,
-        color: active ? t.color.activeStrong : t.color.textPrimary,
+        borderRadius: v.radius.sm,
+        border: `1px solid ${v.color.line}`,
+        background: v.color.surfaceWell,
+        color: active ? v.color.accent : v.color.ink,
         cursor: 'pointer',
       }}
     >

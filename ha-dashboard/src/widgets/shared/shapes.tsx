@@ -30,7 +30,7 @@ import { ReadingBlock } from '../../ui/ReadingBlock';
 import { SelectTile } from '../../ui/SelectTile';
 import { SensorBlock, SensorTile } from '../../ui/SensorTile';
 import { stateLabel } from '../../ui/stateLabel';
-import { t } from '../../ui/theme';
+import { v } from '../../ui/vars';
 import { VacuumCard } from '../../ui/VacuumCard';
 import { WeatherCard } from '../../ui/WeatherCard';
 import { conditionIcon, conditionLabel } from '../../ui/weatherState';
@@ -136,7 +136,7 @@ function Toggle({ entity, variant, member }: ShapeProps) {
   // `ToggleView` fills its box by itself; in a card it is a row of the old
   // Row's height instead.
   return (
-    <ToggleView entity={entity} variant={variant} style={member ? { ...MEMBER, height: 'auto', minHeight: t.layout.rowRoom } : undefined} />
+    <ToggleView entity={entity} variant={variant} style={member ? { ...MEMBER, height: 'auto', minHeight: v.layout.rowRoom } : undefined} />
   );
 }
 

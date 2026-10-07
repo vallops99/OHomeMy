@@ -5,7 +5,7 @@
  */
 import type { Entity, Feed } from '../ha';
 import { tr } from '../i18n';
-import { t } from './theme';
+import { v } from './vars';
 
 /**
  * Where a Feed is, as the caption and the frame need it: the session's phase
@@ -31,7 +31,7 @@ export function bigCamera(cameras: { id: string; moving: boolean }[], tapped: st
 export type StatusTone = 'quiet' | 'motion' | 'fault';
 
 /** The colour of each status tone, for the caption and the Popup's header alike. */
-export const TONE_COLOR = { quiet: t.color.textSecondary, motion: t.color.activeStrong, fault: t.color.fault } as const;
+export const TONE_COLOR = { quiet: v.color.inkMuted, motion: v.color.accent, fault: v.color.alert } as const;
 
 /**
  * The right half of a caption. Motion is said only when there is a picture to

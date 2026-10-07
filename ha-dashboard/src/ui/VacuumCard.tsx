@@ -14,7 +14,7 @@ import { useActions, useDeviceBattery, type Entity } from '../ha';
 import { fmt, tr } from '../i18n';
 import { entityIcon, Icon } from './Icon';
 import { stateLabel } from './stateLabel';
-import { t } from './theme';
+import { v } from './vars';
 import { vacuumControls } from './vacuumState';
 
 export type VacuumCardProps = {
@@ -41,25 +41,25 @@ export function VacuumCard({ entity, style }: VacuumCardProps) {
         flex: '0 0 auto',
         display: 'flex',
         alignItems: 'center',
-        gap: t.space.md,
-        padding: t.space.md,
+        gap: v.space.md,
+        padding: v.space.md,
         boxSizing: 'border-box',
-        borderRadius: t.radius.tile,
-        border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
-        background: unavailable ? t.color.faultSurface : t.color.surface,
+        borderRadius: v.radius.tile,
+        border: `1px solid ${unavailable ? v.color.alertLine : v.color.line}`,
+        background: unavailable ? v.color.alertSurface : v.color.surface,
         ...style,
       }}
     >
-      <span style={{ display: 'flex', color: unavailable ? t.color.fault : cleaning ? t.color.activeStrong : t.color.textSecondary }}>
+      <span style={{ display: 'flex', color: unavailable ? v.color.alert : cleaning ? v.color.accent : v.color.inkMuted }}>
         <Icon name={unavailable ? 'mdi:alert-circle' : entityIcon(entity)} size={32} />
       </span>
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <span
           dir='auto'
           style={{
-            fontSize: t.font.glanceM,
+            fontSize: v.font.glanceM,
             fontWeight: 600,
-            color: t.color.textPrimary,
+            color: v.color.ink,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -71,12 +71,12 @@ export function VacuumCard({ entity, style }: VacuumCardProps) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: t.space.sm,
-            fontSize: t.font.body,
-            color: unavailable ? t.color.fault : t.color.textSecondary,
+            gap: v.space.sm,
+            fontSize: v.font.body,
+            color: unavailable ? v.color.alert : v.color.inkMuted,
           }}
         >
-          <span style={{ fontWeight: unavailable || cleaning ? 700 : 400, color: cleaning ? t.color.activeStrong : undefined }}>
+          <span style={{ fontWeight: unavailable || cleaning ? 700 : 400, color: cleaning ? v.color.accent : undefined }}>
             {unavailable ? stateLabel(entity).toUpperCase() : stateLabel(entity)}
           </span>
           {battery !== null && !unavailable && (
@@ -107,16 +107,16 @@ function VacuumButton({ icon, label, onPress }: { icon: string; label: string; o
       onClick={onPress}
       style={{
         flexShrink: 0,
-        minHeight: t.touch.floor,
+        minHeight: v.touch.floor,
         display: 'flex',
         alignItems: 'center',
-        gap: t.space.xs,
-        padding: `0 ${t.space.sm}px`,
-        borderRadius: t.radius.sm,
-        border: `1px solid ${t.color.border}`,
-        background: t.color.surfaceRaised,
-        color: t.color.textPrimary,
-        fontSize: t.font.caption,
+        gap: v.space.xs,
+        padding: `0 ${v.space.sm}`,
+        borderRadius: v.radius.sm,
+        border: `1px solid ${v.color.line}`,
+        background: v.color.surfaceWell,
+        color: v.color.ink,
+        fontSize: v.font.caption,
         fontWeight: 600,
         whiteSpace: 'nowrap',
         cursor: 'pointer',

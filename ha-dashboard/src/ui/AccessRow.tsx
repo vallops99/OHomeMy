@@ -17,7 +17,7 @@ import { tr } from '../i18n';
 import { accessStatus, HOLD_MS, holdStep, holdTimeout, IDLE, isOpenLock, type Hold, type HoldEvent } from './accessHold';
 import { entityIcon, Icon } from './Icon';
 import { stateLabel } from './stateLabel';
-import { t } from './theme';
+import { v } from './vars';
 
 export type AccessRowProps = { entity: Entity };
 
@@ -60,7 +60,7 @@ export function AccessRow({ entity }: AccessRowProps) {
   const open = isOpenLock(entity.state);
   const unavailable = entity.unavailable;
   const status = accessStatus(entity, hold, stateLabel(entity));
-  const statusColor = status.tone === 'alert' ? t.color.alert : status.tone === 'accent' ? t.color.accent : t.color.inkMuted;
+  const statusColor = status.tone === 'alert' ? v.color.alert : status.tone === 'accent' ? v.color.accent : v.color.inkMuted;
 
   const onPointerDown = (e: PointerEvent) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -74,9 +74,9 @@ export function AccessRow({ entity }: AccessRowProps) {
           width: 48,
           height: 48,
           flexShrink: 0,
-          borderRadius: t.radius.well,
-          background: unavailable ? t.color.alertSurface : t.color.surfaceWell,
-          color: unavailable ? t.color.alert : t.color.ink,
+          borderRadius: v.radius.well,
+          background: unavailable ? v.color.alertSurface : v.color.surfaceWell,
+          color: unavailable ? v.color.alert : v.color.ink,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -89,10 +89,10 @@ export function AccessRow({ entity }: AccessRowProps) {
           dir='auto'
           title={entity.name}
           style={{
-            fontSize: t.type.rowTitle.size,
-            lineHeight: t.type.rowTitle.lineHeight,
-            fontWeight: t.type.rowTitle.weight,
-            color: t.color.ink,
+            fontSize: v.type.rowTitle.size,
+            lineHeight: v.type.rowTitle.lineHeight,
+            fontWeight: v.type.rowTitle.weight,
+            color: v.color.ink,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -104,8 +104,8 @@ export function AccessRow({ entity }: AccessRowProps) {
         <span
           aria-live='polite'
           style={{
-            fontSize: t.type.meta.size,
-            lineHeight: t.type.meta.lineHeight,
+            fontSize: v.type.meta.size,
+            lineHeight: v.type.meta.lineHeight,
             color: statusColor,
             display: 'flex',
             alignItems: 'center',
@@ -115,7 +115,7 @@ export function AccessRow({ entity }: AccessRowProps) {
             textOverflow: 'ellipsis',
           }}
         >
-          <span style={{ width: 7, height: 7, borderRadius: t.radius.pill, background: 'currentColor', flexShrink: 0 }} />
+          <span style={{ width: 7, height: 7, borderRadius: v.radius.pill, background: 'currentColor', flexShrink: 0 }} />
           {status.label}
         </span>
       </div>
@@ -126,7 +126,7 @@ export function AccessRow({ entity }: AccessRowProps) {
           disabled={unavailable}
           aria-label={tr('access.closeLabel', { name: entity.name })}
           onClick={() => actions.lock(entity)}
-          style={{ ...pill, background: t.color.switchOff, color: t.color.ink }}
+          style={{ ...pill, background: v.color.switchOff, color: v.color.ink }}
         >
           {tr('access.closeButton')}
         </button>
@@ -147,7 +147,7 @@ export function AccessRow({ entity }: AccessRowProps) {
           onClick={e => {
             if (e.detail === 0) send({ type: 'key' });
           }}
-          style={{ ...pill, background: t.color.primary, color: t.color.onPrimary }}
+          style={{ ...pill, background: v.color.primary, color: v.color.onPrimary }}
         >
           {/* The sweep: `accent-soft` filling the button over the hold. */}
           <span
@@ -157,7 +157,7 @@ export function AccessRow({ entity }: AccessRowProps) {
               top: 0,
               bottom: 0,
               width: hold.phase === 'holding' ? '100%' : '0%',
-              background: t.color.accentSoft,
+              background: v.color.accentSoft,
               transition: hold.phase === 'holding' ? `width ${HOLD_MS}ms linear` : 'width 150ms ease',
             }}
           />
@@ -173,13 +173,13 @@ const pill: CSSProperties = {
   position: 'relative',
   overflow: 'hidden',
   flexShrink: 0,
-  height: t.size.targetControl,
+  height: v.size.targetControl,
   minWidth: 108,
   padding: '0 22px',
   border: 'none',
-  borderRadius: t.radius.pill,
+  borderRadius: v.radius.pill,
   fontFamily: 'inherit',
-  fontSize: t.type.bodyLg.size,
+  fontSize: v.type.bodyLg.size,
   fontWeight: 600,
   display: 'inline-flex',
   alignItems: 'center',

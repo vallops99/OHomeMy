@@ -22,7 +22,7 @@ import { climateReading, degrees, hvacActionLabel, hvacModes, stepSetpoint } fro
 import { Icon } from './Icon';
 import { ReadingBlock } from './ReadingBlock';
 import { stateLabel } from './stateLabel';
-import { t } from './theme';
+import { v } from './vars';
 
 export type ClimateCardProps = {
   entity: Entity;
@@ -65,17 +65,17 @@ export function ClimateCard({ entity, style }: ClimateCardProps) {
         flex: '0 0 auto',
         display: 'flex',
         flexDirection: 'column',
-        gap: t.space.sm,
-        padding: t.space.md,
+        gap: v.space.sm,
+        padding: v.space.md,
         boxSizing: 'border-box',
-        borderRadius: t.radius.tile,
-        border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
-        background: unavailable ? t.color.faultSurface : t.color.surface,
+        borderRadius: v.radius.tile,
+        border: `1px solid ${unavailable ? v.color.alertLine : v.color.line}`,
+        background: unavailable ? v.color.alertSurface : v.color.surface,
         ...style,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: t.space.sm, minWidth: 0 }}>
-        <span style={{ display: 'flex', color: unavailable ? t.color.fault : t.color.textSecondary }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: v.space.sm, minWidth: 0 }}>
+        <span style={{ display: 'flex', color: unavailable ? v.color.alert : v.color.inkMuted }}>
           <Icon name={unavailable ? 'mdi:alert-circle' : 'mdi:thermostat'} size={26} />
         </span>
         <span
@@ -83,9 +83,9 @@ export function ClimateCard({ entity, style }: ClimateCardProps) {
           style={{
             flex: 1,
             minWidth: 0,
-            fontSize: t.font.glanceM,
+            fontSize: v.font.glanceM,
             fontWeight: 600,
-            color: t.color.textPrimary,
+            color: v.color.ink,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -96,9 +96,9 @@ export function ClimateCard({ entity, style }: ClimateCardProps) {
         <span
           style={{
             flexShrink: 0,
-            fontSize: t.font.body,
+            fontSize: v.font.body,
             fontWeight: unavailable || heating ? 700 : 400,
-            color: unavailable ? t.color.fault : heating ? t.color.activeStrong : t.color.textSecondary,
+            color: unavailable ? v.color.alert : heating ? v.color.accent : v.color.inkMuted,
           }}
         >
           {unavailable ? stateLabel(entity).toUpperCase() : hvacActionLabel(entity)}
@@ -107,29 +107,27 @@ export function ClimateCard({ entity, style }: ClimateCardProps) {
 
       {!unavailable && (
         <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: t.space.md }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: v.space.md }}>
             {/* The room, read from 2 m: the one number here that is not a control. */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-              <span style={{ fontSize: t.font.glanceXL, fontWeight: 300, lineHeight: 1.15, color: t.color.textPrimary }}>
-                {degrees(current)}
-              </span>
+              <span style={{ fontSize: v.font.glanceXL, fontWeight: 300, lineHeight: 1.15, color: v.color.ink }}>{degrees(current)}</span>
               {humidity !== null && (
-                <span style={{ fontSize: t.font.caption, color: t.color.textSecondary }}>
+                <span style={{ fontSize: v.font.caption, color: v.color.inkMuted }}>
                   {tr('climate.humidity', { humidity: fmt.percent(Math.round(humidity)) })}
                 </span>
               )}
             </div>
             <StepButton icon='mdi:minus' label={tr('climate.lower')} onPress={() => step(-1)} disabled={setpoint.shown === null} />
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 84 }}>
-              <span style={{ fontSize: t.font.glanceL, fontWeight: 600, color: t.color.textPrimary, lineHeight: 1.2 }}>
+              <span style={{ fontSize: v.font.glanceL, fontWeight: 600, color: v.color.ink, lineHeight: 1.2 }}>
                 {degrees(setpoint.shown)}
               </span>
-              <span style={{ fontSize: t.font.caption, color: t.color.textSecondary }}>{tr('climate.target')}</span>
+              <span style={{ fontSize: v.font.caption, color: v.color.inkMuted }}>{tr('climate.target')}</span>
             </div>
             <StepButton icon='mdi:plus' label={tr('climate.raise')} onPress={() => step(+1)} disabled={setpoint.shown === null} />
           </div>
 
-          <div style={{ display: 'flex', gap: t.space.sm }}>
+          <div style={{ display: 'flex', gap: v.space.sm }}>
             {hvacModes(entity).map(({ mode, label, icon }) => {
               const on = entity.state === mode;
               return (
@@ -140,16 +138,16 @@ export function ClimateCard({ entity, style }: ClimateCardProps) {
                   onClick={() => actions.call('climate', 'set_hvac_mode', entity.id, { hvac_mode: mode })}
                   style={{
                     flex: 1,
-                    minHeight: t.touch.floor,
+                    minHeight: v.touch.floor,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: t.space.xs,
-                    borderRadius: t.radius.sm,
-                    border: `1px solid ${on ? 'transparent' : t.color.border}`,
-                    background: on ? t.color.activeStrong : t.color.surfaceRaised,
-                    color: on ? t.color.onActiveStrong : t.color.textPrimary,
-                    fontSize: t.font.body,
+                    gap: v.space.xs,
+                    borderRadius: v.radius.sm,
+                    border: `1px solid ${on ? 'transparent' : v.color.line}`,
+                    background: on ? v.color.accent : v.color.surfaceWell,
+                    color: on ? v.color.onAccent : v.color.ink,
+                    fontSize: v.font.body,
                     fontWeight: 600,
                     cursor: 'pointer',
                   }}
@@ -176,16 +174,16 @@ function StepButton({ icon, label, onPress, disabled }: { icon: string; label: s
       disabled={disabled}
       style={{
         flexShrink: 0,
-        width: t.touch.floor,
-        height: t.touch.floor,
+        width: v.touch.floor,
+        height: v.touch.floor,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: 0,
-        borderRadius: t.radius.sm,
-        border: `1px solid ${t.color.border}`,
-        background: t.color.surfaceRaised,
-        color: t.color.textPrimary,
+        borderRadius: v.radius.sm,
+        border: `1px solid ${v.color.line}`,
+        background: v.color.surfaceWell,
+        color: v.color.ink,
         cursor: disabled ? 'default' : 'pointer',
         opacity: disabled ? 0.4 : 1,
       }}

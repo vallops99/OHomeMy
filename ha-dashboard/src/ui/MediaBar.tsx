@@ -16,7 +16,7 @@ import { tr } from '../i18n';
 import { Icon } from './Icon';
 import { mediaControls } from './mediaState';
 import { Tile } from './Tile';
-import { onSurfaceFor, t } from './theme';
+import { onSurfaceFor, v } from './vars';
 
 export type MediaBarProps = {
   /** Every media player the screen placed here. The playing one wins. */
@@ -42,7 +42,7 @@ function nowPlaying(entity: Entity): string {
  * transport (#32). At least a touch target tall: in `left` (#35) nothing
  * stretches it the way the footer does.
  */
-const box = { flex: 1, minWidth: t.layout.mediaBarMinW, minHeight: t.touch.primary, display: 'flex' } as const;
+const box = { flex: 1, minWidth: v.layout.mediaBarMinW, minHeight: v.touch.primary, display: 'flex' } as const;
 
 export function MediaBar({ entities, style }: MediaBarProps) {
   const actions = useActions();
@@ -54,18 +54,18 @@ export function MediaBar({ entities, style }: MediaBarProps) {
         style={{
           ...box,
           alignItems: 'center',
-          gap: t.space.sm,
-          padding: `0 ${t.space.lg}px`,
-          borderRadius: t.radius.tile,
-          background: t.color.surface,
-          border: `1px solid ${t.color.border}`,
-          color: t.color.textSecondary,
+          gap: v.space.sm,
+          padding: `0 ${v.space.lg}`,
+          borderRadius: v.radius.tile,
+          background: v.color.surface,
+          border: `1px solid ${v.color.line}`,
+          color: v.color.inkMuted,
           boxSizing: 'border-box',
           ...style,
         }}
       >
-        <Icon name='mdi:music-note-off' size={24} color={t.color.textSecondary} />
-        <span style={{ fontSize: t.font.body }}>{tr('media.nothing')}</span>
+        <Icon name='mdi:music-note-off' size={24} color={v.color.inkMuted} />
+        <span style={{ fontSize: v.font.body }}>{tr('media.nothing')}</span>
       </div>
     );
   }
@@ -83,8 +83,8 @@ export function MediaBar({ entities, style }: MediaBarProps) {
         `minHeight`, so content wins), and the footer took 10 px from the
         left column whenever something played (#32, `npm run measure`).
       */}
-      <Tile entity={playing} active strong alwaysFilled disableModal style={{ paddingBlock: t.space.sm }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: t.space.md, height: '100%', color: fg }}>
+      <Tile entity={playing} active strong alwaysFilled disableModal style={{ paddingBlock: v.space.sm }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: v.space.md, height: '100%', color: fg }}>
           <Icon name='mdi:music' size={32} />
           {/*
             `contain: inline-size`: the title's whole nowrap width must not
@@ -96,7 +96,7 @@ export function MediaBar({ entities, style }: MediaBarProps) {
             <div
               dir='auto'
               style={{
-                fontSize: t.font.glanceM,
+                fontSize: v.font.glanceM,
                 fontWeight: 600,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -105,14 +105,14 @@ export function MediaBar({ entities, style }: MediaBarProps) {
             >
               {nowPlaying(playing)}
             </div>
-            <div dir='auto' style={{ fontSize: t.font.caption, opacity: 0.85 }}>
+            <div dir='auto' style={{ fontSize: v.font.caption, opacity: 0.85 }}>
               {playing.name}
             </div>
           </div>
 
           {/* Transport controls own their own presses: the tile beneath must not
             also toggle the player when a button is hit. */}
-          <div style={{ display: 'flex', gap: t.space.sm, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+          <div style={{ display: 'flex', gap: v.space.sm, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
             {controls.previous && (
               <MediaButton
                 icon='mdi:skip-previous'
@@ -152,12 +152,12 @@ function MediaButton({ icon, label, onPress, fg }: { icon: string; label: string
       aria-label={label}
       onClick={onPress}
       style={{
-        width: t.touch.floor,
-        height: t.touch.floor,
+        width: v.touch.floor,
+        height: v.touch.floor,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: t.radius.sm,
+        borderRadius: v.radius.sm,
         border: 'none',
         background: 'transparent',
         color: fg,

@@ -8,7 +8,7 @@
 import { useActions, type Entity } from '../ha';
 import { alarmCommands } from './alarmState';
 import { Icon } from './Icon';
-import { t } from './theme';
+import { v } from './vars';
 
 export type AlarmCommandsProps = {
   alarm: Entity;
@@ -24,8 +24,8 @@ export function AlarmCommands({ alarm, row = false }: AlarmCommandsProps) {
         display: 'flex',
         flexWrap: row ? 'nowrap' : 'wrap',
         justifyContent: 'center',
-        gap: t.space.sm,
-        padding: row ? 0 : t.space.md,
+        gap: v.space.sm,
+        padding: row ? 0 : v.space.md,
       }}
     >
       {alarmCommands(alarm).map(command => (
@@ -40,19 +40,19 @@ export function AlarmCommands({ alarm, row = false }: AlarmCommandsProps) {
             flexDirection: row ? 'row' : 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: t.space.xs,
+            gap: v.space.xs,
             ...(row
-              ? { flex: 1, minWidth: 0, minHeight: t.touch.floor, whiteSpace: 'nowrap' }
-              : { minWidth: t.touch.primary * 2, minHeight: t.touch.primary * 1.5 }),
-            padding: row ? `0 ${t.space.xs}px` : t.space.md,
-            borderRadius: row ? t.radius.sm : t.radius.tile,
-            border: `1px solid ${t.color.border}`,
-            background: t.color.surfaceRaised,
-            color: t.color.textPrimary,
+              ? { flex: 1, minWidth: 0, minHeight: v.touch.floor, whiteSpace: 'nowrap' }
+              : { minWidth: `calc(${v.touch.primary} * 2)`, minHeight: `calc(${v.touch.primary} * 1.5)` }),
+            padding: row ? `0 ${v.space.xs}` : v.space.md,
+            borderRadius: row ? v.radius.sm : v.radius.tile,
+            border: `1px solid ${v.color.line}`,
+            background: v.color.surfaceWell,
+            color: v.color.ink,
             // `caption` in a row: three buttons share about 125 px each in a
             // 420 px column, and "Fuori casa" at `body` squeezed its own icon
             // (measured, #34). A fourth mode ellipsises rather than overflows.
-            fontSize: row ? t.font.caption : t.font.body,
+            fontSize: row ? v.font.caption : v.font.body,
             fontWeight: 600,
             cursor: 'pointer',
           }}

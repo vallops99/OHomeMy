@@ -17,7 +17,7 @@
  * watched on `window`, so a finger that slides off the track still commits.
  */
 import { useRef, useState } from 'react';
-import { t } from './theme';
+import { v } from './vars';
 
 export type SliderProps = {
   /** 0-100. */
@@ -27,8 +27,8 @@ export type SliderProps = {
   /** Fired once when the drag ends -- the only one that should call a service. Always a whole number. */
   onChangeApplied?: (value: number) => void;
   disabled?: boolean;
-  /** Track height. Defaults to the ADR-0001 primary touch target, 64 px. */
-  thickness?: number;
+  /** Track height, a length. Defaults to the ADR-0001 primary touch target, 64 px. */
+  thickness?: number | string;
   /**
    * Called when a touch/press starts on the track and when it ends. A tile
    * that keeps its long-press modal uses this to disarm it while the slider
@@ -80,16 +80,16 @@ export function Slider({ value, onChange, onChangeApplied, disabled, thickness, 
       style={{
         position: 'relative',
         width: '100%',
-        height: thickness ?? t.touch.primary,
-        borderRadius: t.radius.sm,
-        background: t.color.surfaceControl,
+        height: thickness ?? v.touch.primary,
+        borderRadius: v.radius.sm,
+        background: v.color.surfaceControl,
         overflow: 'hidden',
         opacity: disabled ? 0.38 : 1,
       }}
     >
       <div
         aria-hidden
-        style={{ position: 'absolute', insetInlineStart: 0, top: 0, bottom: 0, width: `${fill}%`, background: t.color.accentSoft }}
+        style={{ position: 'absolute', insetInlineStart: 0, top: 0, bottom: 0, width: `${fill}%`, background: v.color.accentSoft }}
       />
       <input
         type='range'

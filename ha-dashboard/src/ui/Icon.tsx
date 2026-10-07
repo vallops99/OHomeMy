@@ -34,12 +34,16 @@ const strokeFor = (size: number) => (size >= 30 ? 1.5 : size <= 20 ? 1.8 : 1.6);
 export function Icon({ name, size = 28, color, mirrored = false }: IconProps) {
   // `createElement` rather than JSX on a local: the glyph is a module-level
   // Lucide component looked up by name, not a component made per render.
+  //
+  // A colour is set as the glyph's CSS `color`, which its stroke follows,
+  // rather than as the `stroke` attribute: it is a custom property
+  // (`var(--ink-muted)`, #62), and an SVG attribute takes no `var()`.
   return createElement(lucideFor(name), {
     size,
-    color: color ?? 'currentColor',
+    color: 'currentColor',
     strokeWidth: strokeFor(size),
     'aria-hidden': true,
-    ...(mirrored && viewerDirection() === 'rtl' && { style: { transform: 'scaleX(-1)' } }),
+    style: { color, ...(mirrored && viewerDirection() === 'rtl' && { transform: 'scaleX(-1)' }) },
   });
 }
 

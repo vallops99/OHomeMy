@@ -17,7 +17,7 @@
 import { useRef, useState } from 'react';
 import { fmt, tr } from '../i18n';
 import { Icon } from './Icon';
-import { t } from './theme';
+import { v } from './vars';
 
 export type DimmerProps = {
   /** 0-100; 0 is off. */
@@ -55,16 +55,16 @@ export function Dimmer({ value, onCommit, label }: DimmerProps) {
     <div
       style={{
         position: 'relative',
-        height: t.size.targetControl,
+        height: v.size.targetControl,
         flexShrink: 0,
-        borderRadius: t.radius.control,
-        background: t.color.surfaceControl,
+        borderRadius: v.radius.control,
+        background: v.color.surfaceControl,
         overflow: 'hidden',
       }}
     >
       <div
         aria-hidden
-        style={{ position: 'absolute', insetInlineStart: 0, top: 0, bottom: 0, width: `${shown}%`, background: t.color.accentSoft }}
+        style={{ position: 'absolute', insetInlineStart: 0, top: 0, bottom: 0, width: `${shown}%`, background: v.color.accentSoft }}
       />
       <div
         aria-hidden
@@ -74,11 +74,11 @@ export function Dimmer({ value, onCommit, label }: DimmerProps) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: `0 ${t.space[4]}px`,
+          padding: `0 ${v.space[4]}`,
           pointerEvents: 'none',
-          fontSize: t.type.meta.size,
+          fontSize: v.type.meta.size,
           fontWeight: 500,
-          color: shown > 0 ? t.color.ink : t.color.inkMuted,
+          color: shown > 0 ? v.color.ink : v.color.inkMuted,
           fontVariantNumeric: 'tabular-nums',
         }}
       >

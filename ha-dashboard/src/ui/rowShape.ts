@@ -5,7 +5,7 @@
  * same shape must not drift apart one copied line at a time.
  */
 import { useState, type CSSProperties } from 'react';
-import { t } from './theme';
+import { v } from './vars';
 
 /**
  * The row's box in its Region: its share of the height, and its corners.
@@ -18,18 +18,18 @@ import { t } from './theme';
  */
 export const rowBox = {
   flex: 1,
-  minHeight: t.layout.rowRoom,
-  borderRadius: t.radius.tile,
+  minHeight: v.layout.rowRoom,
+  borderRadius: v.radius.tile,
 } satisfies CSSProperties;
 
 /** The row's surface and state marker, for a `Tile` laid out as a `row`. */
 export function rowStyle({ active, unavailable }: { active: boolean; unavailable: boolean }): CSSProperties {
   return {
     ...rowBox,
-    gap: t.space.md,
+    gap: v.space.md,
     // `Tile` already applies its own horizontal padding via `cssStyles`
-    // (t.space.md), so no second padding is added here.
-    background: unavailable ? t.color.faultSurface : t.color.surface,
+    // (v.space.md), so no second padding is added here.
+    background: unavailable ? v.color.alertSurface : v.color.surface,
     // The state marker is painted INSIDE the row, not as a left border.
     //
     // A 6 px `borderLeft` replaces `Tile`'s own 1 px border on that edge,
@@ -37,7 +37,7 @@ export function rowStyle({ active, unavailable }: { active: boolean; unavailable
     // side of its outline against the rounded corner, and the card read
     // as broken. As a gradient the marker sits within the padding box and
     // all four sides keep the same 1 px border.
-    backgroundImage: `linear-gradient(to right, ${unavailable ? t.color.fault : active ? t.color.accent : 'transparent'} 0 6px, transparent 6px)`,
+    backgroundImage: `linear-gradient(to right, ${unavailable ? v.color.alert : active ? v.color.accent : 'transparent'} 0 6px, transparent 6px)`,
   };
 }
 

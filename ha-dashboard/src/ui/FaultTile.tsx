@@ -15,7 +15,7 @@
  */
 import type { CSSProperties } from 'react';
 import { Icon } from './Icon';
-import { t } from './theme';
+import { v } from './vars';
 
 export type FaultTileProps = {
   label: string;
@@ -37,20 +37,20 @@ export function FaultTile({ label, detail, icon = 'mdi:help-rhombus-outline', st
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: t.space.xs,
-        padding: t.space.md,
+        gap: v.space.xs,
+        padding: v.space.md,
         boxSizing: 'border-box',
-        borderRadius: t.radius.tile,
-        border: `1px solid ${t.color.faultLine}`,
-        background: t.color.faultSurface,
-        color: t.color.fault,
+        borderRadius: v.radius.tile,
+        border: `1px solid ${v.color.alertLine}`,
+        background: v.color.alertSurface,
+        color: v.color.alert,
         textAlign: 'center',
         ...style,
       }}
     >
       <Icon name={icon} size={36} />
-      <span style={{ fontSize: t.font.body, fontWeight: 600 }}>{label}</span>
-      {detail !== undefined && <span style={{ fontSize: t.font.caption, fontWeight: 700 }}>{detail.toUpperCase()}</span>}
+      <span style={{ fontSize: v.font.body, fontWeight: 600 }}>{label}</span>
+      {detail !== undefined && <span style={{ fontSize: v.font.caption, fontWeight: 700 }}>{detail.toUpperCase()}</span>}
     </div>
   );
 }

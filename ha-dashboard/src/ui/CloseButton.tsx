@@ -6,10 +6,13 @@
  */
 import { Icon } from './Icon';
 import { tr } from '../i18n';
-import { t } from './theme';
+import { v } from './vars';
+
+/** The glyph is half the button. */
+const GLYPH = parseFloat(v.layout.popupClose) / 2;
 
 export function CloseButton({ onClose }: { onClose: () => void }) {
-  const size = t.layout.popupClose;
+  const size = v.layout.popupClose;
   return (
     <button
       type='button'
@@ -21,11 +24,11 @@ export function CloseButton({ onClose }: { onClose: () => void }) {
         width: size,
         height: size,
         flexShrink: 0,
-        borderRadius: t.radius.pill,
-        border: `1px solid ${t.color.border}`,
-        background: t.color.backdrop,
+        borderRadius: v.radius.pill,
+        border: `1px solid ${v.color.line}`,
+        background: v.color.backdrop,
         backdropFilter: 'blur(6px)',
-        color: t.color.textPrimary,
+        color: v.color.ink,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -33,7 +36,7 @@ export function CloseButton({ onClose }: { onClose: () => void }) {
         padding: 0,
       }}
     >
-      <Icon name='mdi:close' size={size / 2} />
+      <Icon name='mdi:close' size={GLYPH} />
     </button>
   );
 }

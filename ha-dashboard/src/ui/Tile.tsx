@@ -13,7 +13,7 @@ import { CardBase } from '@hakit/components';
 import type { ReactNode } from 'react';
 import type { Entity } from '../ha';
 import { stateLabel } from './stateLabel';
-import { lineFor, surfaceFor, t } from './theme';
+import { lineFor, surfaceFor, v } from './vars';
 
 export type TileProps = {
   /** The entity this tile stands for. Drives active/fault styling and the modal. */
@@ -51,11 +51,11 @@ export function Tile({ entity, active, strong, alwaysFilled, row, onClick, disab
   const surface = {
     boxSizing: 'border-box' as const,
     border: `1px solid ${lineFor({ active, filled: alwaysFilled, unavailable, strong })}`,
-    borderRadius: t.radius.tile,
+    borderRadius: v.radius.tile,
     background: surfaceFor({ active, filled: alwaysFilled, unavailable, strong }),
-    padding: t.space.md,
+    padding: v.space.md,
     overflow: 'hidden',
-    minHeight: t.touch.primary,
+    minHeight: v.touch.primary,
   };
 
   // No entity: render the surface ourselves rather than handing @hakit a card.
@@ -98,7 +98,7 @@ export function Tile({ entity, active, strong, alwaysFilled, row, onClick, disab
           : {})}
         style={{
           ...surface,
-          ...(row ? { display: 'flex', alignItems: 'center', gap: t.space.md, width: '100%' } : { display: 'block', width: '100%' }),
+          ...(row ? { display: 'flex', alignItems: 'center', gap: v.space.md, width: '100%' } : { display: 'block', width: '100%' }),
           ...(pressable ? { cursor: 'pointer' } : {}),
           ...style,
         }}
@@ -136,7 +136,7 @@ export function Tile({ entity, active, strong, alwaysFilled, row, onClick, disab
         display: ${row ? 'flex' : 'block'};
         ${row ? 'align-items: center;' : ''}
         width: 100%;
-        max-height: ${t.layout.tileMaxH}px;
+        max-height: ${v.layout.tileMaxH};
         ${
           // @hakit nests the children three levels down -- `.ripple-parent`,
           // `.ripple-inner`, then `.contents`, which is the element that
@@ -153,7 +153,7 @@ export function Tile({ entity, active, strong, alwaysFilled, row, onClick, disab
         & .contents {
           display: flex;
           align-items: center;
-          gap: ${t.space.md}px;
+          gap: ${v.space.md};
           width: 100%;
           height: 100%;
         }`
@@ -169,9 +169,9 @@ export function Tile({ entity, active, strong, alwaysFilled, row, onClick, disab
          */
         & .ripple-parent, & .ripple-inner { overflow: visible !important; }
         border: 1px solid ${lineFor({ active, filled: alwaysFilled, unavailable, strong })};
-        border-radius: ${t.radius.tile}px;
+        border-radius: ${v.radius.tile};
         background: ${surfaceFor({ active, filled: alwaysFilled, unavailable, strong })};
-        padding: ${t.space.md}px;
+        padding: ${v.space.md};
         overflow: hidden;
         cursor: ${unavailable ? 'not-allowed' : 'pointer'};
       `}
@@ -179,7 +179,7 @@ export function Tile({ entity, active, strong, alwaysFilled, row, onClick, disab
         // No grid spans: the panel's regions are flows, and the one part
         // that tiles (the bottom strip) places its children itself. A tile
         // fills whatever box it is given.
-        minHeight: t.touch.primary,
+        minHeight: v.touch.primary,
         ...style,
       }}
     >

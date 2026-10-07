@@ -13,7 +13,7 @@ import { AlarmCommands } from './AlarmCommands';
 import { alarmIcon, isArmed, isTriggered } from './alarmState';
 import { Icon } from './Icon';
 import { stateLabel } from './stateLabel';
-import { t } from './theme';
+import { v } from './vars';
 
 export type AlarmPanelProps = {
   entity: Entity;
@@ -26,7 +26,7 @@ export function AlarmPanel({ entity, style }: AlarmPanelProps) {
   // A triggered alarm borrows the fault treatment, as `AlarmTile` does: it
   // must not read as a normal "on".
   const alarming = unavailable || isTriggered(entity);
-  const stateColor = alarming ? t.color.fault : isArmed(entity) ? t.color.activeStrong : t.color.textSecondary;
+  const stateColor = alarming ? v.color.alert : isArmed(entity) ? v.color.accent : v.color.inkMuted;
 
   return (
     <div
@@ -34,16 +34,16 @@ export function AlarmPanel({ entity, style }: AlarmPanelProps) {
         flex: '0 0 auto',
         display: 'flex',
         flexDirection: 'column',
-        gap: t.space.sm,
-        padding: t.space.md,
+        gap: v.space.sm,
+        padding: v.space.md,
         boxSizing: 'border-box',
-        borderRadius: t.radius.tile,
-        border: `1px solid ${alarming ? t.color.faultLine : t.color.border}`,
-        background: alarming ? t.color.faultSurface : t.color.surface,
+        borderRadius: v.radius.tile,
+        border: `1px solid ${alarming ? v.color.alertLine : v.color.line}`,
+        background: alarming ? v.color.alertSurface : v.color.surface,
         ...style,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: t.space.sm, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: v.space.sm, minWidth: 0 }}>
         <span style={{ display: 'flex', color: stateColor }}>
           <Icon name={alarmIcon(entity)} size={26} />
         </span>
@@ -52,9 +52,9 @@ export function AlarmPanel({ entity, style }: AlarmPanelProps) {
           style={{
             flex: 1,
             minWidth: 0,
-            fontSize: t.font.glanceM,
+            fontSize: v.font.glanceM,
             fontWeight: 600,
-            color: t.color.textPrimary,
+            color: v.color.ink,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -62,7 +62,7 @@ export function AlarmPanel({ entity, style }: AlarmPanelProps) {
         >
           {entity.name}
         </span>
-        <span style={{ flexShrink: 0, fontSize: t.font.body, fontWeight: 700, color: stateColor }}>
+        <span style={{ flexShrink: 0, fontSize: v.font.body, fontWeight: 700, color: stateColor }}>
           {unavailable ? stateLabel(entity).toUpperCase() : stateLabel(entity)}
         </span>
       </div>

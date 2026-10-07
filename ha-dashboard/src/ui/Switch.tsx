@@ -6,7 +6,7 @@
  * No press scale: the knob sliding across is the feedback. Its click stops
  * here, so toggling the light never also does what the surface under it does.
  */
-import { t } from './theme';
+import { v } from './vars';
 
 export type SwitchProps = {
   checked: boolean;
@@ -44,8 +44,8 @@ export function Switch({ checked, onChange, label }: SwitchProps) {
           height: 32,
           padding: 3,
           boxSizing: 'border-box',
-          borderRadius: t.radius.pill,
-          background: checked ? t.color.accent : t.color.switchOff,
+          borderRadius: v.radius.pill,
+          background: checked ? v.color.accent : v.color.switchOff,
           display: 'flex',
           alignItems: 'center',
           transition: 'background .18s ease',
@@ -55,8 +55,8 @@ export function Switch({ checked, onChange, label }: SwitchProps) {
           style={{
             width: 26,
             height: 26,
-            borderRadius: t.radius.pill,
-            background: checked ? t.color.onAccent : t.color.knobOff,
+            borderRadius: v.radius.pill,
+            background: checked ? v.color.onAccent : v.color.knobOff,
             marginInlineStart: checked ? 24 : 0,
             transition: 'margin-inline-start .18s ease, background .18s ease',
           }}

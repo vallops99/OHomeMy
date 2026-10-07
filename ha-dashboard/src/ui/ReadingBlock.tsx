@@ -10,7 +10,7 @@
  */
 import type { CSSProperties, ReactNode } from 'react';
 import { Icon } from './Icon';
-import { t } from './theme';
+import { v } from './vars';
 
 export type ReadingBlockProps = {
   icon: string;
@@ -27,33 +27,33 @@ export type ReadingBlockProps = {
 };
 
 export function ReadingBlock({ icon, value, detail, name, unavailable = false, active = false, style }: ReadingBlockProps) {
-  const fg = unavailable ? t.color.fault : active ? t.color.activeStrong : t.color.textPrimary;
+  const fg = unavailable ? v.color.alert : active ? v.color.accent : v.color.ink;
   return (
     <div
       style={{
         flex: '0 0 auto',
         display: 'flex',
         alignItems: 'center',
-        gap: t.space.sm,
+        gap: v.space.sm,
         // The same height budget as a Page block: 64 px of footer, and
         // `sm` top and bottom (PlacementView.tsx's `PageBlock`).
-        minHeight: t.touch.primary,
-        padding: `${t.space.sm}px ${t.space.md}px`,
+        minHeight: v.touch.primary,
+        padding: `${v.space.sm} ${v.space.md}`,
         boxSizing: 'border-box',
-        borderRadius: t.radius.tile,
-        border: `1px solid ${unavailable ? t.color.faultLine : t.color.border}`,
-        background: unavailable ? t.color.faultSurface : t.color.surface,
+        borderRadius: v.radius.tile,
+        border: `1px solid ${unavailable ? v.color.alertLine : v.color.line}`,
+        background: unavailable ? v.color.alertSurface : v.color.surface,
         color: fg,
         ...style,
       }}
     >
       <Icon name={unavailable ? 'mdi:alert-circle' : icon} size={26} />
       <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: t.space.xs, whiteSpace: 'nowrap' }}>
-          <span style={{ fontSize: t.font.body, fontWeight: 700 }}>{value}</span>
-          {detail && <span style={{ fontSize: t.font.caption, color: t.color.textSecondary }}>{detail}</span>}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: v.space.xs, whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: v.font.body, fontWeight: 700 }}>{value}</span>
+          {detail && <span style={{ fontSize: v.font.caption, color: v.color.inkMuted }}>{detail}</span>}
         </div>
-        <span dir='auto' style={{ fontSize: t.font.caption, fontWeight: 600, color: t.color.textSecondary, whiteSpace: 'nowrap' }}>
+        <span dir='auto' style={{ fontSize: v.font.caption, fontWeight: 600, color: v.color.inkMuted, whiteSpace: 'nowrap' }}>
           {name}
         </span>
       </div>

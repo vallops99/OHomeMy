@@ -16,7 +16,7 @@ import { useRowSlider } from '../../ui/rowShape';
 import { Slider } from '../../ui/Slider';
 import { stateLabel } from '../../ui/stateLabel';
 import { Tile } from '../../ui/Tile';
-import { t } from '../../ui/theme';
+import { v } from '../../ui/vars';
 
 /** Surface and border per tone, as Casa Panel's room tile has them. */
 const SURFACE = {
@@ -83,7 +83,7 @@ export function ToggleView({ entity, variant, style }: ToggleViewProps) {
           <div className='ohm-toggle-slider' onClick={e => e.stopPropagation()}>
             <Slider
               value={slider.shown}
-              thickness={t.size.targetControl}
+              thickness={v.size.targetControl}
               onInteracting={slider.setSliding}
               onChange={slider.track}
               onChangeApplied={v => {
