@@ -26,7 +26,7 @@
  * `inspector.test.ts` runs this under plain Node.
  */
 import type { FieldSpec, WidgetSchema } from '../document/schema';
-import type { Widget } from '../document/types';
+import { HOUSE_MODE_DOMAINS, type Widget } from '../document/types';
 import type { Box } from './layout';
 
 /** An entity as the pickers list it. */
@@ -146,6 +146,15 @@ function entityOptions(house: HouseLists, domains: readonly string[]): Option[] 
 
 function areaOptions(house: HouseLists): Option[] {
   return house.areas.map(a => ({ value: a.id, label: a.name })).sort((a, b) => a.label.localeCompare(b.label));
+}
+
+/**
+ * The entities `follow-house` may read (#70): a sun, binary sensor or
+ * boolean, with the current one kept (marked missing) if the house lost it.
+ */
+export function houseModeOptions(entities: readonly { id: string; name: string }[], current: string): Option[] {
+  const house = { entities: entities.map(e => ({ ...e, domain: domainOf(e.id), areaId: null })), areas: [] };
+  return withCurrent(entityOptions(house, HOUSE_MODE_DOMAINS), current);
 }
 
 /** The options, with the current value added (marked missing) if the house no longer has it. */

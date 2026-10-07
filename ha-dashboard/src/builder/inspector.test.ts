@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { defineSchema, validateWidget } from '../document/schema';
-import { controlsFor, moveItem, newWidget, sizeFor, withSetting, type HouseLists } from './inspector';
+import { controlsFor, houseModeOptions, moveItem, newWidget, sizeFor, withSetting, type HouseLists } from './inspector';
 
 const house: HouseLists = {
   entities: [
@@ -176,4 +176,19 @@ test("a new Widget is its kind's first Variant, untitled, opening nothing, with 
 test('a list item moves one place, within the list', () => {
   assert.deepEqual(moveItem(['a', 'b', 'c'], 2, -1), ['a', 'c', 'b']);
   assert.deepEqual(moveItem(['a', 'b', 'c'], 0, -1), ['a', 'b', 'c']);
+});
+
+test('the house entity for follow-house is offered from suns, binary sensors and booleans only (#70)', () => {
+  const entities = [
+    { id: 'sun.sun', name: 'Sun' },
+    { id: 'binary_sensor.dark_outside', name: 'Dark outside' },
+    { id: 'input_boolean.night', name: 'Night' },
+    { id: 'sensor.lux', name: 'Lux' },
+    { id: 'light.kitchen', name: 'Kitchen' },
+  ];
+  const options = houseModeOptions(entities, 'sun.sun');
+  assert.deepEqual(options.map(o => o.value).sort(), ['binary_sensor.dark_outside', 'input_boolean.night', 'sun.sun']);
+  assert.ok(options.every(o => !o.missing));
+  const gone = houseModeOptions(entities, 'binary_sensor.removed');
+  assert.deepEqual(gone[0], { value: 'binary_sensor.removed', label: 'binary_sensor.removed', missing: true });
 });

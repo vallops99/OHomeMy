@@ -14,7 +14,17 @@
  * No React: `pages.test.ts` runs this under plain Node. Ids come from the
  * caller, as in `draft.ts`.
  */
-import type { Dashboard, DashboardSettings, Navbar, NavbarItem, OHomeMyDocument, Page, Size } from '../document/types';
+import {
+  HOUSE_MODE_DEFAULT,
+  HOUSE_MODE_DOMAINS,
+  type Dashboard,
+  type DashboardSettings,
+  type Navbar,
+  type NavbarItem,
+  type OHomeMyDocument,
+  type Page,
+  type Size,
+} from '../document/types';
 import { mapPage, minimumGrid } from './layout';
 
 /** The document with one Dashboard changed. */
@@ -105,7 +115,36 @@ export function setSettings(dashboard: Dashboard, patch: Partial<DashboardSettin
   const { min, max } = settings.supported_range;
   if (![min, max].every(validSize) || min.width > max.width || min.height > max.height) return dashboard;
   if (settings.idle_return !== null && !(Number.isInteger(settings.idle_return) && settings.idle_return >= 1)) return dashboard;
+  if (!validTheme(settings.theme)) return dashboard;
   return next;
+}
+
+type Theme = DashboardSettings['theme'];
+
+/** The house entity is there exactly under `follow-house`, and is one of its Domains. */
+const validTheme = (theme: Theme) =>
+  theme.mode === 'follow-house' ? theme.entity !== undefined && isHouseModeEntity(theme.entity) : !('entity' in theme);
+
+/** Whether `id` is an entity `follow-house` may read: a sun, binary sensor or boolean. */
+export const isHouseModeEntity = (id: string) =>
+  (HOUSE_MODE_DOMAINS as readonly string[]).includes(id.slice(0, id.indexOf('.'))) && /^[a-z0-9_]+\.[a-z0-9_]+$/.test(id);
+
+/**
+ * The Mode set (#70). Choosing `follow-house` reads `sun.sun` until the admin
+ * picks another entity, and keeps one already picked; any other Mode drops
+ * the entity, so the document holds it only where it is read.
+ */
+export function setMode(dashboard: Dashboard, mode: Theme['mode']): Dashboard {
+  const { name, entity } = dashboard.settings.theme;
+  const theme: Theme = mode === 'follow-house' ? { name, mode, entity: entity ?? HOUSE_MODE_DEFAULT } : { name, mode };
+  return setSettings(dashboard, { theme });
+}
+
+/** The entity `follow-house` reads; refused under any other Mode, or outside its Domains. */
+export function setHouseEntity(dashboard: Dashboard, entity: string): Dashboard {
+  const theme = dashboard.settings.theme;
+  if (theme.mode !== 'follow-house') return dashboard;
+  return setSettings(dashboard, { theme: { ...theme, entity } });
 }
 
 const validSize = (s: Size) => [s.width, s.height].every(n => Number.isInteger(n) && n >= 1);

@@ -1,15 +1,19 @@
 /**
  * The Dashboard's own settings (#56): whether it is in the sidebar, whether
  * its Pages fit or scroll, the supported range, the idle return, the back
- * gesture, its Theme and mode, and its Navbar. Every control offers only
+ * gesture, its Theme and Mode (and the entity `follow-house` reads), and
+ * its Navbar. Every control offers only
  * what `pages.ts` accepts.
  */
-import { EDGES, MODES, OVERFLOWS, type Dashboard, type Size } from '../document/types';
+import { useMemo } from 'react';
+import { EDGES, HOUSE_MODE_DEFAULT, HOUSE_MODE_DOMAINS, MODES, OVERFLOWS, type Dashboard, type Size } from '../document/types';
+import { useEntitiesIn } from '../ha';
 import { tr } from '../i18n';
 import { THEMES } from '../theme/themes';
 import { iconChoices } from '../ui/iconMap';
 import { randomId } from './draft';
 import { Field, IconPicker, NumberInput, Picker, Switch } from './fields';
+import { houseModeOptions } from './inspector';
 import {
   addNavbarItem,
   canFit,
@@ -18,6 +22,8 @@ import {
   removeNavbarItem,
   setNavbar,
   setNavbarFields,
+  setHouseEntity,
+  setMode,
   setRangeEnd,
   setSettings,
   updateNavbarItem,
@@ -120,14 +126,26 @@ export function DashboardSettings({ dashboard, edit }: { dashboard: Dashboard; e
               name='mode'
               value={s.theme.mode}
               options={MODES.map(m => ({ value: m, label: tr(`builder.dashboard.settings.mode.${m}`) }))}
-              onChange={v => v && edit(d => setSettings(d, { theme: { ...d.settings.theme, mode: v as (typeof MODES)[number] } }))}
+              onChange={v => v && edit(d => setMode(d, v as (typeof MODES)[number]))}
             />
           )}
         </Field>
       </div>
+      {s.theme.mode === 'follow-house' && <HouseModeEntity entity={s.theme.entity ?? HOUSE_MODE_DEFAULT} edit={edit} />}
 
       <NavbarSettings dashboard={dashboard} edit={edit} />
     </div>
+  );
+}
+
+/** The entity `follow-house` reads (#70): a sun, binary sensor or boolean. */
+function HouseModeEntity({ entity, edit }: { entity: string; edit: Edit }) {
+  const entities = useEntitiesIn(HOUSE_MODE_DOMAINS);
+  const options = useMemo(() => houseModeOptions(entities, entity), [entities, entity]);
+  return (
+    <Field label={tr('builder.dashboard.settings.modeEntity')} hint={tr('builder.dashboard.settings.modeEntityHint')}>
+      {id => <Picker id={id} name='mode_entity' value={entity} options={options} onChange={v => v && edit(d => setHouseEntity(d, v))} />}
+    </Field>
   );
 }
 

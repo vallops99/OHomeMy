@@ -17,6 +17,8 @@ import {
   setHomePage,
   setNavbar,
   setNavbarFields,
+  setHouseEntity,
+  setMode,
   setRangeEnd,
   setSettings,
   updateNavbarItem,
@@ -143,6 +145,41 @@ test('settings refuse an idle return under a second and a range turned inside ou
     name: 'casa-panel',
     mode: 'follow-device',
   });
+});
+
+test('settings refuse a house entity missing under follow-house, outside its Domains, or under any other Mode', () => {
+  const d = wall();
+  assert.equal(setSettings(d, { theme: { name: 'casa-panel', mode: 'follow-house' } }), d);
+  assert.equal(setSettings(d, { theme: { name: 'casa-panel', mode: 'follow-house', entity: 'sensor.lux' } }), d);
+  assert.equal(setSettings(d, { theme: { name: 'casa-panel', mode: 'dark', entity: 'sun.sun' } }), d);
+  const ok = { name: 'casa-panel', mode: 'follow-house' as const, entity: 'input_boolean.night' };
+  assert.deepEqual(setSettings(d, { theme: ok }).settings.theme, ok);
+});
+
+test('choosing follow-house reads the sun until the admin picks another entity', () => {
+  const d = setMode(wall(), 'follow-house');
+  assert.deepEqual(d.settings.theme, { name: 'casa-panel', mode: 'follow-house', entity: 'sun.sun' });
+});
+
+test('the house entity can be any sun, binary sensor or boolean, and nothing else', () => {
+  const d = setMode(wall(), 'follow-house');
+  assert.equal(setHouseEntity(d, 'binary_sensor.dark_outside').settings.theme.entity, 'binary_sensor.dark_outside');
+  assert.equal(setHouseEntity(d, 'input_boolean.night').settings.theme.entity, 'input_boolean.night');
+  assert.equal(setHouseEntity(d, 'sensor.lux'), d);
+  assert.equal(setHouseEntity(d, 'light.kitchen'), d);
+  // Only under follow-house.
+  const dark = wall();
+  assert.equal(setHouseEntity(dark, 'sun.sun'), dark);
+});
+
+test('choosing follow-house again keeps the entity picked; any other Mode removes it', () => {
+  const d = setHouseEntity(setMode(wall(), 'follow-house'), 'binary_sensor.dark_outside');
+  assert.equal(setMode(d, 'follow-house').settings.theme.entity, 'binary_sensor.dark_outside');
+  for (const mode of ['light', 'dark', 'follow-device'] as const) {
+    const theme = setMode(d, mode).settings.theme;
+    assert.deepEqual(theme, { name: 'casa-panel', mode });
+    assert.ok(!('entity' in theme));
+  }
 });
 
 test('one end of the range set past the other carries it along', () => {

@@ -56,6 +56,8 @@ test('a new Dashboard has one empty Home Page and the slug it was given', () => 
   assert.deepEqual(d.pages[0].widgets, []);
   assert.notEqual(d.id, d.pages[0].id);
   assert.equal(d.navbar, null);
+  // Dark, so a new wall panel never lights up a room at night (#70).
+  assert.deepEqual(d.settings.theme, { name: 'casa-panel', mode: 'dark' });
 });
 
 test('a name must not be blank', () => {
