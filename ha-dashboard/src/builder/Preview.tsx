@@ -53,6 +53,7 @@ import { cellPlacement, gridVariables, RENDERER_CSS } from '../renderer/grid';
 import { initialNav, navbarItems, open } from '../renderer/navigation';
 import { DashboardNavigationProvider, type DashboardNavigation } from '../renderer/navigationContext';
 import { Page } from '../renderer/Page';
+import { isDark, useDeviceDark } from '../theme/deviceScheme';
 import { themeFor } from '../theme/themes';
 import { WIDGETS_CSS, widgetKind } from '../widgets/registry';
 import { fits, type Extent } from './fit';
@@ -90,6 +91,7 @@ const DRAG_SLOP = 4;
 
 export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, onDelete, onOpenPage, onFit, ghost, handle }: Props) {
   const house = useHouse();
+  const deviceDark = useDeviceDark();
   const stage = useRef<HTMLDivElement>(null);
   const screenEl = useRef<HTMLDivElement>(null);
   const grid = useRef<HTMLDivElement>(null);
@@ -238,7 +240,7 @@ export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, 
         <div
           className='b-screen'
           ref={screenEl}
-          style={{ width: screen.width, height: screen.height, transform: `scale(${scale})`, ...themeVariables(dashboard) }}
+          style={{ width: screen.width, height: screen.height, transform: `scale(${scale})`, ...themeVariables(dashboard, deviceDark) }}
           aria-label={t.preview.label(page.name)}
         >
           <style>{RENDERER_CSS}</style>
@@ -348,12 +350,12 @@ function WidgetFrame({
 
 /**
  * The Dashboard's theme, as custom properties on the preview's screen only,
- * so the Builder around it keeps its own. `auto` follows this device now.
+ * so the Builder around it keeps its own. `auto` follows this device, and
+ * switches with it while the preview is open.
  */
-function themeVariables(dashboard: Dashboard): CSSProperties {
+function themeVariables(dashboard: Dashboard, deviceDark: boolean): CSSProperties {
   const { name, mode } = dashboard.settings.theme;
-  const dark = mode === 'dark' || (mode === 'auto' && window.matchMedia?.('(prefers-color-scheme: dark)').matches);
-  const tokens = themeFor(name)[dark ? 'dark' : 'light'];
+  const tokens = themeFor(name)[isDark(mode, deviceDark) ? 'dark' : 'light'];
   return Object.fromEntries(Object.entries(tokens).map(([k, v]) => [`--${k}`, v])) as CSSProperties;
 }
 
