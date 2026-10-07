@@ -38,6 +38,7 @@ export default defineWidget({
     .ohm-link-icon { grid-area: icon; display: flex; color: var(--ink-secondary); }
     .ohm-link-title {
       grid-area: title;
+     
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;

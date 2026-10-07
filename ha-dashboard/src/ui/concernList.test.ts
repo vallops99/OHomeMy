@@ -5,7 +5,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Area, Entity, Health, HouseReport } from '../ha';
-import { NO_AREA, concernRows, liveConcern } from './concernList';
+import { concernRows, liveConcern } from './concernList';
+import { DEFAULT_LOCALE, setViewerLocale } from '../i18n';
+
+// In Italian, the copy of the house the panel was built for (#59).
+setViewerLocale({ ...DEFAULT_LOCALE, language: 'it' });
+const NO_AREA = 'Senza stanza';
 
 const entity = (id: string, name: string, areaId: string | null): Entity => ({
   id,
@@ -63,7 +68,6 @@ test('each row is named with its Area, and one with none says so', () => {
       ['sensor.b', NO_AREA],
     ]
   );
-  assert.equal(NO_AREA, 'Senza stanza');
 });
 
 test('an Area the registry no longer has reads as no Area', () => {

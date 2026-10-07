@@ -58,7 +58,9 @@ export function AlarmTile({ entity, style }: AlarmTileProps) {
         }}
       >
         <Icon name={alarmIcon(entity)} size={40} />
-        <span style={{ fontSize: t.font.glanceM, fontWeight: 600, textAlign: 'center' }}>{entity.name}</span>
+        <span dir='auto' style={{ fontSize: t.font.glanceM, fontWeight: 600, textAlign: 'center' }}>
+          {entity.name}
+        </span>
         <span style={{ fontSize: t.font.body, opacity: 0.9 }}>{stateLabel(entity)}</span>
       </div>
     </Tile>

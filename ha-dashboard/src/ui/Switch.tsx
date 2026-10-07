@@ -57,8 +57,8 @@ export function Switch({ checked, onChange, label }: SwitchProps) {
             height: 26,
             borderRadius: t.radius.pill,
             background: checked ? t.color.onAccent : t.color.knobOff,
-            marginLeft: checked ? 24 : 0,
-            transition: 'margin-left .18s ease, background .18s ease',
+            marginInlineStart: checked ? 24 : 0,
+            transition: 'margin-inline-start .18s ease, background .18s ease',
           }}
         />
       </span>

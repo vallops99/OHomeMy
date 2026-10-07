@@ -20,7 +20,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from '../App';
 import indexCss from '../index.css?inline';
-import { panelStore, type PanelInfo, type PanelRoute } from './panelProps';
+import { hassPatch, panelStore, type PanelInfo, type PanelRoute } from './panelProps';
 import { app, portalRoot, styles, tree } from './tree';
 
 const ELEMENT = 'ohomemy-dashboard';
@@ -98,6 +98,10 @@ class DashboardElement extends HTMLElement {
   }
   set narrow(narrow: boolean) {
     panelStore.set({ narrow });
+  }
+  /** Only the viewer's locale and the server's time zone are kept (`panelProps.ts`). */
+  set hass(hass: unknown) {
+    panelStore.set(hassPatch(hass));
   }
 }
 

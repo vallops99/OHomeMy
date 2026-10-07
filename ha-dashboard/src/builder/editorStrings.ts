@@ -1,168 +1,296 @@
 /**
- * Every word the Dashboard editor shows (#56), in English, reached as
- * `strings.editor` (`strings.ts`) so that i18n (#59) finds the Builder's
- * text in one tree. Kept in a file of its own only so the editor's strings
- * and the rest of the Builder's are edited without touching each other.
+ * Every word the Dashboard editor shows (#56): the catalogues' `editor.*`
+ * keys (#59), reached as `strings.editor` (`strings.ts`) and shaped as the
+ * editor's components read them. Getters and functions, as there, so each
+ * word is the viewer's language at the moment it is shown.
  *
  * The one string here that ends up in the document is `newPageName`, the
  * name a new Page starts with, which the admin may change.
  */
+import { isKey, tr, trKey } from '../i18n';
+
+/**
+ * The words under `prefix`, by the last part of their key (`kinds.clock`
+ * from `editor.kind.clock`), for a name looked up from data: a kind, a
+ * setting, an option. One with no word is `undefined`, for the caller to
+ * name from its id.
+ */
+function words(prefix: string): Record<string, string> {
+  return new Proxy({} as Record<string, string>, {
+    get: (_, name) => {
+      const key = `${prefix}.${String(name)}`;
+      return isKey(key) ? trKey(key) : undefined;
+    },
+  });
+}
+
 export const editorStrings = {
-  edit: 'Edit layout',
-  back: 'All Dashboards',
-  editing: (name: string) => `Editing “${name}”`,
+  get edit() {
+    return tr('editor.edit');
+  },
+  get back() {
+    return tr('editor.back');
+  },
+  editing: (name: string) => tr('editor.editing', { name }),
 
   pages: {
-    label: 'Pages',
-    add: 'Add Page',
-    home: 'Home',
-    popup: (name: string) => `Popup · ${name}`,
+    get label() {
+      return tr('editor.pages.label');
+    },
+    get add() {
+      return tr('editor.pages.add');
+    },
+    get home() {
+      return tr('editor.pages.home');
+    },
+    popup: (name: string) => tr('editor.pages.popup', { name }),
   },
-  newPageName: (n: number) => `Page ${n}`,
+
+  newPageName: (n: number) => tr('editor.newPageName', { n }),
 
   size: {
-    label: 'Preview at',
-    smallest: 'Smallest',
-    largest: 'Largest',
-    dims: (width: number, height: number) => `${width} × ${height}`,
-    notFitting: (n: number, width: number, height: number) =>
-      n === 1 ? `1 Widget does not fit its box at ${width} × ${height}` : `${n} Widgets do not fit their boxes at ${width} × ${height}`,
-    allFit: (width: number, height: number) => `Every Widget fits at ${width} × ${height}`,
-    fitRule: 'A Widget does not fit when any of its content is out of sight and would have to be scrolled to.',
+    get label() {
+      return tr('editor.size.label');
+    },
+    get smallest() {
+      return tr('editor.size.smallest');
+    },
+    get largest() {
+      return tr('editor.size.largest');
+    },
+    dims: (width: number, height: number) => tr('editor.size.dims', { width, height }),
+    notFitting: (n: number, width: number, height: number) => tr('editor.size.notFitting', { count: n, width, height }),
+    allFit: (width: number, height: number) => tr('editor.size.allFit', { width, height }),
+    get fitRule() {
+      return tr('editor.size.fitRule');
+    },
   },
 
   palette: {
-    label: 'Add a Widget',
-    hint: 'Tap to add in the first free place, or drag onto the preview.',
-    full: 'This Page has no free cell. Make room, or enlarge its grid.',
+    get label() {
+      return tr('editor.palette.label');
+    },
+    get hint() {
+      return tr('editor.palette.hint');
+    },
+    get full() {
+      return tr('editor.palette.full');
+    },
   },
 
   preview: {
-    label: (page: string) => `Preview of ${page}`,
-    notShown: 'Not shown',
-    notFitting: 'Does not fit',
-    refused: 'Overlaps another Widget',
-    resize: 'Resize',
-    rule: 'Drag a Widget to move it, its corner to resize it. Widgets never overlap; a drop where one would is undone.',
+    label: (page: string) => tr('editor.preview.label', { page }),
+    get notShown() {
+      return tr('editor.preview.notShown');
+    },
+    get notFitting() {
+      return tr('editor.preview.notFitting');
+    },
+    get refused() {
+      return tr('editor.preview.refused');
+    },
+    get resize() {
+      return tr('editor.preview.resize');
+    },
+    get rule() {
+      return tr('editor.preview.rule');
+    },
   },
 
-  tabs: { widget: 'Widget', page: 'Page', dashboard: 'Dashboard' },
+  tabs: {
+    get widget() {
+      return tr('editor.tabs.widget');
+    },
+    get page() {
+      return tr('editor.tabs.page');
+    },
+    get dashboard() {
+      return tr('editor.tabs.dashboard');
+    },
+  },
 
   widget: {
-    none: 'Select a Widget on the preview to change it.',
-    delete: 'Delete Widget',
-    place: (x: number, y: number, w: number, h: number) => `Column ${x + 1}, row ${y + 1} · ${w} × ${h} cells`,
-    noPage: 'choose a Page for it to open',
-    notShown: (reason: string) => `Not shown on the Dashboard until this is fixed: ${reason}.`,
-    notFitting: (width: number, height: number) =>
-      `Some of it is out of sight at ${width} × ${height}. Make it bigger, or choose its compact form.`,
-    variant: 'Form',
-    variants: { full: 'Full', compact: 'Compact' } as Record<string, string>,
-    title: 'Title',
-    titleDefault: 'Default title',
-    titleOwn: 'Own title',
-    titleReset: 'Reset to default',
-    titleHint: 'Shown as written. Leave it empty to show no title.',
-    onTap: 'On tap, open',
-    onTapNone: 'Nothing',
-    settings: 'Settings',
+    get none() {
+      return tr('editor.widget.none');
+    },
+    get delete() {
+      return tr('editor.widget.delete');
+    },
+    place: (x: number, y: number, w: number, h: number) => tr('editor.widget.place', { column: x + 1, row: y + 1, w, h }),
+    get noPage() {
+      return tr('editor.widget.noPage');
+    },
+    notShown: (reason: string) => tr('editor.widget.notShown', { reason }),
+    notFitting: (width: number, height: number) => tr('editor.widget.notFitting', { width, height }),
+    get variant() {
+      return tr('editor.widget.variant');
+    },
+    variants: words('editor.widget.variant'),
+    get title() {
+      return tr('editor.widget.title');
+    },
+    get titleDefault() {
+      return tr('editor.widget.titleDefault');
+    },
+    get titleOwn() {
+      return tr('editor.widget.titleOwn');
+    },
+    get titleReset() {
+      return tr('editor.widget.titleReset');
+    },
+    get titleHint() {
+      return tr('editor.widget.titleHint');
+    },
+    get onTap() {
+      return tr('editor.widget.onTap');
+    },
+    get onTapNone() {
+      return tr('editor.widget.onTapNone');
+    },
+    get settings() {
+      return tr('editor.widget.settings');
+    },
   },
 
   field: {
-    choose: 'Choose…',
-    none: 'None',
-    add: 'Add…',
-    missing: (id: string) => `${id} (not in Home Assistant)`,
-    up: 'Move up',
-    down: 'Move down',
-    remove: 'Remove',
-    atLeast: (n: number) => (n === 1 ? 'Choose at least one.' : `Choose at least ${n}.`),
+    get choose() {
+      return tr('editor.field.choose');
+    },
+    get none() {
+      return tr('editor.field.none');
+    },
+    get add() {
+      return tr('editor.field.add');
+    },
+    missing: (id: string) => tr('editor.field.missing', { id }),
+    get up() {
+      return tr('editor.field.up');
+    },
+    get down() {
+      return tr('editor.field.down');
+    },
+    get remove() {
+      return tr('editor.field.remove');
+    },
+    atLeast: (n: number) => tr('editor.field.atLeast', { count: n }),
   },
 
   page: {
-    name: 'Name',
-    isHome: 'This is the Home Page.',
-    makeHome: 'Make Home Page',
-    popupNote: 'A Popup’s Page is opened by Home Assistant, never by a tap or the Navbar.',
-    columns: 'Columns',
-    rows: 'Rows',
-    gridHint: (columns: number, rows: number) => `Its Widgets need at least ${columns} columns and ${rows} rows.`,
-    moveEarlier: 'Move earlier',
-    moveLater: 'Move later',
-    remove: 'Remove Page',
-    removeConfirm: (name: string) => `Remove the Page “${name}” and its Widgets? Widgets and Navbar items that open it stop doing so.`,
-    homeCannotGo: 'The Home Page cannot be removed. Make another Page the Home Page first.',
+    get name() {
+      return tr('editor.page.name');
+    },
+    get isHome() {
+      return tr('editor.page.isHome');
+    },
+    get makeHome() {
+      return tr('editor.page.makeHome');
+    },
+    get popupNote() {
+      return tr('editor.page.popupNote');
+    },
+    get columns() {
+      return tr('editor.page.columns');
+    },
+    get rows() {
+      return tr('editor.page.rows');
+    },
+    gridHint: (columns: number, rows: number) => tr('editor.page.gridHint', { columns, rows }),
+    get moveEarlier() {
+      return tr('editor.page.moveEarlier');
+    },
+    get moveLater() {
+      return tr('editor.page.moveLater');
+    },
+    get remove() {
+      return tr('editor.page.remove');
+    },
+    removeConfirm: (name: string) => tr('editor.page.removeConfirm', { name }),
+    get homeCannotGo() {
+      return tr('editor.page.homeCannotGo');
+    },
   },
 
   dashboard: {
-    sidebar: 'Show in the sidebar',
-    overflow: 'Pages',
-    overflows: { fit: 'Fit to the screen', scroll: 'Scroll' } as Record<string, string>,
-    cannotFit: 'Some Widgets sit below their Page’s rows. Move them up, or add rows, to fit.',
-    range: 'Supported screens',
-    rangeHint: 'The Builder previews the smallest and the largest. Outside them the Dashboard still renders.',
-    smallest: 'Smallest',
-    largest: 'Largest',
-    width: 'Width',
-    height: 'Height',
-    idle: 'Return to the Home Page when idle',
-    idleSeconds: 'After (seconds)',
-    back: 'Back gesture walks the opened Pages',
-    theme: 'Theme',
-    mode: 'Mode',
-    modes: { light: 'Light', dark: 'Dark', auto: 'Follow the device' } as Record<string, string>,
-    themes: { 'casa-panel': 'Casa Panel' } as Record<string, string>,
+    get sidebar() {
+      return tr('editor.dashboard.sidebar');
+    },
+    get overflow() {
+      return tr('editor.dashboard.overflow');
+    },
+    overflows: words('editor.dashboard.overflow'),
+    get cannotFit() {
+      return tr('editor.dashboard.cannotFit');
+    },
+    get range() {
+      return tr('editor.dashboard.range');
+    },
+    get rangeHint() {
+      return tr('editor.dashboard.rangeHint');
+    },
+    get smallest() {
+      return tr('editor.dashboard.smallest');
+    },
+    get largest() {
+      return tr('editor.dashboard.largest');
+    },
+    get width() {
+      return tr('editor.dashboard.width');
+    },
+    get height() {
+      return tr('editor.dashboard.height');
+    },
+    get idle() {
+      return tr('editor.dashboard.idle');
+    },
+    get idleSeconds() {
+      return tr('editor.dashboard.idleSeconds');
+    },
+    get back() {
+      return tr('editor.dashboard.back');
+    },
+    get theme() {
+      return tr('editor.dashboard.theme');
+    },
+    get mode() {
+      return tr('editor.dashboard.mode');
+    },
+    modes: words('editor.dashboard.mode'),
+    themes: words('editor.dashboard.theme'),
   },
 
   navbar: {
-    title: 'Navbar',
-    on: 'Show a Navbar',
-    edge: 'Edge',
-    edges: { top: 'Top', bottom: 'Bottom', left: 'Left', right: 'Right' } as Record<string, string>,
-    tabs: 'Tabs: each item keeps its own trail of Pages',
-    items: 'Items',
-    page: 'Page',
-    icon: 'Icon',
-    add: 'Add item',
+    get title() {
+      return tr('editor.navbar.title');
+    },
+    get on() {
+      return tr('editor.navbar.on');
+    },
+    get edge() {
+      return tr('editor.navbar.edge');
+    },
+    edges: words('editor.navbar.edge'),
+    get tabs() {
+      return tr('editor.navbar.tabs');
+    },
+    get items() {
+      return tr('editor.navbar.items');
+    },
+    get page() {
+      return tr('editor.navbar.page');
+    },
+    get icon() {
+      return tr('editor.navbar.icon');
+    },
+    get add() {
+      return tr('editor.navbar.add');
+    },
   },
 
   /** What each kind is called in the palette; a kind not here is named from its id. */
-  kinds: {
-    clock: 'Clock',
-    status_chips: 'Status chips',
-    stats: 'Stats',
-    camera_wall: 'Camera Wall',
-    group: 'Group',
-    toggle: 'Light or switch',
-    lock: 'Lock or gate',
-    alarm: 'Alarm',
-    climate: 'Thermostat',
-    media: 'Media player',
-    vacuum: 'Vacuum',
-    weather: 'Weather',
-    sensor: 'Sensor',
-    binary_sensor: 'Binary sensor',
-    select: 'Select',
-    room_tile: 'Room Tile',
-    room_grid: 'Room Grid',
-    link: 'Link',
-  } as Record<string, string>,
+  kinds: words('editor.kind'),
 
   /** What each setting is called; one not here is named from its key. */
-  settingNames: {
-    entity: 'Entity',
-    members: 'Members',
-    cameras: 'Cameras',
-    alarm: 'Alarm',
-    power: 'Power sensor',
-    area: 'Area',
-    areas: 'Areas',
-    light: 'Light',
-    lights: 'Lights, one per Area',
-    temperature: 'Temperature',
-    temperatures: 'Temperatures, one per Area',
-    icon: 'Icon',
-  } as Record<string, string>,
+  settingNames: words('editor.setting'),
 };
 
 /** `room_tile` as "Room tile": a name for a kind or setting nobody wrote one for. */

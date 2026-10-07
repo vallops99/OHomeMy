@@ -32,7 +32,7 @@ Which Page is on screen is React state, not a URL (ADR-0006): `src/renderer/navi
 - **The Navbar** (`Frame.tsx`) sits on its edge, horizontal on top or bottom and vertical on the left or right, each item its icon over its Page's name, the current one a `primary` pill. The Page's grid fills the rest.
 - **`back_history`.** On: while the trail has somewhere to go back to, one history entry at the same URL sits over the page's own, and the back gesture or button steps back one Page (`backGesture.ts`, ADR-0011's mechanism). Off: no entry is made, and back leaves the Dashboard.
 - **`idle_return`.** After that many seconds with no touch or key, the Dashboard returns to how it opened: the Home Page, every trail empty. `null` never returns.
-- **Home Assistant's sidebar.** A custom panel gets no toolbar, so where Home Assistant reports `narrow` (it has hidden its sidebar), the frame offers a Menu control that fires Home Assistant's own `hass-toggle-menu`: first in the Navbar, or floating at the top left without one. On a wide screen there is none, and a user set to always hide the sidebar keeps it hidden.
+- **Home Assistant's sidebar.** A custom panel gets no toolbar, so where Home Assistant reports `narrow` (it has hidden its sidebar), the frame offers a Menu control that fires Home Assistant's own `hass-toggle-menu`: first in the Navbar, or floating at the top corner on the sidebar's side without one. On a wide screen there is none, and a user set to always hide the sidebar keeps it hidden.
 
 #### Tapping a Widget
 
@@ -54,7 +54,13 @@ A kind is one folder, `src/widgets/<kind>/`, named exactly as `Widget.kind` (`ro
 
 `src/widgets/clock/` and `src/widgets/toggle/` are the two to copy from. A kind that stands for one entity of some Domains (`lock`, `climate`, `sensor`, ...) needs only its schema: its component is `shared/EntityWidget`, which draws the entity in its Domain's shape from `shared/shapes.tsx` (the same table a Group draws its members with), and the Fault tile while it is Unavailable. Its Domains go in `shared/domains.ts`. `shared/` has no `index.ts`, so it is not a kind.
 
-The Builder offers a new kind in its palette with no change (#56): its inspector is generated from the schema, one control per field type. Two optional touches make it read better there: a name in `src/builder/editorStrings.ts` (`kinds`, and `settingNames` for its settings; otherwise both are spelled from their ids) and the size it is placed at in `src/builder/inspector.ts` (`DEFAULT_SIZE`; otherwise 3 x 2 cells).
+The Builder offers a new kind in its palette with no change (#56): its inspector is generated from the schema, one control per field type. Two optional touches make it read better there: a name in the catalogues (`editor.kind.<kind>`, and `editor.setting.<key>` for its settings; otherwise both are spelled from their ids) and the size it is placed at in `src/builder/inspector.ts` (`DEFAULT_SIZE`; otherwise 3 x 2 cells).
+
+### Words, formats and right to left (#59)
+
+Every word OHomeMy shows is in `src/i18n/messages/`: `en.ts` is the source, and `zh-Hans`, `hi`, `es`, `ar` and `it` translate it. Code says `tr('roomGrid.allOff')` or `tr('chips.fault', { count })`; a plural message is one string per `Intl.PluralRules` category. A new word goes into `en.ts` and every other catalogue in the same commit: `catalogues.test.ts` refuses a catalogue with a key missing, a key extra, or a value it does not fill in, and at run time a missing key falls back to English. Numbers, times and dates go through `fmt` (`fmt.reading`, `fmt.time`, ...), never `toLocaleString`, so they follow the viewer's Home Assistant format settings.
+
+The language is the viewer's (`hass.locale`, the Home Assistant profile's language and formats; `src/ha/locale.ts`), never the server's. Text an admin writes is shown as written; only a Default title (`shownTitle(widget.title, tr(...))`) is translated. Arabic sets `dir="rtl"` on the Dashboard and the Builder: write CSS with logical properties (`padding-inline-start`, `inset-inline-end`, `text-align: start`), give a name from Home Assistant or the admin `dir="auto"`, and mark a glyph that points onward `mirrored` (`<Icon mirrored />`). The grid and the Navbar are never mirrored (ADR-0015): column 1 is on the left for everyone.
 
 ## Deploy to Home Assistant via SSH
 1. Replace the values in the .env file provided with your `VITE_SSH_USERNAME`, `VITE_SSH_HOSTNAME` and `VITE_SSH_PASSWORD`.

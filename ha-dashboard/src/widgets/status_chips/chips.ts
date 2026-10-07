@@ -14,32 +14,18 @@
  * Derived, and a Widget's own `on_tap` is how a Page is opened now.
  *
  * No React and no @hakit (types only), so `chips.test.ts` runs it under
- * plain Node. English until the strings module (#59).
+ * plain Node. Its words are the viewer's (`chips.*`, #59).
  */
 import type { Entity } from '../../ha';
 import type { Concern, ConcernLevel } from '../../ha/verdict';
 import { alarmIcon } from '../../ui/alarmState';
 import { stateLabel } from '../../ui/stateLabel';
+import { tr } from '../../i18n';
 
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-
-/** Every word this kind says, in one place. */
-export const STRINGS = {
-  concern: {
-    fault: (n: number) => plural(n, 'fault', 'faults'),
-    open: (n: number) => (n === 1 ? '1 way in open' : `${n} ways in open`),
-    lit: (n: number) => plural(n, 'zone lit', 'zones lit'),
-  } satisfies Record<ConcernLevel, (n: number) => string>,
-  cameras: (n: number) => plural(n, 'camera', 'cameras'),
-  camerasDown: (n: number) => `${n} unavailable`,
-  motion: 'motion detected',
-  noMotion: 'no motion',
-  noArea: 'No Area',
-  close: 'Close',
-};
+const HEADLINE = { fault: 'chips.fault', open: 'chips.open', lit: 'chips.lit' } as const satisfies Record<ConcernLevel, string>;
 
 /** What a Concern's chip, and its Concern list's heading, say. */
-export const concernHeadline = (concern: Concern) => STRINGS.concern[concern.level](concern.entities.length);
+export const concernHeadline = (concern: Concern) => tr(HEADLINE[concern.level], { count: concern.entities.length });
 
 export const CONCERN_ICON: Record<ConcernLevel, string> = {
   fault: 'mdi:alert-circle',
@@ -77,8 +63,8 @@ export type StatusChipsInput = {
  */
 function cameraText(cameras: readonly Entity[], moving: readonly Entity[]): string {
   const down = cameras.filter(c => c.unavailable).length;
-  const detail = down > 0 ? STRINGS.camerasDown(down) : moving.length > 0 ? STRINGS.motion : STRINGS.noMotion;
-  return `${STRINGS.cameras(cameras.length)} · ${detail}`;
+  const detail = down > 0 ? tr('chips.camerasDown', { count: down }) : moving.length > 0 ? tr('chips.motion') : tr('chips.noMotion');
+  return `${tr('chips.cameras', { count: cameras.length })} · ${detail}`;
 }
 
 export function statusChips({ concerns, cameras, moving, alarm }: StatusChipsInput): StatusChip[] {

@@ -22,6 +22,7 @@
  * No React, no @hakit: `schema.test.ts` runs this under plain Node, and the
  * Builder can call it on a Draft with no house connected.
  */
+import { fmt, tr } from '../i18n';
 import { VARIANTS, type DashboardSettings, type Page, type Widget } from './types';
 
 export type Variant = (typeof VARIANTS)[number];
@@ -125,20 +126,20 @@ export function validateWidget<F extends Fields>(
   schema: WidgetSchema<F> | undefined,
   context: { grid?: GridContext; house?: House } = {}
 ): Validation<F> {
-  if (!schema) return fail(`unknown kind ${JSON.stringify(widget.kind)}`);
-  if (!schema.variants.includes(widget.variant)) return fail(`${schema.kind} has no ${widget.variant} variant`);
-  if (context.grid && !fitsGrid(widget, context.grid)) return fail('outside the grid');
+  if (!schema) return fail(tr('schema.unknownKind', { kind: JSON.stringify(widget.kind) }));
+  if (!schema.variants.includes(widget.variant)) return fail(tr('schema.noVariant', { kind: schema.kind, variant: widget.variant }));
+  if (context.grid && !fitsGrid(widget, context.grid)) return fail(tr('schema.outsideGrid'));
 
   const given = widget.settings;
-  if (typeof given !== 'object' || given === null || Array.isArray(given)) return fail('settings is not an object');
+  if (typeof given !== 'object' || given === null || Array.isArray(given)) return fail(tr('schema.settingsNotObject'));
   for (const key of Object.keys(given)) {
-    if (!(key in schema.settings)) return fail(`unknown setting ${JSON.stringify(key)}`);
+    if (!(key in schema.settings)) return fail(tr('schema.unknownSetting', { setting: JSON.stringify(key) }));
   }
 
   const settings: Record<string, unknown> = {};
   for (const [key, spec] of Object.entries(schema.settings)) {
     const checked = checkField(spec, given[key], context.house);
-    if (!checked.ok) return fail(`${key}: ${checked.reason}`);
+    if (!checked.ok) return fail(tr('schema.field', { setting: key, reason: checked.reason }));
     settings[key] = checked.value;
   }
   return { ok: true, settings: settings as SettingsOf<F> };
@@ -168,59 +169,62 @@ function checkField(spec: FieldSpec, value: unknown, house: House | undefined): 
   switch (spec.type) {
     case 'entity':
     case 'area': {
-      if (value === undefined || value === null) return spec.optional ? ok(null) : no('required');
+      if (value === undefined || value === null) return spec.optional ? ok(null) : no(tr('schema.required'));
       const id = checkId(spec, value);
       if (typeof id !== 'string') return id;
       // Gone from the house: an optional one reads as unset, a required one
       // takes the Widget with it.
-      if (house && !exists(spec, id, house)) return spec.optional ? ok(null) : no(`${id} is not in Home Assistant`);
+      if (house && !exists(spec, id, house)) return spec.optional ? ok(null) : no(tr('schema.notInHomeAssistant', { id }));
       return ok(id);
     }
     case 'entities':
     case 'areas': {
       const one = spec.type === 'entities' ? ({ type: 'entity', domains: spec.domains } as const) : ({ type: 'area' } as const);
-      if (!Array.isArray(value)) return no('not a list');
+      if (!Array.isArray(value)) return no(tr('schema.notList'));
       const ids: string[] = [];
       for (const item of value) {
         const id = checkId(one, item);
         if (typeof id !== 'string') return id;
-        if (ids.includes(id)) return no(`${id} twice`);
+        if (ids.includes(id)) return no(tr('schema.twice', { id }));
         ids.push(id);
       }
       // On every id written, before any is dropped, so a Group never turns
       // valid, or changes Domain, because a member left Home Assistant.
-      if (spec.type === 'entities' && spec.sameDomain && new Set(ids.map(domainOf)).size > 1) return no('not all of one Domain');
+      if (spec.type === 'entities' && spec.sameDomain && new Set(ids.map(domainOf)).size > 1) return no(tr('schema.mixedDomains'));
       const present = house ? ids.filter(id => exists(one, id, house)) : ids;
       const min = spec.min ?? 1;
-      return present.length >= min ? ok(present) : no(`fewer than ${min}`);
+      return present.length >= min ? ok(present) : no(tr('schema.fewerThan', { min }));
     }
     case 'boolean':
       if (value === undefined) return ok(spec.default);
-      return typeof value === 'boolean' ? ok(value) : no('not true or false');
+      return typeof value === 'boolean' ? ok(value) : no(tr('schema.notBoolean'));
     case 'choice':
       if (value === undefined) return ok(spec.default);
-      return typeof value === 'string' && spec.options.includes(value) ? ok(value) : no(`not one of ${spec.options.join(', ')}`);
+      return typeof value === 'string' && spec.options.includes(value)
+        ? ok(value)
+        : no(tr('schema.notOneOf', { options: spec.options.join(', ') }));
     case 'number':
       if (value === undefined) return ok(spec.default);
-      if (typeof value !== 'number' || !Number.isFinite(value)) return no('not a number');
-      if (spec.integer && !Number.isInteger(value)) return no('not a whole number');
-      return value >= spec.min && value <= spec.max ? ok(value) : no(`not between ${spec.min} and ${spec.max}`);
+      if (typeof value !== 'number' || !Number.isFinite(value)) return no(tr('schema.notNumber'));
+      if (spec.integer && !Number.isInteger(value)) return no(tr('schema.notWhole'));
+      return value >= spec.min && value <= spec.max ? ok(value) : no(tr('schema.notBetween', { min: spec.min, max: spec.max }));
     case 'text':
-      if (value === undefined || value === null) return spec.optional ? ok(null) : no('required');
-      if (typeof value !== 'string') return no('not text');
-      return value.length <= (spec.maxLength ?? TEXT_MAX) ? ok(value) : no('too long');
+      if (value === undefined || value === null) return spec.optional ? ok(null) : no(tr('schema.required'));
+      if (typeof value !== 'string') return no(tr('schema.notText'));
+      return value.length <= (spec.maxLength ?? TEXT_MAX) ? ok(value) : no(tr('schema.tooLong'));
     case 'icon':
-      if (value === undefined || value === null) return spec.optional ? ok(null) : no('required');
-      return typeof value === 'string' && ICON.test(value) ? ok(value) : no('not an icon name');
+      if (value === undefined || value === null) return spec.optional ? ok(null) : no(tr('schema.required'));
+      return typeof value === 'string' && ICON.test(value) ? ok(value) : no(tr('schema.notIcon'));
   }
 }
 
 /** The id itself, or why it is not one. */
 function checkId(spec: { type: 'entity'; domains: readonly string[] } | { type: 'area' }, value: unknown): string | Checked {
-  if (spec.type === 'area') return typeof value === 'string' && AREA_ID.test(value) ? value : no('not an Area id');
-  if (typeof value !== 'string' || !ENTITY_ID.test(value)) return no('not an entity id');
+  if (spec.type === 'area') return typeof value === 'string' && AREA_ID.test(value) ? value : no(tr('schema.notArea'));
+  if (typeof value !== 'string' || !ENTITY_ID.test(value)) return no(tr('schema.notEntity'));
   const domain = domainOf(value);
-  if (spec.domains.length > 0 && !spec.domains.includes(domain)) return no(`${value} is not a ${spec.domains.join(' or ')}`);
+  if (spec.domains.length > 0 && !spec.domains.includes(domain))
+    return no(tr('schema.wrongDomain', { id: value, domains: fmt.list(spec.domains, 'disjunction') }));
   return value;
 }
 

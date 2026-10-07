@@ -5,6 +5,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { accessStatus, HINT_MS, HOLD_MS, holdStep, holdTimeout, IDLE, type Hold } from './accessHold';
+import { DEFAULT_LOCALE, setViewerLocale } from '../i18n';
+
+// In Italian, the copy of the house the panel was built for (#59).
+setViewerLocale({ ...DEFAULT_LOCALE, language: 'it' });
 
 const holding: Hold = { phase: 'holding', since: 1000 };
 

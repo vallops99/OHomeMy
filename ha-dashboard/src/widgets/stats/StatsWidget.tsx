@@ -8,18 +8,12 @@
  * it too.
  */
 import { useEntityState } from '../../ha';
+import { fmt, tr } from '../../i18n';
 import { concernAt } from '../../ha/verdict';
 import { useConcerns } from '../../renderer/concerns';
 import { Icon } from '../../ui/Icon';
 import type { WidgetProps } from '../types';
 import type { statsSchema } from './schema';
-
-/** Every word this kind says, in one place. English until the strings module (#59). */
-const STRINGS = {
-  lights: (n: number) => (n === 1 ? 'light on' : 'lights on'),
-  power: (unit: string) => `${unit} in use`,
-  unavailable: 'Unavailable',
-};
 
 export function StatsWidget({ settings }: WidgetProps<(typeof statsSchema)['settings']>) {
   const lightsOn = concernAt(useConcerns(), 'lit')?.entities.length ?? 0;
@@ -29,19 +23,24 @@ export function StatsWidget({ settings }: WidgetProps<(typeof statsSchema)['sett
 
   return (
     <div className='ohm-stats'>
-      <StatCard icon='mdi:lightbulb' value={String(lightsOn)} unit={STRINGS.lights(lightsOn)} tone={lightsOn > 0 ? 'on' : 'off'} />
+      <StatCard
+        icon='mdi:lightbulb'
+        value={fmt.number(lightsOn)}
+        unit={tr('stats.lightsOn', { count: lightsOn })}
+        tone={lightsOn > 0 ? 'on' : 'off'}
+      />
       {power &&
         (watts === null || Number.isNaN(watts) ? (
-          <StatCard icon='mdi:flash' value={STRINGS.unavailable} tone='alert' />
+          <StatCard icon='mdi:flash' value={tr('stats.unavailable')} tone='alert' />
         ) : (
-          <StatCard icon='mdi:flash' value={formatNumber(watts)} unit={STRINGS.power(unit)} tone='off' />
+          <StatCard icon='mdi:flash' value={formatNumber(watts)} unit={tr('stats.power', { unit })} tone='off' />
         ))}
     </div>
   );
 }
 
 /** A reading as people say it: whole watts, no decimals a meter's jitter would make dance. */
-const formatNumber = (n: number) => String(Math.round(n));
+const formatNumber = (n: number) => fmt.number(Math.round(n));
 
 /** Casa Panel's StatCard (`cp-stat`). */
 function StatCard({ icon, value, unit, tone }: { icon: string; value: string; unit?: string; tone: 'on' | 'off' | 'alert' }) {

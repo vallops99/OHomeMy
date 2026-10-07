@@ -78,7 +78,7 @@ test('an Unavailable chosen light is a fault, and says only that', () => {
   const tile = roomTile(area(light, entity('light.a', 'on')), light, entity('climate.t', 'heat', { current_temperature: 20 }));
   assert.equal(tile.fault, true);
   assert.equal(tile.lit, false);
-  assert.equal(tile.meta, 'Non disponibile');
+  assert.equal(tile.meta, 'Unavailable');
 });
 
 test('the temperature follows the lights, after a middle dot', () => {

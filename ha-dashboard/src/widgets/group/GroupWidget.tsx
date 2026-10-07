@@ -10,27 +10,7 @@ import { Card } from '../../ui/Card';
 import { CARD_ALONE, EntityShape } from '../shared/shapes';
 import type { WidgetProps } from '../types';
 import type { groupSchema } from './schema';
-
-/**
- * The Default title, by the members' Domain. English until the strings
- * module (#59) translates it.
- */
-const DEFAULT_TITLES: Readonly<Record<string, string>> = {
-  light: 'Lights',
-  switch: 'Switches',
-  fan: 'Fans',
-  input_boolean: 'Switches',
-  siren: 'Sirens',
-  lock: 'Locks',
-  alarm_control_panel: 'Alarms',
-  climate: 'Climate',
-  media_player: 'Media',
-  vacuum: 'Vacuums',
-  weather: 'Weather',
-  sensor: 'Sensors',
-  binary_sensor: 'Sensors',
-  select: 'Options',
-};
+import { groupDefaultTitle } from './title';
 
 export function GroupWidget({ widget, settings }: WidgetProps<(typeof groupSchema)['settings']>) {
   const entities = useEntities();
@@ -38,7 +18,7 @@ export function GroupWidget({ widget, settings }: WidgetProps<(typeof groupSchem
   // Checked present by the schema; this covers the render in between.
   if (members.length === 0) return null;
 
-  const title = shownTitle(widget.title, DEFAULT_TITLES[members[0].domain] ?? 'Group');
+  const title = shownTitle(widget.title, groupDefaultTitle(members[0].domain));
   return (
     <Card title={title === '' ? undefined : title} style={CARD_ALONE}>
       {members.map(member => (

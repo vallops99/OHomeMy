@@ -17,12 +17,14 @@ export function LinkWidget({ widget, settings }: WidgetProps<(typeof linkSchema)
   return (
     <div className='ohm-link' data-variant={widget.variant}>
       <span className='ohm-link-icon'>
-        <Icon name={settings.icon ?? DEFAULT_ICON} size={30} />
+        <Icon name={settings.icon ?? DEFAULT_ICON} size={30} mirrored={settings.icon === null} />
       </span>
-      <span className='ohm-link-title'>{shownTitle(widget.title, page ?? '')}</span>
+      <span className='ohm-link-title' dir='auto'>
+        {shownTitle(widget.title, page ?? '')}
+      </span>
       {widget.variant === 'full' && (
         <span className='ohm-link-chevron'>
-          <Icon name='mdi:chevron-right' size={20} />
+          <Icon name='mdi:chevron-right' size={20} mirrored />
         </span>
       )}
     </div>

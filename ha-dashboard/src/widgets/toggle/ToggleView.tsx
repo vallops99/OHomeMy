@@ -74,7 +74,9 @@ export function ToggleView({ entity, variant, style }: ToggleViewProps) {
           <Icon name={unavailable ? 'mdi:alert-circle' : entityIcon(entity)} size={30} />
         </span>
         <span className='ohm-toggle-text'>
-          <span className='ohm-toggle-title'>{entity.name}</span>
+          <span className='ohm-toggle-title' dir='auto'>
+            {entity.name}
+          </span>
           <span className='ohm-toggle-state'>{state}</span>
         </span>
         {slides && (

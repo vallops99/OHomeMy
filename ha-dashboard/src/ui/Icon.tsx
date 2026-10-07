@@ -9,6 +9,7 @@
  * per-state icon set.
  */
 import { createElement } from 'react';
+import { viewerDirection } from '../i18n';
 import { lucideFor } from './iconMap';
 
 export type IconProps = {
@@ -16,6 +17,12 @@ export type IconProps = {
   name: string;
   size?: number;
   color?: string;
+  /**
+   * A glyph that points along the line (a chevron to a Page, an arrow on):
+   * mirrored while the viewer reads right to left, so it still points
+   * onward (#59).
+   */
+  mirrored?: boolean;
 };
 
 /**
@@ -24,10 +31,16 @@ export type IconProps = {
  */
 const strokeFor = (size: number) => (size >= 30 ? 1.5 : size <= 20 ? 1.8 : 1.6);
 
-export function Icon({ name, size = 28, color }: IconProps) {
+export function Icon({ name, size = 28, color, mirrored = false }: IconProps) {
   // `createElement` rather than JSX on a local: the glyph is a module-level
   // Lucide component looked up by name, not a component made per render.
-  return createElement(lucideFor(name), { size, color: color ?? 'currentColor', strokeWidth: strokeFor(size), 'aria-hidden': true });
+  return createElement(lucideFor(name), {
+    size,
+    color: color ?? 'currentColor',
+    strokeWidth: strokeFor(size),
+    'aria-hidden': true,
+    ...(mirrored && viewerDirection() === 'rtl' && { style: { transform: 'scaleX(-1)' } }),
+  });
 }
 
 /**

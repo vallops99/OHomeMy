@@ -10,11 +10,9 @@
  * under plain Node. `ConcernList.tsx` renders what this decides.
  */
 import type { Area, Entity, Health, HealthLevel, HouseReport } from '../ha';
+import { fmt, tr } from '../i18n';
 
-/** What a row says for an entity in no Area. */
-export const NO_AREA = 'Senza stanza';
-
-/** One row of a Concern list: the entity, and its Area's name (or `NO_AREA`). */
+/** One row of a Concern list: the entity, and its Area's name (or the words for none). */
 export type ConcernRow = { entity: Entity; areaName: string };
 
 /**
@@ -26,14 +24,14 @@ export function liveConcern(report: HouseReport, level: HealthLevel): Health | n
   return [report.verdict, ...report.also].find(h => h.level === level) ?? null;
 }
 
-const byName = (a: string, b: string) => a.localeCompare(b, 'it', { sensitivity: 'base' });
+const byName = fmt.compare;
 
 /**
  * A Concern's entities as rows: by Area name, then entity name, with the
  * rows in no Area last whatever their name sorts as. The same order for
  * every Concern. `noArea` names the rows in no Area.
  */
-export function concernRows(concern: Pick<Health, 'entities'>, areas: Area[], noArea: string = NO_AREA): ConcernRow[] {
+export function concernRows(concern: Pick<Health, 'entities'>, areas: Area[], noArea: string = tr('chips.noArea')): ConcernRow[] {
   const names = new Map(areas.map(a => [a.id, a.name]));
   const rows = concern.entities.map(entity => ({
     entity,

@@ -21,19 +21,11 @@
 import { useCallback, useRef, type MouseEvent, type PointerEvent } from 'react';
 import type { Dashboard, Page as PageType } from '../document/types';
 import { useActions, useEntityState } from '../ha';
+import { tr } from '../i18n';
 import { Icon } from '../ui/Icon';
 import { Z_POPUP } from '../ui/layers';
 import { Page } from './Page';
 import { ACTIVITY_INTERVAL_MS, NO_POPUP, POPUP_ACTIVITY, POPUP_SELECT, activityGate, openPopup, opensPage, popupPage } from './popup';
-
-/** English until the strings module (#59). */
-const STRINGS = {
-  close: 'Close',
-  empty: {
-    title: 'Nothing on this Popup yet',
-    detail: 'Widgets placed on it in OHomeMy Builder appear here as soon as they are published.',
-  },
-};
 
 export function PopupLayer({ dashboard }: { dashboard: Dashboard }) {
   const page = popupPage(dashboard, openPopup(useEntityState(POPUP_SELECT)));
@@ -87,13 +79,20 @@ function Popup({ page, overflow, onClose, onActivity }: PopupProps) {
     >
       {page.widgets.length === 0 ? (
         <div className='ohm-notice' role='status'>
-          <span className='ohm-notice-title'>{STRINGS.empty.title}</span>
-          <span className='ohm-notice-detail'>{STRINGS.empty.detail}</span>
+          <span className='ohm-notice-title'>{tr('popup.empty.title')}</span>
+          <span className='ohm-notice-detail'>{tr('popup.empty.detail')}</span>
         </div>
       ) : (
         <Page page={page} overflow={overflow} />
       )}
-      <button type='button' className='ohm-popup-close' data-close onClick={onClose} aria-label={STRINGS.close} title={STRINGS.close}>
+      <button
+        type='button'
+        className='ohm-popup-close'
+        data-close
+        onClick={onClose}
+        aria-label={tr('common.close')}
+        title={tr('common.close')}
+      >
         <Icon name='mdi:close' size={24} />
       </button>
     </div>
@@ -103,7 +102,8 @@ function Popup({ page, overflow, onClose, onActivity }: PopupProps) {
 /**
  * The layer's stylesheet, beside the renderer's. The Dashboard becomes the
  * Popup's containing block, so the Popup covers the panel and not Home
- * Assistant's sidebar. The close button sits in the top right corner over
+ * Assistant's sidebar. The close button sits in the top corner at the end
+ * of the line (the right, or the left right to left) over
  * the Popup's own grid, which the admin lays out edge to edge (a doorbell's
  * camera may fill it), at Casa Panel's minimum touch target.
  */
@@ -118,7 +118,7 @@ export const POPUP_CSS = `
   .ohm-popup-close {
     position: absolute;
     top: var(--space-4);
-    right: var(--space-4);
+    inset-inline-end: var(--space-4);
     width: var(--target-min);
     height: var(--target-min);
     padding: 0;

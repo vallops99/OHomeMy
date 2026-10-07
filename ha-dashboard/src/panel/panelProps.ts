@@ -8,9 +8,14 @@
  * outlives every element (see `main.tsx`), so the element cannot pass these
  * down as props; it writes them here and the tree subscribes.
  *
- * `hass` is deliberately not carried. Home Assistant sets it on every state
- * change in the house, and @hakit already holds all of it, from the same
- * connection; re-rendering the Dashboard on each one would buy nothing.
+ * `hass` itself is deliberately not carried. Home Assistant sets it on every
+ * state change in the house, and @hakit already holds all of it, from the
+ * same connection; re-rendering the Dashboard on each one would buy nothing.
+ * Only two parts of it are kept, which change only when the viewer changes
+ * them (#59): `hass.locale`, the frontend's own resolution of the user's
+ * language and formats, and the server's time zone. Home Assistant keeps
+ * the same `locale` object until it changes, so the store hears of nothing
+ * else.
  */
 import { useSyncExternalStore } from 'react';
 
@@ -27,7 +32,17 @@ export type PanelProps = {
   panel: PanelInfo | null;
   route: PanelRoute | null;
   narrow: boolean;
+  /** `hass.locale`, or `null` outside Home Assistant (the dev server). */
+  locale: Record<string, unknown> | null;
+  /** `hass.config.time_zone`. */
+  timeZone: string | null;
 };
+
+/** The parts of `hass` the store keeps (see above). */
+export function hassPatch(hass: unknown): Pick<PanelProps, 'locale' | 'timeZone'> {
+  const h = (hass ?? {}) as { locale?: Record<string, unknown>; config?: { time_zone?: string } };
+  return { locale: h.locale ?? null, timeZone: h.config?.time_zone ?? null };
+}
 
 export type PanelStore = {
   get(): PanelProps;
@@ -37,7 +52,7 @@ export type PanelStore = {
 };
 
 export function createPanelStore(): PanelStore {
-  let state: PanelProps = { panel: null, route: null, narrow: false };
+  let state: PanelProps = { panel: null, route: null, narrow: false, locale: null, timeZone: null };
   const listeners = new Set<() => void>();
   return {
     get: () => state,

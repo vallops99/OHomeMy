@@ -1,6 +1,6 @@
 /**
  * A `weather` entity (#33): what it is in `left` or `right`. The condition
- * now, in Italian, the temperature, and the next five days.
+ * now, in words, the temperature, and the next five days.
  *
  * The forecast is not an attribute any more: it arrives over a subscription
  * (`useForecast`). Until it does, the days' row is left empty rather than
@@ -9,6 +9,7 @@
  */
 import type { CSSProperties } from 'react';
 import { useForecast, type Entity } from '../ha';
+import { fmt } from '../i18n';
 import { Icon } from './Icon';
 import { stateLabel } from './stateLabel';
 import { t } from './theme';
@@ -24,7 +25,7 @@ export type WeatherCardProps = {
 const DAYS = 5;
 
 /** A temperature, rounded: a forecast's tenths are noise. */
-const whole = (value: number | null) => (value === null ? '--' : `${Math.round(value)}°`);
+const whole = (value: number | null) => (value === null ? '--' : fmt.wholeDegrees(value));
 
 export function WeatherCard({ entity, style }: WeatherCardProps) {
   const forecast = useForecast(entity.id, DAYS);
@@ -69,6 +70,7 @@ export function WeatherCard({ entity, style }: WeatherCardProps) {
             {unavailable ? stateLabel(entity).toUpperCase() : conditionLabel(entity.state)}
           </span>
           <span
+            dir='auto'
             style={{
               fontSize: t.font.body,
               color: t.color.textSecondary,

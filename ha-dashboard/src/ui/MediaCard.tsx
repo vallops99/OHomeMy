@@ -11,6 +11,7 @@
  */
 import type { CSSProperties } from 'react';
 import { useActions, useHassUrl, type Entity } from '../ha';
+import { tr } from '../i18n';
 import { isPhone } from './device';
 import { Icon } from './Icon';
 import { mediaControls, mediaNowPlaying } from './mediaState';
@@ -87,6 +88,7 @@ export function MediaCard({ entity, style }: MediaCardProps) {
         }}
       >
         <span
+          dir='auto'
           style={{
             fontSize: t.font.caption,
             fontWeight: 600,
@@ -99,6 +101,7 @@ export function MediaCard({ entity, style }: MediaCardProps) {
           {entity.name}
         </span>
         <span
+          dir='auto'
           style={{
             fontSize: t.font.glanceM,
             fontWeight: 600,
@@ -113,6 +116,7 @@ export function MediaCard({ entity, style }: MediaCardProps) {
         </span>
         {artist && !unavailable && (
           <span
+            dir='auto'
             style={{
               fontSize: t.font.body,
               color: t.color.textSecondary,
@@ -150,17 +154,19 @@ export function MediaCard({ entity, style }: MediaCardProps) {
 
       {(controls.previous || controls.playPause || controls.next) && (
         <div style={{ display: 'flex', gap: t.space.sm, flexShrink: 0 }}>
-          {controls.previous && <CardButton icon='mdi:skip-previous' label='Precedente' onPress={() => media('media_previous_track')} />}
-          {controls.playPause === 'pause' && <CardButton icon='mdi:pause' label='Pausa' onPress={() => media('media_pause')} />}
-          {controls.playPause === 'play' && <CardButton icon='mdi:play' label='Riproduci' onPress={() => media('media_play')} />}
-          {controls.next && <CardButton icon='mdi:skip-next' label='Successivo' onPress={() => media('media_next_track')} />}
+          {controls.previous && (
+            <CardButton icon='mdi:skip-previous' label={tr('media.previous')} onPress={() => media('media_previous_track')} />
+          )}
+          {controls.playPause === 'pause' && <CardButton icon='mdi:pause' label={tr('media.pause')} onPress={() => media('media_pause')} />}
+          {controls.playPause === 'play' && <CardButton icon='mdi:play' label={tr('media.play')} onPress={() => media('media_play')} />}
+          {controls.next && <CardButton icon='mdi:skip-next' label={tr('media.next')} onPress={() => media('media_next_track')} />}
         </div>
       )}
 
       {controls.power && (
         <CardButton
           icon='mdi:power'
-          label={controls.power === 'on' ? 'Accendi' : 'Spegni'}
+          label={controls.power === 'on' ? tr('media.turnOn') : tr('media.turnOff')}
           onPress={() => media(controls.power === 'on' ? 'turn_on' : 'turn_off')}
           active={controls.power === 'off'}
         />

@@ -10,18 +10,8 @@
  */
 import type { Area, Entity } from '../../ha';
 import { supportsBrightness } from '../../ui/lightState';
+import { fmt, tr } from '../../i18n';
 import { stateLabel } from '../../ui/stateLabel';
-
-/** Every word a Room Tile shows, in one place for the strings module (#59). */
-export const STRINGS = {
-  noLight: 'No light chosen',
-  on: 'On',
-  off: 'Off',
-  allOff: (lights: number) => `Off · ${lights} lights`,
-  lightsOn: (on: number) => (on === 1 ? '1 light on' : `${on} lights on`),
-  switchLabel: (area: string) => `${area} light`,
-  dimmerLabel: (area: string) => `${area} brightness`,
-};
 
 export type RoomTileState = {
   /** The light the switch and dimmer drive, or null when none is chosen. */
@@ -62,8 +52,8 @@ function counted(area: Area, chosen: Entity | null): Entity[] {
 
 function lightsMeta(lights: Entity[]): string {
   const on = lights.filter(e => e.state === 'on').length;
-  if (lights.length === 1) return on === 1 ? STRINGS.on : STRINGS.off;
-  return on === 0 ? STRINGS.allOff(lights.length) : STRINGS.lightsOn(on);
+  if (lights.length === 1) return on === 1 ? tr('roomTile.on') : tr('roomTile.off');
+  return on === 0 ? tr('roomTile.allOff', { count: lights.length }) : tr('roomTile.lightsOn', { count: on });
 }
 
 export function roomTile(area: Area, light: Entity | null, temperature: Entity | null): RoomTileState {
@@ -74,7 +64,7 @@ export function roomTile(area: Area, light: Entity | null, temperature: Entity |
 
   // No controls, but still lit while a light is on: the surface says what
   // the room is, whether or not this tile can change it.
-  if (light === null) return { light, lights: 'none', lit, fault: false, meta: withTemperature(STRINGS.noLight) };
+  if (light === null) return { light, lights: 'none', lit, fault: false, meta: withTemperature(tr('roomTile.noLight')) };
   const lights = supportsBrightness(light) ? 'dimmer' : 'switch';
   // A fault says what is wrong and nothing else: a lit surface or a count of
   // lights beside it would read as a room that is fine.
@@ -86,13 +76,13 @@ export function roomTile(area: Area, light: Entity | null, temperature: Entity |
  * A temperature entity's reading as a Room Tile writes it, "20.5°", or null
  * when there is none to show. A thermostat gives its own
  * `current_temperature`, a sensor its state. Degrees, never the unit letter,
- * as Casa Panel writes a room's reading. One decimal, in English, until #59
- * follows the viewer's number format.
+ * as Casa Panel writes a room's reading. One decimal, in the viewer's
+ * number format (`20,5°` in Italian).
  */
 export function temperatureReading(entity: Entity | null): string | null {
   if (!entity || entity.unavailable) return null;
   const raw = entity.domain === 'climate' ? entity.attributes.current_temperature : entity.state;
   if (raw === null || raw === undefined || raw === '') return null;
   const value = Number(raw);
-  return Number.isFinite(value) ? `${value.toFixed(1)}°` : null;
+  return Number.isFinite(value) ? fmt.degrees(value) : null;
 }

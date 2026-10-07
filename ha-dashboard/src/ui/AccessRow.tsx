@@ -13,6 +13,7 @@
  */
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import { useActions, type Entity } from '../ha';
+import { tr } from '../i18n';
 import { accessStatus, HOLD_MS, holdStep, holdTimeout, IDLE, isOpenLock, type Hold, type HoldEvent } from './accessHold';
 import { entityIcon, Icon } from './Icon';
 import { stateLabel } from './stateLabel';
@@ -67,7 +68,7 @@ export function AccessRow({ entity }: AccessRowProps) {
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 6px 10px 10px', minWidth: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingBlock: 10, paddingInline: '10px 6px', minWidth: 0 }}>
       <div
         style={{
           width: 48,
@@ -85,6 +86,7 @@ export function AccessRow({ entity }: AccessRowProps) {
       </div>
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span
+          dir='auto'
           title={entity.name}
           style={{
             fontSize: t.type.rowTitle.size,
@@ -122,18 +124,18 @@ export function AccessRow({ entity }: AccessRowProps) {
           type='button'
           className='casa-press'
           disabled={unavailable}
-          aria-label={`Chiudi ${entity.name}`}
+          aria-label={tr('access.closeLabel', { name: entity.name })}
           onClick={() => actions.lock(entity)}
           style={{ ...pill, background: t.color.switchOff, color: t.color.ink }}
         >
-          Chiudi
+          {tr('access.closeButton')}
         </button>
       ) : (
         <button
           type='button'
           className='casa-press'
           disabled={unavailable}
-          aria-label={`Apri ${entity.name} (tieni premuto)`}
+          aria-label={tr('access.openLabel', { name: entity.name })}
           onPointerDown={onPointerDown}
           onPointerUp={() => send({ type: 'release', at: Date.now() })}
           onPointerLeave={() => send({ type: 'cancel' })}
@@ -151,7 +153,7 @@ export function AccessRow({ entity }: AccessRowProps) {
           <span
             style={{
               position: 'absolute',
-              left: 0,
+              insetInlineStart: 0,
               top: 0,
               bottom: 0,
               width: hold.phase === 'holding' ? '100%' : '0%',
@@ -159,14 +161,14 @@ export function AccessRow({ entity }: AccessRowProps) {
               transition: hold.phase === 'holding' ? `width ${HOLD_MS}ms linear` : 'width 150ms ease',
             }}
           />
-          <span style={{ position: 'relative' }}>Apri</span>
+          <span style={{ position: 'relative' }}>{tr('access.openButton')}</span>
         </button>
       )}
     </div>
   );
 }
 
-/** Casa Panel's large pill button: `target-control` tall, one Italian verb. */
+/** Casa Panel's large pill button: `target-control` tall, one verb. */
 const pill: CSSProperties = {
   position: 'relative',
   overflow: 'hidden',

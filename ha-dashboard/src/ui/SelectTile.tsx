@@ -62,6 +62,7 @@ export function SelectTile({ entity, style }: SelectTileProps) {
           <Icon name={unavailable ? 'mdi:alert-circle' : entityIcon(entity)} size={26} />
         </span>
         <span
+          dir='auto'
           title={entity.name}
           style={{
             flex: 1,
@@ -77,6 +78,7 @@ export function SelectTile({ entity, style }: SelectTileProps) {
           {entity.name}
         </span>
         <span
+          dir='auto'
           style={{
             flexShrink: 0,
             maxWidth: '45%',
@@ -149,6 +151,7 @@ function SelectPicker({ entity, onClose }: { entity: Entity; onClose: () => void
           }}
         >
           <span
+            dir='auto'
             style={{
               fontSize: t.font.glanceM,
               fontWeight: 700,
@@ -192,7 +195,7 @@ function SelectPicker({ entity, onClose }: { entity: Entity; onClose: () => void
                   color: current ? t.color.onActiveStrong : t.color.textPrimary,
                   fontSize: t.font.glanceM,
                   fontWeight: 600,
-                  textAlign: 'left',
+                  textAlign: 'start',
                   cursor: 'pointer',
                 }}
               >

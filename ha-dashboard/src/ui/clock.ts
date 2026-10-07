@@ -1,22 +1,22 @@
 /**
- * The Clock's pure half (#41, CONTEXT.md "Clock"): the time and the date as
- * the status bar writes them, in Italian, and when it next has to change.
+ * The Clock's pure half (#41, CONTEXT.md "Clock"): the time and the date in
+ * the viewer's own formats (#59, `i18n/format.ts`), and when it next has to
+ * change.
  *
  * No React, so `clock.test.ts` runs it under plain Node. `Clock.tsx` renders
  * it and keeps it current.
  */
-
-const TIME = new Intl.DateTimeFormat('it-IT', { hour: '2-digit', minute: '2-digit', hour12: false });
-const DATE = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+import { fmt } from '../i18n';
 
 /**
- * `09:04` and `Lunedì 5 ottobre`, in the panel's own time zone. Italian
- * writes the weekday in lower case; it starts the line here, so it is
- * capitalised, as the design system's Dashboard does.
+ * `09:04` and `Lunedì 5 ottobre` for an Italian viewer, `9:04 AM` and
+ * `Monday, October 5` for an American one: 12 or 24 hours, the date's
+ * language and the time zone as their Home Assistant profile says. The
+ * weekday starts the line, so it is capitalised, as the design system's
+ * Dashboard does.
  */
 export function clockText(now: Date): { time: string; date: string } {
-  const date = DATE.format(now);
-  return { time: TIME.format(now), date: date.charAt(0).toUpperCase() + date.slice(1) };
+  return { time: fmt.time(now), date: fmt.longDate(now) };
 }
 
 /**

@@ -127,7 +127,9 @@ function DefaultRow({
     <li className='b-row'>
       <div className='b-row-main'>
         <div className='b-row-text'>
-          <span className='b-row-title'>{title}</span>
+          <span className='b-row-title' dir='auto'>
+            {title}
+          </span>
           {meta && <span className='b-meta'>{meta}</span>}
         </div>
         <select

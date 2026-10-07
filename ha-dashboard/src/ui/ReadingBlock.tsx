@@ -53,7 +53,9 @@ export function ReadingBlock({ icon, value, detail, name, unavailable = false, a
           <span style={{ fontSize: t.font.body, fontWeight: 700 }}>{value}</span>
           {detail && <span style={{ fontSize: t.font.caption, color: t.color.textSecondary }}>{detail}</span>}
         </div>
-        <span style={{ fontSize: t.font.caption, fontWeight: 600, color: t.color.textSecondary, whiteSpace: 'nowrap' }}>{name}</span>
+        <span dir='auto' style={{ fontSize: t.font.caption, fontWeight: 600, color: t.color.textSecondary, whiteSpace: 'nowrap' }}>
+          {name}
+        </span>
       </div>
     </div>
   );

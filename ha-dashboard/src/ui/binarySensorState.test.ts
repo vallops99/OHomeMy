@@ -6,6 +6,10 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Entity } from '../ha';
 import { binarySensorView } from './binarySensorState';
+import { DEFAULT_LOCALE, setViewerLocale } from '../i18n';
+
+// In Italian, the copy of the house the panel was built for (#59).
+setViewerLocale({ ...DEFAULT_LOCALE, language: 'it' });
 
 const sensor = (state: string, device_class?: string): Entity => ({
   id: 'binary_sensor.x',

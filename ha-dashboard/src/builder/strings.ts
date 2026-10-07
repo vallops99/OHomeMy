@@ -1,132 +1,250 @@
 /**
- * Every word the Builder shows, in English, in one place so that i18n (#59)
- * can lift it whole. Nothing else in `src/builder/` writes user-facing text.
+ * Every word the Builder shows, in one place: the catalogues' `builder.*`
+ * keys (`src/i18n/messages/`, #59), in the viewer's language, as the
+ * Builder's components read them. Nothing else in `src/builder/` writes
+ * user-facing text.
+ *
+ * Each word is a getter, or a function where it takes values, so it is read
+ * in the language of the moment it is shown, not of the moment this module
+ * loaded. The shape is the one the components were written against, which
+ * keeps the values each message takes checked at every call.
  *
  * Text an admin writes (a Dashboard's name) is never translated; the one
  * string here that ends up in the document is `homePageName`, the name a new
- * Dashboard's first Page starts with, which the admin may change.
+ * Dashboard's first Page starts with, in the admin's language, which the
+ * admin may change.
  */
+import { fmt, tr } from '../i18n';
 import { editorStrings } from './editorStrings';
 import type { SlugProblem } from './slug';
 
+/** " This discards your Draft." after a question, when there is one to discard. */
+const discards = (dirty: boolean) => (dirty ? ` ${tr('builder.discardsDraft')}` : '');
+
 export const strings = {
-  title: 'OHomeMy Builder',
-  menu: 'Menu',
-  loading: 'Connecting to Home Assistant…',
+  get title() {
+    return tr('builder.title');
+  },
+  get menu() {
+    return tr('builder.menu');
+  },
+  get loading() {
+    return tr('builder.loading');
+  },
 
   status: {
-    clean: (revision: number) => (revision === 0 ? 'Nothing published yet' : `Published · revision ${revision}`),
-    dirty: (revision: number) => `Draft · unpublished changes over revision ${revision}`,
-    publishing: 'Publishing…',
-    conflict: 'Draft cannot be published',
+    clean: (revision: number) => (revision === 0 ? tr('builder.status.none') : tr('builder.status.clean', { revision })),
+    dirty: (revision: number) => tr('builder.status.dirty', { revision }),
+    get publishing() {
+      return tr('builder.status.publishing');
+    },
+    get conflict() {
+      return tr('builder.status.conflict');
+    },
   },
-  publish: 'Publish',
-  discard: 'Discard Draft',
-  discardConfirm: 'Discard every change in your Draft?',
-  published: (revision: number) => `Published as revision ${revision}. Every open Dashboard shows it now.`,
-  failed: (message: string) => `Not published: ${message}`,
-  dismiss: 'Dismiss',
+  get publish() {
+    return tr('builder.publish');
+  },
+  get discard() {
+    return tr('builder.discard');
+  },
+  get discardConfirm() {
+    return tr('builder.discardConfirm');
+  },
+  published: (revision: number) => tr('builder.published', { revision }),
+  failed: (message: string) => tr('builder.failed', { message }),
+  get dismiss() {
+    return tr('builder.dismiss');
+  },
 
   conflict: {
-    title: 'Someone else published',
-    body: (revision: number) =>
-      `Revision ${revision} was published from another Builder while you were working. ` +
-      'Your Draft was not published, and it cannot be over their changes.',
-    reload: 'Reload their version',
-    reloadNote: 'Reloading discards your Draft.',
+    get title() {
+      return tr('builder.conflict.title');
+    },
+    body: (revision: number) => tr('builder.conflict.body', { revision }),
+    get reload() {
+      return tr('builder.conflict.reload');
+    },
+    get reloadNote() {
+      return tr('builder.conflict.reloadNote');
+    },
   },
 
   dashboards: {
-    title: 'Dashboards',
-    none: 'No Dashboards yet. Create the first one, then Publish.',
-    create: 'New Dashboard',
-    pages: (n: number) => (n === 1 ? '1 Page' : `${n} Pages`),
-    hidden: 'Hidden from the sidebar',
-    new: 'New',
-    changed: 'Changed',
-    deleted: (names: string[]) => `Deleted in this Draft: ${names.join(', ')}`,
-    open: 'Open',
-    rename: 'Rename',
-    duplicate: 'Duplicate',
-    delete: 'Delete',
-    deleteConfirm: (name: string) => `Delete “${name}”? It disappears for everyone when you Publish.`,
-    copyName: (name: string) => `${name} (copy)`,
+    get title() {
+      return tr('builder.dashboards.title');
+    },
+    get none() {
+      return tr('builder.dashboards.none');
+    },
+    get create() {
+      return tr('builder.dashboards.create');
+    },
+    pages: (n: number) => tr('builder.dashboards.pages', { count: n }),
+    get hidden() {
+      return tr('builder.dashboards.hidden');
+    },
+    get new() {
+      return tr('builder.dashboards.new');
+    },
+    get changed() {
+      return tr('builder.dashboards.changed');
+    },
+    deleted: (names: string[]) => tr('builder.dashboards.deleted', { names: fmt.list(names) }),
+    get open() {
+      return tr('builder.dashboards.open');
+    },
+    get rename() {
+      return tr('builder.dashboards.rename');
+    },
+    get duplicate() {
+      return tr('builder.dashboards.duplicate');
+    },
+    get delete() {
+      return tr('builder.dashboards.delete');
+    },
+    deleteConfirm: (name: string) => tr('builder.dashboards.deleteConfirm', { name }),
+    copyName: (name: string) => tr('builder.dashboards.copyName', { name }),
   },
 
   form: {
-    createTitle: 'New Dashboard',
-    duplicateTitle: (name: string) => `Duplicate “${name}”`,
-    renameTitle: 'Rename',
-    name: 'Name',
-    slug: 'Address',
-    slugHint: 'Fixed once the Dashboard is created. A rename keeps it.',
+    get createTitle() {
+      return tr('builder.form.createTitle');
+    },
+    duplicateTitle: (name: string) => tr('builder.form.duplicateTitle', { name }),
+    get renameTitle() {
+      return tr('builder.form.renameTitle');
+    },
+    get name() {
+      return tr('builder.form.name');
+    },
+    get slug() {
+      return tr('builder.form.slug');
+    },
+    get slugHint() {
+      return tr('builder.form.slugHint');
+    },
+    /** An address, not a word: the same in every language. */
     url: (slug: string) => `/ohomemy-${slug}`,
-    create: 'Create',
-    save: 'Save',
-    cancel: 'Cancel',
-    nameEmpty: 'Give it a name.',
-    slug_problem: {
-      empty: 'Choose an address.',
-      format: 'Lowercase letters and digits, joined by single hyphens.',
-      too_long: 'At most 40 characters.',
-      taken: 'Another Dashboard already has this address.',
-    } satisfies Record<SlugProblem, string>,
+    get create() {
+      return tr('builder.form.create');
+    },
+    get save() {
+      return tr('builder.form.save');
+    },
+    get cancel() {
+      return tr('builder.form.cancel');
+    },
+    get nameEmpty() {
+      return tr('builder.form.nameEmpty');
+    },
+    get slug_problem(): Record<SlugProblem, string> {
+      return {
+        empty: tr('builder.form.slug.empty'),
+        format: tr('builder.form.slug.format'),
+        too_long: tr('builder.form.slug.too_long'),
+        taken: tr('builder.form.slug.taken'),
+      };
+    },
   },
 
-  homePageName: 'Home',
+  get homePageName() {
+    return tr('builder.homePageName');
+  },
 
   history: {
-    title: 'History',
-    none: 'Nothing has been published yet.',
-    loading: 'Loading history…',
-    failed: (message: string) => `History could not be loaded: ${message}`,
-    revision: (revision: number) => `Revision ${revision}`,
-    empty: 'No Dashboards',
-    current: 'Current',
-    dashboards: (n: number) => (n === 1 ? '1 Dashboard' : `${n} Dashboards`),
-    undo: (revision: number) => `Undo revision ${revision}`,
-    restore: 'Restore',
-    restoreConfirm: (revision: number, dirty: boolean) =>
-      `Publish revision ${revision} again, as a new revision?${dirty ? ' This discards your Draft.' : ''}`,
+    get title() {
+      return tr('builder.history.title');
+    },
+    get none() {
+      return tr('builder.history.none');
+    },
+    get loading() {
+      return tr('builder.history.loading');
+    },
+    failed: (message: string) => tr('builder.history.failed', { message }),
+    revision: (revision: number) => tr('builder.history.revision', { revision }),
+    get empty() {
+      return tr('builder.history.empty');
+    },
+    get current() {
+      return tr('builder.history.current');
+    },
+    dashboards: (n: number) => tr('builder.history.dashboards', { count: n }),
+    undo: (revision: number) => tr('builder.history.undo', { revision }),
+    get restore() {
+      return tr('builder.history.restore');
+    },
+    restoreConfirm: (revision: number, dirty: boolean) => tr('builder.history.restoreConfirm', { revision }) + discards(dirty),
   },
 
   transfer: {
-    title: 'Export and import',
-    body: 'Export saves what is published as a file. Import publishes a file in its place.',
-    export: 'Export',
-    import: 'Import…',
-    importConfirm: (file: string, dirty: boolean) =>
-      `Publish “${file}” in place of every Dashboard?${dirty ? ' This discards your Draft.' : ''}`,
-    notJson: (file: string) => `“${file}” is not a JSON file.`,
-    exportFailed: (message: string) => `Export failed: ${message}`,
+    get title() {
+      return tr('builder.transfer.title');
+    },
+    get body() {
+      return tr('builder.transfer.body');
+    },
+    get export() {
+      return tr('builder.transfer.export');
+    },
+    get import() {
+      return tr('builder.transfer.import');
+    },
+    importConfirm: (file: string, dirty: boolean) => tr('builder.transfer.importConfirm', { file }) + discards(dirty),
+    notJson: (file: string) => tr('builder.transfer.notJson', { file }),
+    exportFailed: (message: string) => tr('builder.transfer.exportFailed', { message }),
   },
 
   /** The Dashboard editor's (#56), kept in `editorStrings.ts`. */
   editor: editorStrings,
 
   defaults: {
-    title: 'Default Dashboards',
-    body: 'The Dashboard each person lands on when they open Home Assistant. A change applies at once, without Publish.',
-    loading: 'Loading users…',
-    failed: (message: string) => `Default Dashboards could not be loaded: ${message}`,
-    setFailed: (name: string, message: string) => `The default for ${name} was not changed: ${message}`,
-    system: 'Everyone else',
-    systemMeta: 'Anyone without a Default Dashboard of their own',
-    systemName: 'everyone else',
-    admin: 'Admin',
-    inactive: 'Inactive',
-    choose: (name: string) => `Default Dashboard for ${name}`,
-    haDefault: "Home Assistant's default",
-    other: (urlPath: string) => `Another panel: /${urlPath}`,
-    publishFirst: (name: string) => `${name} (Publish it first)`,
-    lostTitle: 'Default Dashboards will be cleared',
-    lost: (name: string, who: string[]) =>
-      `“${name}” is deleted in this Draft, and it is the Default Dashboard of ${who.join(', ')}. ` +
-      "When you Publish, they go back to Home Assistant's default.",
+    get title() {
+      return tr('builder.defaults.title');
+    },
+    get body() {
+      return tr('builder.defaults.body');
+    },
+    get loading() {
+      return tr('builder.defaults.loading');
+    },
+    failed: (message: string) => tr('builder.defaults.failed', { message }),
+    setFailed: (name: string, message: string) => tr('builder.defaults.setFailed', { name, message }),
+    get system() {
+      return tr('builder.defaults.system');
+    },
+    get systemMeta() {
+      return tr('builder.defaults.systemMeta');
+    },
+    get systemName() {
+      return tr('builder.defaults.systemName');
+    },
+    get admin() {
+      return tr('builder.defaults.admin');
+    },
+    get inactive() {
+      return tr('builder.defaults.inactive');
+    },
+    choose: (name: string) => tr('builder.defaults.choose', { name }),
+    get haDefault() {
+      return tr('builder.defaults.haDefault');
+    },
+    other: (urlPath: string) => tr('builder.defaults.other', { urlPath }),
+    publishFirst: (name: string) => tr('builder.defaults.publishFirst', { name }),
+    get lostTitle() {
+      return tr('builder.defaults.lostTitle');
+    },
+    lost: (name: string, who: string[]) => tr('builder.defaults.lost', { name, who: fmt.list(who) }),
   },
 
-  confirm: 'Confirm',
-  cancel: 'Cancel',
+  get confirm() {
+    return tr('builder.confirm');
+  },
+  get cancel() {
+    return tr('builder.cancel');
+  },
 
-  time: (iso: string) => new Date(iso).toLocaleString(),
+  /** A moment, `07/10/2026, 09:04`, in the viewer's date and time formats. */
+  time: (iso: string) => fmt.dateTime(new Date(iso)),
 };

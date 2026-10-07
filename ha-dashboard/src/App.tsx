@@ -1,4 +1,6 @@
 import { HassConnect } from '@hakit/core';
+import { useMemo } from 'react';
+import { useHakitLocale } from './ha';
 import Dashboard from './Dashboard';
 import { Renderer } from './renderer/Renderer';
 import { HakitTheme } from './ui';
@@ -32,18 +34,20 @@ const PANEL_RESUME = { suspendWhenHidden: false };
 const DEV_DASHBOARD = new URLSearchParams(window.location.search).has('dashboard');
 
 function App({ panel }: AppProps) {
+  // @hakit takes its language from the server, not from whoever is looking,
+  // so its own surfaces (the entity dialog) are given the viewer's (#59).
+  // A change remounts what @hakit wraps, which on a Dashboard only costs
+  // where it was left.
+  const locale = useHakitLocale();
+  const options = useMemo(
+    () => ({ locale, ...(panel && { portalRoot: panel.portalRoot, handleResumeOptions: PANEL_RESUME }) }),
+    [locale, panel]
+  );
   return (
     <HassConnect
       hassUrl={import.meta.env.DEV && !panel ? import.meta.env.VITE_HA_URL : window.location.origin}
       hassToken={panel ? undefined : import.meta.env.VITE_HA_TOKEN}
-      // @hakit is documented to take the language from the Home Assistant
-      // instance, but its own surfaces (the entity modal) came up in English
-      // against an Italian `ha-local`. The house is Italian and the UI copy
-      // is Italian (map Notes), so it is pinned rather than detected.
-      options={{
-        locale: 'it',
-        ...(panel && { portalRoot: panel.portalRoot, handleResumeOptions: PANEL_RESUME }),
-      }}
+      options={options}
     >
       {/* Drives @hakit's own surfaces -- the entity modal above all -- from
           our tokens. See src/ui/HakitTheme.tsx. */}

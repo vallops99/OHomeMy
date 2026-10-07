@@ -34,7 +34,8 @@ export default defineWidget({
       flex: 0 0 auto;
       max-width: 100%;
       height: var(--target-min);
-      padding: 0 20px 0 var(--space-4);
+      padding-block: 0;
+      padding-inline: var(--space-4) 20px;
       border-radius: var(--radius-pill);
       display: inline-flex;
       align-items: center;
@@ -83,7 +84,8 @@ export default defineWidget({
       align-items: center;
       justify-content: space-between;
       gap: var(--space-4);
-      padding: var(--space-4) var(--space-4) var(--space-4) var(--space-5);
+      padding: var(--space-4);
+      padding-inline-start: var(--space-5);
       border-bottom: 1px solid var(--line);
     }
     .ohm-status_chips-list-title {
@@ -120,6 +122,7 @@ export default defineWidget({
     .ohm-status_chips-list-card[data-level='fault'] .ohm-status_chips-list-icon { color: var(--alert); }
     .ohm-status_chips-list-text { display: flex; flex-direction: column; min-width: 0; }
     .ohm-status_chips-list-name {
+     
       font-size: var(--type-body-lg-size);
       line-height: var(--type-body-lg-line);
       font-weight: 500;

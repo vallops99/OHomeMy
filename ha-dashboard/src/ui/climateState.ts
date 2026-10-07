@@ -5,6 +5,8 @@
  * `alarmState.ts` and `stateLabel.ts` exist.
  */
 import type { Entity } from '../ha';
+import { fmt, isKey, trKey } from '../i18n';
+import { stateLabel } from './stateLabel';
 
 const numberOrNull = (value: unknown): number | null => {
   if (value === null || value === undefined || value === '') return null;
@@ -38,14 +40,20 @@ export function stepSetpoint(entity: Entity, from: number, direction: 1 | -1): n
 /** An HVAC mode, worded for a button. */
 export type HvacMode = { mode: string; label: string; icon: string };
 
-const MODES: Record<string, { label: string; icon: string }> = {
-  off: { label: 'Spento', icon: 'mdi:power' },
-  heat: { label: 'Caldo', icon: 'mdi:fire' },
-  cool: { label: 'Freddo', icon: 'mdi:snowflake' },
-  heat_cool: { label: 'Caldo/freddo', icon: 'mdi:sun-snowflake-variant' },
-  auto: { label: 'Auto', icon: 'mdi:thermostat-auto' },
-  dry: { label: 'Deumidifica', icon: 'mdi:water-percent' },
-  fan_only: { label: 'Ventola', icon: 'mdi:fan' },
+const MODE_ICONS: Record<string, string> = {
+  off: 'mdi:power',
+  heat: 'mdi:fire',
+  cool: 'mdi:snowflake',
+  heat_cool: 'mdi:sun-snowflake-variant',
+  auto: 'mdi:thermostat-auto',
+  dry: 'mdi:water-percent',
+  fan_only: 'mdi:fan',
+};
+
+/** The catalogue's word for `value` under `prefix`, or Home Assistant's own value when it has none. */
+const worded = (prefix: string, value: string) => {
+  const key = `${prefix}.${value}`;
+  return isKey(key) ? trKey(key) : value;
 };
 
 /**
@@ -55,43 +63,22 @@ const MODES: Record<string, { label: string; icon: string }> = {
  */
 export function hvacModes(entity: Entity): HvacMode[] {
   const modes = Array.isArray(entity.attributes.hvac_modes) ? (entity.attributes.hvac_modes as string[]) : [];
-  return modes.map(mode => ({ mode, ...(MODES[mode] ?? { label: mode, icon: 'mdi:thermostat' }) }));
+  return modes.map(mode => ({ mode, label: worded('climate.mode', mode), icon: MODE_ICONS[mode] ?? 'mdi:thermostat' }));
 }
-
-const ACTIONS: Record<string, string> = {
-  off: 'Spento',
-  idle: 'Inattivo',
-  heating: 'Riscalda',
-  cooling: 'Raffresca',
-  drying: 'Deumidifica',
-  fan: 'Ventila',
-  preheating: 'Preriscalda',
-  defrosting: 'Sbrina',
-};
-
-/** Italian names for the modes as states, when there is no action to report. */
-const MODE_STATES: Record<string, string> = {
-  off: 'Spento',
-  heat: 'Riscaldamento',
-  cool: 'Raffrescamento',
-  heat_cool: 'Caldo/freddo',
-  auto: 'Automatico',
-  dry: 'Deumidificazione',
-  fan_only: 'Ventilazione',
-};
 
 /**
  * What the climate is doing right now: `hvac_action` when the entity reports
- * one ("Riscalda", "Inattivo"), else its mode. The action is the more useful
- * of the two -- a thermostat in `heat` that has reached its setpoint is idle.
+ * one ("Heating", "Idle"), else its mode as a state. The action is the more
+ * useful of the two -- a thermostat in `heat` that has reached its setpoint
+ * is idle.
  */
 export function hvacActionLabel(entity: Entity): string {
   const action = entity.attributes.hvac_action;
-  if (typeof action === 'string' && action) return ACTIONS[action] ?? action;
-  return MODE_STATES[entity.state] ?? entity.state;
+  if (typeof action === 'string' && action) return worded('climate.action', action);
+  return stateLabel(entity);
 }
 
-/** Degrees for display: one decimal, Italian comma. `--` when unknown. */
+/** Degrees for display: one decimal, in the viewer's number format. `--` when unknown. */
 export function degrees(value: number | null): string {
-  return value === null ? '--' : `${value.toLocaleString('it-IT', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}°`;
+  return value === null ? '--' : fmt.degrees(value);
 }

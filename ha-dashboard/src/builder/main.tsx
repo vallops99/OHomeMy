@@ -12,7 +12,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import BuilderApp from '../BuilderApp';
-import { panelStore, type PanelInfo, type PanelRoute } from '../panel/panelProps';
+import { hassPatch, panelStore, type PanelInfo, type PanelRoute } from '../panel/panelProps';
 import { app, portalRoot, styles, tree } from '../panel/tree';
 import { CASA } from '../theme/tokens';
 import builderCss from './builder.css?inline';
@@ -86,6 +86,10 @@ class BuilderElement extends HTMLElement {
   }
   set narrow(narrow: boolean) {
     panelStore.set({ narrow });
+  }
+  /** Only the viewer's locale and the server's time zone are kept (`panelProps.ts`). */
+  set hass(hass: unknown) {
+    panelStore.set(hassPatch(hass));
   }
 }
 

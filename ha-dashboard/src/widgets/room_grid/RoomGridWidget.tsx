@@ -19,13 +19,14 @@
 import { useMemo, useRef } from 'react';
 import { shownTitle } from '../../document/schema';
 import { useActions, useAreas, type Area } from '../../ha';
+import { tr } from '../../i18n';
 import { Icon } from '../../ui/Icon';
 import { lightsOn, roomGridShape } from '../../ui/roomGrid';
 import { SectionLabel } from '../../ui/SectionLabel';
 import { useHasMoreBelow } from '../../ui/useHasMoreBelow';
 import { RoomTile } from '../room_tile/RoomTile';
 import type { WidgetProps } from '../types';
-import { chosenIn, STRINGS } from './roomGrid';
+import { chosenIn } from './roomGrid';
 import type { roomGridSchema } from './schema';
 
 function AllOff({ areas }: { areas: Area[] }) {
@@ -35,7 +36,7 @@ function AllOff({ areas }: { areas: Area[] }) {
   return (
     <button type='button' className='ohm-room-grid-off' disabled={disabled} onClick={() => actions.turnOff(on)}>
       <Icon name='mdi:power' size={20} />
-      {STRINGS.allOff}
+      {tr('roomGrid.allOff')}
     </button>
   );
 }
@@ -45,10 +46,10 @@ export function RoomGridWidget({ widget, settings }: WidgetProps<(typeof roomGri
   const areas = useMemo(() => settings.areas.flatMap(id => all.find(a => a.id === id) ?? []), [all, settings.areas]);
   const tilesRef = useRef<HTMLDivElement>(null);
   const hasMore = useHasMoreBelow(tilesRef);
-  const title = shownTitle(widget.title, STRINGS.defaultTitle);
+  const title = shownTitle(widget.title, tr('roomGrid.title'));
 
   return (
-    <section className='ohm-room-grid' aria-label={title || STRINGS.defaultTitle}>
+    <section className='ohm-room-grid' aria-label={title || tr('roomGrid.title')}>
       <SectionLabel action={<AllOff areas={areas} />}>{title}</SectionLabel>
       <div
         ref={tilesRef}

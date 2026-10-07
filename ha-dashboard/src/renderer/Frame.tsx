@@ -21,7 +21,8 @@
  * Assistant tells the panel when that is (`narrow`), and there the frame
  * offers a Menu control that asks Home Assistant to open it, with the same
  * `hass-toggle-menu` event its own toolbars fire: first in the Navbar, or,
- * on a Dashboard without one, floating at the top left corner. It follows
+ * on a Dashboard without one, floating at the top corner on the sidebar's
+ * side, which right to left is the right. It follows
  * Home Assistant's signal, not the device: on a wide screen the sidebar is
  * Home Assistant's to show, and a wall user set to "always hide the sidebar"
  * keeps it hidden. The event is only ever fired while `narrow`, where Home
@@ -30,17 +31,10 @@
  */
 import type { ReactNode } from 'react';
 import type { Navbar } from '../document/types';
+import { tr } from '../i18n';
 import { usePanelProps } from '../panel/panelProps';
 import { Icon } from '../ui/Icon';
 import type { NavbarEntry } from './navigation';
-
-/** English until the strings module (#59). */
-const STRINGS = {
-  /** The Navbar's name for a screen reader. */
-  navbar: 'Pages',
-  /** The control that opens Home Assistant's sidebar. */
-  menu: 'Menu',
-};
 
 function openHomeAssistantMenu(from: HTMLElement) {
   // Composed, so it leaves the Dashboard's shadow root and reaches
@@ -63,13 +57,13 @@ export function Frame({
   const menu = narrow && (
     <button type='button' className='ohm-navbar-item' onClick={e => openHomeAssistantMenu(e.currentTarget)}>
       <Icon name='mdi:menu' size={22} />
-      <span className='ohm-navbar-name'>{STRINGS.menu}</span>
+      <span className='ohm-navbar-name'>{tr('renderer.menu')}</span>
     </button>
   );
 
   // A Navbar with nothing to show is not drawn: an empty bar is a dead control.
   const bar = navbar && (items.length > 0 || menu) && (
-    <nav className='ohm-navbar' aria-label={STRINGS.navbar}>
+    <nav className='ohm-navbar' aria-label={tr('renderer.navbar')}>
       {menu}
       {items.map(item => (
         <button
@@ -93,7 +87,12 @@ export function Frame({
       <div className='ohm-frame-main'>
         {children}
         {!bar && narrow && (
-          <button type='button' className='ohm-menu-float' aria-label={STRINGS.menu} onClick={e => openHomeAssistantMenu(e.currentTarget)}>
+          <button
+            type='button'
+            className='ohm-menu-float'
+            aria-label={tr('renderer.menu')}
+            onClick={e => openHomeAssistantMenu(e.currentTarget)}
+          >
             <Icon name='mdi:menu' size={22} />
           </button>
         )}
@@ -201,7 +200,7 @@ export const FRAME_CSS = `
   .ohm-menu-float {
     position: absolute;
     top: calc(var(--space-2) + env(safe-area-inset-top));
-    left: calc(var(--space-2) + env(safe-area-inset-left));
+    inset-inline-start: calc(var(--space-2) + env(safe-area-inset-left));
     width: var(--target-min);
     height: var(--target-min);
     padding: 0;

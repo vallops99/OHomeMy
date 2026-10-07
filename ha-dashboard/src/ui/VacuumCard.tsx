@@ -1,5 +1,5 @@
 /**
- * A `vacuum` (#36): what it is in `left` or `right`. Its state in Italian,
+ * A `vacuum` (#36): what it is in `left` or `right`. Its state in words,
  * its battery, and start or pause and back to the dock at the touch floor --
  * each only when `supported_features` allows it and the state makes sense
  * (`vacuumControls`).
@@ -11,6 +11,7 @@
  */
 import type { CSSProperties } from 'react';
 import { useActions, useDeviceBattery, type Entity } from '../ha';
+import { fmt, tr } from '../i18n';
 import { entityIcon, Icon } from './Icon';
 import { stateLabel } from './stateLabel';
 import { t } from './theme';
@@ -54,6 +55,7 @@ export function VacuumCard({ entity, style }: VacuumCardProps) {
       </span>
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <span
+          dir='auto'
           style={{
             fontSize: t.font.glanceM,
             fontWeight: 600,
@@ -80,7 +82,7 @@ export function VacuumCard({ entity, style }: VacuumCardProps) {
           {battery !== null && !unavailable && (
             <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Icon name={batteryIcon(battery)} size={20} />
-              {Math.round(battery)}%
+              {fmt.percent(Math.round(battery))}
             </span>
           )}
         </span>
@@ -88,11 +90,11 @@ export function VacuumCard({ entity, style }: VacuumCardProps) {
       {controls.startPause && (
         <VacuumButton
           icon={controls.startPause === 'pause' ? 'mdi:pause' : 'mdi:play'}
-          label={controls.startPause === 'pause' ? 'Pausa' : 'Avvia'}
+          label={controls.startPause === 'pause' ? tr('vacuum.pause') : tr('vacuum.start')}
           onPress={() => vacuum(controls.startPause === 'pause' ? 'pause' : 'start')}
         />
       )}
-      {controls.dock && <VacuumButton icon='mdi:home-import-outline' label='Alla base' onPress={() => vacuum('return_to_base')} />}
+      {controls.dock && <VacuumButton icon='mdi:home-import-outline' label={tr('vacuum.dock')} onPress={() => vacuum('return_to_base')} />}
     </div>
   );
 }

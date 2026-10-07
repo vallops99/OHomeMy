@@ -1,4 +1,6 @@
 import { HassConnect } from '@hakit/core';
+import { useMemo, useState } from 'react';
+import { useHakitLocale } from './ha';
 import { Builder } from './builder/Builder';
 import { HakitTheme } from './ui';
 
@@ -12,8 +14,16 @@ const PANEL_RESUME = { suspendWhenHidden: false };
  * the Builder's preview is the renderer itself (ADR-0015).
  */
 export default function BuilderApp({ portalRoot }: { portalRoot: HTMLElement }) {
+  // The viewer's language for @hakit's own surfaces (#59), as `App` gives
+  // it, but the first one only: a change of language makes @hakit unmount
+  // everything it wraps while it fetches the new words, and here that is
+  // an unpublished Draft. The Builder's own words still follow at once.
+  const live = useHakitLocale();
+  const [locale, setLocale] = useState(live);
+  if (locale === undefined && live !== undefined) setLocale(live);
+  const options = useMemo(() => ({ locale, portalRoot, handleResumeOptions: PANEL_RESUME }), [locale, portalRoot]);
   return (
-    <HassConnect hassUrl={window.location.origin} options={{ portalRoot, handleResumeOptions: PANEL_RESUME }}>
+    <HassConnect hassUrl={window.location.origin} options={options}>
       {/* Casa Panel's tokens as custom properties, which the Builder's CSS reads. */}
       <HakitTheme />
       <Builder />

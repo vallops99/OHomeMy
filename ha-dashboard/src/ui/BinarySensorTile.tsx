@@ -47,6 +47,7 @@ export function BinarySensorTile({ entity, style }: BinarySensorTileProps) {
         <Icon name={icon} size={26} />
       </span>
       <span
+        dir='auto'
         title={entity.name}
         style={{
           flex: 1,

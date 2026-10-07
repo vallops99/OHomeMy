@@ -9,6 +9,7 @@
  */
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { Dashboard, Widget } from '../document/types';
+import { viewerDirection } from '../i18n';
 import { widgetSchemas } from '../widgets/registry';
 import type { Ask } from './Builder';
 import { DashboardSettings } from './DashboardSettings';
@@ -125,7 +126,7 @@ export function DashboardEditor({
     <section className='b-editor' aria-label={t.editing(dashboard.name)}>
       <div className='b-editor-bar'>
         <button type='button' className='b-button' onClick={onClose}>
-          ← {t.back}
+          {viewerDirection() === 'rtl' ? '→' : '←'} {t.back}
         </button>
         <h2 className='b-editor-title'>{dashboard.name}</h2>
         <div className='b-pages' role='tablist' aria-label={t.pages.label}>

@@ -2,7 +2,7 @@
  * The media strip: contextual, not persistent (#8).
  *
  * The house has seven media players and they are idle most of the time. A
- * persistent bar would spend most of its life showing "niente in riproduzione"
+ * persistent bar would spend most of its life showing "nothing playing"
  * in a panel whose whole premise is that every pixel answers something. So the
  * bar shows whatever is actually playing, and when nothing is, the cell says
  * so quietly in one line rather than rendering a dead transport.
@@ -12,6 +12,7 @@
  */
 import type { CSSProperties } from 'react';
 import { useActions, type Entity } from '../ha';
+import { tr } from '../i18n';
 import { Icon } from './Icon';
 import { mediaControls } from './mediaState';
 import { Tile } from './Tile';
@@ -32,7 +33,7 @@ function nowPlaying(entity: Entity): string {
   const title = entity.attributes.media_title as string | undefined;
   const artist = (entity.attributes.media_artist ?? entity.attributes.media_channel) as string | undefined;
   if (title && artist) return `${title} — ${artist}`;
-  return title ?? 'In riproduzione';
+  return title ?? tr('media.playing');
 }
 
 /**
@@ -64,7 +65,7 @@ export function MediaBar({ entities, style }: MediaBarProps) {
         }}
       >
         <Icon name='mdi:music-note-off' size={24} color={t.color.textSecondary} />
-        <span style={{ fontSize: t.font.body }}>Niente in riproduzione</span>
+        <span style={{ fontSize: t.font.body }}>{tr('media.nothing')}</span>
       </div>
     );
   }
@@ -93,6 +94,7 @@ export function MediaBar({ entities, style }: MediaBarProps) {
           */}
           <div style={{ flex: 1, minWidth: 0, contain: 'inline-size' }}>
             <div
+              dir='auto'
               style={{
                 fontSize: t.font.glanceM,
                 fontWeight: 600,
@@ -103,7 +105,9 @@ export function MediaBar({ entities, style }: MediaBarProps) {
             >
               {nowPlaying(playing)}
             </div>
-            <div style={{ fontSize: t.font.caption, opacity: 0.85 }}>{playing.name}</div>
+            <div dir='auto' style={{ fontSize: t.font.caption, opacity: 0.85 }}>
+              {playing.name}
+            </div>
           </div>
 
           {/* Transport controls own their own presses: the tile beneath must not
@@ -112,18 +116,23 @@ export function MediaBar({ entities, style }: MediaBarProps) {
             {controls.previous && (
               <MediaButton
                 icon='mdi:skip-previous'
-                label='Precedente'
+                label={tr('media.previous')}
                 onPress={() => actions.call('media_player', 'media_previous_track', playing.id)}
                 fg={fg}
               />
             )}
             {controls.playPause === 'pause' && (
-              <MediaButton icon='mdi:pause' label='Pausa' onPress={() => actions.call('media_player', 'media_pause', playing.id)} fg={fg} />
+              <MediaButton
+                icon='mdi:pause'
+                label={tr('media.pause')}
+                onPress={() => actions.call('media_player', 'media_pause', playing.id)}
+                fg={fg}
+              />
             )}
             {controls.next && (
               <MediaButton
                 icon='mdi:skip-next'
-                label='Successivo'
+                label={tr('media.next')}
                 onPress={() => actions.call('media_player', 'media_next_track', playing.id)}
                 fg={fg}
               />

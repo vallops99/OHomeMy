@@ -10,6 +10,7 @@
 import { useEffect, useReducer, useState, type ReactNode } from 'react';
 import type { OHomeMyDocument } from '../document/types';
 import { useDocumentAdmin, usePublished, type ImportOutcome } from '../ha';
+import { useLocalised } from '../i18n/useLocalised';
 import { usePanelProps } from '../panel/panelProps';
 import { DashboardList } from './DashboardList';
 import { DashboardEditor } from './Editor';
@@ -26,6 +27,8 @@ export type Confirmation = { message: string; confirmLabel: string; onConfirm: (
 export type Ask = (confirmation: Confirmation) => void;
 
 export function Builder() {
+  // First, so every word below is the viewer's (#59).
+  const { lang, dir, style } = useLocalised();
   const published = usePublished();
   const admin = useDocumentAdmin();
   const [session, dispatch] = useReducer(sessionReducer, null);
@@ -37,7 +40,12 @@ export function Builder() {
     if (published) dispatch({ type: 'received', published });
   }, [published]);
 
-  if (!session || !admin) return <div className='b-loading'>{strings.loading}</div>;
+  if (!session || !admin)
+    return (
+      <div className='b-loading' lang={lang} dir={dir} style={style}>
+        {strings.loading}
+      </div>
+    );
 
   /** Sends one Publish and hands how it ended to the session. */
   const publish = async (document: OHomeMyDocument | null, send: () => Promise<ImportOutcome>) => {
@@ -57,7 +65,7 @@ export function Builder() {
   const edited = editing === null ? undefined : session.draft.dashboards.find(d => d.id === editing);
 
   return (
-    <div className='b-app'>
+    <div className='b-app' lang={lang} dir={dir} style={style}>
       <Header
         session={session}
         onPublish={() => publish(session.draft, () => admin.save(session.draft, base))}

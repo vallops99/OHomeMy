@@ -16,6 +16,7 @@
 import type { ComponentType, CSSProperties } from 'react';
 import type { Variant } from '../../document/schema';
 import type { Entity } from '../../ha';
+import { fmt } from '../../i18n';
 import { AccessRow } from '../../ui/AccessRow';
 import { AlarmPanel } from '../../ui/AlarmPanel';
 import { AlarmTile } from '../../ui/AlarmTile';
@@ -99,7 +100,7 @@ function Vacuum({ entity, member }: ShapeProps) {
 function Weather({ entity, variant, member }: ShapeProps) {
   if (variant === 'full') return <WeatherCard entity={entity} style={box(member, CARD_ALONE)} />;
   // Compact: the condition now and its temperature, read as a sensor is.
-  const temperature = typeof entity.attributes.temperature === 'number' ? `${Math.round(entity.attributes.temperature)}°` : '--';
+  const temperature = typeof entity.attributes.temperature === 'number' ? fmt.wholeDegrees(entity.attributes.temperature) : '--';
   return (
     <ReadingBlock
       icon={conditionIcon(entity.state)}

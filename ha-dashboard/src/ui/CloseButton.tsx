@@ -5,6 +5,7 @@
  * the Popup does not report it as activity.
  */
 import { Icon } from './Icon';
+import { tr } from '../i18n';
 import { t } from './theme';
 
 export function CloseButton({ onClose }: { onClose: () => void }) {
@@ -14,8 +15,8 @@ export function CloseButton({ onClose }: { onClose: () => void }) {
       type='button'
       data-close
       onClick={onClose}
-      aria-label='Chiudi'
-      title='Chiudi'
+      aria-label={tr('common.close')}
+      title={tr('common.close')}
       style={{
         width: size,
         height: size,

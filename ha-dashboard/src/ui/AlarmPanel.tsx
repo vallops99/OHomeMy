@@ -48,6 +48,7 @@ export function AlarmPanel({ entity, style }: AlarmPanelProps) {
           <Icon name={alarmIcon(entity)} size={26} />
         </span>
         <span
+          dir='auto'
           style={{
             flex: 1,
             minWidth: 0,

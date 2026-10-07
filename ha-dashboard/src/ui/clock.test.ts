@@ -5,6 +5,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { clockText, msToNextMinute } from './clock';
+import { DEFAULT_LOCALE, setViewerLocale } from '../i18n';
+
+// In Italian, the copy of the house the panel was built for (#59).
+setViewerLocale({ ...DEFAULT_LOCALE, language: 'it' });
 
 test('the time is hours and minutes, 24-hour, zero-padded', () => {
   assert.equal(clockText(new Date(2026, 9, 5, 9, 4, 30)).time, '09:04');

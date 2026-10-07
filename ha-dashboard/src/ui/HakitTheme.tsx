@@ -87,17 +87,6 @@ export function HakitTheme() {
         .modal-container .slider-track-bar {
           background-color: ${t.color.accent} !important;
         }
-
-        /* Casa Panel's dimmer (ADR-0013): a surface-control track under an
-           accent-soft fill. @hakit tints its track from the fill colour
-           at 20%, which on the accent read as "on" while the light was off. */
-        .casa-dimmer .slider-track-background {
-          background: ${t.color.surfaceControl} !important;
-          opacity: 1 !important;
-        }
-        .casa-dimmer:not([data-disabled]) .slider-track-bar {
-          background-color: ${t.color.accentSoft} !important;
-        }
       `}
     />
   );

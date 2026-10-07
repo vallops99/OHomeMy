@@ -19,7 +19,10 @@ export function SectionLabel({ children, action }: { children: ReactNode; action
       }}
     >
       <div
+        // A title someone wrote, in its own direction (#59).
+        dir='auto'
         style={{
+          minWidth: 0,
           fontSize: t.type.label.size,
           lineHeight: t.type.label.lineHeight,
           fontWeight: t.type.label.weight,

@@ -56,7 +56,8 @@ export default defineWidget({
     ${COLUMNS_CSS}
     .ohm-room-grid-off {
       height: var(--target-min);
-      padding: 0 20px 0 var(--space-4);
+      padding-block: 0;
+      padding-inline: var(--space-4) 20px;
       border-radius: var(--radius-pill);
       border: 1px solid var(--line-strong);
       background: transparent;

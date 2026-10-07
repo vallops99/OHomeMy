@@ -53,6 +53,8 @@ function SectionLabel({ children }: { children: ReactNode }) {
   const { size, lineHeight, weight, letterSpacing } = t.type.label;
   return (
     <div
+      // A title someone wrote, in its own direction (#59).
+      dir='auto'
       style={{
         padding: '12px 12px 4px',
         fontSize: size,

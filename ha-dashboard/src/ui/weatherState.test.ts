@@ -4,6 +4,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { conditionIcon, conditionLabel, dayLabel } from './weatherState';
+import { DEFAULT_LOCALE, setViewerLocale } from '../i18n';
+
+// In Italian, the copy of the house the panel was built for (#59).
+setViewerLocale({ ...DEFAULT_LOCALE, language: 'it' });
 
 test('every condition Home Assistant defines has an Italian name and an icon', () => {
   assert.equal(conditionLabel('partlycloudy'), 'Parzialmente nuvoloso');

@@ -17,6 +17,7 @@
  */
 import { useState, type CSSProperties } from 'react';
 import { climateHumidity, useActions, useEntities, type Entity } from '../ha';
+import { fmt, tr, viewerDirection } from '../i18n';
 import { climateReading, degrees, hvacActionLabel, hvacModes, stepSetpoint } from './climateState';
 import { Icon } from './Icon';
 import { ReadingBlock } from './ReadingBlock';
@@ -78,6 +79,7 @@ export function ClimateCard({ entity, style }: ClimateCardProps) {
           <Icon name={unavailable ? 'mdi:alert-circle' : 'mdi:thermostat'} size={26} />
         </span>
         <span
+          dir='auto'
           style={{
             flex: 1,
             minWidth: 0,
@@ -112,17 +114,19 @@ export function ClimateCard({ entity, style }: ClimateCardProps) {
                 {degrees(current)}
               </span>
               {humidity !== null && (
-                <span style={{ fontSize: t.font.caption, color: t.color.textSecondary }}>{Math.round(humidity)}% umidità</span>
+                <span style={{ fontSize: t.font.caption, color: t.color.textSecondary }}>
+                  {tr('climate.humidity', { humidity: fmt.percent(Math.round(humidity)) })}
+                </span>
               )}
             </div>
-            <StepButton icon='mdi:minus' label='Abbassa' onPress={() => step(-1)} disabled={setpoint.shown === null} />
+            <StepButton icon='mdi:minus' label={tr('climate.lower')} onPress={() => step(-1)} disabled={setpoint.shown === null} />
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 84 }}>
               <span style={{ fontSize: t.font.glanceL, fontWeight: 600, color: t.color.textPrimary, lineHeight: 1.2 }}>
                 {degrees(setpoint.shown)}
               </span>
-              <span style={{ fontSize: t.font.caption, color: t.color.textSecondary }}>impostata</span>
+              <span style={{ fontSize: t.font.caption, color: t.color.textSecondary }}>{tr('climate.target')}</span>
             </div>
-            <StepButton icon='mdi:plus' label='Alza' onPress={() => step(+1)} disabled={setpoint.shown === null} />
+            <StepButton icon='mdi:plus' label={tr('climate.raise')} onPress={() => step(+1)} disabled={setpoint.shown === null} />
           </div>
 
           <div style={{ display: 'flex', gap: t.space.sm }}>
@@ -203,7 +207,7 @@ export function ClimateBlock({ entity, style }: ClimateCardProps) {
     <ReadingBlock
       icon='mdi:thermostat'
       value={entity.unavailable ? stateLabel(entity) : degrees(current)}
-      detail={entity.unavailable ? undefined : `→ ${degrees(target)}`}
+      detail={entity.unavailable ? undefined : `${viewerDirection() === 'rtl' ? '←' : '→'} ${degrees(target)}`}
       name={entity.name}
       unavailable={entity.unavailable}
       style={style}

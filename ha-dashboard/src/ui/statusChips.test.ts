@@ -7,6 +7,10 @@ import { test } from 'node:test';
 import type { Entity } from '../ha';
 import { houseReport } from '../ha/health';
 import { statusChips } from './statusChips';
+import { DEFAULT_LOCALE, setViewerLocale } from '../i18n';
+
+// In Italian, the copy of the house the panel was built for (#59).
+setViewerLocale({ ...DEFAULT_LOCALE, language: 'it' });
 
 const entity = (id: string, parts: Partial<Entity> = {}): Entity => ({
   id,

@@ -75,10 +75,14 @@ export function DashboardList({
           <li key={dashboard.id} className='b-row'>
             <div className='b-row-main'>
               <div className='b-row-text'>
-                <span className='b-row-title'>{dashboard.name}</span>
+                <span className='b-row-title' dir='auto'>
+                  {dashboard.name}
+                </span>
                 <span className='b-meta'>
+                  {/* An address reads left to right in any language. */}
+                  <bdi>{strings.form.url(dashboard.slug)}</bdi>
                   {[
-                    strings.form.url(dashboard.slug),
+                    '',
                     strings.dashboards.pages(dashboard.pages.length),
                     ...(dashboard.show_in_sidebar ? [] : [strings.dashboards.hidden]),
                   ].join(' · ')}
@@ -226,7 +230,7 @@ function DashboardForm({
             onChange={e => setOwnSlug(e.target.value)}
           />
           <span className='b-meta' id={`${id}-slug-hint`}>
-            {strings.form.url(slug)} · {strings.form.slugHint}
+            <bdi>{strings.form.url(slug)}</bdi> · {strings.form.slugHint}
           </span>
           <span className='b-error' id={`${id}-slug-error`}>
             {(tried || (ownSlug !== null && ownSlug !== initialSlug)) && slugError}

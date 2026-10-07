@@ -4,6 +4,7 @@
  * plain Node; `Feeds.tsx` and `Feed.tsx` render what this decides.
  */
 import type { Entity, Feed } from '../ha';
+import { tr } from '../i18n';
 import { t } from './theme';
 
 /**
@@ -40,11 +41,11 @@ export const TONE_COLOR = { quiet: t.color.textSecondary, motion: t.color.active
  * outranks it.
  */
 export function feedStatus(phase: FeedPhase, moving: boolean): { text: string; tone: StatusTone } {
-  if (phase === 'unavailable') return { text: 'Non disponibile', tone: 'fault' };
-  if (phase === 'connecting') return { text: 'Connessione…', tone: 'quiet' };
-  if (phase === 'failed') return { text: 'Riconnessione…', tone: 'quiet' };
-  if (moving) return { text: 'Movimento', tone: 'motion' };
-  return phase === 'live' ? { text: 'In diretta', tone: 'quiet' } : { text: 'Nessun video', tone: 'quiet' };
+  if (phase === 'unavailable') return { text: tr('camera.unavailable'), tone: 'fault' };
+  if (phase === 'connecting') return { text: tr('camera.connecting'), tone: 'quiet' };
+  if (phase === 'failed') return { text: tr('camera.reconnecting'), tone: 'quiet' };
+  if (moving) return { text: tr('camera.motion'), tone: 'motion' };
+  return phase === 'live' ? { text: tr('camera.live'), tone: 'quiet' } : { text: tr('camera.noVideo'), tone: 'quiet' };
 }
 
 /** Whole seconds until `retryAt`, rounded up, for "Nuovo tentativo tra N s". */

@@ -5,12 +5,6 @@
  */
 import type { Area, Entity } from '../../ha';
 
-/** Every word a Room Grid shows itself, for the strings module (#59). */
-export const STRINGS = {
-  defaultTitle: 'Rooms',
-  allOff: 'All off',
-};
-
 /**
  * The entity of `ids` a tile shows for its Area: the first of the list that
  * is in that Area, in the list's order, so an admin who chose two lights in

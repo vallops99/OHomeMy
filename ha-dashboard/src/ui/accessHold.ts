@@ -7,6 +7,7 @@
  * through `holdStep` and words its status line with `accessStatus`; neither
  * knows about React or the DOM.
  */
+import { tr } from '../i18n';
 
 /** How long Apri must be held. */
 export const HOLD_MS = 700;
@@ -75,9 +76,10 @@ export function accessStatus(
   worded: string
 ): { label: string; tone: 'muted' | 'accent' | 'alert' } {
   if (lock.unavailable) return { label: worded, tone: 'alert' };
-  if (isOpenLock(lock.state)) return { label: 'Aperto', tone: 'accent' };
-  if (hold.phase === 'holding' || lock.state === 'unlocking' || lock.state === 'opening') return { label: 'Apertura…', tone: 'accent' };
-  if (hold.phase === 'hint') return { label: 'Tieni premuto per aprire', tone: 'accent' };
-  if (lock.state === 'locked') return { label: 'Chiuso', tone: 'muted' };
+  if (isOpenLock(lock.state)) return { label: tr('access.open'), tone: 'accent' };
+  if (hold.phase === 'holding' || lock.state === 'unlocking' || lock.state === 'opening')
+    return { label: tr('access.opening'), tone: 'accent' };
+  if (hold.phase === 'hint') return { label: tr('access.hint'), tone: 'accent' };
+  if (lock.state === 'locked') return { label: tr('access.closed'), tone: 'muted' };
   return { label: worded, tone: 'muted' };
 }

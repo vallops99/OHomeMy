@@ -1,8 +1,8 @@
 /**
  * Casa Panel's dimmer (ADR-0013), ported from its `Dimmer`: a 56 px bar that
  * is its own thumb -- drag or tap anywhere on it to set 0-100. The fill is
- * `accent-soft` up to the level; the right end reads the percentage, or
- * "Spento" at 0, because 0 is off.
+ * `accent-soft` up to the level; the end reads the percentage, or "Off"
+ * at 0, because 0 is off.
  *
  * A native range input underneath, at opacity 0, as the design system has
  * it: keyboard and screen readers get a real slider for free, and the browser
@@ -15,6 +15,7 @@
  * the bar before lifting still commits.
  */
 import { useRef, useState } from 'react';
+import { fmt, tr } from '../i18n';
 import { Icon } from './Icon';
 import { t } from './theme';
 
@@ -23,7 +24,7 @@ export type DimmerProps = {
   value: number;
   /** Called once per gesture, when it ends, with a whole number. */
   onCommit: (value: number) => void;
-  /** The accessible name -- "Luminosità Cucina". */
+  /** The accessible name -- "Cucina brightness". */
   label: string;
 };
 
@@ -61,7 +62,10 @@ export function Dimmer({ value, onCommit, label }: DimmerProps) {
         overflow: 'hidden',
       }}
     >
-      <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${shown}%`, background: t.color.accentSoft }} />
+      <div
+        aria-hidden
+        style={{ position: 'absolute', insetInlineStart: 0, top: 0, bottom: 0, width: `${shown}%`, background: t.color.accentSoft }}
+      />
       <div
         aria-hidden
         style={{
@@ -79,7 +83,7 @@ export function Dimmer({ value, onCommit, label }: DimmerProps) {
         }}
       >
         <Icon name='mdi:weather-sunny' size={20} />
-        <span>{shown > 0 ? `${shown}%` : 'Spento'}</span>
+        <span>{shown > 0 ? fmt.percent(shown) : tr('dimmer.off')}</span>
       </div>
       <input
         type='range'

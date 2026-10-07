@@ -15,6 +15,7 @@ import { pressable } from '../ui/pressable';
 import { validateWidget, type Fields, type SettingsOf } from '../document/schema';
 import type { Page as PageType, Widget } from '../document/types';
 import { useHouse } from '../ha';
+import { tr } from '../i18n';
 import { widgetKind } from '../widgets/registry';
 import type { WidgetKind } from '../widgets/types';
 import { cellPlacement, gridVariables, type Overflow } from './grid';
@@ -22,9 +23,6 @@ import { useDashboardNavigation } from './navigationContext';
 import { widgetTap, type WidgetTap } from './tap';
 
 type Shown = { widget: Widget; kind: WidgetKind; settings: SettingsOf<Fields>; tap: WidgetTap };
-
-/** What the Open button says to a screen reader. English until the strings module (#59). */
-const openLabel = (page: string) => `Open ${page}`;
 
 export function Page({ page, overflow }: { page: PageType; overflow: Overflow }) {
   const house = useHouse();
@@ -68,10 +66,10 @@ export function Page({ page, overflow }: { page: PageType; overflow: Overflow })
                 type='button'
                 className='ohm-open'
                 data-opens
-                aria-label={openLabel(navigation.pageName(tap.page) ?? '')}
+                aria-label={tr('renderer.open', { page: navigation.pageName(tap.page) ?? '' })}
                 onClick={() => navigation.open(tap.page)}
               >
-                <Icon name='mdi:chevron-right' size={20} />
+                <Icon name='mdi:chevron-right' size={20} mirrored />
               </button>
             )}
           </div>

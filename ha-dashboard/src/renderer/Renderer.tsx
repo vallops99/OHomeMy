@@ -17,6 +17,8 @@
 import { useState, type ReactNode } from 'react';
 import type { Id } from '../document/types';
 import { usePublished } from '../ha';
+import { tr } from '../i18n';
+import { useLocalised } from '../i18n/useLocalised';
 import { usePanelProps } from '../panel/panelProps';
 import { DEFAULT_THEME, themeCss } from '../theme/themes';
 import { WIDGETS_CSS, widgetKind } from '../widgets/registry';
@@ -30,25 +32,17 @@ import { dashboardRef, selectHomePage } from './select';
 
 /**
  * What the renderer says when there is nothing to draw: quietly, in the
- * middle of the screen, and only what is true. English until the strings
- * module (#59).
+ * middle of the screen, and only what is true.
  */
 const NOTICES = {
-  none: {
-    title: 'No Dashboards yet',
-    detail: 'An admin can build one in OHomeMy Builder.',
-  },
-  missing: {
-    title: 'This Dashboard is not there any more',
-    detail: 'It may have been deleted in OHomeMy Builder. Another Dashboard can be opened from the sidebar.',
-  },
-  empty: {
-    title: 'Nothing on this Page yet',
-    detail: 'Widgets placed on it in OHomeMy Builder appear here as soon as they are published.',
-  },
+  none: () => ({ title: tr('renderer.none.title'), detail: tr('renderer.none.detail') }),
+  missing: () => ({ title: tr('renderer.missing.title'), detail: tr('renderer.missing.detail') }),
+  empty: () => ({ title: tr('renderer.empty.title'), detail: tr('renderer.empty.detail') }),
 };
 
 export function Renderer() {
+  // First, so every word below is the viewer's (#59).
+  const localised = useLocalised();
   const published = usePublished();
   const { panel } = usePanelProps();
   // Where each Dashboard was left, for coming back to its panel.
@@ -62,7 +56,7 @@ export function Renderer() {
   const theme = selection.state === 'page' ? selection.dashboard.settings.theme : { name: DEFAULT_THEME, mode: 'auto' as const };
 
   let body: ReactNode;
-  if (selection.state !== 'page') body = <Notice {...NOTICES[selection.state]} />;
+  if (selection.state !== 'page') body = <Notice {...NOTICES[selection.state]()} />;
   else
     body = (
       // Concerns are the whole Dashboard's, on any of its Pages (#53). The
@@ -73,7 +67,7 @@ export function Renderer() {
           key={selection.dashboard.id}
           dashboard={selection.dashboard}
           places={places}
-          empty={<Notice {...NOTICES.empty} />}
+          empty={<Notice {...NOTICES.empty()} />}
           overlay={<PopupLayer dashboard={selection.dashboard} />}
         />
       </DashboardConcerns>
@@ -86,7 +80,9 @@ export function Renderer() {
       <style>{FRAME_CSS}</style>
       <style>{WIDGETS_CSS}</style>
       <style>{POPUP_CSS}</style>
-      <div className='ohm-dashboard'>{body}</div>
+      <div className='ohm-dashboard' lang={localised.lang} dir={localised.dir} style={localised.style}>
+        {body}
+      </div>
     </>
   );
 }

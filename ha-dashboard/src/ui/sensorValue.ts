@@ -3,19 +3,20 @@
  * history graphs are out of scope (#31), so this is a reading, not a trend.
  */
 import type { Entity } from '../ha';
+import { fmt } from '../i18n';
 import { stateLabel } from './stateLabel';
 
 /**
- * The value and its unit. A number gets at most one decimal and an Italian
- * comma; text stays as Home Assistant reports it. An Unavailable sensor says
- * so, with no unit: "Non disponibile °C" would be nonsense.
+ * The value and its unit. A number gets at most one decimal, in the
+ * viewer's number format; text stays as Home Assistant reports it. An Unavailable sensor says
+ * so, with no unit: "Unavailable °C" would be nonsense.
  */
 export function sensorReading(entity: Entity): { value: string; unit: string | null } {
   if (entity.unavailable) return { value: stateLabel(entity), unit: null };
   const unit = typeof entity.attributes.unit_of_measurement === 'string' ? entity.attributes.unit_of_measurement : null;
   const n = Number(entity.state);
   if (entity.state === '' || Number.isNaN(n)) return { value: stateLabel(entity), unit: null };
-  return { value: n.toLocaleString('it-IT', { maximumFractionDigits: 1 }), unit };
+  return { value: fmt.reading(n), unit };
 }
 
 /** Home Assistant's own default icons for the common sensor device classes. */

@@ -18,11 +18,12 @@
  */
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { cameraMoving, useEntities, useFeed, type Entity, type Feed } from '../../ha';
+import { tr } from '../../i18n';
 import { bigCamera, feedPhase, secondsLeft, type FeedPhase } from '../../ui/feeds';
 import { Icon } from '../../ui/Icon';
 import type { WidgetProps } from '../types';
 import type { cameraWallSchema } from './schema';
-import { feedStatus, STRINGS } from './status';
+import { feedStatus } from './status';
 
 export function CameraWallWidget({ settings }: WidgetProps<(typeof cameraWallSchema)['settings']>) {
   const entities = useEntities();
@@ -77,7 +78,7 @@ function FeedCell({ camera, moving, big, stripIndex, onTap }: FeedCellProps) {
     ? {
         role: 'button',
         tabIndex: 0,
-        'aria-label': STRINGS.show(camera.name),
+        'aria-label': tr('camera.show', { name: camera.name }),
         onClick: onTap,
         onKeyDown: (e: KeyboardEvent) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -97,7 +98,9 @@ function FeedCell({ camera, moving, big, stripIndex, onTap }: FeedCellProps) {
     >
       <FeedFrame feed={feed} phase={phase} big={big} />
       <div className='ohm-camera_wall-caption' data-phase={phase}>
-        <span className='ohm-camera_wall-name'>{camera.name}</span>
+        <span className='ohm-camera_wall-name' dir='auto'>
+          {camera.name}
+        </span>
         <span className='ohm-camera_wall-status' data-tone={status.tone}>
           {status.text}
         </span>
@@ -153,8 +156,8 @@ function FeedState({ phase, feed, big }: { phase: Exclude<FeedPhase, 'live'>; fe
         <Icon name={STATE_ICON[phase]} size={big ? 56 : 28} />
       </span>
       {big && phase === 'failed' && feed.session.phase === 'failed' && <Retry retryAt={feed.session.retryAt} onRetry={feed.retry} />}
-      {big && phase === 'unsupported' && <span>{STRINGS.noLiveVideo}</span>}
-      {big && phase === 'unavailable' && <span className='ohm-camera_wall-state-fault'>{STRINGS.unavailable}</span>}
+      {big && phase === 'unsupported' && <span>{tr('camera.noLiveVideo')}</span>}
+      {big && phase === 'unavailable' && <span className='ohm-camera_wall-state-fault'>{tr('camera.unavailable')}</span>}
     </div>
   );
 }
@@ -169,10 +172,10 @@ function Retry({ retryAt, onRetry }: { retryAt: number; onRetry: () => void }) {
 
   return (
     <>
-      <span>{STRINGS.retryIn(secondsLeft(retryAt, now))}</span>
+      <span>{tr('camera.retryIn', { seconds: secondsLeft(retryAt, now) })}</span>
       <button type='button' className='ohm-camera_wall-retry' onClick={onRetry}>
         <Icon name='mdi:reload' size={24} />
-        {STRINGS.retry}
+        {tr('camera.retry')}
       </button>
     </>
   );

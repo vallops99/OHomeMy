@@ -1,24 +1,12 @@
 /**
- * What a Feed's caption says (#53, from `ui/feeds.ts`), and every other word
- * the Camera Wall says, in one place. English until the strings module
- * (#59). Which Feed is big is still `ui/feeds.ts`'s `bigCamera`.
+ * What a Feed's caption says (#53, from `ui/feeds.ts`), in the viewer's
+ * language (`camera.*`, #59). Which Feed is big is still `ui/feeds.ts`'s
+ * `bigCamera`.
  *
  * No React, no @hakit: `status.test.ts` runs it under plain Node.
  */
+import { tr } from '../../i18n';
 import type { FeedPhase } from '../../ui/feeds';
-
-export const STRINGS = {
-  unavailable: 'Unavailable',
-  connecting: 'Connecting…',
-  reconnecting: 'Reconnecting…',
-  motion: 'Motion',
-  live: 'Live',
-  noVideo: 'No video',
-  noLiveVideo: 'No live video',
-  retryIn: (s: number) => `Trying again in ${s} s`,
-  retry: 'Try again',
-  show: (name: string) => `Show ${name}`,
-};
 
 /** `quiet` is secondary ink, `motion` the accent, `fault` the alert. */
 export type StatusTone = 'quiet' | 'motion' | 'fault';
@@ -30,9 +18,9 @@ export type StatusTone = 'quiet' | 'motion' | 'fault';
  * hide that the picture is missing, and a Fault outranks it.
  */
 export function feedStatus(phase: FeedPhase, moving: boolean): { text: string; tone: StatusTone } {
-  if (phase === 'unavailable') return { text: STRINGS.unavailable, tone: 'fault' };
-  if (phase === 'connecting') return { text: STRINGS.connecting, tone: 'quiet' };
-  if (phase === 'failed') return { text: STRINGS.reconnecting, tone: 'quiet' };
-  if (moving) return { text: STRINGS.motion, tone: 'motion' };
-  return phase === 'live' ? { text: STRINGS.live, tone: 'quiet' } : { text: STRINGS.noVideo, tone: 'quiet' };
+  if (phase === 'unavailable') return { text: tr('camera.unavailable'), tone: 'fault' };
+  if (phase === 'connecting') return { text: tr('camera.connecting'), tone: 'quiet' };
+  if (phase === 'failed') return { text: tr('camera.reconnecting'), tone: 'quiet' };
+  if (moving) return { text: tr('camera.motion'), tone: 'motion' };
+  return phase === 'live' ? { text: tr('camera.live'), tone: 'quiet' } : { text: tr('camera.noVideo'), tone: 'quiet' };
 }

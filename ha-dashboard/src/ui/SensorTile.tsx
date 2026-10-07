@@ -43,6 +43,7 @@ export function SensorTile({ entity, style }: SensorTileProps) {
         <Icon name={unavailable ? 'mdi:alert-circle' : sensorIcon(entity)} size={26} />
       </span>
       <span
+        dir='auto'
         title={entity.name}
         style={{
           flex: 1,
@@ -66,7 +67,12 @@ export function SensorTile({ entity, style }: SensorTileProps) {
         }}
       >
         {unavailable ? value.toUpperCase() : value}
-        {unit && <span style={{ fontSize: t.font.body, color: t.color.textSecondary }}> {unit}</span>}
+        {unit && (
+          <span style={{ fontSize: t.font.body, color: t.color.textSecondary }}>
+            {' '}
+            <bdi>{unit}</bdi>
+          </span>
+        )}
       </span>
     </div>
   );
@@ -79,7 +85,7 @@ export function SensorBlock({ entity, style }: SensorTileProps) {
     <ReadingBlock
       icon={sensorIcon(entity)}
       value={value}
-      detail={unit ?? undefined}
+      detail={unit === null ? undefined : <bdi>{unit}</bdi>}
       name={entity.name}
       unavailable={entity.unavailable}
       style={style}

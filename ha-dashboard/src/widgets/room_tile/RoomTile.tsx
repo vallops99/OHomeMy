@@ -17,12 +17,13 @@
  * for it gives up the dimmer first, then becomes the row.
  */
 import { useActions, type Area, type Entity } from '../../ha';
+import { tr } from '../../i18n';
 import { Dimmer } from '../../ui/Dimmer';
 import { Icon } from '../../ui/Icon';
 import { brightnessPercent } from '../../ui/lightState';
 import { Switch } from '../../ui/Switch';
 import type { Variant } from '../../document/schema';
-import { roomTile, STRINGS } from './roomTile';
+import { roomTile } from './roomTile';
 
 export type RoomTileProps = {
   area: Area;
@@ -49,11 +50,13 @@ export function RoomTile({ area, name, light, temperature, variant }: RoomTilePr
         </span>
         {chosen && (
           <span className='ohm-room-tile-switch'>
-            <Switch checked={on} label={STRINGS.switchLabel(name || area.name)} onChange={() => actions.toggle(chosen)} />
+            <Switch checked={on} label={tr('roomTile.switch', { area: name || area.name })} onChange={() => actions.toggle(chosen)} />
           </span>
         )}
         <span className='ohm-room-tile-text'>
-          <span className='ohm-room-tile-name'>{name}</span>
+          <span className='ohm-room-tile-name' dir='auto'>
+            {name}
+          </span>
           <span className='ohm-room-tile-meta'>{state.meta}</span>
         </span>
         {chosen && state.lights === 'dimmer' && variant === 'full' && (
@@ -62,7 +65,7 @@ export function RoomTile({ area, name, light, temperature, variant }: RoomTilePr
               // An on light Home Assistant reports at under 1% still reads as
               // on, never as "Off".
               value={on ? Math.max(1, brightnessPercent(chosen)) : 0}
-              label={STRINGS.dimmerLabel(name || area.name)}
+              label={tr('roomTile.dimmer', { area: name || area.name })}
               onCommit={v => actions.setBrightness(chosen, v)}
             />
           </div>
@@ -95,7 +98,7 @@ const narrowRow = (scope: string) => `
 `;
 const rowParts = (scope: string) => `
   ${scope} .ohm-room-tile-body { ${ROW} }
-  ${scope} .ohm-room-tile-switch { margin: -12px -14px -12px 0; }
+  ${scope} .ohm-room-tile-switch { margin-block: -12px; margin-inline: 0 -14px; }
   ${scope} .ohm-room-tile-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   ${scope} .ohm-room-tile-dimmer { display: none; }
 `;
@@ -139,10 +142,11 @@ export const ROOM_TILE_CSS = `
   .ohm-room-tile-icon { grid-area: icon; display: flex; align-self: start; }
   /* The switch's hit area overhangs the padding, so it can be large without
      pushing the name down (Casa Panel's -12 / -14). */
-  .ohm-room-tile-switch { grid-area: switch; justify-self: end; align-self: start; margin: -12px -14px 0 0; }
+  .ohm-room-tile-switch { grid-area: switch; justify-self: end; align-self: start; margin-block: -12px 0; margin-inline: 0 -14px; }
   .ohm-room-tile-text { grid-area: text; display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
   .ohm-room-tile-name {
     min-width: 0;
+   
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

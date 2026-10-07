@@ -16,14 +16,15 @@
 import { createPortal } from 'react-dom';
 import { useAreas, usePortalRoot } from '../../ha';
 import type { Concern } from '../../ha/verdict';
+import { tr } from '../../i18n';
 import { concernRows } from '../../ui/concernList';
 import { DOMAIN_ICON, Icon } from '../../ui/Icon';
 import { useIdleClose } from '../../ui/idle';
 import { Z_CONCERN_LIST } from '../../ui/layers';
-import { concernHeadline, STRINGS } from './chips';
+import { concernHeadline } from './chips';
 
 export function ConcernList({ concern, onClose }: { concern: Concern; onClose: () => void }) {
-  const rows = concernRows(concern, useAreas(), STRINGS.noArea);
+  const rows = concernRows(concern, useAreas(), tr('chips.noArea'));
   const headline = concernHeadline(concern);
   const portalRoot = usePortalRoot();
   useIdleClose(onClose);
@@ -40,7 +41,13 @@ export function ConcernList({ concern, onClose }: { concern: Concern; onClose: (
       <div className='ohm-status_chips-list-card' role='dialog' aria-label={headline} data-level={concern.level}>
         <header className='ohm-status_chips-list-header'>
           <span className='ohm-status_chips-list-title'>{headline}</span>
-          <button type='button' className='ohm-status_chips-list-close' onClick={onClose} aria-label={STRINGS.close} title={STRINGS.close}>
+          <button
+            type='button'
+            className='ohm-status_chips-list-close'
+            onClick={onClose}
+            aria-label={tr('common.close')}
+            title={tr('common.close')}
+          >
             <Icon name='mdi:close' size={24} />
           </button>
         </header>
@@ -51,7 +58,9 @@ export function ConcernList({ concern, onClose }: { concern: Concern; onClose: (
                 <Icon name={DOMAIN_ICON[entity.domain] ?? 'mdi:help-circle-outline'} size={26} />
               </span>
               <span className='ohm-status_chips-list-text'>
-                <span className='ohm-status_chips-list-name'>{entity.name}</span>
+                <span className='ohm-status_chips-list-name' dir='auto'>
+                  {entity.name}
+                </span>
                 <span className='ohm-status_chips-list-area'>{areaName}</span>
               </span>
             </li>

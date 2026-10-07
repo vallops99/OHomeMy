@@ -5,6 +5,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { bigCamera, feedStatus, secondsLeft } from './feeds';
+import { DEFAULT_LOCALE, setViewerLocale } from '../i18n';
+
+// In Italian, the copy of the house the panel was built for (#59).
+setViewerLocale({ ...DEFAULT_LOCALE, language: 'it' });
 
 const cams = (...list: [string, boolean][]) => list.map(([id, moving]) => ({ id, moving }));
 

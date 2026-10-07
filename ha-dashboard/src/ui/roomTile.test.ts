@@ -6,6 +6,10 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Area, Entity } from '../ha';
 import { roomTile } from './roomTile';
+import { DEFAULT_LOCALE, setViewerLocale } from '../i18n';
+
+// In Italian, the copy of the house the panel was built for (#59).
+setViewerLocale({ ...DEFAULT_LOCALE, language: 'it' });
 
 const DIMMABLE = { supported_color_modes: ['brightness'] };
 const ONOFF = { supported_color_modes: ['onoff'] };

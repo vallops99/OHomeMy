@@ -42,6 +42,11 @@ export type Overflow = DashboardSettings['overflow'];
  *   `widget`, which is what a kind's container queries ask about, and it
  *   scrolls its own content when that does not fit, so a Page that fits
  *   never does. `data-opens` marks one whose whole box opens a Page.
+ *
+ * Right to left (#59, ADR-0015) the grid stays where the admin placed it:
+ * column 1 is on the left for every viewer, so `.ohm-grid` is laid out left
+ * to right whatever the language, and only inside each cell does an Arabic
+ * viewer's text run right to left.
  */
 export const RENDERER_CSS = `
   .ohm-dashboard {
@@ -74,7 +79,17 @@ export const RENDERER_CSS = `
     grid-template-columns: repeat(var(--ohm-columns), minmax(0, 1fr));
     grid-template-rows: repeat(var(--ohm-rows), var(--ohm-row));
     grid-auto-rows: var(--ohm-row);
+    direction: ltr;
   }
+  .ohm-cell:dir(rtl) { direction: rtl; }
+  /* Tracking pulls Arabic's joined letters apart and breaks Devanagari's
+     headstroke: those scripts are set as their faces draw them (#59). */
+  :lang(ar), :lang(hi) { letter-spacing: 0 !important; }
+  /* A name or a title from Home Assistant or the admin runs in its own
+     direction (dir="auto"), so a Latin name in an Arabic tile is cut at
+     its end, not its start; it still lines up with the words around it. */
+  :dir(rtl) > [dir='auto'] { text-align: right; }
+  :dir(ltr) > [dir='auto'] { text-align: left; }
   .ohm-cell {
     min-width: 0;
     min-height: 0;
