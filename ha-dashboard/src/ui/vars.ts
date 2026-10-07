@@ -61,7 +61,7 @@ function sized<G extends Group>(group: G): Record<Sized[G][number], string> {
 
 export const v = {
   color: {
-    ...refs(CASA.color, kebab),
+    ...refs(CASA.color.dark, kebab),
     /**
      * Dims the panel behind something over it. Not a Casa Panel token: its
      * ground at ADR-0001's 72%, as `t.color.backdrop` is, so it follows the

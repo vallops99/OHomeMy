@@ -24,16 +24,13 @@ export type Theme = { light: ThemeTokens; dark: ThemeTokens };
 
 export type ThemeMode = 'light' | 'dark' | 'auto';
 
-const casa = casaVariables();
-
 export const THEMES: Readonly<Record<string, Theme>> = {
   /**
-   * Casa Panel (ADR-0013) defines dark only: it was drawn for a wall that must
-   * not light up a room at night. Until the design system draws a light set,
-   * light is the dark one, so choosing it changes nothing rather than
-   * inventing colours the design system has not made.
+   * Casa Panel (ADR-0013) draws both: dark, its default, for a wall that must
+   * not light up a room at night, and light for daytime (#63). The two share
+   * every token name and every non-colour value.
    */
-  'casa-panel': { light: casa, dark: casa },
+  'casa-panel': { light: casaVariables('light'), dark: casaVariables('dark') },
 };
 
 /** The theme a Dashboard gets when the one it names is not in `THEMES`. */

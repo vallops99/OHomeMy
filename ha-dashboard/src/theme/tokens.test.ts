@@ -1,16 +1,18 @@
 /**
  * ADR-0013 keeps ADR-0001's contrast findings as checks against Casa Panel's
  * values: text 4.5:1 on its ground, 3:1 for filled controls and icons. Each
- * pair below is one the design system documents or the panel renders.
+ * pair below is one the design system documents or the panel renders, and
+ * each is checked in both of Casa Panel's colour sets, dark and light (#63).
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { contrast, flatten } from './color';
-import { CASA, buildTokens, cssVariables } from './tokens';
+import { CASA, buildTokens, casaVariables, cssVariables, type ColorName } from './tokens';
 
-const c = CASA.color;
+const SCHEMES = ['dark', 'light'] as const;
+const c = CASA.color.dark;
 
-const TEXT: [string, keyof typeof c, keyof typeof c][] = [
+const TEXT: [string, ColorName, ColorName][] = [
   ['primary text on the page', 'ink', 'bg'],
   ['primary text on a card', 'ink', 'surface'],
   ['primary text on an off tile', 'ink', 'surfaceTile'],
@@ -36,14 +38,17 @@ const TEXT: [string, keyof typeof c, keyof typeof c][] = [
   ['a primary button label', 'onPrimary', 'primary'],
 ];
 
-for (const [what, fg, bg] of TEXT) {
-  test(`text 4.5:1 -- ${what} (${fg} on ${bg})`, () => {
-    const ratio = contrast(c[fg], c[bg]);
-    assert.ok(ratio >= 4.5, `${ratio.toFixed(2)}:1`);
-  });
+for (const scheme of SCHEMES) {
+  const c = CASA.color[scheme];
+  for (const [what, fg, bg] of TEXT) {
+    test(`${scheme}: text 4.5:1 -- ${what} (${fg} on ${bg})`, () => {
+      const ratio = contrast(c[fg], c[bg]);
+      assert.ok(ratio >= 4.5, `${ratio.toFixed(2)}:1`);
+    });
+  }
 }
 
-const CONTROLS: [string, keyof typeof c, keyof typeof c][] = [
+const CONTROLS: [string, ColorName, ColorName][] = [
   ['an on icon on a lit tile', 'accent', 'litSurface'],
   ['an on switch track on a lit tile', 'accent', 'litSurface'],
   ['an on control on the page', 'accent', 'bg'],
@@ -55,27 +60,73 @@ const CONTROLS: [string, keyof typeof c, keyof typeof c][] = [
   ['the focus ring on the page', 'focus', 'bg'],
 ];
 
-for (const [what, fg, bg] of CONTROLS) {
-  test(`controls and icons 3:1 -- ${what} (${fg} on ${bg})`, () => {
-    const ratio = contrast(c[fg], c[bg]);
-    assert.ok(ratio >= 3, `${ratio.toFixed(2)}:1`);
+for (const scheme of SCHEMES) {
+  const c = CASA.color[scheme];
+  for (const [what, fg, bg] of CONTROLS) {
+    test(`${scheme}: controls and icons 3:1 -- ${what} (${fg} on ${bg})`, () => {
+      const ratio = contrast(c[fg], c[bg]);
+      assert.ok(ratio >= 3, `${ratio.toFixed(2)}:1`);
+    });
+  }
+
+  // accent-soft is translucent: what the eye sees is it laid over what is under it.
+  test(`${scheme}: the dimmer's label stays 4.5:1 over its translucent fill`, () => {
+    const dimmer = contrast(c.ink, flatten(c.accentSoft, c.surfaceControl));
+    assert.ok(dimmer >= 4.5, `ink over the dimmer fill: ${dimmer.toFixed(2)}:1`);
+  });
+
+  // The hold sweep over Apri (`AccessRow`). In light it measures 4.27:1: the
+  // design system documents no ratio for this pair, and its values are not
+  // tuned here, so the gap is kept visible until the design system resolves
+  // it (#63).
+  const holdGap = scheme === 'light' && 'light on-primary over the hold fill is 4.27:1; the design system has to settle it';
+  test(`${scheme}: Apri's label stays 4.5:1 under the hold sweep`, { todo: holdGap || undefined }, () => {
+    const hold = contrast(c.onPrimary, flatten(c.accentSoft, c.primary));
+    assert.ok(hold >= 4.5, `on-primary over the hold fill: ${hold.toFixed(2)}:1`);
+  });
+
+  test(`${scheme}: the references in tokens.json are resolved within the set, not carried as text`, () => {
+    assert.equal(c.primary, c.ink);
+    assert.equal(c.focus, c.accent);
   });
 }
 
-test('labels stay 4.5:1 under the translucent dimmer and hold fills', () => {
-  // accent-soft is translucent: what the eye sees is it laid over what is under it.
-  const dimmer = contrast(c.ink, flatten(c.accentSoft, c.surfaceControl));
-  assert.ok(dimmer >= 4.5, `ink over the dimmer fill: ${dimmer.toFixed(2)}:1`);
-  const hold = contrast(c.onPrimary, flatten(c.accentSoft, c.primary));
-  assert.ok(hold >= 4.5, `on-primary over the hold fill: ${hold.toFixed(2)}:1`);
+test('the dark and light sets name exactly the same tokens', () => {
+  assert.deepEqual(Object.keys(CASA.color.light).sort(), Object.keys(CASA.color.dark).sort());
+  assert.deepEqual(Object.keys(casaVariables('light')).sort(), Object.keys(casaVariables('dark')).sort());
 });
 
-test('the references in tokens.json are resolved, not carried as text', () => {
-  assert.equal(c.primary, c.ink);
-  assert.equal(c.focus, c.accent);
+test("the light set is Casa Panel's light values", () => {
+  const l = CASA.color.light;
+  assert.equal(l.bg, '#efeee9');
+  assert.equal(l.ink, '#1a1b18');
+  assert.equal(l.primary, '#1a1b18');
+  assert.equal(l.focus, '#9a6210');
+  assert.equal(l.accentSoft, '#eaa93a99');
+  assert.equal(l.onPrimary, '#faf9f6');
 });
 
-test('the CSS custom properties carry the design system names and values', () => {
+test('only colour differs between the sets: type, space, radius and size are shared', () => {
+  const dark = casaVariables('dark');
+  const light = casaVariables('light');
+  const colours = new Set(Object.keys(CASA.color.dark).map(k => k.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`)));
+  for (const [name, value] of Object.entries(dark)) {
+    if (!colours.has(name)) assert.equal(light[name], value, name);
+  }
+  assert.equal(light['surface-tile'], '#ffffff');
+});
+
+test('the design system states the light ratios it was drawn to (#63)', () => {
+  const l = CASA.color.light;
+  const near = (got: number, want: number, what: string) =>
+    assert.ok(Math.abs(got - want) < 0.15, `${what}: ${got.toFixed(2)}:1, stated ${want}:1`);
+  near(contrast(l.ink, l.bg), 14.9, 'ink on bg');
+  near(contrast(l.accent, l.surface), 4.8, 'accent on surface');
+  near(contrast(l.alert, l.alertSurface), 5.7, 'alert on alert-surface');
+  assert.ok(contrast(l.inkMuted, l.surfaceControl) >= 4.7, 'ink-muted on surface-control');
+});
+
+test('the CSS custom properties carry the design system names and values, dark at the page root', () => {
   const css = cssVariables();
   assert.match(css, /--bg: #0e0f0d;/);
   assert.match(css, /--surface-tile: #191a18;/);

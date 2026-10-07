@@ -14,94 +14,156 @@
  */
 import { withAlpha } from './color';
 
-/** Casa Panel's tokens, as `tokens.json` (version 1) has them. */
-export const CASA = (() => {
+/**
+ * Casa Panel's colours, dark. Dark is the default: the panel lives on a wall
+ * and must not light up a room at night (`tokens.json`: "night, and any time
+ * the room is dim").
+ */
+const DARK = (() => {
   const ink = '#f2f1ec';
   const accent = '#f5c15c';
   return {
-    /** Dark only: the panel lives on a wall and must not light up a room at night. */
-    color: {
-      /** The page ground behind everything. */
-      bg: '#0e0f0d',
-      /** Grouping cards: stat cards, the Accessi card, the media bar, the dock, neutral chips. */
-      surface: '#161715',
-      /** A room tile with lights, while they are off. */
-      surfaceTile: '#191a18',
-      /** A room tile with no controllable light: darker, so it reads as passive. */
-      surfaceStatic: '#141513',
-      /** Icon wells. */
-      surfaceWell: '#20211e',
-      /** The unfilled part of a dimmer. */
-      surfaceControl: '#232420',
-      /** Border of surface cards; the divider between rows. */
-      line: '#232421',
-      /** Border of neutral chips and outline buttons. */
-      lineStrong: '#2a2b28',
-      /** Border of an off room tile. */
-      lineTile: '#262724',
-      /** Primary text and numbers, on every surface. */
-      ink,
-      /** Text on chips and outline buttons, the media title. */
-      inkSoft: '#d9d8d2',
-      /** Supporting values, inactive nav labels, off room icons. */
-      inkSecondary: '#c9c8c2',
-      /** Metadata, section labels, status words, chevrons. */
-      inkMuted: '#9c9b95',
-      /** Tertiary hints; never smaller than 15 px. */
-      inkFaint: '#8e8d87',
-      /** The only accent, and it means ON. Never decorative. */
-      accent,
-      /** Accent at 36%: the dimmer fill and the hold-to-open sweep. */
-      accentSoft: '#f5c15c5c',
-      /** On an `accent` fill: the switch knob. */
-      onAccent: '#15130d',
-      /** A room tile with any light on. */
-      litSurface: '#26221a',
-      litLine: '#4a3f26',
-      /** Meta text on a lit tile. */
-      litInk: '#e8d9b8',
-      /** An off switch track; also the secondary button fill (Chiudi). */
-      switchOff: '#2f302d',
-      knobOff: '#8c8c86',
-      /** Text and icon of something that needs attention: a Fault. Semantic, not the accent. */
-      alert: '#ff9b80',
-      alertSurface: '#2a1611',
-      alertLine: '#5a2a1e',
-      /** The one high-contrast action per group (Apri), and the current nav item: `{ink}`. */
-      primary: ink,
-      onPrimary: '#111210',
-      /** Keyboard focus outline: `{accent}`. */
-      focus: accent,
-    },
-    font: { sans: 'Geist, system-ui, -apple-system, "Segoe UI", sans-serif' },
-    /** Casa Panel's named type styles, for the components that take them up. */
-    type: {
-      tempHero: { size: 144, lineHeight: 1, weight: 200, letterSpacing: '-0.05em' },
-      stat: { size: 34, lineHeight: '40px', weight: 500, letterSpacing: '-0.02em' },
-      clock: { size: 30, lineHeight: '36px', weight: 500, letterSpacing: '-0.02em' },
-      tileTitle: { size: 21, lineHeight: '26px', weight: 500, letterSpacing: '-0.01em' },
-      rowTitle: { size: 19, lineHeight: '24px', weight: 500, letterSpacing: 'normal' },
-      bodyLg: { size: 17, lineHeight: '24px', weight: 400, letterSpacing: 'normal' },
-      body: { size: 16, lineHeight: '22px', weight: 400, letterSpacing: 'normal' },
-      meta: { size: 15, lineHeight: '20px', weight: 400, letterSpacing: 'normal' },
-      label: { size: 14, lineHeight: '18px', weight: 500, letterSpacing: '0.08em' },
-    },
-    /** 4 px base: 12 between siblings, 20-24 between regions, 28 at the page sides. */
-    space: { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 7: 28 },
-    /** Radii that nest: the inner one is the outer minus the padding between them. */
-    radius: { well: 15, control: 18, card: 22, tile: 24, dock: 26, pill: 9999 },
-    /** Touch sizes are floors, not suggestions. */
-    size: {
-      canvasWidth: 1280,
-      canvasHeight: 800,
-      targetMin: 52,
-      targetControl: 56,
-      statusBarHeight: 56,
-      dockHeight: 84,
-      sidebarWidth: 380,
-    },
+    /** The page ground behind everything. */
+    bg: '#0e0f0d',
+    /** Grouping cards: stat cards, the Accessi card, the media bar, the dock, neutral chips. */
+    surface: '#161715',
+    /** A room tile with lights, while they are off. */
+    surfaceTile: '#191a18',
+    /** A room tile with no controllable light: darker, so it reads as passive. */
+    surfaceStatic: '#141513',
+    /** Icon wells. */
+    surfaceWell: '#20211e',
+    /** The unfilled part of a dimmer. */
+    surfaceControl: '#232420',
+    /** Border of surface cards; the divider between rows. */
+    line: '#232421',
+    /** Border of neutral chips and outline buttons. */
+    lineStrong: '#2a2b28',
+    /** Border of an off room tile. */
+    lineTile: '#262724',
+    /** Primary text and numbers, on every surface. */
+    ink,
+    /** Text on chips and outline buttons, the media title. */
+    inkSoft: '#d9d8d2',
+    /** Supporting values, inactive nav labels, off room icons. */
+    inkSecondary: '#c9c8c2',
+    /** Metadata, section labels, status words, chevrons. */
+    inkMuted: '#9c9b95',
+    /** Tertiary hints; never smaller than 15 px. */
+    inkFaint: '#8e8d87',
+    /** The only accent, and it means ON. Never decorative. */
+    accent,
+    /** Accent at 36%: the dimmer fill and the hold-to-open sweep. */
+    accentSoft: '#f5c15c5c',
+    /** On an `accent` fill: the switch knob. */
+    onAccent: '#15130d',
+    /** A room tile with any light on. */
+    litSurface: '#26221a',
+    litLine: '#4a3f26',
+    /** Meta text on a lit tile. */
+    litInk: '#e8d9b8',
+    /** An off switch track; also the secondary button fill (Chiudi). */
+    switchOff: '#2f302d',
+    knobOff: '#8c8c86',
+    /** Text and icon of something that needs attention: a Fault. Semantic, not the accent. */
+    alert: '#ff9b80',
+    alertSurface: '#2a1611',
+    alertLine: '#5a2a1e',
+    /** The one high-contrast action per group (Apri), and the current nav item: `{ink}`. */
+    primary: ink,
+    onPrimary: '#111210',
+    /** Keyboard focus outline: `{accent}`. */
+    focus: accent,
   };
 })();
+
+/** One of Casa Panel's colour sets: every set names the same tokens. */
+export type ColorSet = { readonly [K in keyof typeof DARK]: string };
+
+/** A token's name in a colour set, `inkMuted` for `--ink-muted`. */
+export type ColorName = keyof ColorSet;
+
+/** Light or dark: which of a Theme's two sets of values is shown. */
+export type ColorScheme = 'light' | 'dark';
+
+/**
+ * Casa Panel's colours, light: for daytime. The roles are the dark set's
+ * (see each token there); only the values change, and `accent` deepens to an
+ * amber that still reads as text on a light ground.
+ */
+const LIGHT: ColorSet = (() => {
+  const ink = '#1a1b18';
+  const accent = '#9a6210';
+  return {
+    bg: '#efeee9',
+    surface: '#faf9f6',
+    surfaceTile: '#ffffff',
+    surfaceStatic: '#f5f4f0',
+    surfaceWell: '#e9e8e2',
+    surfaceControl: '#e6e5df',
+    line: '#e2e1db',
+    lineStrong: '#d3d2cb',
+    lineTile: '#e4e3dd',
+    ink,
+    inkSoft: '#33342f',
+    inkSecondary: '#4a4b45',
+    inkMuted: '#65645e',
+    inkFaint: '#6e6d67',
+    accent,
+    accentSoft: '#eaa93a99',
+    onAccent: '#ffffff',
+    litSurface: '#fbf1dc',
+    litLine: '#ebd3a2',
+    litInk: '#6b480d',
+    switchOff: '#93928b',
+    knobOff: '#ffffff',
+    alert: '#a8341a',
+    alertSurface: '#fce9e3',
+    alertLine: '#f2c4b6',
+    primary: ink,
+    onPrimary: '#faf9f6',
+    focus: accent,
+  };
+})();
+
+/** Casa Panel's tokens, as `tokens.json` (version 1) has them. */
+export const CASA = {
+  /**
+   * Two sets under the same names (#63), each with its references
+   * (`primary` is `{ink}`, `focus` is `{accent}`) resolved within it. A
+   * Theme (`themes.ts`) shows one or the other by its mode; code that reads
+   * a set directly rather than the Theme's custom properties is not themed,
+   * and takes `dark`.
+   */
+  color: { dark: DARK, light: LIGHT } as const satisfies Record<ColorScheme, ColorSet>,
+  font: { sans: 'Geist, system-ui, -apple-system, "Segoe UI", sans-serif' },
+  /** Casa Panel's named type styles, for the components that take them up. */
+  type: {
+    tempHero: { size: 144, lineHeight: 1, weight: 200, letterSpacing: '-0.05em' },
+    stat: { size: 34, lineHeight: '40px', weight: 500, letterSpacing: '-0.02em' },
+    clock: { size: 30, lineHeight: '36px', weight: 500, letterSpacing: '-0.02em' },
+    tileTitle: { size: 21, lineHeight: '26px', weight: 500, letterSpacing: '-0.01em' },
+    rowTitle: { size: 19, lineHeight: '24px', weight: 500, letterSpacing: 'normal' },
+    bodyLg: { size: 17, lineHeight: '24px', weight: 400, letterSpacing: 'normal' },
+    body: { size: 16, lineHeight: '22px', weight: 400, letterSpacing: 'normal' },
+    meta: { size: 15, lineHeight: '20px', weight: 400, letterSpacing: 'normal' },
+    label: { size: 14, lineHeight: '18px', weight: 500, letterSpacing: '0.08em' },
+  },
+  /** 4 px base: 12 between siblings, 20-24 between regions, 28 at the page sides. */
+  space: { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 7: 28 },
+  /** Radii that nest: the inner one is the outer minus the padding between them. */
+  radius: { well: 15, control: 18, card: 22, tile: 24, dock: 26, pill: 9999 },
+  /** Touch sizes are floors, not suggestions. */
+  size: {
+    canvasWidth: 1280,
+    canvasHeight: 800,
+    targetMin: 52,
+    targetControl: 56,
+    statusBarHeight: 56,
+    dockHeight: 84,
+    sidebarWidth: 380,
+  },
+};
 
 /** A token's key as a custom property name: `surfaceTile` is `surface-tile`. */
 export const kebab = (name: string | number) => String(name).replace(/[A-Z]/g, m => `-${m.toLowerCase()}`);
@@ -110,7 +172,8 @@ export const kebab = (name: string | number) => String(name).replace(/[A-Z]/g, m
  * The tokens as CSS custom properties, under the design system's own names
  * (`--surface-tile`, `--radius-tile`, `--space-3`), so a stylesheet written
  * against its `tokens.css` reads them unchanged. Mounted on `:root` by
- * `HakitTheme`.
+ * `HakitTheme`, in the dark set: the page outside a Dashboard is not themed.
+ * A Dashboard's own Theme and mode override them inside it (`themeCss`).
  */
 export function cssVariables(): string {
   return Object.entries(casaVariables())
@@ -121,9 +184,10 @@ export function cssVariables(): string {
 /**
  * The same tokens as a record, custom property name (without `--`) to value,
  * plus each named type style as `type-<name>-size`, `-line`, `-weight` and
- * `-tracking`. The document's themes (`themes.ts`) are built from it.
+ * `-tracking`, in one of the colour sets; everything but colour is the same
+ * in both. The document's themes (`themes.ts`) are built from it.
  */
-export function casaVariables(): Record<string, string> {
+export function casaVariables(scheme: ColorScheme = 'dark'): Record<string, string> {
   const px = (group: string, values: Record<string | number, number>) =>
     Object.entries(values).map(([k, v]) => [`${group}${kebab(k)}`, `${v}px`]);
   const type = Object.entries(CASA.type).flatMap(([name, s]) => [
@@ -133,7 +197,7 @@ export function casaVariables(): Record<string, string> {
     [`type-${kebab(name)}-tracking`, s.letterSpacing],
   ]);
   return Object.fromEntries([
-    ...Object.entries(CASA.color).map(([k, v]) => [kebab(k), v]),
+    ...Object.entries(CASA.color[scheme]).map(([k, v]) => [kebab(k), v]),
     ['font-sans', CASA.font.sans],
     ...px('space-', CASA.space),
     ...px('radius-', CASA.radius),
@@ -196,7 +260,9 @@ function armTokens(wall: ReturnType<typeof buildWallTokens>): ReturnType<typeof 
 }
 
 function buildWallTokens() {
-  const c = CASA.color;
+  // `t` (`ui/theme.ts`) holds values fixed at load, so it cannot follow a
+  // Theme's mode: what reads it is not themed, and stays dark.
+  const c = CASA.color.dark;
   return {
     /**
      * Casa Panel's palette under its own names, then ADR-0001's names for the

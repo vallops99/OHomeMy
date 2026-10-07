@@ -22,7 +22,7 @@ test('every custom property v reads is one the theme or the box scale sets', () 
 });
 
 test('colour, radius, spacing and type are the theme custom properties, under Casa Panel names', () => {
-  for (const name of Object.keys(CASA.color) as (keyof typeof CASA.color)[]) assert.match(v.color[name], /^var\(--[a-z-]+\)$/);
+  for (const name of Object.keys(CASA.color.dark) as (keyof typeof CASA.color.dark)[]) assert.match(v.color[name], /^var\(--[a-z-]+\)$/);
   assert.equal(v.color.surfaceTile, 'var(--surface-tile)');
   assert.equal(v.radius.tile, 'var(--radius-tile)');
   assert.equal(v.space[3], 'var(--space-3)');

@@ -3,9 +3,9 @@
  * name: `theme.ts` reads the name as a value, `vars.ts` as a custom property
  * (#62). One rule, so the two never disagree about what "on" looks like.
  */
-import type { CASA } from '../theme/tokens';
+import type { ColorName } from '../theme/tokens';
 
-export type ColorName = keyof typeof CASA.color;
+export type { ColorName };
 
 export type SurfaceOpts = {
   /** The thing is on. */
