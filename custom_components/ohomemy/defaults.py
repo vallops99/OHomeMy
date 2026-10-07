@@ -58,6 +58,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from .const import DATA_PUBLISHED
 from .panels import URL_PREFIX
 from .store import Published
+from .websocket import async_register_under
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -248,18 +249,15 @@ def async_follow_publishes(hass: HomeAssistant, published: Published) -> None:
 @callback
 def async_register_commands(hass: HomeAssistant) -> None:
     """Register the commands, once for the life of Home Assistant."""
-    for command, handler in (
-        ("subscribe", ws_subscribe),
-        ("set_user", ws_set_user),
-        ("set_system", ws_set_system),
-    ):
-        websocket_api.async_register_command(
-            hass, f"ohomemy/defaults/{command}", handler, _any_fields
-        )
-
-
-def _any_fields(msg: dict[str, Any]) -> dict[str, Any]:
-    return msg
+    async_register_under(
+        hass,
+        "ohomemy/defaults",
+        {
+            "subscribe": ws_subscribe,
+            "set_user": ws_set_user,
+            "set_system": ws_set_system,
+        },
+    )
 
 
 @websocket_api.require_admin

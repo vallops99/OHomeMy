@@ -46,16 +46,33 @@ ERR_UNSUPPORTED_VERSION = "unsupported_version"
 @callback
 def async_register_commands(hass: HomeAssistant) -> None:
     """Register every command, once for the life of Home Assistant."""
-    for command, handler in (
-        ("get", ws_get),
-        ("subscribe", ws_subscribe),
-        ("save", ws_save),
-        ("history", ws_history),
-        ("export", ws_export),
-        ("import", ws_import),
-    ):
+    async_register_under(
+        hass,
+        "ohomemy/document",
+        {
+            "get": ws_get,
+            "subscribe": ws_subscribe,
+            "save": ws_save,
+            "history": ws_history,
+            "export": ws_export,
+            "import": ws_import,
+        },
+    )
+
+
+@callback
+def async_register_under(
+    hass: HomeAssistant,
+    prefix: str,
+    handlers: dict[str, websocket_api.WebSocketCommandHandler],
+) -> None:
+    """Register each handler as `{prefix}/{command}`, letting any message through.
+
+    The handler reads its fields itself; see the module docstring.
+    """
+    for command, handler in handlers.items():
         websocket_api.async_register_command(
-            hass, f"ohomemy/document/{command}", handler, _any_fields
+            hass, f"{prefix}/{command}", handler, _any_fields
         )
 
 
