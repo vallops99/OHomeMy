@@ -38,17 +38,34 @@ _LOGGER = logging.getLogger(__name__)
 # The document's version. A minor bump is a change an older integration can
 # still read; a major bump is one it cannot, and HA then refuses to load the
 # file rather than lose what it does not understand.
-VERSION = 1
+VERSION = 2
 MINOR_VERSION = 1
 
 HISTORY_SIZE = 20
 
+
+
+def _follow_device_was_auto(document: dict[str, Any]) -> dict[str, Any]:
+    """2.1 (#70): the Mode `auto` is `follow-device`. Major, because an older
+    integration refuses a Mode it does not know."""
+
+    def theme(t: dict[str, Any]) -> dict[str, Any]:
+        return t | {"mode": "follow-device"} if t.get("mode") == "auto" else t
+
+    return document | {
+        "dashboards": [
+            d | {"settings": d["settings"] | {"theme": theme(d["settings"]["theme"])}}
+            for d in document["dashboards"]
+        ]
+    }
+
+
 # Each step brings the document up to the version it is keyed by, in order.
 # A step takes and returns the document (`{"dashboards": [...]}`); the
-# revision is not the step's business. Empty until the first change of shape.
+# revision is not the step's business.
 MIGRATIONS: list[
     tuple[tuple[int, int], Callable[[dict[str, Any]], dict[str, Any]]]
-] = []
+] = [((2, 1), _follow_device_was_auto)]
 
 type Listener = Callable[[int, dict[str, Any]], None]
 # `(before, after)`: the documents either side of a Publish. It returns the

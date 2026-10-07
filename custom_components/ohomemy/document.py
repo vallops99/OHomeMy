@@ -29,7 +29,11 @@ import re
 from typing import Any
 
 OVERFLOWS = ("fit", "scroll")
-MODES = ("light", "dark", "auto")
+MODES = ("light", "dark", "follow-device", "follow-house")
+# The Domains `follow-house` may read: each says light or dark in two states
+# (`above_horizon`/`below_horizon`, `on`/`off`).
+HOUSE_MODE_DOMAINS = ("sun", "binary_sensor", "input_boolean")
+ENTITY_ID = re.compile(r"^([a-z0-9_]+)\.[a-z0-9_]+$")
 EDGES = ("top", "bottom", "left", "right")
 VARIANTS = ("full", "compact")
 
@@ -164,10 +168,27 @@ def _settings(value: Any, path: str) -> str:
         _int(settings["idle_return"], f"{path}.idle_return", minimum=1)
     _bool(settings["back_history"], f"{path}.back_history")
 
-    theme = _obj(settings["theme"], f"{path}.theme", {"name", "mode"})
-    _str(theme["name"], f"{path}.theme.name")
-    _enum(theme["mode"], f"{path}.theme.mode", MODES)
+    _theme(settings["theme"], f"{path}.theme")
     return overflow
+
+
+def _theme(value: Any, path: str) -> None:
+    """A Theme's name and its Mode. Following the house reads one entity,
+    which is there exactly then, and is a `sun`, `binary_sensor` or
+    `input_boolean`."""
+    mode = value.get("mode") if isinstance(value, dict) else None
+    keys = {"name", "mode", "entity"} if mode == "follow-house" else {"name", "mode"}
+    theme = _obj(value, path, keys)
+    _str(theme["name"], f"{path}.name")
+    _enum(theme["mode"], f"{path}.mode", MODES)
+    if mode == "follow-house":
+        entity = theme["entity"]
+        match = ENTITY_ID.match(entity) if isinstance(entity, str) else None
+        if match is None or match.group(1) not in HOUSE_MODE_DOMAINS:
+            raise InvalidDocument(
+                f"{path}.entity",
+                f"must be an entity id in {', '.join(HOUSE_MODE_DOMAINS)}",
+            )
 
 
 def _size(value: Any, path: str) -> dict[str, int]:

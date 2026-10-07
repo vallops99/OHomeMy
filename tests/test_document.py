@@ -232,3 +232,45 @@ def test_a_renamed_dashboard_keeps_its_slug_and_a_new_one_takes_a_freed_slug() -
     new["dashboards"][0]["name"] = "Entrance"
     new["dashboards"][1] = dashboard("tablet", slug="phone")
     check_transition(old, new)
+
+
+def themed(**theme: Any) -> dict[str, Any]:
+    doc = house()
+    doc["dashboards"][0]["settings"]["theme"] = {"name": "casa-panel", **theme}
+    return doc
+
+
+@pytest.mark.parametrize("mode", ["light", "dark", "follow-device"])
+def test_a_mode_that_reads_no_entity_is_sound(mode: str) -> None:
+    validate(themed(mode=mode))
+
+
+@pytest.mark.parametrize(
+    "entity", ["sun.sun", "binary_sensor.dark_outside", "input_boolean.night"]
+)
+def test_following_the_house_reads_a_sun_binary_sensor_or_boolean(
+    entity: str,
+) -> None:
+    validate(themed(mode="follow-house", entity=entity))
+
+
+@pytest.mark.parametrize(
+    "theme",
+    [
+        {"mode": "follow-house"},
+        {"mode": "follow-house", "entity": "sensor.lux"},
+        {"mode": "follow-house", "entity": "light.kitchen"},
+        {"mode": "follow-house", "entity": "sun"},
+        {"mode": "follow-house", "entity": "sun."},
+        {"mode": "follow-house", "entity": 3},
+        {"mode": "dark", "entity": "sun.sun"},
+        {"mode": "follow-device", "entity": "sun.sun"},
+        {"mode": "auto"},
+    ],
+)
+def test_the_house_entity_is_there_exactly_when_the_mode_follows_the_house(
+    theme: dict[str, Any],
+) -> None:
+    with pytest.raises(InvalidDocument) as err:
+        validate(themed(**theme))
+    assert err.value.path.startswith("dashboards[0].settings.theme")

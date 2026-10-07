@@ -43,7 +43,7 @@ def dashboard(id: str = "wall", **overrides: Any) -> dict[str, Any]:
             },
             "idle_return": 60,
             "back_history": True,
-            "theme": {"name": "casa-panel", "mode": "auto"},
+            "theme": {"name": "casa-panel", "mode": "follow-device"},
         },
         "navbar": None,
         "pages": [page()],

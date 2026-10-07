@@ -10,7 +10,7 @@ from homeassistant.setup import async_setup_component
 
 from custom_components.ohomemy import store as store_module
 from custom_components.ohomemy.const import DATA_PUBLISHED
-from custom_components.ohomemy.document import InvalidDocument
+from custom_components.ohomemy.document import InvalidDocument, validate
 from custom_components.ohomemy.store import (
     HISTORY_SIZE,
     Conflict,
@@ -46,7 +46,7 @@ async def test_a_publish_is_written_at_once_with_the_next_revision(
 
     # Immediately: no delayed save is pending.
     stored = hass_storage[DOCUMENT_KEY]
-    assert (stored["version"], stored["minor_version"]) == (1, 1)
+    assert (stored["version"], stored["minor_version"]) == (2, 1)
     assert stored["data"] == {"revision": 1, "document": house()}
 
     again = await loaded(hass)
@@ -180,30 +180,45 @@ async def test_a_failing_recorder_loses_neither_the_publish_nor_its_entry(
 
 @pytest.fixture
 def minor_version_2(monkeypatch: pytest.MonkeyPatch) -> None:
-    """A later OHomeMy at 1.2, whose one migration renames every Dashboard."""
+    """A later OHomeMy at 2.2, whose next migration renames every Dashboard."""
 
     def rename(document: dict[str, Any]) -> dict[str, Any]:
         return {
             "dashboards": [
-                d | {"name": f"{d['name']} (1.2)"} for d in document["dashboards"]
+                d | {"name": f"{d['name']} (2.2)"} for d in document["dashboards"]
             ]
         }
 
     monkeypatch.setattr(store_module, "MINOR_VERSION", 2)
-    monkeypatch.setattr(store_module, "MIGRATIONS", [((1, 2), rename)])
+    monkeypatch.setattr(
+        store_module, "MIGRATIONS", [*store_module.MIGRATIONS, ((2, 2), rename)]
+    )
+
+
+def following_the_device_as_auto() -> dict[str, Any]:
+    """`house()` as version 1 wrote it, when `follow-device` was `auto`."""
+    old = house()
+    for d in old["dashboards"]:
+        d["settings"]["theme"]["mode"] = "auto"
+    old["dashboards"][1]["settings"]["theme"]["mode"] = "light"
+    return old
+
+
+def stored(key: str, version: int, minor: int, data: dict[str, Any]) -> dict[str, Any]:
+    return {"version": version, "minor_version": minor, "key": key, "data": data}
 
 
 async def test_an_older_stored_document_is_migrated_on_load_and_saved(
     hass: HomeAssistant, hass_storage: dict[str, Any], minor_version_2: None
 ) -> None:
     hass_storage[DOCUMENT_KEY] = {
-        "version": 1,
+        "version": 2,
         "minor_version": 1,
         "key": DOCUMENT_KEY,
         "data": {"revision": 7, "document": house()},
     }
     hass_storage[HISTORY_KEY] = {
-        "version": 1,
+        "version": 2,
         "minor_version": 1,
         "key": HISTORY_KEY,
         "data": {
@@ -216,18 +231,18 @@ async def test_an_older_stored_document_is_migrated_on_load_and_saved(
     published = await loaded(hass)
 
     assert published.revision == 7
-    assert published.document["dashboards"][0]["name"] == "Wall (1.2)"
-    assert published.history[0]["document"]["dashboards"][0]["name"] == "Wall (1.2)"
+    assert published.document["dashboards"][0]["name"] == "Wall (2.2)"
+    assert published.history[0]["document"]["dashboards"][0]["name"] == "Wall (2.2)"
     stored = hass_storage[DOCUMENT_KEY]
     assert stored["minor_version"] == 2
-    assert stored["data"]["document"]["dashboards"][0]["name"] == "Wall (1.2)"
+    assert stored["data"]["document"]["dashboards"][0]["name"] == "Wall (2.2)"
 
 
 async def test_a_document_from_a_newer_major_version_is_not_loaded(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     hass_storage[DOCUMENT_KEY] = {
-        "version": 2,
+        "version": 3,
         "minor_version": 1,
         "key": DOCUMENT_KEY,
         "data": {"revision": 3, "document": {"boards": []}},
@@ -243,7 +258,7 @@ async def test_an_export_imports_as_a_new_revision(
     await published.async_publish(house(), 0, "a")
     exported = published.export()
     assert exported == {
-        "version": 1,
+        "version": 2,
         "minor_version": 1,
         "revision": 1,
         "document": house(),
@@ -258,15 +273,15 @@ async def test_an_older_export_is_migrated_before_it_is_imported(
     hass: HomeAssistant, hass_storage: dict[str, Any], minor_version_2: None
 ) -> None:
     published = await loaded(hass)
-    exported = {"version": 1, "minor_version": 1, "revision": 9, "document": house()}
+    exported = {"version": 2, "minor_version": 1, "revision": 9, "document": house()}
     assert await published.async_import(exported, 0, "a") == 1
-    assert published.document["dashboards"][0]["name"] == "Wall (1.2)"
+    assert published.document["dashboards"][0]["name"] == "Wall (2.2)"
 
 
 @pytest.mark.parametrize(
     "exported",
     [
-        {"version": 2, "minor_version": 1, "revision": 1, "document": {}},
+        {"version": 3, "minor_version": 1, "revision": 1, "document": {}},
         {"dashboards": []},
         "not json",
     ],
@@ -284,10 +299,88 @@ async def test_setting_up_loads_the_stored_document(
     hass: HomeAssistant, hass_storage: dict[str, Any], built: Path
 ) -> None:
     hass_storage[DOCUMENT_KEY] = {
-        "version": 1,
+        "version": 2,
         "minor_version": 1,
         "key": DOCUMENT_KEY,
         "data": {"revision": 4, "document": house()},
     }
     assert await async_setup_component(hass, "ohomemy", {})
     assert hass.data[DATA_PUBLISHED].revision == 4
+
+
+async def test_a_version_1_document_following_the_device_as_auto_loads_as_follow_device(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    hass_storage[DOCUMENT_KEY] = stored(
+        DOCUMENT_KEY, 1, 1, {"revision": 5, "document": following_the_device_as_auto()}
+    )
+    entry = {"revision": 5, "saved_at": "x", "user_id": "a"}
+    hass_storage[HISTORY_KEY] = stored(
+        HISTORY_KEY,
+        1,
+        1,
+        {
+            "entries": [
+                # A field a recorder added (#67) rides along untouched.
+                entry
+                | {
+                    "document": following_the_device_as_auto(),
+                    "cleared_defaults": [{"user_id": "u1", "dashboard": "lovelace"}],
+                },
+                entry | {"revision": 4, "document": {"dashboards": []}},
+            ]
+        },
+    )
+
+    published = await loaded(hass)
+
+    modes = lambda doc: [d["settings"]["theme"]["mode"] for d in doc["dashboards"]]
+    assert published.revision == 5
+    assert modes(published.document) == ["follow-device", "light"]
+    expected = house()
+    expected["dashboards"][1]["settings"]["theme"]["mode"] = "light"
+    assert published.document == expected
+    validate(published.document)
+    newest, older = published.history
+    assert modes(newest["document"]) == ["follow-device", "light"]
+    assert newest["cleared_defaults"] == [{"user_id": "u1", "dashboard": "lovelace"}]
+    assert (newest["revision"], newest["saved_at"], newest["user_id"]) == (5, "x", "a")
+    assert older["document"] == {"dashboards": []}
+
+    # Saved at the new major version, so the next load needs no migration.
+    for key in (DOCUMENT_KEY, HISTORY_KEY):
+        assert (hass_storage[key]["version"], hass_storage[key]["minor_version"]) == (
+            2,
+            1,
+        )
+    assert modes(hass_storage[DOCUMENT_KEY]["data"]["document"]) == [
+        "follow-device",
+        "light",
+    ]
+
+
+async def test_a_version_1_export_following_the_device_as_auto_imports_as_follow_device(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    published = await loaded(hass)
+    exported = {
+        "version": 1,
+        "minor_version": 1,
+        "revision": 9,
+        "document": following_the_device_as_auto(),
+    }
+    assert await published.async_import(exported, 0, "a") == 1
+    assert published.document["dashboards"][0]["settings"]["theme"] == {
+        "name": "casa-panel",
+        "mode": "follow-device",
+    }
+
+
+def test_the_rename_leaves_every_other_mode_and_field_alone() -> None:
+    doc = house()
+    doc["dashboards"][0]["settings"]["theme"] = {
+        "name": "casa-panel",
+        "mode": "follow-house",
+        "entity": "sun.sun",
+    }
+    assert store_module.migrate(1, 1, doc) == doc
