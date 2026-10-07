@@ -13,6 +13,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import BuilderApp from '../BuilderApp';
 import { hassPatch, panelStore, type PanelInfo, type PanelRoute } from '../panel/panelProps';
+import { SCRIPT_CSS } from '../i18n/scriptCss';
 import { app, portalRoot, styles, tree } from '../panel/tree';
 import { CASA } from '../theme/tokens';
 import builderCss from './builder.css?inline';
@@ -47,7 +48,7 @@ let started = false;
 function start() {
   if (started) return;
   started = true;
-  styles.append(style(HOST_CSS), style(TYPE_CSS), style(builderCss), style(dashboardScreenCss));
+  styles.append(style(HOST_CSS), style(TYPE_CSS), style(SCRIPT_CSS), style(builderCss), style(dashboardScreenCss));
   if (!document.head.querySelector(`link[href="${FONTS}"]`)) {
     document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: FONTS }));
   }

@@ -13,6 +13,7 @@
  * No React, so `grid.test.ts` runs it under plain Node.
  */
 import type { DashboardSettings, Page, Widget } from '../document/types';
+import { SCRIPT_CSS } from '../i18n/scriptCss';
 
 /** The custom properties that size one Page's grid; `RENDERER_CSS` reads them. */
 export function gridVariables(grid: Page['grid']): Record<string, string> {
@@ -82,14 +83,7 @@ export const RENDERER_CSS = `
     direction: ltr;
   }
   .ohm-cell:dir(rtl) { direction: rtl; }
-  /* Tracking pulls Arabic's joined letters apart and breaks Devanagari's
-     headstroke: those scripts are set as their faces draw them (#59). */
-  :lang(ar), :lang(hi) { letter-spacing: 0 !important; }
-  /* A name or a title from Home Assistant or the admin runs in its own
-     direction (dir="auto"), so a Latin name in an Arabic tile is cut at
-     its end, not its start; it still lines up with the words around it. */
-  :dir(rtl) > [dir='auto'] { text-align: right; }
-  :dir(ltr) > [dir='auto'] { text-align: left; }
+  ${SCRIPT_CSS}
   .ohm-cell {
     min-width: 0;
     min-height: 0;

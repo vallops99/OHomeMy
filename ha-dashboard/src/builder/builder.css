@@ -28,21 +28,9 @@
   box-sizing: border-box;
 }
 
-/* Tracking pulls Arabic's joined letters apart and breaks Devanagari's
-   headstroke: those scripts are set as their faces draw them (#59). */
-:lang(ar),
-:lang(hi) {
-  letter-spacing: 0 !important;
-}
-
-/* A name from Home Assistant or the admin runs in its own direction
-   (`dir="auto"`) and lines up with the words around it. */
-:dir(rtl) > [dir='auto'] {
-  text-align: right;
-}
-:dir(ltr) > [dir='auto'] {
-  text-align: left;
-}
+/* The rules for the viewer's script (Arabic's and Hindi's tracking, a name
+   running in its own direction) are the renderer's too: `main.tsx` puts
+   them in from `i18n/scriptCss.ts`. */
 
 .b-loading {
   display: grid;
