@@ -35,11 +35,13 @@ Dashboard given the same slug would silently become their default.
 
 Undo gives them back (#67). The Publish's history entry records, under
 `cleared_defaults`, whose defaults it cleared: `{dashboard_id: {users,
-system}}`. A later Publish in which that Dashboard reappears, by id (an undo,
-a restore, an import), sets them again at its panel as that document names
-it, but only where they are still unset: a default chosen since wins, and a
-user removed since is skipped. The newest record for a Dashboard wins, and a
-record lasts as long as its history entry.
+system}}`, with an empty record for a Dashboard that was nobody's. A later
+Publish in which that Dashboard reappears, by id (an undo, a restore, an
+import), sets them again at its panel as that document names it, but only
+where they are still unset: a default chosen since wins, and a user removed
+since is skipped. The newest record for a Dashboard wins, so its newest
+deletion always speaks for it: an empty record sets nothing, even where an
+older one named someone. A record lasts as long as its history entry.
 
 Both run inside the Publish, before its history entry is saved, so the
 record is on disk by the time the Publish is acknowledged.
@@ -170,15 +172,15 @@ async def async_clear(
 ) -> dict[str, dict[str, Any]]:
     """Clear every default, user or system, naming a panel in `gone` (panel
     URL path by Dashboard id). Return whose, as `{dashboard_id: {users,
-    system}}`, leaving out a Dashboard that was nobody's."""
-    ids = {path: id for id, path in gone.items()}
-    cleared: dict[str, dict[str, Any]] = {}
+    system}}`, with an empty record for a Dashboard that was nobody's."""
+    ids = {path: dashboard_id for dashboard_id, path in gone.items()}
+    cleared: dict[str, dict[str, Any]] = {
+        dashboard_id: {"users": [], "system": False} for dashboard_id in gone
+    }
 
     def named(store: FrontendStore) -> dict[str, Any] | None:
-        id = ids.get(default_of(store) or "")
-        if id is None:
-            return None
-        return cleared.setdefault(id, {"users": [], "system": False})
+        dashboard_id = ids.get(default_of(store) or "")
+        return None if dashboard_id is None else cleared[dashboard_id]
 
     system = await async_system_store(hass)
     if (record := named(system)) is not None:
@@ -198,10 +200,15 @@ async def async_restore(
 ) -> None:
     """Give back the defaults recorded for each Dashboard in `back` (its panel
     URL path now, by Dashboard id), where they are still unset."""
-    for id, url_path in back.items():
+    for dashboard_id, url_path in back.items():
         # History is newest first, so the first record is the newest.
         record = next(
-            (e[CLEARED][id] for e in history if id in e.get(CLEARED, {})), None
+            (
+                e[CLEARED][dashboard_id]
+                for e in history
+                if dashboard_id in e.get(CLEARED, {})
+            ),
+            None,
         )
         if record is None:
             continue
@@ -210,10 +217,11 @@ async def async_restore(
             user = await hass.auth.async_get_user(user_id)
             if user is not None and not user.system_generated:
                 stores.append(await async_user_store(hass, user.id))
-        for store in stores:
-            if default_of(store) is None:
-                await async_set_default(store, url_path)
-        _LOGGER.debug("Restored the defaults naming %s", url_path)
+        restored = [store for store in stores if default_of(store) is None]
+        for store in restored:
+            await async_set_default(store, url_path)
+        if restored:
+            _LOGGER.debug("Restored the defaults naming %s", url_path)
 
 
 @callback
@@ -227,20 +235,24 @@ def async_follow_publishes(hass: HomeAssistant, published: Published) -> None:
         was, now = url_paths(before), url_paths(after)
         # By id, not by path: a Dashboard deleted while a new one takes its
         # slug in the same Publish is still a different Dashboard.
-        gone = {id: path for id, path in was.items() if id not in now}
-        back = {id: path for id, path in now.items() if id not in was}
-        if not gone and not back:
-            return {}
-        try:
-            # Clearing first, so a default this Publish clears is unset
-            # again for a Dashboard it brings back.
-            cleared = await async_clear(hass, gone) if gone else {}
-            if back:
+        gone = {d: path for d, path in was.items() if d not in now}
+        back = {d: path for d, path in now.items() if d not in was}
+        # The Publish stands whatever fails here; only the defaults the
+        # failing step would have touched are left as they were.
+        cleared: dict[str, dict[str, Any]] = {}
+        if gone:
+            try:
+                # Clearing first, so a default this Publish clears is unset
+                # again for a Dashboard it brings back.
+                cleared = await async_clear(hass, gone)
+            except Unavailable as err:
+                _LOGGER.warning("Default Dashboards were not cleared: %s", err)
+        if back:
+            try:
                 await async_restore(hass, published.history, back)
-        except Unavailable as err:
-            # The Publish stands; only its defaults are left as they were.
-            _LOGGER.warning("Default Dashboards were not followed: %s", err)
-            return {}
+            except Unavailable as err:
+                # What clearing did is still recorded, for an undo to give back.
+                _LOGGER.warning("Default Dashboards were not restored: %s", err)
         return {CLEARED: cleared} if cleared else {}
 
     published.async_record(record)

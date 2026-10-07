@@ -311,12 +311,34 @@ async def test_a_publish_records_the_defaults_it_clears_on_its_history_entry(
     assert await default_panels(hass, hass_read_only_user) == [None, None]
 
 
-async def test_a_publish_that_clears_nothing_records_nothing(
+async def test_a_publish_that_deletes_nothing_records_nothing(
     hass: HomeAssistant, hass_storage: dict[str, Any], wall_is_their_default: None
 ) -> None:
-    await publish(hass, dashboard("wall"))
+    await publish(hass, dashboard("wall"), dashboard("phone"), dashboard("hall"))
     entry = hass_storage[HISTORY_KEY]["data"]["entries"][0]
     assert "cleared_defaults" not in entry
+
+
+async def test_a_deletion_nobodys_default_named_still_shadows_older_records(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    admin: WsClient,
+    hass_read_only_user: User,
+) -> None:
+    await set_user(admin, hass_read_only_user.id, "wall")
+    await publish(hass, dashboard("phone"))
+    await publish(hass, dashboard("wall"), dashboard("phone"))
+    assert await default_panels(hass, hass_read_only_user) == [None, "ohomemy-wall"]
+
+    # The tablet's user clears their default on purpose; Wall goes again.
+    await set_user(admin, hass_read_only_user.id, None)
+    await publish(hass, dashboard("phone"))
+    entry = hass_storage[HISTORY_KEY]["data"]["entries"][0]
+    assert entry["cleared_defaults"] == {"wall": {"users": [], "system": False}}
+
+    # The newest deletion named nobody, so the older record is not read.
+    await publish(hass, dashboard("wall"), dashboard("phone"))
+    assert await default_panels(hass, hass_read_only_user) == [None, None]
 
 
 async def test_undoing_the_publish_gives_the_defaults_back(
@@ -449,3 +471,57 @@ async def test_without_frontend_storage_a_publish_still_succeeds(
     entries = hass_storage[HISTORY_KEY]["data"]["entries"]
     assert [e["revision"] for e in entries[:2]] == [before + 2, before + 1]
     assert "cleared_defaults" not in entries[1]
+
+
+async def test_a_failing_restore_keeps_the_record_of_what_was_cleared(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    admin: WsClient,
+    hass_read_only_user: User,
+    wall_is_their_default: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    await publish(hass, dashboard("phone"))
+    await set_user(admin, hass_read_only_user.id, "phone")
+
+    async def moved(*_args: Any) -> None:
+        raise defaults.Unavailable("moved")
+
+    monkeypatch.setattr(defaults, "async_restore", moved)
+    published = hass.data[DATA_PUBLISHED]
+    before = published.revision
+
+    # Phone goes, clearing the tablet's default, as Wall comes back.
+    await publish(hass, dashboard("wall"))
+
+    assert published.revision == before + 1
+    entry = hass_storage[HISTORY_KEY]["data"]["entries"][0]
+    assert entry["cleared_defaults"] == {
+        "phone": {"users": [hass_read_only_user.id], "system": False}
+    }
+    assert await default_panels(hass, hass_read_only_user) == [None, None]
+
+
+async def test_a_failing_clear_still_restores(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_read_only_user: User,
+    wall_is_their_default: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    await publish(hass, dashboard("phone"))
+
+    async def moved(*_args: Any) -> None:
+        raise defaults.Unavailable("moved")
+
+    monkeypatch.setattr(defaults, "async_clear", moved)
+
+    # Phone goes, and nothing is cleared or recorded, as Wall comes back.
+    await publish(hass, dashboard("wall"))
+
+    entry = hass_storage[HISTORY_KEY]["data"]["entries"][0]
+    assert "cleared_defaults" not in entry
+    assert await default_panels(hass, hass_read_only_user) == [
+        "ohomemy-wall",
+        "ohomemy-wall",
+    ]
