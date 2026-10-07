@@ -103,6 +103,16 @@ setting on each widget.
   default. A test pins the internal call, so an HA upgrade that moves it fails
   loudly. A wall tablet logs in as its own non-admin user, with "Always hide
   the sidebar" on and "suspend when hidden" off.
+- **Deleting a Dashboard clears the defaults that named it, and undo gives
+  them back** (#67). Left alone, HA would send those users to `home` rather
+  than the system default, and a later Dashboard with the same slug would
+  quietly become theirs. Defaults stay out of the document, but the history
+  entry of the Publish that cleared them records which users (and whether the
+  system default) named which Dashboard. Any later Publish in which that
+  Dashboard reappears, by id (an undo, a restore, an import), sets those
+  defaults again, but only where they are still unset: a default chosen since
+  wins, and a user removed since is skipped. The record lasts as long as its
+  history entry, and the newest one for a Dashboard wins.
 
 ### Inside a Dashboard
 
@@ -133,7 +143,9 @@ setting on each widget.
   integration provides. Its options are the Popup names across all
   Dashboards, plus none. Each Dashboard lays out its own Page for any Popup
   name and shows nothing for a name it does not define. ADR-0009's reasons
-  for using state rather than events still hold.
+  for using state rather than events still hold. Tapping a Widget on a Popup
+  that opens a Page closes the Popup house-wide, as ADR-0009's "navigating
+  out of it" did, and the Page opens underneath on that Dashboard (#67).
 - **Concerns and Faults are counted per Dashboard**, over what that Dashboard
   renders on any of its Pages.
 

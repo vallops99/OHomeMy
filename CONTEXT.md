@@ -49,7 +49,9 @@ _Avoid_: Save, deploy, apply
 **Default Dashboard**:
 The Dashboard a Home Assistant user lands on when they open Home Assistant.
 Only an admin sets it, and only in the Builder. A wall panel logs in as a user
-of its own so that it can have one.
+of its own so that it can have one. Publishing a Dashboard's deletion
+clears every Default Dashboard that named it; Publishing it back restores
+those nobody has changed since.
 _Avoid_: Home dashboard, start page
 
 ### Structure
@@ -131,7 +133,9 @@ A Page shown over whatever Page is current, opened and closed by Home
 Assistant rather than by a tap. It is opened by name. It is house-wide: every
 Dashboard that lays out a Page for that name shows it, and closing it on one
 closes it on all. A Dashboard that defines no Page for the name shows nothing.
-At most one is open at a time, and it never closes on its own.
+At most one is open at a time, and it never closes on its own. Tapping
+something on it that opens a Page closes it, house-wide, and that Page opens
+underneath on the Dashboard that was tapped.
 _Avoid_: Modal (that is @hakit's entity dialog), dialog, overlay, alert
 
 **Camera Wall**:
