@@ -9,7 +9,7 @@
  * list without closing it.
  *
  * What closes it: its close button and a tap on the backdrop (`onClose`),
- * its own idle spell (here), its Concern clearing (the chips Widget, which
+ * its own idle spell (here), its Concern clearing (the Chip Row, which
  * holds the live Concerns) and the device leaving the Page (which unmounts
  * the Widget).
  */
@@ -32,18 +32,18 @@ export function ConcernList({ concern, onClose }: { concern: Concern; onClose: (
   return createPortal(
     // The backdrop: a tap on it, and not on the card, closes the list.
     <div
-      className='ohm-status_chips-list-backdrop'
+      className='ohm-chip_row-list-backdrop'
       style={{ zIndex: Z_CONCERN_LIST }}
       onClick={e => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className='ohm-status_chips-list-card' role='dialog' aria-label={headline} data-level={concern.level}>
-        <header className='ohm-status_chips-list-header'>
-          <span className='ohm-status_chips-list-title'>{headline}</span>
+      <div className='ohm-chip_row-list-card' role='dialog' aria-label={headline} data-level={concern.level}>
+        <header className='ohm-chip_row-list-header'>
+          <span className='ohm-chip_row-list-title'>{headline}</span>
           <button
             type='button'
-            className='ohm-status_chips-list-close'
+            className='ohm-chip_row-list-close'
             onClick={onClose}
             aria-label={tr('common.close')}
             title={tr('common.close')}
@@ -51,17 +51,17 @@ export function ConcernList({ concern, onClose }: { concern: Concern; onClose: (
             <Icon name='mdi:close' size={24} />
           </button>
         </header>
-        <ul className='ohm-status_chips-list-rows'>
+        <ul className='ohm-chip_row-list-rows'>
           {rows.map(({ entity, areaName }) => (
-            <li key={entity.id} className='ohm-status_chips-list-row'>
-              <span className='ohm-status_chips-list-icon'>
+            <li key={entity.id} className='ohm-chip_row-list-row'>
+              <span className='ohm-chip_row-list-icon'>
                 <Icon name={DOMAIN_ICON[entity.domain] ?? 'mdi:help-circle-outline'} size={26} />
               </span>
-              <span className='ohm-status_chips-list-text'>
-                <span className='ohm-status_chips-list-name' dir='auto'>
+              <span className='ohm-chip_row-list-text'>
+                <span className='ohm-chip_row-list-name' dir='auto'>
                   {entity.name}
                 </span>
-                <span className='ohm-status_chips-list-area'>{areaName}</span>
+                <span className='ohm-chip_row-list-area'>{areaName}</span>
               </span>
             </li>
           ))}

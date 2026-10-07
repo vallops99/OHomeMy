@@ -4,7 +4,7 @@
  *
  * The ranking is the one `./health` has always had, ranked by what would
  * stop someone leaving the house: a Fault the Dashboard cannot see past,
- * then an open way in, then a lit zone. What changed is what is counted.
+ * then an open way in, then a light left on. What changed is what is counted.
  * The old rule asked the registries (an Area, a Label, a Group helper)
  * whether an entity was rendered anywhere; now the Dashboard's document says
  * exactly what it shows, on any of its Pages (`../document/shows`), and only
@@ -14,8 +14,8 @@
  * - **Open**: a door, window or gate the Dashboard shows, standing open.
  * - **Lit**: a light a Widget names itself, on. A named light is the one a
  *   Widget stands for (a Room Tile's chosen light, a toggle's), which is
- *   what a zone's `main` light used to be; the other lights a Room Tile
- *   counts in its Area are not each a zone.
+ *   what an Area's `main` light used to be; the other lights a Room Tile
+ *   counts in its Area are not each counted.
  *
  * No React, no @hakit: `verdict.test.ts` runs this under plain Node. The
  * words are the Widgets', not this module's.

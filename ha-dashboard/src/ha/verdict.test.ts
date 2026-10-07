@@ -42,7 +42,7 @@ test('nothing shown, nothing to report', () => {
   assert.equal(verdictOf([]), null);
 });
 
-test('worst first: a Fault, then an open way in, then a lit zone', () => {
+test('worst first: a Fault, then an open way in, then a light left on', () => {
   const house = [
     entity('light.salone', 'on'),
     entity('lock.gate', 'unlocked'),
@@ -79,7 +79,7 @@ test('an entity shown from its Area counts: an Unavailable light a Room Tile cou
   assert.deepEqual(concernAt(concerns, 'fault')?.entities, [lamp]);
 });
 
-test('a lit zone is a light a Widget names, not every light shown from an Area', () => {
+test('a light on is one a Widget names, not every light shown from an Area', () => {
   const chosen = entity('light.salone', 'on', { areaId: 'salone' });
   const other = entity('light.lamp', 'on', { areaId: 'salone' });
   const concerns = dashboardConcerns([chosen, other], shows(['light.salone'], { salone: ['light'] }));

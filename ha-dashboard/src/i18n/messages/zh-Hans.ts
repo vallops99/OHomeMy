@@ -182,7 +182,7 @@ export const zhHans: Catalogue = {
 
   'chips.fault': { other: '{count} 个故障' },
   'chips.open': { other: '{count} 个出入口开着' },
-  'chips.lit': { other: '{count} 个区域亮着' },
+  'chips.lit': { other: '{count} 盏灯亮着' },
   'chips.cameras': { other: '{count} 个摄像头' },
   'chips.camerasDown': '{count} 个不可用',
   'chips.motion': '检测到移动',
@@ -401,7 +401,7 @@ export const zhHans: Catalogue = {
   'builder.dashboard.navbar.icon': '图标',
   'builder.dashboard.navbar.add': '添加项目',
   'builder.dashboard.kind.clock': '时钟',
-  'builder.dashboard.kind.status_chips': '状态标签',
+  'builder.dashboard.kind.chip_row': '标签行',
   'builder.dashboard.kind.stats': '统计',
   'builder.dashboard.kind.camera_wall': '摄像头墙',
   'builder.dashboard.kind.group': '分组',

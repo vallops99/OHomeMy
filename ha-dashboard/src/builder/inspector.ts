@@ -187,7 +187,7 @@ export function moveItem<T>(list: readonly T[], index: number, by: -1 | 1): T[] 
  */
 export const DEFAULT_SIZE: Readonly<Record<string, { w: number; h: number }>> = {
   clock: { w: 4, h: 1 },
-  status_chips: { w: 6, h: 1 },
+  chip_row: { w: 6, h: 1 },
   stats: { w: 4, h: 2 },
   camera_wall: { w: 8, h: 5 },
   group: { w: 4, h: 3 },

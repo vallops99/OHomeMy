@@ -199,7 +199,7 @@ export const en = {
 
   'chips.fault': { one: '{count} fault', other: '{count} faults' },
   'chips.open': { one: '{count} way in open', other: '{count} ways in open' },
-  'chips.lit': { one: '{count} zone lit', other: '{count} zones lit' },
+  'chips.lit': { one: '{count} light on', other: '{count} lights on' },
   'chips.cameras': { one: '{count} camera', other: '{count} cameras' },
   'chips.camerasDown': '{count} unavailable',
   'chips.motion': 'motion detected',
@@ -428,7 +428,7 @@ export const en = {
   'builder.dashboard.navbar.icon': 'Icon',
   'builder.dashboard.navbar.add': 'Add item',
   'builder.dashboard.kind.clock': 'Clock',
-  'builder.dashboard.kind.status_chips': 'Status chips',
+  'builder.dashboard.kind.chip_row': 'Chip Row',
   'builder.dashboard.kind.stats': 'Stats',
   'builder.dashboard.kind.camera_wall': 'Camera Wall',
   'builder.dashboard.kind.group': 'Group',

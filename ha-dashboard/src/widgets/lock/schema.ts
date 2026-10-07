@@ -4,7 +4,7 @@
  * hold is where the safety is: a gate opened by a stray tap is a gate open
  * onto the street (`ui/accessHold.ts`).
  *
- * One form, in a card of its own; in a Group, a row of the Group's card.
+ * One form, in a card of its own; in a Group, one of the Group's entries.
  *
  * Its Default title is the entity's own name. Unavailable, it is the Fault
  * tile (`shared/shapes.tsx`).

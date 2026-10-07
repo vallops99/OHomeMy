@@ -1,5 +1,5 @@
 /**
- * The status chips Widget (#53): `ui/ChipRow`'s job, laid out by its box and
+ * The Chip Row Widget (#53): `ui/ChipRow`'s job, laid out by its box and
  * coloured through the theme's custom properties.
  *
  * The Fault chip is the only one in the `alert` tone, so it stays
@@ -20,11 +20,11 @@ import { AlarmModal } from '../../ui/AlarmModal';
 import { Icon } from '../../ui/Icon';
 import { pressable } from '../../ui/pressable';
 import type { WidgetProps } from '../types';
-import { statusChips, type StatusChip } from './chips';
+import { chipRow, type Chip } from './chips';
 import { ConcernList } from './ConcernList';
-import type { statusChipsSchema } from './schema';
+import type { chipRowSchema } from './schema';
 
-export function StatusChipsWidget({ settings }: WidgetProps<(typeof statusChipsSchema)['settings']>) {
+export function ChipRowWidget({ settings }: WidgetProps<(typeof chipRowSchema)['settings']>) {
   const concerns = useConcerns();
   const entities = useEntities();
   const [openLevel, setOpenLevel] = useState<ConcernLevel | null>(null);
@@ -33,14 +33,14 @@ export function StatusChipsWidget({ settings }: WidgetProps<(typeof statusChipsS
   const cameras = settings.cameras.flatMap(id => entities.get(id) ?? []);
   const moving = cameras.filter(c => cameraMoving(c, entities.values()));
   const alarm = (settings.alarm && entities.get(settings.alarm)) || null;
-  const chips = statusChips({ concerns, cameras, moving, alarm });
+  const chips = chipRow({ concerns, cameras, moving, alarm });
 
   // Set during render, React's way to adjust state to a changed prop: the
   // list closes once its Concern clears, and does not come back by itself.
   const concern = openLevel === null ? null : concernAt(concerns, openLevel);
   if (openLevel !== null && concern === null) setOpenLevel(null);
 
-  const onPress = (chip: StatusChip): (() => void) | undefined => {
+  const onPress = (chip: Chip): (() => void) | undefined => {
     const opens = chip.opens;
     if (opens?.kind === 'concern') return () => setOpenLevel(opens.level);
     if (opens?.kind === 'alarm') return () => setAlarmOpen(true);
@@ -48,13 +48,13 @@ export function StatusChipsWidget({ settings }: WidgetProps<(typeof statusChipsS
   };
 
   return (
-    <div className='ohm-status_chips'>
+    <div className='ohm-chip_row'>
       {chips.map(chip => {
         const press = pressable(onPress(chip));
         return (
-          <div key={chip.key} {...press} className='ohm-status_chips-chip' data-tone={chip.tone}>
+          <div key={chip.key} {...press} className='ohm-chip_row-chip' data-tone={chip.tone}>
             <Icon name={chip.icon} size={22} />
-            <span className='ohm-status_chips-text'>{chip.text}</span>
+            <span className='ohm-chip_row-text'>{chip.text}</span>
           </div>
         );
       })}

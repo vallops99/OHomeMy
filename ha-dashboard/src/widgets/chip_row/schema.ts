@@ -1,6 +1,6 @@
 /**
- * The status chips (#53): Casa Panel's StatusChips in one row, saying the
- * Dashboard's Concerns and, when chosen, its cameras and its alarm.
+ * The Chip Row (#53): Casa Panel's StatusChip pills in one row, saying
+ * the Dashboard's Concerns and, when chosen, its cameras and its alarm.
  *
  * - A Fault chip and an open-way-in chip, whenever the Dashboard has one,
  *   counted over everything it shows on any Page. Each opens its Concern
@@ -14,8 +14,8 @@
  */
 import { defineSchema } from '../../document/schema';
 
-export const statusChipsSchema = defineSchema({
-  kind: 'status_chips',
+export const chipRowSchema = defineSchema({
+  kind: 'chip_row',
   variants: ['full'],
   titled: false,
   settings: {

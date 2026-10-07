@@ -185,7 +185,7 @@ export const it: Catalogue = {
 
   'chips.fault': { one: '{count} guasto', other: '{count} guasti' },
   'chips.open': { one: '{count} accesso aperto', other: '{count} accessi aperti' },
-  'chips.lit': { one: '{count} zona accesa', other: '{count} zone accese' },
+  'chips.lit': { one: '{count} luce accesa', other: '{count} luci accese' },
   'chips.cameras': { one: '{count} telecamera', other: '{count} telecamere' },
   'chips.camerasDown': '{count} non disponibili',
   'chips.motion': 'movimento rilevato',
@@ -414,7 +414,7 @@ export const it: Catalogue = {
   'builder.dashboard.navbar.icon': 'Icona',
   'builder.dashboard.navbar.add': 'Aggiungi voce',
   'builder.dashboard.kind.clock': 'Orologio',
-  'builder.dashboard.kind.status_chips': 'Chip di stato',
+  'builder.dashboard.kind.chip_row': 'Riga di chip',
   'builder.dashboard.kind.stats': 'Statistiche',
   'builder.dashboard.kind.camera_wall': 'Parete di telecamere',
   'builder.dashboard.kind.group': 'Gruppo',

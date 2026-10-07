@@ -182,7 +182,7 @@ export const hi: Catalogue = {
 
   'chips.fault': { one: '{count} खराबी', other: '{count} खराबियाँ' },
   'chips.open': { one: '{count} प्रवेश खुला', other: '{count} प्रवेश खुले' },
-  'chips.lit': { one: '{count} ज़ोन रोशन', other: '{count} ज़ोन रोशन' },
+  'chips.lit': { one: '{count} लाइट चालू', other: '{count} लाइटें चालू' },
   'chips.cameras': { one: '{count} कैमरा', other: '{count} कैमरे' },
   'chips.camerasDown': '{count} उपलब्ध नहीं',
   'chips.motion': 'हलचल मिली',
@@ -409,7 +409,7 @@ export const hi: Catalogue = {
   'builder.dashboard.navbar.icon': 'आइकन',
   'builder.dashboard.navbar.add': 'आइटम जोड़ें',
   'builder.dashboard.kind.clock': 'घड़ी',
-  'builder.dashboard.kind.status_chips': 'स्थिति चिप',
+  'builder.dashboard.kind.chip_row': 'चिप पंक्ति',
   'builder.dashboard.kind.stats': 'आँकड़े',
   'builder.dashboard.kind.camera_wall': 'कैमरा वॉल',
   'builder.dashboard.kind.group': 'समूह',

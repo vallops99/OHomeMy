@@ -1,13 +1,13 @@
 /**
- * The status chips, decided (#53, from `ui/statusChips.ts`): in this order a
- * Fault, an open way in, the cameras, the alarm, each only when there is one
- * to show. Never capped: a Concern hidden to keep the row short would be a
+ * The Chip Row's chips, decided (#53, from `ui/statusChips.ts`): in this
+ * order a Fault, an open way in, the cameras, the alarm, each only when there
+ * is one to show. Never capped: a Concern hidden to keep the row short would be a
  * lie (CONTEXT.md, Concern).
  *
  * The Concerns are the Dashboard's, counted over every Page of it
  * (`ha/verdict.ts`), so a camera on the cameras' Page going Unavailable
  * raises the Fault chip on the Home Page. A Fault does not silence an open
- * gate: each Concern gets its chip. Lit zones are not a chip; the `stats`
+ * gate: each Concern gets its chip. Lights on are not a chip; the `stats`
  * Widget says them.
  *
  * The camera chip opens nothing: the Page of the cameras' Feeds used to be
@@ -36,7 +36,7 @@ export const CONCERN_ICON: Record<ConcernLevel, string> = {
 /** What a chip does when tapped: open its Concern list, the alarm's dialog, or nothing. */
 export type ChipOpens = { kind: 'concern'; level: ConcernLevel } | { kind: 'alarm' } | null;
 
-export type StatusChip = {
+export type Chip = {
   key: 'fault' | 'open' | 'cameras' | 'alarm';
   /** `alert` only for a Fault (Casa Panel's StatusChip); everything else is calm. */
   tone: 'alert' | 'neutral';
@@ -46,7 +46,7 @@ export type StatusChip = {
   opens: ChipOpens;
 };
 
-export type StatusChipsInput = {
+export type ChipRowInput = {
   /** The Dashboard's Concerns, worst first. */
   concerns: readonly Concern[];
   /** The Widget's cameras: none, and there is no camera chip. */
@@ -67,8 +67,8 @@ function cameraText(cameras: readonly Entity[], moving: readonly Entity[]): stri
   return `${tr('chips.cameras', { count: cameras.length })} · ${detail}`;
 }
 
-export function statusChips({ concerns, cameras, moving, alarm }: StatusChipsInput): StatusChip[] {
-  const chips: StatusChip[] = [];
+export function chipRow({ concerns, cameras, moving, alarm }: ChipRowInput): Chip[] {
+  const chips: Chip[] = [];
   for (const concern of concerns) {
     if (concern.level === 'lit') continue;
     chips.push({
