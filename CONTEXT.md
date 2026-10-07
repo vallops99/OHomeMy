@@ -161,16 +161,22 @@ _Avoid_: Activity, detection
 ### State
 
 **Verdict**:
-The house's state as one ranked judgement (a fault, an open way in, a lit
-zone, or nothing to report) rather than a list of readings.
+The house's state as one ranked judgement (a fault, an open way in, a light
+left on, or nothing to report) rather than a list of readings.
 _Avoid_: Status, summary, overview
 
 **Concern**:
-One ranked kind of thing worth reporting (Faults, open ways in, lit zones)
+One ranked kind of thing worth reporting (Faults, open ways in, lights on)
 and the entities behind it, counted over what one Dashboard shows. The Verdict
 is the highest-ranked Concern. Concerns are never capped: hiding one to keep
 things short would be a lie.
 _Avoid_: Issue, alert, warning, health
+
+**Chip Row**:
+A Widget holding a row of chips: one for each Concern worth shouting about
+(Faults, open ways in), one for the cameras and one for the alarm. Tapping a
+Concern's chip opens its Concern list. Lights on get no chip.
+_Avoid_: Status chips, status bar
 
 **Concern list**:
 The entities behind one Concern, shown over the current Page when the
