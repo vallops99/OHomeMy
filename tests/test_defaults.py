@@ -197,7 +197,7 @@ async def test_only_a_person_has_a_default(
     assert result["error"]["code"] == "not_found"
 
 
-async def test_subscribe_lists_people_and_follows_their_defaults(
+async def test_subscribe_lists_login_users_and_follows_their_defaults(
     hass: HomeAssistant,
     admin: WsClient,
     wall_tablet: WsClient,

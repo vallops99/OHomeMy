@@ -133,7 +133,7 @@ async def async_set_default(store: FrontendStore, url_path: str | None) -> None:
     await store.async_set_item(CORE, core)
 
 
-async def async_people(hass: HomeAssistant) -> list[User]:
+async def async_login_users(hass: HomeAssistant) -> list[User]:
     """The users a person logs in as. HA's own system users are not."""
     users = await hass.auth.async_get_users()
     return sorted(
@@ -146,7 +146,7 @@ async def async_state(hass: HomeAssistant) -> dict[str, Any]:
     """`{system, users}`: every default, as the panel URL path it names."""
     system = await async_system_store(hass)
     users = []
-    for user in await async_people(hass):
+    for user in await async_login_users(hass):
         store = await async_user_store(hass, user.id)
         users.append(
             {
@@ -184,7 +184,7 @@ async def async_clear(
     if (record := named(system)) is not None:
         await async_set_default(system, None)
         record["system"] = True
-    for user in await async_people(hass):
+    for user in await async_login_users(hass):
         store = await async_user_store(hass, user.id)
         if (record := named(store)) is not None:
             await async_set_default(store, None)
@@ -277,7 +277,7 @@ async def ws_subscribe(
         # writes, so the Builder never shows a stale default.
         unsubscribe_stores()
         stores = [await async_system_store(hass)]
-        stores += [await async_user_store(hass, u.id) for u in await async_people(hass)]
+        stores += [await async_user_store(hass, u.id) for u in await async_login_users(hass)]
         unsubs.extend(store.async_subscribe(CORE, changed) for store in stores)
         await send()
 
