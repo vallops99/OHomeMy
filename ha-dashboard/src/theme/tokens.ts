@@ -103,7 +103,8 @@ export const CASA = (() => {
   };
 })();
 
-const kebab = (name: string | number) => String(name).replace(/[A-Z]/g, m => `-${m.toLowerCase()}`);
+/** A token's key as a custom property name: `surfaceTile` is `surface-tile`. */
+export const kebab = (name: string | number) => String(name).replace(/[A-Z]/g, m => `-${m.toLowerCase()}`);
 
 /**
  * The tokens as CSS custom properties, under the design system's own names

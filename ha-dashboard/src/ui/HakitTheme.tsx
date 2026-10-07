@@ -17,7 +17,9 @@
 import { ThemeProvider } from '@hakit/components';
 import { hexToHsl } from '../theme/color';
 import { cssVariables } from '../theme/tokens';
+import { isPhone } from './device';
 import { t } from './theme';
+import { boxScaleVariables } from './vars';
 
 const ground = hexToHsl(t.color.surface);
 const accent = hexToHsl(t.color.accent);
@@ -39,6 +41,16 @@ const roots = `
   --ha-A700-l: ${accent.l}%;
 `;
 
+/**
+ * `MediaCard` folds in two on a phone. A Widget's box decides that for
+ * itself (`widgets/media`); the label-driven Dashboard has only the device.
+ */
+const PHONE_MEDIA_CARD = `
+  --ohm-media-wrap: wrap;
+  --ohm-media-text-flex: 1 1 calc(100% - 64px - ${t.space.md}px);
+  --ohm-media-volume-flex: 1;
+`;
+
 export function HakitTheme() {
   return (
     <ThemeProvider
@@ -52,9 +64,15 @@ export function HakitTheme() {
         }
 
         /* Casa Panel's tokens under its own names (ADR-0013), for any
-           stylesheet written against them, and the page shell it asks for. */
+           stylesheet written against them, and the page shell it asks for.
+           Then the box scale (vars.ts) at the page's root, by device: what
+           the label-driven Dashboard and an overlay over the whole screen
+           are sized by, since there the screen is the box. A Widget's own
+           box sets its own (#62). */
         :root {
           ${cssVariables()}
+          ${boxScaleVariables(t)}
+          ${isPhone ? PHONE_MEDIA_CARD : ''}
         }
         body {
           margin: 0;

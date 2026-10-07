@@ -8,6 +8,7 @@
  * is named after the kind (`Widget.kind`), which is checked below.
  */
 import type { Fields, WidgetSchema } from '../document/schema';
+import { BOX_SCALE_CSS } from '../ui/vars';
 import type { WidgetKind } from './types';
 
 const modules = import.meta.glob<{ default: WidgetKind<Fields> }>('./*/index.ts', { eager: true });
@@ -31,8 +32,8 @@ export function widgetSchemas(): WidgetSchema[] {
   return [...KINDS.values()].map(k => k.schema);
 }
 
-/** Every kind's own CSS, joined: the renderer puts it in the shadow root once. */
-export const WIDGETS_CSS = [...KINDS.values()]
-  .map(k => k.css ?? '')
-  .filter(Boolean)
-  .join('\n');
+/**
+ * Every kind's own CSS, joined, after the box scale every Widget's box sets
+ * (`ui/vars.ts`): the renderer puts it in the shadow root once.
+ */
+export const WIDGETS_CSS = [BOX_SCALE_CSS, ...[...KINDS.values()].map(k => k.css ?? '')].filter(Boolean).join('\n');
