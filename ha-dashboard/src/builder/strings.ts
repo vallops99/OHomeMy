@@ -235,7 +235,9 @@ export const strings = {
     get lostTitle() {
       return tr('builder.defaults.lostTitle');
     },
-    lost: (name: string, who: string[]) => tr('builder.defaults.lost', { name, who: fmt.list(who) }),
+    /** Where they land: the surviving system default, or else Home Assistant's. */
+    lost: (name: string, who: string[], fallback: 'system' | 'home-assistant') =>
+      tr(fallback === 'system' ? 'builder.defaults.lostToSystem' : 'builder.defaults.lost', { name, who: fmt.list(who) }),
   },
 
   get confirm() {

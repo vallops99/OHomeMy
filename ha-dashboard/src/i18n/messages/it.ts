@@ -303,7 +303,9 @@ export const it: Catalogue = {
   'builder.defaults.publishFirst': '{name} (prima Pubblicala)',
   'builder.defaults.lostTitle': 'Alcune Dashboard predefinite verranno azzerate',
   'builder.defaults.lost':
-    '«{name}» è eliminata in questa Bozza ed è la Dashboard predefinita di {who}. Quando Pubblichi, torneranno alla predefinita di Home Assistant.',
+    '«{name}» è eliminata in questa Bozza ed è la Dashboard predefinita di {who}. Quando Pubblichi, torneranno alla predefinita di Home Assistant. Se annulli la Pubblicazione, queste predefinite tornano, a meno che nel frattempo non ne sia stata scelta un’altra.',
+  'builder.defaults.lostToSystem':
+    '«{name}» è eliminata in questa Bozza ed è la Dashboard predefinita di {who}. Quando Pubblichi, torneranno alla predefinita di tutti gli altri. Se annulli la Pubblicazione, queste predefinite tornano, a meno che nel frattempo non ne sia stata scelta un’altra.',
 
   'editor.edit': 'Modifica layout',
   'editor.back': 'Tutte le Dashboard',

@@ -365,7 +365,8 @@ export const ar: Catalogue = {
   'builder.defaults.other': 'لوحة أخرى: /{urlPath}',
   'builder.defaults.publishFirst': '{name} (انشرها أولًا)',
   'builder.defaults.lostTitle': 'ستُمسح لوحات افتراضية',
-  'builder.defaults.lost': '«{name}» محذوفة في هذه المسودة، وهي اللوحة الافتراضية لـ {who}. عند النشر يعودون إلى افتراضي Home Assistant.',
+  'builder.defaults.lost': '«{name}» محذوفة في هذه المسودة، وهي اللوحة الافتراضية لـ {who}. عند النشر يعودون إلى افتراضي Home Assistant. التراجع عن النشر يعيد هذه الافتراضيات، ما لم يُختر غيرها منذ ذلك الحين.',
+  'builder.defaults.lostToSystem': '«{name}» محذوفة في هذه المسودة، وهي اللوحة الافتراضية لـ {who}. عند النشر يعودون إلى افتراضي الجميع غيرهم. التراجع عن النشر يعيد هذه الافتراضيات، ما لم يُختر غيرها منذ ذلك الحين.',
 
   'editor.edit': 'تعديل التخطيط',
   'editor.back': 'كل اللوحات',

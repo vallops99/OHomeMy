@@ -298,7 +298,8 @@ export const zhHans: Catalogue = {
   'builder.defaults.other': '其他面板：/{urlPath}',
   'builder.defaults.publishFirst': '{name}（请先发布）',
   'builder.defaults.lostTitle': '部分默认仪表板将被清除',
-  'builder.defaults.lost': '“{name}”在此草稿中已删除，而它是 {who} 的默认仪表板。发布后，他们将回到 Home Assistant 的默认。',
+  'builder.defaults.lost': '“{name}”在此草稿中已删除，而它是 {who} 的默认仪表板。发布后，他们将回到 Home Assistant 的默认。撤销该次发布会恢复这些默认，除非之后已另选其他默认。',
+  'builder.defaults.lostToSystem': '“{name}”在此草稿中已删除，而它是 {who} 的默认仪表板。发布后，他们将回到其他所有人的默认。撤销该次发布会恢复这些默认，除非之后已另选其他默认。',
 
   'editor.edit': '编辑布局',
   'editor.back': '所有仪表板',

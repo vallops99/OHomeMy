@@ -8,7 +8,8 @@
  * Published Dashboard can be chosen. A Dashboard deleted in the Draft is
  * still Published until the Draft is, and on that Publish the integration
  * clears every default naming it (`defaults.py`): its users fall back to the
- * system default, then to Home Assistant's own.
+ * system default, then to Home Assistant's own. Undoing that Publish gives
+ * them back, unless one has been chosen since (#67).
  */
 import type { Dashboard, OHomeMyDocument } from '../document/types';
 import type { Defaults, UserDefault } from '../ha';
@@ -43,17 +44,23 @@ export function choices(published: OHomeMyDocument, draft: OHomeMyDocument): Cho
   ];
 }
 
-/** A Dashboard the Draft deletes, and whose default it is. */
-export type LostDefault = { dashboard: Dashboard; users: UserDefault[]; system: boolean };
+/**
+ * A Dashboard the Draft deletes, whose default it is, and where they land
+ * once it is Published: the system default, if one survives the Publish, or
+ * else Home Assistant's own.
+ */
+export type LostDefault = { dashboard: Dashboard; users: UserDefault[]; system: boolean; fallback: 'system' | 'home-assistant' };
 
 /** The Dashboards deleted in the Draft that someone, or the system, has as their default. */
 export function lostDefaults(base: OHomeMyDocument, draft: OHomeMyDocument, defaults: Defaults): LostDefault[] {
   const kept = new Set(draft.dashboards.map(d => d.id));
-  return base.dashboards
+  const lost = base.dashboards
     .filter(d => !kept.has(d.id))
     .map(dashboard => {
       const path = panelPath(dashboard.slug);
       return { dashboard, users: defaults.users.filter(u => u.default_panel === path), system: defaults.system === path };
     })
     .filter(lost => lost.system || lost.users.length > 0);
+  const fallback = defaults.system !== null && !lost.some(l => l.system) ? 'system' : 'home-assistant';
+  return lost.map(l => ({ ...l, fallback }));
 }

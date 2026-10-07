@@ -141,6 +141,43 @@ async def test_an_old_publish_from_history_can_be_published_again(
     assert published.document == house()
 
 
+async def test_a_recorder_adds_to_the_history_entry_before_it_is_saved(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    published = await loaded(hass)
+    heard: list[Any] = []
+
+    async def recorder(
+        before: dict[str, Any], after: dict[str, Any]
+    ) -> dict[str, Any]:
+        # After the listeners, and with the history as it was before this Publish.
+        heard.append((published.document is after, len(published.history)))
+        return {"seen": [len(before["dashboards"]), len(after["dashboards"])]}
+
+    published.async_record(recorder)
+    await published.async_publish(house(), 0, "a")
+
+    assert heard == [(True, 0)]
+    stored = hass_storage[HISTORY_KEY]["data"]["entries"][0]
+    assert stored["revision"] == 1
+    assert stored["seen"] == [0, len(house()["dashboards"])]
+
+
+async def test_a_failing_recorder_loses_neither_the_publish_nor_its_entry(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    published = await loaded(hass)
+
+    async def recorder(
+        before: dict[str, Any], after: dict[str, Any]
+    ) -> dict[str, Any]:
+        raise RuntimeError("broken")
+
+    published.async_record(recorder)
+    assert await published.async_publish(house(), 0, "a") == 1
+    assert hass_storage[HISTORY_KEY]["data"]["entries"][0]["revision"] == 1
+
+
 @pytest.fixture
 def minor_version_2(monkeypatch: pytest.MonkeyPatch) -> None:
     """A later OHomeMy at 1.2, whose one migration renames every Dashboard."""

@@ -50,10 +50,10 @@ export function DefaultsSection({ session }: { session: Session }) {
       </div>
       <p className='b-meta'>{strings.defaults.body}</p>
 
-      {lost.map(({ dashboard, users, system }) => (
+      {lost.map(({ dashboard, users, system, fallback }) => (
         <div key={dashboard.id} className='b-banner b-defaults-lost' role='status'>
           <strong className='b-banner-title'>{strings.defaults.lostTitle}</strong>
-          <p>{strings.defaults.lost(dashboard.name, [...users.map(u => u.name), ...(system ? [strings.defaults.systemName] : [])])}</p>
+          <p>{strings.defaults.lost(dashboard.name, [...users.map(u => u.name), ...(system ? [strings.defaults.systemName] : [])], fallback)}</p>
         </div>
       ))}
 

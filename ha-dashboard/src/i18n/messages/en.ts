@@ -319,7 +319,9 @@ export const en = {
   'builder.defaults.publishFirst': '{name} (Publish it first)',
   'builder.defaults.lostTitle': 'Default Dashboards will be cleared',
   'builder.defaults.lost':
-    '“{name}” is deleted in this Draft, and it is the Default Dashboard of {who}. When you Publish, they go back to Home Assistant’s default.',
+    '“{name}” is deleted in this Draft, and it is the Default Dashboard of {who}. When you Publish, they go back to Home Assistant’s default. Undoing the Publish gives these defaults back, unless another has been chosen since.',
+  'builder.defaults.lostToSystem':
+    '“{name}” is deleted in this Draft, and it is the Default Dashboard of {who}. When you Publish, they go back to the default for everyone else. Undoing the Publish gives these defaults back, unless another has been chosen since.',
 
   // ── The Dashboard editor (`builder/editorStrings.ts`) ───────────────
   'editor.edit': 'Edit layout',

@@ -53,3 +53,20 @@ test('a Draft deleting a Dashboard someone has as their default says whose', () 
   );
   assert.deepEqual(lostDefaults(base, base, defaults), []);
 });
+
+test('whose default is cleared falls back to the system default only if that one survives the Publish', () => {
+  const base = doc(dash('wall'), dash('phone'), dash('spare'));
+  const tablet = user('tablet', 'ohomemy-wall');
+  const fallbacks = (draft: OHomeMyDocument, system: string | null) =>
+    lostDefaults(base, draft, { system, users: [tablet] }).map(l => [l.dashboard.id, l.fallback]);
+
+  assert.deepEqual(fallbacks(doc(dash('phone')), 'ohomemy-phone'), [['wall', 'system']]);
+  assert.deepEqual(fallbacks(doc(dash('phone')), 'lovelace'), [['wall', 'system']]);
+  assert.deepEqual(fallbacks(doc(dash('phone')), null), [['wall', 'home-assistant']]);
+  // The same Publish clears the system default too, so nobody lands on it.
+  assert.deepEqual(fallbacks(doc(dash('phone')), 'ohomemy-spare'), [
+    ['wall', 'home-assistant'],
+    ['spare', 'home-assistant'],
+  ]);
+  assert.deepEqual(fallbacks(doc(dash('phone'), dash('spare')), 'ohomemy-wall'), [['wall', 'home-assistant']]);
+});

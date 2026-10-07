@@ -12,12 +12,18 @@ The losing Builder already holds the newer document from its subscription.
 first, for undo. Its entries are documents too, so it shares the document's
 version and runs the same migrations: an old entry can always be Published
 again.
+
+An entry may carry more than the Publish itself: a recorder, awaited inside
+the Publish before its entry is saved, adds what it did because of it (the
+Default Dashboards it cleared, #67). Such fields are optional, so an entry
+written before one existed still loads and needs no migration.
 """
 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+import logging
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -26,6 +32,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .document import check_transition, empty_document, validate
+
+_LOGGER = logging.getLogger(__name__)
 
 # The document's version. A minor bump is a change an older integration can
 # still read; a major bump is one it cannot, and HA then refuses to load the
@@ -43,6 +51,11 @@ MIGRATIONS: list[
 ] = []
 
 type Listener = Callable[[int, dict[str, Any]], None]
+# `(before, after)`: the documents either side of a Publish. It returns the
+# fields it adds to that Publish's history entry.
+type Recorder = Callable[
+    [dict[str, Any], dict[str, Any]], Awaitable[dict[str, Any]]
+]
 
 
 class Conflict(Exception):
@@ -124,6 +137,7 @@ class Published:
         self.document: dict[str, Any] = empty_document()
         self._history: list[dict[str, Any]] = []
         self._listeners: list[Listener] = []
+        self._recorders: list[Recorder] = []
         # One Publish at a time: the revision check and the write that follows
         # it must not interleave with another's.
         self._lock = asyncio.Lock()
@@ -142,6 +156,17 @@ class Published:
         self._listeners.append(listener)
         return lambda: self._listeners.remove(listener)
 
+    @callback
+    def async_record(self, recorder: Recorder) -> Callable[[], None]:
+        """Await `recorder(before, after)` in every Publish, after the listeners
+        and before the history entry is saved, adding what it returns to it.
+
+        It runs under the Publish's lock, so it sees the history as it was
+        before this Publish, and the next Publish waits for it.
+        """
+        self._recorders.append(recorder)
+        return lambda: self._recorders.remove(recorder)
+
     async def async_publish(
         self, document: Any, base_revision: int, user_id: str | None
     ) -> int:
@@ -158,20 +183,26 @@ class Published:
 
             revision = self.revision + 1
             await self._store.async_save({"revision": revision, "document": document})
+            before = self.document
             self.revision = revision
             self.document = document
             for listener in list(self._listeners):
                 listener(revision, document)
 
-            self._history = [
-                {
-                    "revision": revision,
-                    "saved_at": dt_util.utcnow().isoformat(),
-                    "user_id": user_id,
-                    "document": document,
-                },
-                *self._history,
-            ][:HISTORY_SIZE]
+            entry = {
+                "revision": revision,
+                "saved_at": dt_util.utcnow().isoformat(),
+                "user_id": user_id,
+                "document": document,
+            }
+            for recorder in list(self._recorders):
+                # The document is already Published: a recorder that fails
+                # must not cost it its history entry.
+                try:
+                    entry |= await recorder(before, document)
+                except Exception:
+                    _LOGGER.exception("Recording revision %s failed", revision)
+            self._history = [entry, *self._history][:HISTORY_SIZE]
             await self._history_store.async_save({"entries": self._history})
             return revision
 

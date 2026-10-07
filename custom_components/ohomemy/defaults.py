@@ -32,6 +32,17 @@ When a Publish deletes a Dashboard, every default pointing at its panel is
 cleared. Left alone, HA would send those users to `home`, not to the system
 default (its fallback is per panel lookup, not per level), and a later
 Dashboard given the same slug would silently become their default.
+
+Undo gives them back (#67). The Publish's history entry records, under
+`cleared_defaults`, whose defaults it cleared: `{dashboard_id: {users,
+system}}`. A later Publish in which that Dashboard reappears, by id (an undo,
+a restore, an import), sets them again at its panel as that document names
+it, but only where they are still unset: a default chosen since wins, and a
+user removed since is skipped. The newest record for a Dashboard wins, and a
+record lasts as long as its history entry.
+
+Both run inside the Publish, before its history entry is saved, so the
+record is on disk by the time the Publish is acknowledged.
 """
 
 from __future__ import annotations
@@ -52,6 +63,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CORE = "core"
 DEFAULT_PANEL = "default_panel"
+# On a Publish's history entry: whose defaults it cleared, by Dashboard id.
+CLEARED = "cleared_defaults"
 
 ERR_UNAVAILABLE = "unavailable"
 ERR_UNKNOWN_DASHBOARD = "unknown_dashboard"
@@ -151,33 +164,85 @@ def url_paths(document: dict[str, Any]) -> dict[str, str]:
     return {d["id"]: f"{URL_PREFIX}{d['slug']}" for d in document["dashboards"]}
 
 
-async def async_clear(hass: HomeAssistant, gone: set[str]) -> None:
-    """Clear every default, user or system, naming a panel in `gone`."""
-    stores = [await async_system_store(hass)]
-    stores += [await async_user_store(hass, u.id) for u in await async_people(hass)]
-    for store in stores:
-        if default_of(store) in gone:
+async def async_clear(
+    hass: HomeAssistant, gone: dict[str, str]
+) -> dict[str, dict[str, Any]]:
+    """Clear every default, user or system, naming a panel in `gone` (panel
+    URL path by Dashboard id). Return whose, as `{dashboard_id: {users,
+    system}}`, leaving out a Dashboard that was nobody's."""
+    ids = {path: id for id, path in gone.items()}
+    cleared: dict[str, dict[str, Any]] = {}
+
+    def named(store: FrontendStore) -> dict[str, Any] | None:
+        id = ids.get(default_of(store) or "")
+        if id is None:
+            return None
+        return cleared.setdefault(id, {"users": [], "system": False})
+
+    system = await async_system_store(hass)
+    if (record := named(system)) is not None:
+        await async_set_default(system, None)
+        record["system"] = True
+    for user in await async_people(hass):
+        store = await async_user_store(hass, user.id)
+        if (record := named(store)) is not None:
             await async_set_default(store, None)
-    _LOGGER.debug("Cleared the defaults naming %s", ", ".join(sorted(gone)))
+            record["users"].append(user.id)
+    _LOGGER.debug("Cleared the defaults naming %s", ", ".join(sorted(ids)))
+    return cleared
+
+
+async def async_restore(
+    hass: HomeAssistant, history: list[dict[str, Any]], back: dict[str, str]
+) -> None:
+    """Give back the defaults recorded for each Dashboard in `back` (its panel
+    URL path now, by Dashboard id), where they are still unset."""
+    for id, url_path in back.items():
+        # History is newest first, so the first record is the newest.
+        record = next(
+            (e[CLEARED][id] for e in history if id in e.get(CLEARED, {})), None
+        )
+        if record is None:
+            continue
+        stores = [await async_system_store(hass)] if record["system"] else []
+        for user_id in record["users"]:
+            user = await hass.auth.async_get_user(user_id)
+            if user is not None and not user.system_generated:
+                stores.append(await async_user_store(hass, user.id))
+        for store in stores:
+            if default_of(store) is None:
+                await async_set_default(store, url_path)
+        _LOGGER.debug("Restored the defaults naming %s", url_path)
 
 
 @callback
 def async_follow_publishes(hass: HomeAssistant, published: Published) -> None:
-    """After each Publish, clear the defaults of the Dashboards it deleted."""
-    before = url_paths(published.document)
+    """In each Publish, clear the defaults of the Dashboards it deletes and
+    restore those of the Dashboards it brings back."""
 
-    @callback
-    def on_publish(_revision: int, document: dict[str, Any]) -> None:
-        nonlocal before
-        after = url_paths(document)
+    async def record(
+        before: dict[str, Any], after: dict[str, Any]
+    ) -> dict[str, Any]:
+        was, now = url_paths(before), url_paths(after)
         # By id, not by path: a Dashboard deleted while a new one takes its
         # slug in the same Publish is still a different Dashboard.
-        gone = {path for id, path in before.items() if id not in after}
-        before = after
-        if gone:
-            hass.async_create_task(async_clear(hass, gone), eager_start=True)
+        gone = {id: path for id, path in was.items() if id not in now}
+        back = {id: path for id, path in now.items() if id not in was}
+        if not gone and not back:
+            return {}
+        try:
+            # Clearing first, so a default this Publish clears is unset
+            # again for a Dashboard it brings back.
+            cleared = await async_clear(hass, gone) if gone else {}
+            if back:
+                await async_restore(hass, published.history, back)
+        except Unavailable as err:
+            # The Publish stands; only its defaults are left as they were.
+            _LOGGER.warning("Default Dashboards were not followed: %s", err)
+            return {}
+        return {CLEARED: cleared} if cleared else {}
 
-    published.async_listen(on_publish)
+    published.async_record(record)
 
 
 @callback

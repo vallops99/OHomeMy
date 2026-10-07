@@ -23,6 +23,7 @@ from pytest_homeassistant_custom_component.typing import (
     WebSocketGenerator as ClientFactory,
 )
 
+from custom_components.ohomemy import defaults
 from custom_components.ohomemy.const import DATA_PUBLISHED
 
 from .documents import dashboard
@@ -252,3 +253,199 @@ async def test_publishing_without_a_dashboard_clears_the_defaults_naming_it(
     assert me.data["core"]["default_panel"] == "ohomemy-phone"
     system = await storage.async_system_store(hass)
     assert "default_panel" not in system.data["core"]
+
+
+# Undo gives the defaults back (#67): what a Publish cleared is recorded on
+# its history entry, and a later Publish in which the Dashboard reappears, by
+# id, restores those defaults that are still unset.
+
+HISTORY_KEY = "ohomemy.history"
+
+
+async def publish(hass: HomeAssistant, *dashboards: dict[str, Any]) -> None:
+    published = hass.data[DATA_PUBLISHED]
+    await published.async_publish(
+        {"dashboards": list(dashboards)}, published.revision, None
+    )
+
+
+async def undo(hass: HomeAssistant) -> None:
+    """Publish again the document from before the last Publish, as the Builder's
+    undo does: an ordinary Publish."""
+    published = hass.data[DATA_PUBLISHED]
+    await published.async_publish(
+        published.history[1]["document"], published.revision, None
+    )
+
+
+async def default_panels(hass: HomeAssistant, *users: User) -> list[str | None]:
+    """The system's default, then each user's, as panel URL paths."""
+    stores = [await storage.async_system_store(hass)]
+    stores += [await storage.async_user_store(hass, u.id) for u in users]
+    return [s.data.get("core", {}).get("default_panel") for s in stores]
+
+
+@pytest.fixture
+async def wall_is_their_default(
+    hass: HomeAssistant, admin: WsClient, hass_read_only_user: User
+) -> None:
+    """The tablet's user, and the system, land on Wall."""
+    await set_user(admin, hass_read_only_user.id, "wall")
+    await call(admin, "ohomemy/defaults/set_system", dashboard_id="wall")
+
+
+async def test_a_publish_records_the_defaults_it_clears_on_its_history_entry(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_read_only_user: User,
+    wall_is_their_default: None,
+) -> None:
+    await publish(hass, dashboard("phone"))
+
+    # Stored by the time the Publish is acknowledged: nothing left to wait for.
+    entry = hass_storage[HISTORY_KEY]["data"]["entries"][0]
+    assert entry["revision"] == hass.data[DATA_PUBLISHED].revision
+    assert entry["cleared_defaults"] == {
+        "wall": {"users": [hass_read_only_user.id], "system": True}
+    }
+    assert await default_panels(hass, hass_read_only_user) == [None, None]
+
+
+async def test_a_publish_that_clears_nothing_records_nothing(
+    hass: HomeAssistant, hass_storage: dict[str, Any], wall_is_their_default: None
+) -> None:
+    await publish(hass, dashboard("wall"))
+    entry = hass_storage[HISTORY_KEY]["data"]["entries"][0]
+    assert "cleared_defaults" not in entry
+
+
+async def test_undoing_the_publish_gives_the_defaults_back(
+    hass: HomeAssistant, hass_read_only_user: User, wall_is_their_default: None
+) -> None:
+    await publish(hass, dashboard("phone"))
+    await undo(hass)
+    assert await default_panels(hass, hass_read_only_user) == [
+        "ohomemy-wall",
+        "ohomemy-wall",
+    ]
+
+
+async def test_a_default_chosen_since_wins_over_the_record(
+    hass: HomeAssistant,
+    admin: WsClient,
+    hass_read_only_user: User,
+    wall_is_their_default: None,
+) -> None:
+    await publish(hass, dashboard("phone"))
+    await set_user(admin, hass_read_only_user.id, "phone")
+    await undo(hass)
+    assert await default_panels(hass, hass_read_only_user) == [
+        "ohomemy-wall",
+        "ohomemy-phone",
+    ]
+
+
+async def test_a_user_removed_since_is_skipped(
+    hass: HomeAssistant, admin: WsClient, wall_is_their_default: None
+) -> None:
+    kitchen = await hass.auth.async_create_user("Kitchen")
+    await set_user(admin, kitchen.id, "wall")
+    await publish(hass, dashboard("phone"))
+    await hass.auth.async_remove_user(kitchen)
+
+    await undo(hass)
+    assert await default_panels(hass) == ["ohomemy-wall"]
+
+
+async def test_a_dashboard_back_under_another_slug_is_restored_at_its_new_panel(
+    hass: HomeAssistant, hass_read_only_user: User, wall_is_their_default: None
+) -> None:
+    await publish(hass, dashboard("phone"))
+    await publish(hass, dashboard("phone"), dashboard("wall", slug="hall"))
+    assert await default_panels(hass, hass_read_only_user) == [
+        "ohomemy-hall",
+        "ohomemy-hall",
+    ]
+
+
+async def test_the_newest_record_for_a_dashboard_wins(
+    hass: HomeAssistant,
+    admin: WsClient,
+    hass_read_only_user: User,
+    wall_is_their_default: None,
+) -> None:
+    await publish(hass, dashboard("phone"))
+    await publish(hass, dashboard("wall"), dashboard("phone"))
+    # The tablet moves to Phone, so the second deletion clears only the system.
+    await set_user(admin, hass_read_only_user.id, "phone")
+    await publish(hass, dashboard("phone"))
+    await set_user(admin, hass_read_only_user.id, None)
+
+    await publish(hass, dashboard("wall"), dashboard("phone"))
+    # The older record named the tablet too; the newer one does not.
+    assert await default_panels(hass, hass_read_only_user) == ["ohomemy-wall", None]
+
+
+async def test_history_from_before_the_record_loads_and_restores_nothing(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    built: Path,
+    hass_admin_user: User,
+) -> None:
+    old = [dashboard("phone")]
+    hass_storage["ohomemy.document"] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "ohomemy.document",
+        "data": {"revision": 2, "document": {"dashboards": old}},
+    }
+    hass_storage[HISTORY_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": HISTORY_KEY,
+        "data": {
+            "entries": [
+                {
+                    "revision": 2,
+                    "saved_at": "y",
+                    "user_id": None,
+                    "document": {"dashboards": old},
+                },
+                {
+                    "revision": 1,
+                    "saved_at": "x",
+                    "user_id": None,
+                    "document": {"dashboards": [dashboard("wall"), *old]},
+                },
+            ]
+        },
+    }
+    assert await async_setup_component(hass, "ohomemy", {})
+    published = hass.data[DATA_PUBLISHED]
+    assert [e["revision"] for e in published.history] == [2, 1]
+
+    await undo(hass)
+    assert published.revision == 3
+    assert await default_panels(hass, hass_admin_user) == [None, None]
+
+
+async def test_without_frontend_storage_a_publish_still_succeeds(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    wall_is_their_default: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def moved() -> None:
+        raise defaults.Unavailable("moved")
+
+    monkeypatch.setattr(defaults, "_storage", moved)
+    published = hass.data[DATA_PUBLISHED]
+    before = published.revision
+
+    await publish(hass, dashboard("phone"))
+    await undo(hass)
+
+    assert published.revision == before + 2
+    entries = hass_storage[HISTORY_KEY]["data"]["entries"]
+    assert [e["revision"] for e in entries[:2]] == [before + 2, before + 1]
+    assert "cleared_defaults" not in entries[1]

@@ -110,9 +110,10 @@ setting on each widget.
   entry of the Publish that cleared them records which users (and whether the
   system default) named which Dashboard. Any later Publish in which that
   Dashboard reappears, by id (an undo, a restore, an import), sets those
-  defaults again, but only where they are still unset: a default chosen since
-  wins, and a user removed since is skipped. The record lasts as long as its
-  history entry, and the newest one for a Dashboard wins.
+  defaults again, at its panel as that Publish names it, but only where they
+  are still unset: a default chosen since wins, and a user removed since is
+  skipped. The record lasts as long as its history entry, and the newest one
+  for a Dashboard wins.
 
 ### Inside a Dashboard
 
