@@ -177,6 +177,9 @@ export const zhHans: Catalogue = {
   'stats.power': '{unit} 使用中',
   'stats.unavailable': '不可用',
 
+  'indoorReading.title': '室内',
+  'indoorReading.humidity': '湿度 {percent}',
+
   'chips.fault': { other: '{count} 个故障' },
   'chips.open': { other: '{count} 个出入口开着' },
   'chips.lit': { other: '{count} 个区域亮着' },
@@ -415,6 +418,7 @@ export const zhHans: Catalogue = {
   'editor.kind.room_tile': '房间卡片',
   'editor.kind.room_grid': '房间网格',
   'editor.kind.link': '链接',
+  'editor.kind.indoor_reading': '室内读数',
   'editor.setting.entity': '实体',
   'editor.setting.members': '成员',
   'editor.setting.cameras': '摄像头',
@@ -426,5 +430,6 @@ export const zhHans: Catalogue = {
   'editor.setting.lights': '灯，每个区域一盏',
   'editor.setting.temperature': '温度',
   'editor.setting.temperatures': '温度，每个区域一个',
+  'editor.setting.humidity': '湿度',
   'editor.setting.icon': '图标',
 };

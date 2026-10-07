@@ -194,6 +194,9 @@ export const en = {
   'stats.power': '{unit} in use',
   'stats.unavailable': 'Unavailable',
 
+  'indoorReading.title': 'Indoor',
+  'indoorReading.humidity': '{percent} humidity',
+
   'chips.fault': { one: '{count} fault', other: '{count} faults' },
   'chips.open': { one: '{count} way in open', other: '{count} ways in open' },
   'chips.lit': { one: '{count} zone lit', other: '{count} zones lit' },
@@ -441,6 +444,7 @@ export const en = {
   'editor.kind.room_tile': 'Room Tile',
   'editor.kind.room_grid': 'Room Grid',
   'editor.kind.link': 'Link',
+  'editor.kind.indoor_reading': 'Indoor Reading',
   'editor.setting.entity': 'Entity',
   'editor.setting.members': 'Members',
   'editor.setting.cameras': 'Cameras',
@@ -452,5 +456,6 @@ export const en = {
   'editor.setting.lights': 'Lights, one per Area',
   'editor.setting.temperature': 'Temperature',
   'editor.setting.temperatures': 'Temperatures, one per Area',
+  'editor.setting.humidity': 'Humidity',
   'editor.setting.icon': 'Icon',
 } as const;

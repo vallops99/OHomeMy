@@ -202,6 +202,9 @@ export const ar: Catalogue = {
   'stats.power': '{unit} قيد الاستهلاك',
   'stats.unavailable': 'غير متاح',
 
+  'indoorReading.title': 'داخلي',
+  'indoorReading.humidity': 'رطوبة {percent}',
+
   'chips.fault': {
     zero: 'لا أعطال',
     one: 'عطل واحد',
@@ -496,6 +499,7 @@ export const ar: Catalogue = {
   'editor.kind.room_tile': 'بطاقة غرفة',
   'editor.kind.room_grid': 'شبكة الغرف',
   'editor.kind.link': 'رابط',
+  'editor.kind.indoor_reading': 'قراءة داخلية',
   'editor.setting.entity': 'الكيان',
   'editor.setting.members': 'الأعضاء',
   'editor.setting.cameras': 'الكاميرات',
@@ -507,5 +511,6 @@ export const ar: Catalogue = {
   'editor.setting.lights': 'أضواء، واحد لكل منطقة',
   'editor.setting.temperature': 'درجة الحرارة',
   'editor.setting.temperatures': 'درجات حرارة، واحدة لكل منطقة',
+  'editor.setting.humidity': 'الرطوبة',
   'editor.setting.icon': 'الأيقونة',
 };

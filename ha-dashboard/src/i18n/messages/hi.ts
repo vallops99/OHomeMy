@@ -177,6 +177,9 @@ export const hi: Catalogue = {
   'stats.power': '{unit} उपयोग में',
   'stats.unavailable': 'उपलब्ध नहीं',
 
+  'indoorReading.title': 'अंदर',
+  'indoorReading.humidity': '{percent} नमी',
+
   'chips.fault': { one: '{count} खराबी', other: '{count} खराबियाँ' },
   'chips.open': { one: '{count} प्रवेश खुला', other: '{count} प्रवेश खुले' },
   'chips.lit': { one: '{count} ज़ोन रोशन', other: '{count} ज़ोन रोशन' },
@@ -422,6 +425,7 @@ export const hi: Catalogue = {
   'editor.kind.room_tile': 'कमरा टाइल',
   'editor.kind.room_grid': 'कमरा ग्रिड',
   'editor.kind.link': 'लिंक',
+  'editor.kind.indoor_reading': 'अंदर का माप',
   'editor.setting.entity': 'एंटिटी',
   'editor.setting.members': 'सदस्य',
   'editor.setting.cameras': 'कैमरे',
@@ -433,5 +437,6 @@ export const hi: Catalogue = {
   'editor.setting.lights': 'लाइटें, हर क्षेत्र की एक',
   'editor.setting.temperature': 'तापमान',
   'editor.setting.temperatures': 'तापमान, हर क्षेत्र का एक',
+  'editor.setting.humidity': 'नमी',
   'editor.setting.icon': 'आइकन',
 };

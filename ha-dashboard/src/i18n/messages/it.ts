@@ -180,6 +180,9 @@ export const it: Catalogue = {
   'stats.power': '{unit} in uso',
   'stats.unavailable': 'Non disponibile',
 
+  'indoorReading.title': 'Interno',
+  'indoorReading.humidity': '{percent} umidità',
+
   'chips.fault': { one: '{count} guasto', other: '{count} guasti' },
   'chips.open': { one: '{count} accesso aperto', other: '{count} accessi aperti' },
   'chips.lit': { one: '{count} zona accesa', other: '{count} zone accese' },
@@ -427,6 +430,7 @@ export const it: Catalogue = {
   'editor.kind.room_tile': 'Riquadro stanza',
   'editor.kind.room_grid': 'Griglia stanze',
   'editor.kind.link': 'Collegamento',
+  'editor.kind.indoor_reading': 'Lettura interna',
   'editor.setting.entity': 'Entità',
   'editor.setting.members': 'Membri',
   'editor.setting.cameras': 'Telecamere',
@@ -438,5 +442,6 @@ export const it: Catalogue = {
   'editor.setting.lights': 'Luci, una per Area',
   'editor.setting.temperature': 'Temperatura',
   'editor.setting.temperatures': 'Temperature, una per Area',
+  'editor.setting.humidity': 'Umidità',
   'editor.setting.icon': 'Icona',
 };

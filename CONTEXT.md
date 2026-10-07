@@ -128,6 +128,12 @@ A Widget showing the time and date in the viewer's own formats. It is not an
 entity and not a control.
 _Avoid_: Header, status bar
 
+**Indoor Reading**:
+A Widget showing one temperature, big enough to read on approach, with a
+humidity under it. The admin chooses the entity behind each, a thermostat or
+a sensor; with no humidity chosen there is no humidity line.
+_Avoid_: Hero, temperature card, glance
+
 **Popup**:
 A Page shown over whatever Page is current, opened and closed by Home
 Assistant rather than by a tap. It is opened by name. It is house-wide: every
