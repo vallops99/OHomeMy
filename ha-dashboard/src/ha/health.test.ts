@@ -63,7 +63,7 @@ test('open doors and unlocked gates are one Concern, each carrying only its own'
   );
 });
 
-test('the lit Concern carries the lit main lights', () => {
+test('the lights-on Concern carries the main lights left on', () => {
   const lit = entity('light.salone', { state: 'on', labels: ['main'] });
   const report = houseReport([lit, entity('light.lamp', { state: 'on' })]);
   assert.equal(report.verdict.level, 'on');
@@ -73,19 +73,19 @@ test('the lit Concern carries the lit main lights', () => {
   );
 });
 
-// ---- Lit zones (#44) ----
+// ---- Lights on (#44) ----
 //
-// Lit zones are no longer a chip: the lights StatCard states them. So the
-// report carries the lit-zones Concern on its own, whatever outranks it,
+// Lights on are no longer a chip: the lights StatCard states them. So the
+// report carries the lights-on Concern on its own, whatever outranks it,
 // and it never rides along in `also`.
 
-test('a lit zone still leads the verdict when nothing louder is wrong', () => {
+test('a light left on still leads the verdict when nothing louder is wrong', () => {
   const report = houseReport([entity('light.salone', { state: 'on', labels: ['main'] })]);
   assert.equal(report.verdict.level, 'on');
   assert.equal(report.lit, report.verdict);
 });
 
-test('the lit-zones Concern is reported under a fault, for the lights stat', () => {
+test('the lights-on Concern is reported under a fault, for the lights stat', () => {
   const lit = [entity('light.salone', { state: 'on', labels: ['main'] }), entity('light.cucina', { state: 'on', labels: ['main'] })];
   const report = houseReport([down('light.a'), ...lit]);
   assert.equal(report.verdict.level, 'fault');
@@ -97,12 +97,12 @@ test('the lit-zones Concern is reported under a fault, for the lights stat', () 
   assert.ok(report.also.every(h => h.level !== 'on'));
 });
 
-test('a house with nothing lit has no lit-zones Concern', () => {
+test('a house with no light on has no lights-on Concern', () => {
   assert.equal(houseReport([entity('light.salone', { labels: ['main'] })]).lit, null);
   assert.equal(houseReport([down('light.a')]).lit, null);
 });
 
-test('a fault does not silence an open gate, and the lit zones stay out of `also`', () => {
+test('a fault does not silence an open gate, and the lights on stay out of `also`', () => {
   const report = houseReport([
     down('light.a'),
     entity('lock.cancello', { state: 'unlocked' }),

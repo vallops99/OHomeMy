@@ -5,7 +5,7 @@
  *
  * It reads the connection's own `ready` and `disconnected` events rather than
  * @hakit's `connectionStatus`, which tracks only suspending a hidden page.
- * React and @hakit are kept to `useConnected.ts`, so this runs under plain
+ * React and @hakit are kept to `useConnected` in `./useLive`, so this runs under plain
  * Node in its tests.
  */
 

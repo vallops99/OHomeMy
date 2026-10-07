@@ -44,7 +44,6 @@ MINOR_VERSION = 1
 HISTORY_SIZE = 20
 
 
-
 def _follow_device_was_auto(document: dict[str, Any]) -> dict[str, Any]:
     """2.1 (#70): the Mode `auto` is `follow-device`. Major, because an older
     integration refuses a Mode it does not know."""

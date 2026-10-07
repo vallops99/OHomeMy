@@ -7,8 +7,8 @@
  * sensor its state. The temperature is in whole degrees, as the wall has
  * always shown the number read from 2 m; the humidity in whole percent.
  *
- * Unavailable is said, never hidden (CONTEXT.md): the old Hero dropped its
- * humidity line when nothing reported one, which hid a broken sensor. Here
+ * Unavailable is said, never hidden (CONTEXT.md): `ui/Hero.tsx` drops its
+ * humidity line when nothing reports one, which hides a broken sensor. Here
  * the line goes only when no humidity is chosen.
  *
  * No React, no @hakit: it runs under plain Node.

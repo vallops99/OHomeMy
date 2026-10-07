@@ -1,8 +1,9 @@
 /**
  * The Home Assistant data seam.
  *
- * This is the ONLY module that imports @hakit/core. Everything above it speaks
- * the plain types in `./types`. The #3 rules -- denylist, Domain ranking --
+ * @hakit/core is imported only inside `src/ha/`, never above it (`./index`),
+ * and this module is its registries' side: everything above it speaks the
+ * plain types in `./types`. The #3 rules -- denylist, Domain ranking --
  * live here and in `./entities` so no screen or component restates them.
  *
  * `usePage` lives here too, as the hook over the pure `resolvePage`

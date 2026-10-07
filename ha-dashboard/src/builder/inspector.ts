@@ -222,7 +222,7 @@ export const sizeFor = (kind: string) => DEFAULT_SIZE[kind] ?? { w: 3, h: 2 };
  * A new Widget of this kind at `box`: its first Variant, its Default title,
  * opening nothing, with nothing chosen. Its lists start empty rather than
  * absent, since the schema takes no list as missing: a kind whose list may
- * be empty (the status chips' cameras) is valid at once. A kind with a
+ * be empty (the Chip Row's cameras) is valid at once. A kind with a
  * required setting (an entity) is not valid until one is chosen, and the
  * preview says so.
  */

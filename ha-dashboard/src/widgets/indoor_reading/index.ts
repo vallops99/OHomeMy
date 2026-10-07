@@ -6,15 +6,18 @@ export default defineWidget({
   schema: indoorReadingSchema,
   Component: IndoorReadingWidget,
   // Nothing happens on a tap, so an `on_tap` makes the whole reading a way
-  // to its Page, as the wall's Hero led to the thermostat's (#32).
+  // to its Page, as the label-driven Dashboard's indoor reading led to the
+  // thermostat's (#32).
   tap: 'none',
-  // `full` stacks title, number and humidity, as the wall's Hero (the lines
-  // dissolve into its grid, the title ordered first); `compact` puts the
+  // `full` stacks title, number and humidity, as `ui/Hero.tsx` (the lines
+  // dissolve into the grid, the title ordered first); `compact` puts the
   // number beside the two lines. The number takes the height the lines
   // leave it, never above Casa Panel's `temp-hero` (144 px on the wall) nor
   // below a size still read from across a room. The -1/24 em is the
   // design's optical correction (-6 at 144 px): a big "2" carries its own
-  // side bearing, which would set it in from the title.
+  // side bearing, which would set it in from the title. The floors stay
+  // lengths: they are what reads across a room, which no type style names.
+  // The humidity takes `body-lg`, the type style nearest the 18 px it was.
   css: `
     .ohm-indoor_reading {
       height: 100%;
@@ -41,7 +44,7 @@ export default defineWidget({
       color: var(--ink-muted);
     }
     .ohm-indoor_reading-humidity {
-      font-size: 18px;
+      font-size: var(--type-body-lg-size);
       color: var(--ink-secondary);
     }
     .ohm-indoor_reading-icon { display: flex; flex-shrink: 0; color: var(--ink-muted); }

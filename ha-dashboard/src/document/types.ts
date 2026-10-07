@@ -108,8 +108,8 @@ export type DashboardSettings = {
     /**
      * `light` or `dark` always; `follow-device` follows the device's own
      * preference; `follow-house` follows `entity` (CONTEXT.md "Mode",
-     * "Follow the house"). Where the house or the device cannot say, the
-     * Dashboard is dark.
+     * "Follow the house"). Where the house cannot say, the Dashboard follows
+     * the device; where the device cannot either, it is dark.
      */
     mode: (typeof MODES)[number];
     /**

@@ -13,7 +13,7 @@
  * on. Everything else is not an answer to this question and belongs in a
  * secondary view.
  *
- * The ranking is the Verdict's, and it still counts lit zones. What changed
+ * The ranking is the Verdict's, and it still counts lights left on. What changed
  * (#44) is where they are said: not as a chip, but by the lights StatCard,
  * which is why the report carries them as `lit` of their own.
  */
@@ -50,10 +50,10 @@ export type Health = {
 export type HouseReport = {
   /** The headline verdict, and the colour the panel takes. */
   verdict: Health;
-  /** Lower-ranked concerns, still shown as chips. Empty when there are none. Never lit zones. */
+  /** Lower-ranked concerns, still shown as chips. Empty when there are none. Never the lights on. */
   also: Health[];
   /**
-   * The lit-zones Concern, whatever outranks it, or null when no zone is lit.
+   * The lights-on Concern, whatever outranks it, or null when no main light is on.
    * Not a chip (#44): the lights StatCard states it, and reads its count
    * here so the card and the Verdict count by the one rule. The same object
    * as `verdict` when it leads.
