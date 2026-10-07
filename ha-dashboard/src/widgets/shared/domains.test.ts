@@ -17,7 +17,7 @@ import { sensorSchema } from '../sensor/schema';
 import { toggleSchema } from '../toggle/schema';
 import { vacuumSchema } from '../vacuum/schema';
 import { weatherSchema } from '../weather/schema';
-import { GROUP_DOMAINS, KIND_DOMAINS } from './domains';
+import { entityKindSchema, GROUP_DOMAINS, KIND_DOMAINS } from './domains';
 
 const widget = (kind: string, settings: Record<string, unknown>, variant: Widget['variant'] = 'full'): Widget => ({
   id: 'w',
@@ -53,6 +53,18 @@ test('each per-Domain kind takes an entity of its own Domains and no other', () 
     }
     assert.equal(validateWidget(widget(kind, { entity: 'camera.x' }), schema).ok, false, `${kind} refuses a camera`);
   }
+});
+
+test('each per-Domain kind is titled and takes its one entity, as entityKindSchema writes it', () => {
+  for (const [kind, schema] of Object.entries(SCHEMAS)) {
+    assert.deepEqual(schema, {
+      kind,
+      variants: schema.variants,
+      titled: true,
+      settings: { entity: { type: 'entity', domains: KIND_DOMAINS[kind as keyof typeof KIND_DOMAINS] } },
+    });
+  }
+  assert.deepEqual(entityKindSchema('climate', ['full', 'compact']), climateSchema);
 });
 
 test('a gate, a vacuum and a select have one form', () => {
