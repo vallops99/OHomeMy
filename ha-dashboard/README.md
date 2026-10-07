@@ -54,7 +54,7 @@ A kind is one folder, `src/widgets/<kind>/`, named exactly as `Widget.kind` (`ro
 
 `src/widgets/clock/` and `src/widgets/toggle/` are the two to copy from. A kind that stands for one entity of some Domains (`lock`, `climate`, `sensor`, ...) needs only its schema: its component is `shared/EntityWidget`, which draws the entity in its Domain's shape from `shared/shapes.tsx` (the same table a Group draws its members with), and the Fault tile while it is Unavailable. Its Domains go in `shared/domains.ts`. `shared/` has no `index.ts`, so it is not a kind.
 
-The Builder offers a new kind in its palette with no change (#56): its inspector is generated from the schema, one control per field type. Two optional touches make it read better there: a name in the catalogues (`editor.kind.<kind>`, and `editor.setting.<key>` for its settings; otherwise both are spelled from their ids) and the size it is placed at in `src/builder/inspector.ts` (`DEFAULT_SIZE`; otherwise 3 x 2 cells).
+The Builder offers a new kind in its palette with no change (#56): its inspector is generated from the schema, one control per field type. Two optional touches make it read better there: a name in the catalogues (`builder.dashboard.kind.<kind>`, and `builder.dashboard.setting.<key>` for its settings; otherwise both are spelled from their ids) and the size it is placed at in `src/builder/inspector.ts` (`DEFAULT_SIZE`; otherwise 3 x 2 cells).
 
 ### Words, formats and right to left (#59)
 

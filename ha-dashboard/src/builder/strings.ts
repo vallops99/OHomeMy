@@ -15,7 +15,7 @@
  * admin may change.
  */
 import { fmt, tr } from '../i18n';
-import { editorStrings } from './editorStrings';
+import { dashboardStrings } from './dashboardStrings';
 import type { SlugProblem } from './slug';
 
 /** " This discards your Draft." after a question, when there is one to discard. */
@@ -91,8 +91,8 @@ export const strings = {
       return tr('builder.dashboards.changed');
     },
     deleted: (names: string[]) => tr('builder.dashboards.deleted', { names: fmt.list(names) }),
-    get open() {
-      return tr('builder.dashboards.open');
+    get visit() {
+      return tr('builder.dashboards.visit');
     },
     get rename() {
       return tr('builder.dashboards.rename');
@@ -196,8 +196,8 @@ export const strings = {
     exportFailed: (message: string) => tr('builder.transfer.exportFailed', { message }),
   },
 
-  /** The Dashboard editor's (#56), kept in `editorStrings.ts`. */
-  editor: editorStrings,
+  /** The Dashboard screen's (#56), kept in `dashboardStrings.ts`. */
+  dashboard: dashboardStrings,
 
   defaults: {
     get title() {

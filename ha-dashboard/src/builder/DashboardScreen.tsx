@@ -14,7 +14,7 @@ import { widgetSchemas } from '../widgets/registry';
 import type { Ask } from './Builder';
 import { DashboardSettings } from './DashboardSettings';
 import { randomId } from './draft';
-import { fromId } from './editorStrings';
+import { fromId } from './dashboardStrings';
 import { Inspector } from './Inspector';
 import { newWidget, sizeFor } from './inspector';
 import { addWidget, canPlace, deleteWidget, freeSpot, gridOf, placeWidget, placedOnGrid, updateWidget, type Box } from './layout';
@@ -23,14 +23,14 @@ import { PageSettings } from './PageSettings';
 import { Preview, type Ghost, type PreviewHandle } from './Preview';
 import { strings } from './strings';
 
-const t = strings.editor;
+const t = strings.dashboard;
 
 type Tab = 'widget' | 'page' | 'dashboard';
 
 /** Pixels a pointer must travel from a palette item before it is a drag, not a tap. */
 const DRAG_SLOP = 6;
 
-export function DashboardEditor({
+export function DashboardScreen({
   dashboard,
   edit,
   ask,
@@ -123,12 +123,12 @@ export function DashboardEditor({
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <section className='b-editor' aria-label={t.editing(dashboard.name)}>
-      <div className='b-editor-bar'>
+    <section className='b-dashboard-screen' aria-label={t.editing(dashboard.name)}>
+      <div className='b-dashboard-screen-bar'>
         <button type='button' className='b-button' onClick={onClose}>
           {viewerDirection() === 'rtl' ? '→' : '←'} {t.back}
         </button>
-        <h2 className='b-editor-title'>{dashboard.name}</h2>
+        <h2 className='b-dashboard-screen-title'>{dashboard.name}</h2>
         <div className='b-pages' role='tablist' aria-label={t.pages.label}>
           {dashboard.pages.map(p => (
             <button
@@ -160,7 +160,7 @@ export function DashboardEditor({
         </div>
       </div>
 
-      <div className='b-editor-body'>
+      <div className='b-dashboard-screen-body'>
         <aside className='b-palette' aria-label={t.palette.label}>
           <h3 className='b-panel-title'>{t.palette.label}</h3>
           <p className='b-meta'>{t.palette.hint}</p>

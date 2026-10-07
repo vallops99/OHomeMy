@@ -1,5 +1,5 @@
 /*
- * The Dashboard editor (#56), in Casa Panel's tokens as `builder.css` is.
+ * The Dashboard screen (#56), in Casa Panel's tokens as `builder.css` is.
  *
  * Colour still means state: `alert` marks only what is wrong (a Widget not
  * shown, one that does not fit, a drop that would overlap), and `primary`
@@ -15,20 +15,20 @@
   display: none;
 }
 
-.b-editor {
+.b-dashboard-screen {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
 }
 
-.b-editor-bar {
+.b-dashboard-screen-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
 }
 
-.b-editor-title {
+.b-dashboard-screen-title {
   margin: 0;
   font-size: var(--type-row-title-size);
   line-height: var(--type-row-title-line);
@@ -69,7 +69,7 @@
   border-color: currentColor;
 }
 
-.b-editor-body {
+.b-dashboard-screen-body {
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr) 360px;
   align-items: start;
@@ -77,7 +77,7 @@
 }
 
 @media (max-width: 1200px) {
-  .b-editor-body {
+  .b-dashboard-screen-body {
     grid-template-columns: minmax(0, 1fr) 340px;
   }
   .b-palette {
@@ -90,7 +90,7 @@
 }
 
 @media (max-width: 860px) {
-  .b-editor-body {
+  .b-dashboard-screen-body {
     grid-template-columns: minmax(0, 1fr);
   }
 }

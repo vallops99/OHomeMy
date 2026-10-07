@@ -16,7 +16,7 @@ import { hassPatch, panelStore, type PanelInfo, type PanelRoute } from '../panel
 import { app, portalRoot, styles, tree } from '../panel/tree';
 import { CASA } from '../theme/tokens';
 import builderCss from './builder.css?inline';
-import editorCss from './editor.css?inline';
+import dashboardScreenCss from './dashboardScreen.css?inline';
 
 const ELEMENT = 'ohomemy-builder';
 
@@ -47,7 +47,7 @@ let started = false;
 function start() {
   if (started) return;
   started = true;
-  styles.append(style(HOST_CSS), style(TYPE_CSS), style(builderCss), style(editorCss));
+  styles.append(style(HOST_CSS), style(TYPE_CSS), style(builderCss), style(dashboardScreenCss));
   if (!document.head.querySelector(`link[href="${FONTS}"]`)) {
     document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: FONTS }));
   }

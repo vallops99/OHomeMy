@@ -36,7 +36,7 @@ export function DashboardList({
   disabled: boolean;
   edit: Edit;
   ask: Ask;
-  /** Opens the Dashboard's layout in the editor (#56). */
+  /** Opens the Dashboard's layout in the Dashboard screen (#56). */
   onEdit: (id: string) => void;
 }) {
   const [form, setForm] = useState<Form | null>(null);
@@ -93,11 +93,11 @@ export function DashboardList({
               )}
               <div className='b-actions'>
                 <button className='b-button b-primary' disabled={!!form} onClick={() => onEdit(dashboard.id)}>
-                  {strings.editor.edit}
+                  {strings.dashboard.open}
                 </button>
                 {published.has(dashboard.id) && (
                   <a className='b-button' href={strings.form.url(dashboard.slug)}>
-                    {strings.dashboards.open}
+                    {strings.dashboards.visit}
                   </a>
                 )}
                 <button className='b-button' disabled={disabled || !!form} onClick={() => setForm({ mode: 'rename', dashboard })}>

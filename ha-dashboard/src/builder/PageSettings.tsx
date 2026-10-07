@@ -11,7 +11,7 @@ import { minimumGrid } from './layout';
 import { GRID_MAX, movePage, removePage, renamePage, setGrid, setHomePage } from './pages';
 import { strings } from './strings';
 
-const t = strings.editor.page;
+const t = strings.dashboard.page;
 
 export function PageSettings({
   dashboard,

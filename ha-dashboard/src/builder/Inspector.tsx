@@ -10,14 +10,14 @@ import type { Dashboard, Page, Size, Widget } from '../document/types';
 import { useAreas, useEntities, useHouse } from '../ha';
 import { iconChoices } from '../ui/iconMap';
 import { widgetKind } from '../widgets/registry';
-import { fromId } from './editorStrings';
+import { fromId } from './dashboardStrings';
 import { Field, IconPicker, NumberInput, OrderedList, Picker, Switch } from './fields';
 import { controlsFor, withSetting, type Control, type HouseLists } from './inspector';
 import { gridOf } from './layout';
 import { ordinaryPages } from './pages';
 import { strings } from './strings';
 
-const t = strings.editor;
+const t = strings.dashboard;
 const ICONS = iconChoices();
 
 export function Inspector({

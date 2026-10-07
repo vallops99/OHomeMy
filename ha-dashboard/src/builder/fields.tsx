@@ -1,7 +1,7 @@
 /**
- * The editor's inputs (#56): a labelled row around one control, a number
+ * The Dashboard screen's inputs (#56): a labelled row around one control, a number
  * that is only ever committed when valid, a switch, a picker, and an
- * ordered list. Each offers only valid values and hands the editor a value,
+ * ordered list. Each offers only valid values and hands the Dashboard screen a value,
  * never an event, so the rules stay in `pages.ts`, `layout.ts` and
  * `inspector.ts`.
  */
@@ -10,7 +10,7 @@ import { Icon } from '../ui/Icon';
 import type { Option } from './inspector';
 import { strings } from './strings';
 
-const t = strings.editor.field;
+const t = strings.dashboard.field;
 
 export function Field({ label, hint, children }: { label: string; hint?: ReactNode; children: (id: string) => ReactNode }) {
   const id = useId();

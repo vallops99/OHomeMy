@@ -23,8 +23,8 @@ import {
 } from './pages';
 import { strings } from './strings';
 
-const t = strings.editor.dashboard;
-const n = strings.editor.navbar;
+const t = strings.dashboard.dashboard;
+const n = strings.dashboard.navbar;
 const ICON_OPTIONS = iconChoices().map(name => ({ value: name, label: name.replace(/^mdi:/, '') }));
 
 type Edit = (f: (d: Dashboard) => Dashboard) => void;
@@ -191,7 +191,7 @@ function NavbarSettings({ dashboard, edit }: { dashboard: Dashboard; edit: Edit 
                   <button
                     type='button'
                     className='b-button b-icon'
-                    aria-label={strings.editor.field.up}
+                    aria-label={strings.dashboard.field.up}
                     disabled={i === 0}
                     onClick={() => edit(d => moveNavbarItem(d, item.id, -1))}
                   >
@@ -200,7 +200,7 @@ function NavbarSettings({ dashboard, edit }: { dashboard: Dashboard; edit: Edit 
                   <button
                     type='button'
                     className='b-button b-icon'
-                    aria-label={strings.editor.field.down}
+                    aria-label={strings.dashboard.field.down}
                     disabled={i === navbar.items.length - 1}
                     onClick={() => edit(d => moveNavbarItem(d, item.id, 1))}
                   >
@@ -209,7 +209,7 @@ function NavbarSettings({ dashboard, edit }: { dashboard: Dashboard; edit: Edit 
                   <button
                     type='button'
                     className='b-button b-icon'
-                    aria-label={strings.editor.field.remove}
+                    aria-label={strings.dashboard.field.remove}
                     onClick={() => edit(d => removeNavbarItem(d, item.id))}
                   >
                     ✕

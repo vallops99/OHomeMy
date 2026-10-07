@@ -1,7 +1,7 @@
 /**
  * OHomeMy Builder (#55): the Dashboards in a Draft, Publish, history and
  * export/import; and, for one Dashboard at a time, laying out its Pages by
- * dragging on a preview (#56, `Editor.tsx`), in place of the sections.
+ * dragging on a preview (#56, `DashboardScreen.tsx`), in place of the sections.
  *
  * All the rules are in `session.ts` (the Draft against the published
  * document), `draft.ts` (what an edit does) and `history.ts`; this file
@@ -13,7 +13,7 @@ import { useDocumentAdmin, usePublished, type ImportOutcome } from '../ha';
 import { useLocalised } from '../i18n/useLocalised';
 import { usePanelProps } from '../panel/panelProps';
 import { DashboardList } from './DashboardList';
-import { DashboardEditor } from './Editor';
+import { DashboardScreen } from './DashboardScreen';
 import { DefaultsSection } from './DefaultsSection';
 import { HistorySection } from './HistorySection';
 import { messageOf } from './messageOf';
@@ -124,9 +124,9 @@ export function Builder() {
           </Banner>
         )}
 
-        {/* While a Dashboard is laid out, the sections are hidden (`editor.css`), not unmounted. */}
+        {/* While a Dashboard is laid out, the sections are hidden (`dashboardScreen.css`), not unmounted. */}
         {edited && (
-          <DashboardEditor
+          <DashboardScreen
             key={edited.id}
             dashboard={edited}
             edit={f => dispatch({ type: 'edited', edit: d => mapDashboard(d, edited.id, f) })}

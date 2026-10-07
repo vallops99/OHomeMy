@@ -8,7 +8,7 @@
  *
  * The screen is the renderer's own `Frame` and `Page`, given the Draft's
  * Dashboard and the Page being edited, so what the preview shows is what the
- * wall shows. Its navigation is the editor's: the Page on screen is the one
+ * wall shows. Its navigation is the Dashboard screen's: the Page on screen is the one
  * picked, a Navbar item picks its Page, and a Widget's tap does nothing,
  * since every tap lands on the editing layer.
  *
@@ -58,12 +58,12 @@ import { themeFor } from '../theme/themes';
 import { WIDGETS_CSS, widgetKind } from '../widgets/registry';
 import { fits, type Extent } from './fit';
 import { canPlace, cellAt, gridOf, moved, overlaps, resized, snapDelta, type Box, type Metrics } from './layout';
-import { fromId } from './editorStrings';
+import { fromId } from './dashboardStrings';
 import { strings } from './strings';
 
-const t = strings.editor;
+const t = strings.dashboard;
 
-/** What the editor asks of the preview: which cell is under a point of the screen, if any. */
+/** What the Dashboard screen asks of the preview: which cell is under a point of the screen, if any. */
 export type PreviewHandle = { cellAt: (clientX: number, clientY: number) => { x: number; y: number } | null };
 
 /** A place being dragged to, shown on the grid before it is dropped. */
