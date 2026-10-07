@@ -134,8 +134,8 @@ setting on each widget.
   These replace the Dock, the phone Tabs, Page Openers and every navigation
   rule that used to be Derived.
 - **Device behaviours are per-Dashboard settings**: the idle return to the
-  home Page (or none), the back gesture's history, and light, dark or auto
-  mode. The code no longer branches on wall versus phone.
+  home Page (or none), the back gesture's history, and the Mode. The code no
+  longer branches on wall versus phone.
 - **The first widgets are the existing components**, plus Link. The Room
   Tile's light and temperature are settings on the widget, which is where the
   `main` Label went. A Group card holds an ordered member list of one Domain.
@@ -172,6 +172,21 @@ setting on each widget.
 - **A theme is a named set of token values in light and dark**, applied as CSS
   custom properties. The document stores the theme's name and the mode. Casa
   Panel ships first. Components take colour and radius only from tokens.
+- **The mode is `light`, `dark`, `follow-device` or `follow-house`** (#70).
+  A wall panel should switch when the house gets dark, not when its OS does,
+  so `follow-house` reads an entity the admin picks: a `sun`, `binary_sensor`
+  or `input_boolean`, where `above_horizon` or `on` is light. Choosing it
+  writes `sun.sun` into the document, which the admin can change. Deciding
+  when it is night stays in Home Assistant, so a lux threshold is a template
+  sensor there rather than a setting here. If the entity is unavailable,
+  unknown or gone, the Dashboard follows the device, and if the device cannot
+  say, it is dark. A lost connection changes nothing: the Dashboard keeps
+  what it shows. `auto` was renamed `follow-device`, which is a major version
+  of the document.
+- **A change of light and dark fades over about 300 ms and waits for touches
+  to end**, whatever caused it: the entity, the device, or a Publish. It
+  waits until no pointer is down on the Dashboard, then switches at once. The
+  first render does not fade, and the Builder's preview switches instantly.
 
 ### Running inside a panel
 

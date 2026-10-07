@@ -201,8 +201,20 @@ _Avoid_: Offline, missing, error, dead
 
 **Theme**:
 A named look, defined for both light and dark. Casa Panel is the first.
-Each Dashboard picks one, and light, dark or follow-the-device.
+Each Dashboard picks one, and a Mode to show it in.
 _Avoid_: Skin, palette, style
+
+**Mode**:
+Whether a Dashboard shows its Theme light, dark, or switches between them by
+following the device or the house. A switch fades in, and never happens while
+someone is touching the screen.
+_Avoid_: Theme (for light or dark), colour scheme, auto
+
+**Follow the house**:
+The Mode that switches on an entity the admin picks, the sun by default, so
+Home Assistant decides when it is night. If that entity cannot say, the
+Dashboard follows the device; if the device cannot either, it is dark.
+_Avoid_: Follow the sun, schedule, auto
 
 **Default title**:
 The title a Widget shows until someone writes one. It is translated into each
