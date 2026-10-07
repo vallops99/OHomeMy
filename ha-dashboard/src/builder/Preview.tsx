@@ -47,6 +47,7 @@ import {
 import { validateWidget } from '../document/schema';
 import type { Dashboard, Page as PageType, Size, Widget } from '../document/types';
 import { useHouse } from '../ha';
+import { tr } from '../i18n';
 import { DashboardConcerns } from '../renderer/concerns';
 import { Frame, FRAME_CSS } from '../renderer/Frame';
 import { cellPlacement, gridVariables, RENDERER_CSS } from '../renderer/grid';
@@ -58,10 +59,7 @@ import { themeFor } from '../theme/themes';
 import { WIDGETS_CSS, widgetKind } from '../widgets/registry';
 import { fits, type Extent } from './fit';
 import { canPlace, cellAt, gridOf, moved, overlaps, resized, snapDelta, type Box, type Metrics } from './layout';
-import { fromId } from './dashboardStrings';
-import { strings } from './strings';
-
-const t = strings.dashboard;
+import { kindName } from './words';
 
 /** What the Dashboard screen asks of the preview: which cell is under a point of the screen, if any. */
 export type PreviewHandle = { cellAt: (clientX: number, clientY: number) => { x: number; y: number } | null };
@@ -217,7 +215,7 @@ export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, 
       const kind = widgetKind(w.kind);
       const valid = validateWidget(w, kind?.schema, { grid: gridCtx, house });
       if (!valid.ok) out.set(w.id, valid.reason);
-      else if (kind?.tap === 'page' && w.on_tap === null) out.set(w.id, t.widget.noPage);
+      else if (kind?.tap === 'page' && w.on_tap === null) out.set(w.id, tr('builder.dashboard.widget.noPage'));
     }
     return out;
   }, [page, gridCtx, house]);
@@ -241,7 +239,7 @@ export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, 
           className='b-screen'
           ref={screenEl}
           style={{ width: screen.width, height: screen.height, transform: `scale(${scale})`, ...themeVariables(dashboard, deviceDark) }}
-          aria-label={t.preview.label(page.name)}
+          aria-label={tr('builder.dashboard.preview.label', { page: page.name })}
         >
           <style>{RENDERER_CSS}</style>
           <style>{FRAME_CSS}</style>
@@ -288,7 +286,7 @@ export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, 
                         ))}
                         {shownGhost && (
                           <div className='b-ghost' data-valid={shownGhost.valid} style={cellPlacement(shownGhost.box)}>
-                            {!shownGhost.valid && <span className='b-frame-tag'>{t.preview.refused}</span>}
+                            {!shownGhost.valid && <span className='b-frame-tag'>{tr('builder.dashboard.preview.refused')}</span>}
                           </div>
                         )}
                       </div>
@@ -321,7 +319,7 @@ function WidgetFrame({
   onPress: (widget: Widget, mode: 'move' | 'resize') => (e: ReactPointerEvent) => void;
   onKey: (e: ReactKeyboardEvent) => void;
 }) {
-  const name = t.kinds[widget.kind] ?? fromId(widget.kind);
+  const name = kindName(widget.kind);
   return (
     <div
       className='b-frame'
@@ -339,11 +337,13 @@ function WidgetFrame({
     >
       <span className='b-frame-tag'>
         {name}
-        {problem !== null && ` · ${t.preview.notShown}`}
-        <span className='b-frame-fit'> · {t.preview.notFitting}</span>
+        {problem !== null && ` · ${tr('builder.dashboard.preview.notShown')}`}
+        <span className='b-frame-fit'> · {tr('builder.dashboard.preview.notFitting')}</span>
       </span>
       {problem !== null && <span className='b-frame-problem'>{problem}</span>}
-      {selected && <span className='b-handle' aria-label={t.preview.resize} onPointerDown={onPress(widget, 'resize')} />}
+      {selected && (
+        <span className='b-handle' aria-label={tr('builder.dashboard.preview.resize')} onPointerDown={onPress(widget, 'resize')} />
+      )}
     </div>
   );
 }

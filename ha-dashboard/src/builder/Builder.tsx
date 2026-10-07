@@ -10,6 +10,7 @@
 import { useEffect, useReducer, useState, type ReactNode } from 'react';
 import type { OHomeMyDocument } from '../document/types';
 import { useDocumentAdmin, usePublished, type ImportOutcome } from '../ha';
+import { tr } from '../i18n';
 import { useLocalised } from '../i18n/useLocalised';
 import { usePanelProps } from '../panel/panelProps';
 import { DashboardList } from './DashboardList';
@@ -19,7 +20,6 @@ import { HistorySection } from './HistorySection';
 import { messageOf } from './messageOf';
 import { mapDashboard } from './pages';
 import { canPublish, inConflict, isDirty, sessionReducer, type PublishOutcome, type Session } from './session';
-import { strings } from './strings';
 import { TransferSection } from './TransferSection';
 
 /** A question the admin answers before something is thrown away. */
@@ -43,7 +43,7 @@ export function Builder() {
   if (!session || !admin)
     return (
       <div className='b-loading' lang={lang} dir={dir} style={style}>
-        {strings.loading}
+        {tr('builder.loading')}
       </div>
     );
 
@@ -71,8 +71,8 @@ export function Builder() {
         onPublish={() => publish(session.draft, () => admin.save(session.draft, base))}
         onDiscard={() =>
           setConfirmation({
-            message: strings.discardConfirm,
-            confirmLabel: strings.discard,
+            message: tr('builder.discardConfirm'),
+            confirmLabel: tr('builder.discard'),
             onConfirm: () => dispatch({ type: 'reverted' }),
           })
         }
@@ -81,12 +81,12 @@ export function Builder() {
       <main className='b-main' data-editing={!!edited}>
         {conflict && (
           <Banner tone='alert' role='alert'>
-            <strong className='b-banner-title'>{strings.conflict.title}</strong>
-            <p>{strings.conflict.body(session.latest.revision)}</p>
-            <p className='b-banner-note'>{strings.conflict.reloadNote}</p>
+            <strong className='b-banner-title'>{tr('builder.conflict.title')}</strong>
+            <p>{tr('builder.conflict.body', { revision: session.latest.revision })}</p>
+            <p className='b-banner-note'>{tr('builder.conflict.reloadNote')}</p>
             <div className='b-actions'>
               <button className='b-button b-primary' onClick={() => dispatch({ type: 'reverted' })}>
-                {strings.conflict.reload}
+                {tr('builder.conflict.reload')}
               </button>
             </div>
           </Banner>
@@ -94,10 +94,14 @@ export function Builder() {
 
         {session.notice && (
           <Banner tone={session.notice.kind === 'failed' ? 'alert' : 'neutral'} role='status'>
-            <p>{session.notice.kind === 'failed' ? strings.failed(session.notice.message) : strings.published(session.notice.revision)}</p>
+            <p>
+              {session.notice.kind === 'failed'
+                ? tr('builder.failed', { message: session.notice.message })
+                : tr('builder.published', { revision: session.notice.revision })}
+            </p>
             <div className='b-actions'>
               <button className='b-button' onClick={() => dispatch({ type: 'dismissed' })}>
-                {strings.dismiss}
+                {tr('builder.dismiss')}
               </button>
             </div>
           </Banner>
@@ -118,7 +122,7 @@ export function Builder() {
                 {confirmation.confirmLabel}
               </button>
               <button className='b-button' onClick={() => setConfirmation(null)}>
-                {strings.cancel}
+                {tr('builder.cancel')}
               </button>
             </div>
           </Banner>
@@ -170,12 +174,14 @@ function Header({ session, onPublish, onDiscard }: { session: Session; onPublish
   const { narrow } = usePanelProps();
   const dirty = isDirty(session);
   const status = session.publishing
-    ? strings.status.publishing
+    ? tr('builder.status.publishing')
     : inConflict(session)
-      ? strings.status.conflict
+      ? tr('builder.status.conflict')
       : dirty
-        ? strings.status.dirty(session.base.revision)
-        : strings.status.clean(session.base.revision);
+        ? tr('builder.status.dirty', { revision: session.base.revision })
+        : session.base.revision === 0
+          ? tr('builder.status.none')
+          : tr('builder.status.clean', { revision: session.base.revision });
 
   return (
     <header className='b-header'>
@@ -184,24 +190,24 @@ function Header({ session, onPublish, onDiscard }: { session: Session; onPublish
         // screen this is the only way back to its sidebar.
         <button
           className='b-button b-icon'
-          aria-label={strings.menu}
+          aria-label={tr('builder.menu')}
           onClick={e => e.currentTarget.dispatchEvent(new Event('hass-toggle-menu', { bubbles: true, composed: true }))}
         >
           ☰
         </button>
       )}
       <div className='b-heading'>
-        <h1>{strings.title}</h1>
+        <h1>{tr('builder.title')}</h1>
         <p className='b-status' data-state={inConflict(session) ? 'conflict' : dirty ? 'dirty' : 'clean'}>
           {status}
         </p>
       </div>
       <div className='b-actions'>
         <button className='b-button' disabled={!dirty || !!session.publishing} onClick={onDiscard}>
-          {strings.discard}
+          {tr('builder.discard')}
         </button>
         <button className='b-button b-primary' disabled={!canPublish(session)} onClick={onPublish}>
-          {strings.publish}
+          {tr('builder.publish')}
         </button>
       </div>
     </header>

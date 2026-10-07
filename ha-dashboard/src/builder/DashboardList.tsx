@@ -4,6 +4,7 @@
  */
 import { useId, useState } from 'react';
 import type { Dashboard, OHomeMyDocument } from '../document/types';
+import { fmt, tr } from '../i18n';
 import type { Ask } from './Builder';
 import {
   addDashboard,
@@ -16,7 +17,7 @@ import {
   renameDashboard,
 } from './draft';
 import { slugify, slugProblem, uniqueSlug } from './slug';
-import { strings } from './strings';
+import { dashboardUrl } from './words';
 
 type Edit = (edit: (draft: OHomeMyDocument) => OHomeMyDocument) => void;
 
@@ -49,26 +50,26 @@ export function DashboardList({
   return (
     <section className='b-section' aria-labelledby='b-dashboards'>
       <div className='b-section-head'>
-        <h2 id='b-dashboards'>{strings.dashboards.title}</h2>
+        <h2 id='b-dashboards'>{tr('builder.dashboards.title')}</h2>
         <button className='b-button' disabled={disabled || !!form} onClick={() => setForm({ mode: 'create' })}>
-          {strings.dashboards.create}
+          {tr('builder.dashboards.create')}
         </button>
       </div>
 
       {form?.mode === 'create' && (
         <DashboardForm
-          title={strings.form.createTitle}
+          title={tr('builder.form.createTitle')}
           initialName=''
           taken={slugs}
           onCancel={() => setForm(null)}
           onSubmit={fields => {
-            edit(d => addDashboard(d, newDashboard(fields, strings.homePageName, randomId)));
+            edit(d => addDashboard(d, newDashboard(fields, tr('builder.homePageName'), randomId)));
             setForm(null);
           }}
         />
       )}
 
-      {draft.dashboards.length === 0 && !form && <p className='b-empty'>{strings.dashboards.none}</p>}
+      {draft.dashboards.length === 0 && !form && <p className='b-empty'>{tr('builder.dashboards.none')}</p>}
 
       <ul className='b-list'>
         {draft.dashboards.map(dashboard => (
@@ -80,51 +81,53 @@ export function DashboardList({
                 </span>
                 <span className='b-meta'>
                   {/* An address reads left to right in any language. */}
-                  <bdi>{strings.form.url(dashboard.slug)}</bdi>
+                  <bdi>{dashboardUrl(dashboard.slug)}</bdi>
                   {[
                     '',
-                    strings.dashboards.pages(dashboard.pages.length),
-                    ...(dashboard.show_in_sidebar ? [] : [strings.dashboards.hidden]),
+                    tr('builder.dashboards.pages', { count: dashboard.pages.length }),
+                    ...(dashboard.show_in_sidebar ? [] : [tr('builder.dashboards.hidden')]),
                   ].join(' · ')}
                 </span>
               </div>
               {changes.has(dashboard.id) && (
-                <span className='b-chip'>{changes.get(dashboard.id) === 'new' ? strings.dashboards.new : strings.dashboards.changed}</span>
+                <span className='b-chip'>
+                  {changes.get(dashboard.id) === 'new' ? tr('builder.dashboards.new') : tr('builder.dashboards.changed')}
+                </span>
               )}
               <div className='b-actions'>
                 <button className='b-button b-primary' disabled={!!form} onClick={() => onEdit(dashboard.id)}>
-                  {strings.dashboard.open}
+                  {tr('builder.dashboard.open')}
                 </button>
                 {published.has(dashboard.id) && (
-                  <a className='b-button' href={strings.form.url(dashboard.slug)}>
-                    {strings.dashboards.visit}
+                  <a className='b-button' href={dashboardUrl(dashboard.slug)}>
+                    {tr('builder.dashboards.visit')}
                   </a>
                 )}
                 <button className='b-button' disabled={disabled || !!form} onClick={() => setForm({ mode: 'rename', dashboard })}>
-                  {strings.dashboards.rename}
+                  {tr('builder.dashboards.rename')}
                 </button>
                 <button className='b-button' disabled={disabled || !!form} onClick={() => setForm({ mode: 'duplicate', dashboard })}>
-                  {strings.dashboards.duplicate}
+                  {tr('builder.dashboards.duplicate')}
                 </button>
                 <button
                   className='b-button'
                   disabled={disabled || !!form}
                   onClick={() =>
                     ask({
-                      message: strings.dashboards.deleteConfirm(dashboard.name),
-                      confirmLabel: strings.dashboards.delete,
+                      message: tr('builder.dashboards.deleteConfirm', { name: dashboard.name }),
+                      confirmLabel: tr('builder.dashboards.delete'),
                       onConfirm: () => edit(d => deleteDashboard(d, dashboard.id)),
                     })
                   }
                 >
-                  {strings.dashboards.delete}
+                  {tr('builder.dashboards.delete')}
                 </button>
               </div>
             </div>
 
             {formFor(dashboard) && form?.mode === 'rename' && (
               <DashboardForm
-                title={strings.form.renameTitle}
+                title={tr('builder.form.renameTitle')}
                 initialName={dashboard.name}
                 onCancel={() => setForm(null)}
                 onSubmit={({ name }) => {
@@ -135,8 +138,8 @@ export function DashboardList({
             )}
             {formFor(dashboard) && form?.mode === 'duplicate' && (
               <DashboardForm
-                title={strings.form.duplicateTitle(dashboard.name)}
-                initialName={strings.dashboards.copyName(dashboard.name)}
+                title={tr('builder.form.duplicateTitle', { name: dashboard.name })}
+                initialName={tr('builder.dashboards.copyName', { name: dashboard.name })}
                 initialSlug={uniqueSlug(`${dashboard.slug}-copy`, slugs)}
                 taken={slugs}
                 onCancel={() => setForm(null)}
@@ -150,7 +153,7 @@ export function DashboardList({
         ))}
       </ul>
 
-      {deleted.length > 0 && <p className='b-meta'>{strings.dashboards.deleted(deleted.map(d => d.name))}</p>}
+      {deleted.length > 0 && <p className='b-meta'>{tr('builder.dashboards.deleted', { names: fmt.list(deleted.map(d => d.name)) })}</p>}
     </section>
   );
 }
@@ -182,9 +185,9 @@ function DashboardForm({
   const slug = ownSlug ?? slugify(name);
   const [tried, setTried] = useState(false);
 
-  const nameError = nameProblem(name) && strings.form.nameEmpty;
+  const nameError = nameProblem(name) && tr('builder.form.nameEmpty');
   const slugIssue = choosesSlug ? slugProblem(slug, taken) : null;
-  const slugError = slugIssue && strings.form.slug_problem[slugIssue];
+  const slugError = slugIssue && tr(`builder.form.slug.${slugIssue}`);
 
   return (
     <form
@@ -199,7 +202,7 @@ function DashboardForm({
       <h3>{title}</h3>
       <div className='b-field'>
         <label className='b-label' htmlFor={`${id}-name`}>
-          {strings.form.name}
+          {tr('builder.form.name')}
         </label>
         <input
           className='b-input'
@@ -217,7 +220,7 @@ function DashboardForm({
       {choosesSlug && (
         <div className='b-field'>
           <label className='b-label' htmlFor={`${id}-slug`}>
-            {strings.form.slug}
+            {tr('builder.form.slug')}
           </label>
           <input
             className='b-input'
@@ -230,7 +233,7 @@ function DashboardForm({
             onChange={e => setOwnSlug(e.target.value)}
           />
           <span className='b-meta' id={`${id}-slug-hint`}>
-            <bdi>{strings.form.url(slug)}</bdi> · {strings.form.slugHint}
+            <bdi>{dashboardUrl(slug)}</bdi> · {tr('builder.form.slugHint')}
           </span>
           <span className='b-error' id={`${id}-slug-error`}>
             {(tried || (ownSlug !== null && ownSlug !== initialSlug)) && slugError}
@@ -239,10 +242,10 @@ function DashboardForm({
       )}
       <div className='b-actions'>
         <button className='b-button b-primary' type='submit'>
-          {choosesSlug ? strings.form.create : strings.form.save}
+          {choosesSlug ? tr('builder.form.create') : tr('builder.form.save')}
         </button>
         <button className='b-button' type='button' onClick={onCancel}>
-          {strings.form.cancel}
+          {tr('builder.form.cancel')}
         </button>
       </div>
     </form>

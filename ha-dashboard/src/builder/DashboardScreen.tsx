@@ -9,21 +9,18 @@
  */
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { Dashboard, Widget } from '../document/types';
-import { viewerDirection } from '../i18n';
+import { tr, viewerDirection } from '../i18n';
 import { widgetSchemas } from '../widgets/registry';
 import type { Ask } from './Builder';
 import { DashboardSettings } from './DashboardSettings';
 import { randomId } from './draft';
-import { fromId } from './dashboardStrings';
 import { Inspector } from './Inspector';
 import { newWidget, sizeFor } from './inspector';
 import { addWidget, canPlace, deleteWidget, freeSpot, gridOf, placeWidget, placedOnGrid, updateWidget, type Box } from './layout';
 import { addPage } from './pages';
 import { PageSettings } from './PageSettings';
 import { Preview, type Ghost, type PreviewHandle } from './Preview';
-import { strings } from './strings';
-
-const t = strings.dashboard;
+import { kindName } from './words';
 
 type Tab = 'widget' | 'page' | 'dashboard';
 
@@ -119,17 +116,17 @@ export function DashboardScreen({
   };
 
   const kinds = widgetSchemas()
-    .map(s => ({ kind: s.kind, name: t.kinds[s.kind] ?? fromId(s.kind) }))
+    .map(s => ({ kind: s.kind, name: kindName(s.kind) }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <section className='b-dashboard-screen' aria-label={t.editing(dashboard.name)}>
+    <section className='b-dashboard-screen' aria-label={tr('builder.dashboard.editing', { name: dashboard.name })}>
       <div className='b-dashboard-screen-bar'>
         <button type='button' className='b-button' onClick={onClose}>
-          {viewerDirection() === 'rtl' ? '→' : '←'} {t.back}
+          {viewerDirection() === 'rtl' ? '→' : '←'} {tr('builder.dashboard.back')}
         </button>
         <h2 className='b-dashboard-screen-title'>{dashboard.name}</h2>
-        <div className='b-pages' role='tablist' aria-label={t.pages.label}>
+        <div className='b-pages' role='tablist' aria-label={tr('builder.dashboard.pages.label')}>
           {dashboard.pages.map(p => (
             <button
               key={p.id}
@@ -139,8 +136,8 @@ export function DashboardScreen({
               aria-selected={p.id === page.id}
               onClick={() => openPage(p.id)}
             >
-              {p.popup !== null ? t.pages.popup(p.popup) : p.name}
-              {p.id === dashboard.home_page && <span className='b-chip'>{t.pages.home}</span>}
+              {p.popup !== null ? tr('builder.dashboard.pages.popup', { name: p.popup }) : p.name}
+              {p.id === dashboard.home_page && <span className='b-chip'>{tr('builder.dashboard.pages.home')}</span>}
             </button>
           ))}
           <button
@@ -149,24 +146,24 @@ export function DashboardScreen({
             disabled={disabled}
             onClick={() => {
               const id = randomId();
-              const name = t.newPageName(dashboard.pages.length + 1);
+              const name = tr('builder.dashboard.newPageName', { n: dashboard.pages.length + 1 });
               change(d => addPage(d, { id, name, grid: page.grid }));
               openPage(id);
               setTab('page');
             }}
           >
-            + {t.pages.add}
+            + {tr('builder.dashboard.pages.add')}
           </button>
         </div>
       </div>
 
       <div className='b-dashboard-screen-body'>
-        <aside className='b-palette' aria-label={t.palette.label}>
-          <h3 className='b-panel-title'>{t.palette.label}</h3>
-          <p className='b-meta'>{t.palette.hint}</p>
+        <aside className='b-palette' aria-label={tr('builder.dashboard.palette.label')}>
+          <h3 className='b-panel-title'>{tr('builder.dashboard.palette.label')}</h3>
+          <p className='b-meta'>{tr('builder.dashboard.palette.hint')}</p>
           {full && (
             <p className='b-note' data-tone='alert' role='status'>
-              {t.palette.full}
+              {tr('builder.dashboard.palette.full')}
             </p>
           )}
           <ul className='b-palette-list'>
@@ -192,19 +189,22 @@ export function DashboardScreen({
 
         <div className='b-canvas'>
           <div className='b-canvas-bar'>
-            <span className='b-label'>{t.size.label}</span>
-            <div className='b-segmented' role='radiogroup' aria-label={t.size.label}>
+            <span className='b-label'>{tr('builder.dashboard.size.label')}</span>
+            <div className='b-segmented' role='radiogroup' aria-label={tr('builder.dashboard.size.label')}>
               {(['min', 'max'] as const).map(e => (
                 <button key={e} type='button' role='radio' aria-checked={end === e} onClick={() => setEnd(e)}>
-                  {e === 'min' ? t.size.smallest : t.size.largest} ·{' '}
-                  {t.size.dims(dashboard.settings.supported_range[e].width, dashboard.settings.supported_range[e].height)}
+                  {e === 'min' ? tr('builder.dashboard.size.smallest') : tr('builder.dashboard.size.largest')} ·{' '}
+                  {tr('builder.dashboard.size.dims', {
+                    width: dashboard.settings.supported_range[e].width,
+                    height: dashboard.settings.supported_range[e].height,
+                  })}
                 </button>
               ))}
             </div>
-            <span className='b-fit-summary' data-fits={notFitting.length === 0} role='status' title={t.size.fitRule}>
+            <span className='b-fit-summary' data-fits={notFitting.length === 0} role='status' title={tr('builder.dashboard.size.fitRule')}>
               {notFitting.length === 0
-                ? t.size.allFit(screen.width, screen.height)
-                : t.size.notFitting(notFitting.length, screen.width, screen.height)}
+                ? tr('builder.dashboard.size.allFit', { width: screen.width, height: screen.height })
+                : tr('builder.dashboard.size.notFitting', { count: notFitting.length, width: screen.width, height: screen.height })}
             </span>
           </div>
           <Preview
@@ -220,14 +220,14 @@ export function DashboardScreen({
             ghost={ghost}
             handle={preview}
           />
-          <p className='b-meta'>{t.preview.rule}</p>
+          <p className='b-meta'>{tr('builder.dashboard.preview.rule')}</p>
         </div>
 
         <aside className='b-side'>
           <div className='b-segmented b-side-tabs' role='tablist'>
             {(['widget', 'page', 'dashboard'] as const).map(k => (
               <button key={k} type='button' role='tab' aria-selected={tab === k} onClick={() => setTab(k)}>
-                {t.tabs[k]}
+                {tr(`builder.dashboard.tabs.${k}`)}
               </button>
             ))}
           </div>
@@ -244,7 +244,7 @@ export function DashboardScreen({
                 onDelete={() => change(d => deleteWidget(d, page.id, widget.id))}
               />
             ) : (
-              <p className='b-empty'>{t.widget.none}</p>
+              <p className='b-empty'>{tr('builder.dashboard.widget.none')}</p>
             ))}
           {tab === 'page' && <PageSettings dashboard={dashboard} page={page} edit={change} ask={ask} />}
           {tab === 'dashboard' && <DashboardSettings dashboard={dashboard} edit={change} />}

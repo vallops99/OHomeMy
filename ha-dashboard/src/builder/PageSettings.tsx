@@ -5,13 +5,11 @@
  * Home Page cannot be removed.
  */
 import type { Dashboard, Page } from '../document/types';
+import { tr } from '../i18n';
 import type { Ask } from './Builder';
 import { Field, NumberInput } from './fields';
 import { minimumGrid } from './layout';
 import { GRID_MAX, movePage, removePage, renamePage, setGrid, setHomePage } from './pages';
-import { strings } from './strings';
-
-const t = strings.dashboard.page;
 
 export function PageSettings({
   dashboard,
@@ -31,24 +29,24 @@ export function PageSettings({
 
   return (
     <div className='b-panel-body'>
-      <Field label={t.name}>
+      <Field label={tr('builder.dashboard.page.name')}>
         {id => <PageName key={page.id} id={id} name={page.name} onChange={name => edit(d => renamePage(d, page.id, name))} />}
       </Field>
 
       {page.popup !== null ? (
-        <p className='b-meta'>{t.popupNote}</p>
+        <p className='b-meta'>{tr('builder.dashboard.page.popupNote')}</p>
       ) : isHome ? (
-        <p className='b-meta'>{t.isHome}</p>
+        <p className='b-meta'>{tr('builder.dashboard.page.isHome')}</p>
       ) : (
         <div className='b-actions'>
           <button type='button' className='b-button' onClick={() => edit(d => setHomePage(d, page.id))}>
-            {t.makeHome}
+            {tr('builder.dashboard.page.makeHome')}
           </button>
         </div>
       )}
 
       <div className='b-pair'>
-        <Field label={t.columns}>
+        <Field label={tr('builder.dashboard.page.columns')}>
           {id => (
             <NumberInput
               id={id}
@@ -60,7 +58,7 @@ export function PageSettings({
             />
           )}
         </Field>
-        <Field label={t.rows}>
+        <Field label={tr('builder.dashboard.page.rows')}>
           {id => (
             <NumberInput
               id={id}
@@ -73,11 +71,13 @@ export function PageSettings({
           )}
         </Field>
       </div>
-      {page.widgets.length > 0 && <p className='b-meta'>{t.gridHint(least.columns, fit ? least.rows : 1)}</p>}
+      {page.widgets.length > 0 && (
+        <p className='b-meta'>{tr('builder.dashboard.page.gridHint', { columns: least.columns, rows: fit ? least.rows : 1 })}</p>
+      )}
 
       <div className='b-actions'>
         <button type='button' className='b-button' disabled={index <= 0} onClick={() => edit(d => movePage(d, page.id, -1))}>
-          {t.moveEarlier}
+          {tr('builder.dashboard.page.moveEarlier')}
         </button>
         <button
           type='button'
@@ -85,20 +85,24 @@ export function PageSettings({
           disabled={index >= dashboard.pages.length - 1}
           onClick={() => edit(d => movePage(d, page.id, 1))}
         >
-          {t.moveLater}
+          {tr('builder.dashboard.page.moveLater')}
         </button>
         <button
           type='button'
           className='b-button'
           disabled={isHome || dashboard.pages.length <= 1}
           onClick={() =>
-            ask({ message: t.removeConfirm(page.name), confirmLabel: t.remove, onConfirm: () => edit(d => removePage(d, page.id)) })
+            ask({
+              message: tr('builder.dashboard.page.removeConfirm', { name: page.name }),
+              confirmLabel: tr('builder.dashboard.page.remove'),
+              onConfirm: () => edit(d => removePage(d, page.id)),
+            })
           }
         >
-          {t.remove}
+          {tr('builder.dashboard.page.remove')}
         </button>
       </div>
-      {isHome && <p className='b-meta'>{t.homeCannotGo}</p>}
+      {isHome && <p className='b-meta'>{tr('builder.dashboard.page.homeCannotGo')}</p>}
     </div>
   );
 }

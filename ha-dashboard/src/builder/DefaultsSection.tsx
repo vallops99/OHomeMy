@@ -9,10 +9,10 @@
 import { useState } from 'react';
 import type { OHomeMyDocument } from '../document/types';
 import { useDefaults } from '../ha';
+import { fmt, tr } from '../i18n';
 import { choices, lostDefaults, targetOf, type Choice } from './defaults';
 import { messageOf } from './messageOf';
 import type { Session } from './session';
-import { strings } from './strings';
 
 /** Who a row is for: a user's id, or the system default. */
 const SYSTEM = '';
@@ -33,7 +33,7 @@ export function DefaultsSection({ session }: { session: Session }) {
     try {
       await (key === SYSTEM ? admin.setSystem(dashboardId) : admin.setUser(key, dashboardId));
     } catch (err) {
-      setFailure(strings.defaults.setFailed(name, messageOf(err)));
+      setFailure(tr('builder.defaults.setFailed', { name, message: messageOf(err) }));
     } finally {
       setPending(p => {
         const next = new Set(p);
@@ -46,47 +46,51 @@ export function DefaultsSection({ session }: { session: Session }) {
   return (
     <section className='b-section' aria-labelledby='b-defaults'>
       <div className='b-section-head'>
-        <h2 id='b-defaults'>{strings.defaults.title}</h2>
+        <h2 id='b-defaults'>{tr('builder.defaults.title')}</h2>
       </div>
-      <p className='b-meta'>{strings.defaults.body}</p>
+      <p className='b-meta'>{tr('builder.defaults.body')}</p>
 
       {lost.map(({ dashboard, users, system, fallback }) => (
         <div key={dashboard.id} className='b-banner b-defaults-lost' role='status'>
-          <strong className='b-banner-title'>{strings.defaults.lostTitle}</strong>
+          <strong className='b-banner-title'>{tr('builder.defaults.lostTitle')}</strong>
           <p>
-            {strings.defaults.lost(dashboard.name, [...users.map(u => u.name), ...(system ? [strings.defaults.systemName] : [])], fallback)}
+            {tr(fallback === 'system' ? 'builder.defaults.lostToSystem' : 'builder.defaults.lost', {
+              name: dashboard.name,
+              who: fmt.list([...users.map(u => u.name), ...(system ? [tr('builder.defaults.systemName')] : [])]),
+            })}
           </p>
         </div>
       ))}
 
-      {error != null && <p className='b-error'>{strings.defaults.failed(messageOf(error))}</p>}
+      {error != null && <p className='b-error'>{tr('builder.defaults.failed', { message: messageOf(error) })}</p>}
       {failure && (
         <p className='b-error' role='alert'>
           {failure}
         </p>
       )}
-      {!defaults && error == null && <p className='b-empty'>{strings.defaults.loading}</p>}
+      {!defaults && error == null && <p className='b-empty'>{tr('builder.defaults.loading')}</p>}
 
       {defaults && (
         <ul className='b-list'>
           <DefaultRow
-            title={strings.defaults.system}
-            meta={strings.defaults.systemMeta}
-            label={strings.defaults.choose(strings.defaults.systemName)}
+            title={tr('builder.defaults.system')}
+            meta={tr('builder.defaults.systemMeta')}
+            label={tr('builder.defaults.choose', { name: tr('builder.defaults.systemName') })}
             current={defaults.system}
             published={published}
             options={options}
             busy={pending.has(SYSTEM)}
-            onChoose={id => choose(SYSTEM, strings.defaults.systemName, id)}
+            onChoose={id => choose(SYSTEM, tr('builder.defaults.systemName'), id)}
           />
           {defaults.users.map(user => (
             <DefaultRow
               key={user.id}
               title={user.name}
-              meta={[...(user.is_admin ? [strings.defaults.admin] : []), ...(user.is_active ? [] : [strings.defaults.inactive])].join(
-                ' · '
-              )}
-              label={strings.defaults.choose(user.name)}
+              meta={[
+                ...(user.is_admin ? [tr('builder.defaults.admin')] : []),
+                ...(user.is_active ? [] : [tr('builder.defaults.inactive')]),
+              ].join(' · ')}
+              label={tr('builder.defaults.choose', { name: user.name })}
               current={user.default_panel}
               published={published}
               options={options}
@@ -145,15 +149,15 @@ function DefaultRow({
             else if (v.startsWith('d:')) onChoose(v.slice(2));
           }}
         >
-          <option value=''>{strings.defaults.haDefault}</option>
+          <option value=''>{tr('builder.defaults.haDefault')}</option>
           {options.map(({ dashboard, published }) => (
             <option key={dashboard.id} value={`d:${dashboard.id}`} disabled={!published}>
-              {published ? dashboard.name : strings.defaults.publishFirst(dashboard.name)}
+              {published ? dashboard.name : tr('builder.defaults.publishFirst', { name: dashboard.name })}
             </option>
           ))}
           {target.kind === 'other' && (
             <option value={value} disabled>
-              {strings.defaults.other(target.urlPath)}
+              {tr('builder.defaults.other', { urlPath: target.urlPath })}
             </option>
           )}
         </select>

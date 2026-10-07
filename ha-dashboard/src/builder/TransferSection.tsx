@@ -5,10 +5,11 @@
  */
 import { useRef, useState } from 'react';
 import type { DocumentAdmin } from '../ha';
+import { tr } from '../i18n';
 import type { Ask } from './Builder';
 import { messageOf } from './messageOf';
 import { canReplace, type Session } from './session';
-import { strings } from './strings';
+import { discards } from './words';
 
 export function TransferSection({
   admin,
@@ -35,7 +36,7 @@ export function TransferSection({
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 0);
     } catch (err) {
-      setError(strings.transfer.exportFailed(messageOf(err)));
+      setError(tr('builder.transfer.exportFailed', { message: messageOf(err) }));
     }
   };
 
@@ -45,12 +46,12 @@ export function TransferSection({
     try {
       data = JSON.parse(await file.text());
     } catch {
-      setError(strings.transfer.notJson(file.name));
+      setError(tr('builder.transfer.notJson', { file: file.name }));
       return;
     }
     ask({
-      message: strings.transfer.importConfirm(file.name, dirty),
-      confirmLabel: strings.transfer.import,
+      message: tr('builder.transfer.importConfirm', { file: file.name }) + discards(dirty),
+      confirmLabel: tr('builder.transfer.import'),
       onConfirm: () => importData(data),
     });
   };
@@ -58,17 +59,17 @@ export function TransferSection({
   return (
     <section className='b-section' aria-labelledby='b-transfer'>
       <div className='b-section-head'>
-        <h2 id='b-transfer'>{strings.transfer.title}</h2>
+        <h2 id='b-transfer'>{tr('builder.transfer.title')}</h2>
         <div className='b-actions'>
           <button className='b-button' onClick={download}>
-            {strings.transfer.export}
+            {tr('builder.transfer.export')}
           </button>
           <button className='b-button' disabled={!canReplace(session)} onClick={() => input.current?.click()}>
-            {strings.transfer.import}
+            {tr('builder.transfer.import')}
           </button>
         </div>
       </div>
-      <p className='b-meta'>{strings.transfer.body}</p>
+      <p className='b-meta'>{tr('builder.transfer.body')}</p>
       {error && <p className='b-error'>{error}</p>}
       <input
         ref={input}

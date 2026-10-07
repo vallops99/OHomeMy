@@ -8,16 +8,15 @@ import { useMemo } from 'react';
 import { validateWidget } from '../document/schema';
 import type { Dashboard, Page, Size, Widget } from '../document/types';
 import { useAreas, useEntities, useHouse } from '../ha';
+import { tr } from '../i18n';
 import { iconChoices } from '../ui/iconMap';
 import { widgetKind } from '../widgets/registry';
-import { fromId } from './dashboardStrings';
 import { Field, IconPicker, NumberInput, OrderedList, Picker, Switch } from './fields';
 import { controlsFor, withSetting, type Control, type HouseLists } from './inspector';
 import { gridOf } from './layout';
 import { ordinaryPages } from './pages';
-import { strings } from './strings';
+import { kindName, settingName } from './words';
 
-const t = strings.dashboard;
 const ICONS = iconChoices();
 
 export function Inspector({
@@ -41,10 +40,10 @@ export function Inspector({
   const house = useHouse();
   const kind = widgetKind(widget.kind);
   const schema = kind?.schema;
-  const name = t.kinds[widget.kind] ?? fromId(widget.kind);
+  const name = kindName(widget.kind);
 
   const valid = validateWidget(widget, schema, { grid: gridOf(page, dashboard.settings.overflow), house });
-  const problem = !valid.ok ? valid.reason : kind?.tap === 'page' && widget.on_tap === null ? t.widget.noPage : null;
+  const problem = !valid.ok ? valid.reason : kind?.tap === 'page' && widget.on_tap === null ? tr('builder.dashboard.widget.noPage') : null;
   const pages = ordinaryPages(dashboard).map(p => ({ value: p.id, label: p.name }));
 
   return (
@@ -52,28 +51,30 @@ export function Inspector({
       <div className='b-section-head'>
         <h3 className='b-panel-title'>{name}</h3>
         <button type='button' className='b-button' onClick={onDelete}>
-          {t.widget.delete}
+          {tr('builder.dashboard.widget.delete')}
         </button>
       </div>
-      <p className='b-meta'>{t.widget.place(widget.x, widget.y, widget.w, widget.h)}</p>
+      <p className='b-meta'>
+        {tr('builder.dashboard.widget.place', { column: widget.x + 1, row: widget.y + 1, w: widget.w, h: widget.h })}
+      </p>
       {problem !== null && (
         <p className='b-note' data-tone='alert' role='status'>
-          {t.widget.notShown(problem)}
+          {tr('builder.dashboard.widget.notShown', { reason: problem })}
         </p>
       )}
       {problem === null && !fits && (
         <p className='b-note' data-tone='alert' role='status'>
-          {t.widget.notFitting(screen.width, screen.height)}
+          {tr('builder.dashboard.widget.notFitting', { width: screen.width, height: screen.height })}
         </p>
       )}
 
       {schema && schema.variants.length > 1 && (
-        <Field label={t.widget.variant}>
+        <Field label={tr('builder.dashboard.widget.variant')}>
           {() => (
-            <div className='b-segmented' role='radiogroup' aria-label={t.widget.variant}>
+            <div className='b-segmented' role='radiogroup' aria-label={tr('builder.dashboard.widget.variant')}>
               {schema.variants.map(v => (
                 <button key={v} type='button' role='radio' aria-checked={widget.variant === v} onClick={() => onChange({ variant: v })}>
-                  {t.widget.variants[v] ?? v}
+                  {tr(`builder.dashboard.widget.variant.${v}`)}
                 </button>
               ))}
             </div>
@@ -82,12 +83,12 @@ export function Inspector({
       )}
 
       {schema?.titled && (
-        <Field label={t.widget.title} hint={widget.title !== null && t.widget.titleHint}>
+        <Field label={tr('builder.dashboard.widget.title')} hint={widget.title !== null && tr('builder.dashboard.widget.titleHint')}>
           {id => (
             <div className='b-title'>
-              <div className='b-segmented' role='radiogroup' aria-label={t.widget.title}>
+              <div className='b-segmented' role='radiogroup' aria-label={tr('builder.dashboard.widget.title')}>
                 <button type='button' role='radio' aria-checked={widget.title === null} onClick={() => onChange({ title: null })}>
-                  {t.widget.titleDefault}
+                  {tr('builder.dashboard.widget.titleDefault')}
                 </button>
                 <button
                   type='button'
@@ -95,7 +96,7 @@ export function Inspector({
                   aria-checked={widget.title !== null}
                   onClick={() => widget.title === null && onChange({ title: '' })}
                 >
-                  {t.widget.titleOwn}
+                  {tr('builder.dashboard.widget.titleOwn')}
                 </button>
               </div>
               {widget.title !== null && (
@@ -109,7 +110,7 @@ export function Inspector({
                     onChange={e => onChange({ title: e.target.value })}
                   />
                   <button type='button' className='b-button' onClick={() => onChange({ title: null })}>
-                    {t.widget.titleReset}
+                    {tr('builder.dashboard.widget.titleReset')}
                   </button>
                 </div>
               )}
@@ -118,14 +119,14 @@ export function Inspector({
         </Field>
       )}
 
-      <Field label={t.widget.onTap}>
+      <Field label={tr('builder.dashboard.widget.onTap')}>
         {id => (
           <Picker
             id={id}
             name='on_tap'
             value={widget.on_tap}
             options={pages}
-            none={kind?.tap === 'page' ? undefined : t.widget.onTapNone}
+            none={kind?.tap === 'page' ? undefined : tr('builder.dashboard.widget.onTapNone')}
             onChange={v => onChange({ on_tap: v })}
           />
         )}
@@ -133,7 +134,7 @@ export function Inspector({
 
       {schema && Object.keys(schema.settings).length > 0 && (
         <>
-          <h4 className='b-subhead'>{t.widget.settings}</h4>
+          <h4 className='b-subhead'>{tr('builder.dashboard.widget.settings')}</h4>
           {controlsFor(schema, widget.settings, lists, ICONS).map(c => (
             <SettingControl key={c.key} control={c} onChange={v => onChange({ settings: withSetting(widget.settings, c.key, v) })} />
           ))}
@@ -144,7 +145,7 @@ export function Inspector({
 }
 
 function SettingControl({ control: c, onChange }: { control: Control; onChange: (value: unknown) => void }) {
-  const label = t.settingNames[c.key] ?? fromId(c.key);
+  const label = settingName(c.key);
   return (
     <Field label={label}>
       {id => {
@@ -157,7 +158,7 @@ function SettingControl({ control: c, onChange }: { control: Control; onChange: 
                 name={c.key}
                 value={c.value}
                 options={c.options}
-                none={c.optional ? t.field.none : undefined}
+                none={c.optional ? tr('builder.dashboard.field.none') : undefined}
                 onChange={onChange}
               />
             );
@@ -168,7 +169,7 @@ function SettingControl({ control: c, onChange }: { control: Control; onChange: 
                 name={c.key}
                 value={c.value}
                 options={c.options}
-                none={c.optional ? t.field.none : undefined}
+                none={c.optional ? tr('builder.dashboard.field.none') : undefined}
                 onChange={onChange}
               />
             );

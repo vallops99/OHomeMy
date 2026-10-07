@@ -5,6 +5,7 @@
  * what `pages.ts` accepts.
  */
 import { EDGES, MODES, OVERFLOWS, type Dashboard, type Size } from '../document/types';
+import { tr } from '../i18n';
 import { THEMES } from '../theme/themes';
 import { iconChoices } from '../ui/iconMap';
 import { randomId } from './draft';
@@ -21,10 +22,8 @@ import {
   setSettings,
   updateNavbarItem,
 } from './pages';
-import { strings } from './strings';
+import { wordFor } from './words';
 
-const t = strings.dashboard.dashboard;
-const n = strings.dashboard.navbar;
 const ICON_OPTIONS = iconChoices().map(name => ({ value: name, label: name.replace(/^mdi:/, '') }));
 
 type Edit = (f: (d: Dashboard) => Dashboard) => void;
@@ -35,34 +34,54 @@ export function DashboardSettings({ dashboard, edit }: { dashboard: Dashboard; e
 
   return (
     <div className='b-panel-body'>
-      <Switch checked={dashboard.show_in_sidebar} label={t.sidebar} onChange={on => edit(d => ({ ...d, show_in_sidebar: on }))} />
+      <Switch
+        checked={dashboard.show_in_sidebar}
+        label={tr('builder.dashboard.settings.sidebar')}
+        onChange={on => edit(d => ({ ...d, show_in_sidebar: on }))}
+      />
 
-      <Field label={t.overflow} hint={!fitOk && s.overflow === 'scroll' && t.cannotFit}>
+      <Field
+        label={tr('builder.dashboard.settings.overflow')}
+        hint={!fitOk && s.overflow === 'scroll' && tr('builder.dashboard.settings.cannotFit')}
+      >
         {id => (
           <Picker
             id={id}
             name='overflow'
             value={s.overflow}
-            options={OVERFLOWS.filter(o => o === s.overflow || o === 'scroll' || fitOk).map(o => ({ value: o, label: t.overflows[o] }))}
+            options={OVERFLOWS.filter(o => o === s.overflow || o === 'scroll' || fitOk).map(o => ({
+              value: o,
+              label: tr(`builder.dashboard.settings.overflow.${o}`),
+            }))}
             onChange={v => v && edit(d => setSettings(d, { overflow: v as Dashboard['settings']['overflow'] }))}
           />
         )}
       </Field>
 
       <fieldset className='b-fieldset'>
-        <legend className='b-label'>{t.range}</legend>
-        <RangeEnd label={t.smallest} name='min' size={s.supported_range.min} onChange={size => edit(d => setRangeEnd(d, 'min', size))} />
-        <RangeEnd label={t.largest} name='max' size={s.supported_range.max} onChange={size => edit(d => setRangeEnd(d, 'max', size))} />
-        <span className='b-meta'>{t.rangeHint}</span>
+        <legend className='b-label'>{tr('builder.dashboard.settings.range')}</legend>
+        <RangeEnd
+          label={tr('builder.dashboard.settings.smallest')}
+          name='min'
+          size={s.supported_range.min}
+          onChange={size => edit(d => setRangeEnd(d, 'min', size))}
+        />
+        <RangeEnd
+          label={tr('builder.dashboard.settings.largest')}
+          name='max'
+          size={s.supported_range.max}
+          onChange={size => edit(d => setRangeEnd(d, 'max', size))}
+        />
+        <span className='b-meta'>{tr('builder.dashboard.settings.rangeHint')}</span>
       </fieldset>
 
       <Switch
         checked={s.idle_return !== null}
-        label={t.idle}
+        label={tr('builder.dashboard.settings.idle')}
         onChange={on => edit(d => setSettings(d, { idle_return: on ? 120 : null }))}
       />
       {s.idle_return !== null && (
-        <Field label={t.idleSeconds}>
+        <Field label={tr('builder.dashboard.settings.idleSeconds')}>
           {id => (
             <NumberInput
               id={id}
@@ -76,27 +95,31 @@ export function DashboardSettings({ dashboard, edit }: { dashboard: Dashboard; e
         </Field>
       )}
 
-      <Switch checked={s.back_history} label={t.back} onChange={on => edit(d => setSettings(d, { back_history: on }))} />
+      <Switch
+        checked={s.back_history}
+        label={tr('builder.dashboard.settings.back')}
+        onChange={on => edit(d => setSettings(d, { back_history: on }))}
+      />
 
       <div className='b-pair'>
-        <Field label={t.theme}>
+        <Field label={tr('builder.dashboard.settings.theme')}>
           {id => (
             <Picker
               id={id}
               name='theme'
               value={s.theme.name}
-              options={Object.keys(THEMES).map(k => ({ value: k, label: t.themes[k] ?? k }))}
+              options={Object.keys(THEMES).map(k => ({ value: k, label: wordFor('builder.dashboard.settings.theme', k) ?? k }))}
               onChange={v => v && edit(d => setSettings(d, { theme: { ...d.settings.theme, name: v } }))}
             />
           )}
         </Field>
-        <Field label={t.mode}>
+        <Field label={tr('builder.dashboard.settings.mode')}>
           {id => (
             <Picker
               id={id}
               name='mode'
               value={s.theme.mode}
-              options={MODES.map(m => ({ value: m, label: t.modes[m] }))}
+              options={MODES.map(m => ({ value: m, label: tr(`builder.dashboard.settings.mode.${m}`) }))}
               onChange={v => v && edit(d => setSettings(d, { theme: { ...d.settings.theme, mode: v as (typeof MODES)[number] } }))}
             />
           )}
@@ -111,7 +134,7 @@ export function DashboardSettings({ dashboard, edit }: { dashboard: Dashboard; e
 function RangeEnd({ label, name, size, onChange }: { label: string; name: string; size: Size; onChange: (s: Size) => void }) {
   return (
     <div className='b-pair'>
-      <Field label={`${label} · ${t.width}`}>
+      <Field label={`${label} · ${tr('builder.dashboard.settings.width')}`}>
         {id => (
           <NumberInput
             id={id}
@@ -123,7 +146,7 @@ function RangeEnd({ label, name, size, onChange }: { label: string; name: string
           />
         )}
       </Field>
-      <Field label={`${label} · ${t.height}`}>
+      <Field label={`${label} · ${tr('builder.dashboard.settings.height')}`}>
         {id => (
           <NumberInput
             id={id}
@@ -144,11 +167,11 @@ function NavbarSettings({ dashboard, edit }: { dashboard: Dashboard; edit: Edit 
   const pages = ordinaryPages(dashboard).map(p => ({ value: p.id, label: p.name }));
 
   return (
-    <section className='b-subsection' aria-label={n.title}>
-      <h4 className='b-subhead'>{n.title}</h4>
+    <section className='b-subsection' aria-label={tr('builder.dashboard.navbar.title')}>
+      <h4 className='b-subhead'>{tr('builder.dashboard.navbar.title')}</h4>
       <Switch
         checked={navbar !== null}
-        label={n.on}
+        label={tr('builder.dashboard.navbar.on')}
         onChange={on => {
           const itemId = randomId();
           edit(d => setNavbar(d, on, itemId));
@@ -156,20 +179,24 @@ function NavbarSettings({ dashboard, edit }: { dashboard: Dashboard; edit: Edit 
       />
       {navbar && (
         <>
-          <Field label={n.edge}>
+          <Field label={tr('builder.dashboard.navbar.edge')}>
             {id => (
               <Picker
                 id={id}
                 name='edge'
                 value={navbar.edge}
-                options={EDGES.map(e => ({ value: e, label: n.edges[e] }))}
+                options={EDGES.map(e => ({ value: e, label: tr(`builder.dashboard.navbar.edge.${e}`) }))}
                 onChange={v => v && edit(d => setNavbarFields(d, { edge: v as (typeof EDGES)[number] }))}
               />
             )}
           </Field>
-          <Switch checked={navbar.tabs} label={n.tabs} onChange={tabs => edit(d => setNavbarFields(d, { tabs }))} />
+          <Switch
+            checked={navbar.tabs}
+            label={tr('builder.dashboard.navbar.tabs')}
+            onChange={tabs => edit(d => setNavbarFields(d, { tabs }))}
+          />
 
-          <span className='b-label'>{n.items}</span>
+          <span className='b-label'>{tr('builder.dashboard.navbar.items')}</span>
           <ol className='b-ordered-list'>
             {navbar.items.map((item, i) => (
               <li key={item.id} className='b-nav-item'>
@@ -191,7 +218,7 @@ function NavbarSettings({ dashboard, edit }: { dashboard: Dashboard; edit: Edit 
                   <button
                     type='button'
                     className='b-button b-icon'
-                    aria-label={strings.dashboard.field.up}
+                    aria-label={tr('builder.dashboard.field.up')}
                     disabled={i === 0}
                     onClick={() => edit(d => moveNavbarItem(d, item.id, -1))}
                   >
@@ -200,7 +227,7 @@ function NavbarSettings({ dashboard, edit }: { dashboard: Dashboard; edit: Edit 
                   <button
                     type='button'
                     className='b-button b-icon'
-                    aria-label={strings.dashboard.field.down}
+                    aria-label={tr('builder.dashboard.field.down')}
                     disabled={i === navbar.items.length - 1}
                     onClick={() => edit(d => moveNavbarItem(d, item.id, 1))}
                   >
@@ -209,7 +236,7 @@ function NavbarSettings({ dashboard, edit }: { dashboard: Dashboard; edit: Edit 
                   <button
                     type='button'
                     className='b-button b-icon'
-                    aria-label={strings.dashboard.field.remove}
+                    aria-label={tr('builder.dashboard.field.remove')}
                     onClick={() => edit(d => removeNavbarItem(d, item.id))}
                   >
                     ✕
@@ -232,7 +259,7 @@ function NavbarSettings({ dashboard, edit }: { dashboard: Dashboard; edit: Edit 
                 });
               }}
             >
-              {n.add}
+              {tr('builder.dashboard.navbar.add')}
             </button>
           </div>
         </>

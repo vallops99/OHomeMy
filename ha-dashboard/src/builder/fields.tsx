@@ -6,11 +6,9 @@
  * `inspector.ts`.
  */
 import { useId, useState, type ReactNode } from 'react';
+import { tr } from '../i18n';
 import { Icon } from '../ui/Icon';
 import type { Option } from './inspector';
-import { strings } from './strings';
-
-const t = strings.dashboard.field;
 
 export function Field({ label, hint, children }: { label: string; hint?: ReactNode; children: (id: string) => ReactNode }) {
   const id = useId();
@@ -132,7 +130,7 @@ export function Picker({
     >
       {value === null && none === undefined && (
         <option value='' disabled>
-          {placeholder ?? t.choose}
+          {placeholder ?? tr('builder.dashboard.field.choose')}
         </option>
       )}
       {none !== undefined && <option value=''>{none}</option>}
@@ -145,7 +143,8 @@ export function Picker({
   );
 }
 
-const optionText = (o: Option) => (o.missing ? t.missing(o.value) : o.detail ? `${o.label} — ${o.detail}` : o.label);
+const optionText = (o: Option) =>
+  o.missing ? tr('builder.dashboard.field.missing', { id: o.value }) : o.detail ? `${o.label} — ${o.detail}` : o.label;
 
 /** A picker of icons, with the chosen one drawn beside it. */
 export function IconPicker(props: Parameters<typeof Picker>[0]) {
@@ -189,17 +188,23 @@ export function OrderedList({
           {chosen.map((o, i) => (
             <li key={o.value} className='b-ordered-item' data-missing={!!o.missing}>
               <span className='b-ordered-text'>
-                <span>{o.missing ? t.missing(o.value) : o.label}</span>
+                <span>{o.missing ? tr('builder.dashboard.field.missing', { id: o.value }) : o.label}</span>
                 {o.detail && !o.missing && <span className='b-meta'>{o.detail}</span>}
               </span>
               <span className='b-actions'>
-                <button type='button' className='b-button b-icon' aria-label={t.up} disabled={i === 0} onClick={() => swap(i, i - 1)}>
+                <button
+                  type='button'
+                  className='b-button b-icon'
+                  aria-label={tr('builder.dashboard.field.up')}
+                  disabled={i === 0}
+                  onClick={() => swap(i, i - 1)}
+                >
                   ↑
                 </button>
                 <button
                   type='button'
                   className='b-button b-icon'
-                  aria-label={t.down}
+                  aria-label={tr('builder.dashboard.field.down')}
                   disabled={i === chosen.length - 1}
                   onClick={() => swap(i, i + 1)}
                 >
@@ -208,7 +213,7 @@ export function OrderedList({
                 <button
                   type='button'
                   className='b-button b-icon'
-                  aria-label={`${t.remove} ${o.label}`}
+                  aria-label={`${tr('builder.dashboard.field.remove')} ${o.label}`}
                   onClick={() => onChange(values.filter(v => v !== o.value))}
                 >
                   ✕
@@ -218,9 +223,15 @@ export function OrderedList({
           ))}
         </ol>
       )}
-      {chosen.length < min && <span className='b-error'>{t.atLeast(min)}</span>}
+      {chosen.length < min && <span className='b-error'>{tr('builder.dashboard.field.atLeast', { count: min })}</span>}
       {options.length > 0 && (
-        <Picker id={id} value={null} options={options} placeholder={t.add} onChange={v => v && onChange([...values, v])} />
+        <Picker
+          id={id}
+          value={null}
+          options={options}
+          placeholder={tr('builder.dashboard.field.add')}
+          onChange={v => v && onChange([...values, v])}
+        />
       )}
     </div>
   );
