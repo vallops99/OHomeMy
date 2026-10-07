@@ -1,6 +1,6 @@
 import { HassConnect } from '@hakit/core';
 import { useMemo } from 'react';
-import { useHakitLocale } from './ha';
+import { IgnoredLabelMute, useHakitLocale } from './ha';
 import Dashboard from './Dashboard';
 import { Renderer } from './renderer/Renderer';
 import { HakitTheme } from './ui';
@@ -52,7 +52,15 @@ function App({ panel }: AppProps) {
       {/* Drives @hakit's own surfaces -- the entity modal above all -- from
           our tokens. See src/ui/HakitTheme.tsx. */}
       <HakitTheme />
-      {panel || DEV_DASHBOARD ? <Renderer /> : <Dashboard />}
+      {panel || DEV_DASHBOARD ? (
+        <Renderer />
+      ) : (
+        // The `ignored` Label is label code, and only the label-driven
+        // Dashboard still honours it (#64).
+        <IgnoredLabelMute value>
+          <Dashboard />
+        </IgnoredLabelMute>
+      )}
     </HassConnect>
   );
 }

@@ -2,26 +2,21 @@
  * The Home Assistant data seam.
  *
  * This is the ONLY module that imports @hakit/core. Everything above it speaks
- * the plain types in `./types`. The #3 rules -- denylist, `ignored` label,
- * Domain ranking -- live here so no screen or component restates them.
+ * the plain types in `./types`. The #3 rules -- denylist, Domain ranking --
+ * live here and in `./entities` so no screen or component restates them.
  *
  * `usePage` lives here too, as the hook over the pure `resolvePage`
  * (`./placement`): keeping every React and @hakit import in this file is what
  * lets the placement resolver run under plain Node in its tests.
  */
 import { useHass, useRegistryData } from '@hakit/core';
-import { useEffect, useMemo, useState } from 'react';
-import { effectiveAreaId } from './area';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { deviceBattery } from './battery';
+import { houseEntities, type LiveState, type RegistryEntry } from './entities';
 import { resolvePage, type PageLayout } from './placement';
 import type { Area, AreaId, Entity, EntityId, Label } from './types';
 
-/**
- * Domains the dashboard never renders (#3). Infrastructure and plumbing that
- * would otherwise flood the panel. The per-entity escape hatch is the
- * `ignored` Label, applied in Home Assistant rather than in code.
- */
-const DENYLIST = new Set(['update', 'automation', 'event', 'tts', 'device_tracker', 'sun', 'zone']);
+export { isUnavailableState } from './entities';
 
 /**
  * Display order within an Area (#3): by Domain rank, then entity_id. Anything
@@ -46,41 +41,20 @@ const DOMAIN_RANK: Record<string, number> = {
 
 const rank = (domain: string) => DOMAIN_RANK[domain] ?? 50;
 
-/** Home Assistant's two ways of saying "I cannot reach this". */
-export const isUnavailableState = (state: string | undefined) => state === 'unavailable' || state === 'unknown';
-
 /**
- * One entry of Home Assistant's `entitiesRegistryDisplay`, as @hakit hands it
- * over.
- *
- * Home Assistant sends this registry compressed (`ei`, `ai`, `lb`, `hn`) and
- * @hakit expands the keys before we see them, so these are the long
- * spellings. Verified against the running instance rather than assumed: the
- * compressed names match nothing here.
- *
- * One expansion gap is worth knowing about. Home Assistant's `hn` -- "hidden
- * in the UI" -- is NOT re-expanded, so `hidden` would arrive undefined for
- * every entity and cannot be honoured. The `ignored` Label is the working
- * equivalent, and it is the one CONTEXT.md documents.
+ * Whether the `ignored` Label still takes entities off screen. Only the
+ * label-driven `Dashboard` turns it on (`App.tsx`), and it goes with the
+ * label code at the cutover (#61). A Dashboard of the document, its Builder
+ * and its Concerns read no Label (ADR-0015, #64): a Widget names its
+ * entities, and nothing else decides whether they are shown.
  */
-type RegistryEntry = {
-  entity_id?: string;
-  area_id?: string | null;
-  device_id?: string | null;
-  labels?: string[];
-  /**
-   * Home Assistant's own marker for plumbing: `config` or `diagnostic`. It
-   * sits on firmware-update buttons, device restart switches and the sun
-   * integration's diagnostic timestamps -- things that belong on a device
-   * page, never on a wall panel.
-   */
-  entity_category?: 'config' | 'diagnostic' | null;
-};
+const MutesIgnored = createContext(false);
+export const IgnoredLabelMute = MutesIgnored.Provider;
 
 /**
  * Every renderable entity, keyed by id, with registry facts and live state
- * already merged. Denylisted Domains and `ignored` entities are gone, so
- * callers never filter again.
+ * already merged (`houseEntities`, `./entities`). Denylisted Domains and
+ * `config` or `diagnostic` entities are gone, so callers never filter again.
  *
  * This reads the whole state map from one store subscription rather than
  * calling a per-entity hook. That matters: the home screen renders dozens of
@@ -90,49 +64,15 @@ export function useEntities(): Map<EntityId, Entity> {
   const registry = useRegistryData('entitiesRegistryDisplay');
   const devices = useRegistryData('devices');
   const states = useHass(s => s.entities);
+  const muteIgnored = useContext(MutesIgnored);
 
-  return useMemo(() => {
-    const out = new Map<EntityId, Entity>();
-    Object.values(registry ?? {}).forEach(raw => {
-      const entry = raw as RegistryEntry;
-      const id = entry.entity_id;
-      if (!id) return;
-
-      const domain = id.split('.')[0];
-      if (DENYLIST.has(domain)) return;
-
-      // `config` and `diagnostic` are Home Assistant's own marker for
-      // plumbing that belongs on a device page rather than a dashboard:
-      // firmware buttons, restart switches, the sun integration's six
-      // diagnostic timestamps. Honouring the marker is the backend-driven
-      // rule again -- Home Assistant has already classified these, so the
-      // denylist does not have to grow a rule per integration.
-      if (entry.entity_category) return;
-
-      const labels = (entry.labels ?? []) as Label[];
-      if (labels.includes('ignored')) return;
-
-      const live = states?.[id];
-      // No live state at all means Home Assistant has the entity registered
-      // but is not reporting it -- a fault, and rendered as one.
-      const state = live?.state ?? 'unavailable';
-      const attributes = (live?.attributes ?? {}) as Record<string, unknown>;
-
-      out.set(id, {
-        id,
-        domain,
-        name: (attributes.friendly_name as string) ?? id,
-        // The effective Area: the entity's own, else its device's (#38).
-        areaId: effectiveAreaId(entry.area_id, entry.device_id, devices),
-        deviceId: entry.device_id ?? null,
-        labels,
-        state,
-        attributes,
-        unavailable: isUnavailableState(state),
-      });
-    });
-    return out;
-  }, [registry, devices, states]);
+  return useMemo(
+    () =>
+      houseEntities(Object.values(registry ?? {}) as RegistryEntry[], states as Record<string, LiveState> | undefined, devices, {
+        muteIgnored,
+      }),
+    [registry, devices, states, muteIgnored]
+  );
 }
 
 /**

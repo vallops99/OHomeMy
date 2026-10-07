@@ -176,11 +176,12 @@ export function resolvePage(areas: Area[], entities: Map<string, Entity>, page: 
   const groups = emptyLayout();
   const rest = emptyLayout();
   for (const entity of entities.values()) {
-    // `ignored` entities never reach this function at all: useEntities()
-    // (src/ha/registry.ts:104) already drops any entity carrying the Label,
-    // so there is nothing to mute here. Left un-double-checked deliberately
-    // -- re-testing it here would suggest the mute still needs applying at
-    // this layer, when for entities it has already happened upstream.
+    // `ignored` entities never reach this function at all: under the
+    // label-driven Dashboard, useEntities() (`./registry`) drops any entity
+    // carrying the Label (`IgnoredLabelMute`), so there is nothing to mute
+    // here. Left un-double-checked deliberately -- re-testing it here would
+    // suggest the mute still needs applying at this layer, when for entities
+    // it has already happened upstream.
     //
     // A Page Opener on its own Page would open the Page it is already on,
     // like an Area in its own footer -- but only in `left` and `right`, where

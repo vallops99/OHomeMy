@@ -13,6 +13,7 @@ export {
   useByDomain,
   useEntities,
   useEntityState,
+  IgnoredLabelMute,
   useLabelOrder,
   useHassUrl,
   usePortalRoot,

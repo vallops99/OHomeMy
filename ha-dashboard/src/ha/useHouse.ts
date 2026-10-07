@@ -7,18 +7,24 @@
 import { useRegistryData } from '@hakit/core';
 import { useMemo } from 'react';
 import type { House } from '../document/schema';
+import { houseOf } from './entities';
 import { useEntities } from './registry';
 
 /**
  * An entity is in the house when the Dashboard could render it at all, so a
- * denylisted Domain or an `ignored` entity counts as gone (`useEntities`).
- * An Unavailable one is still there: it renders, as a Fault.
+ * denylisted Domain counts as gone (`useEntities`). No Label takes one away:
+ * an entity carrying `ignored` that a Widget names is shown (#64). An
+ * Unavailable one is still there: it renders, as a Fault.
  */
 export function useHouse(): House {
   const entities = useEntities();
   const areas = useRegistryData('areas');
-  return useMemo(() => {
-    const areaIds = new Set(Object.entries(areas ?? {}).map(([id, raw]) => (raw as { area_id?: string }).area_id ?? id));
-    return { hasEntity: id => entities.has(id), hasArea: id => areaIds.has(id) };
-  }, [entities, areas]);
+  return useMemo(
+    () =>
+      houseOf(
+        entities,
+        Object.entries(areas ?? {}).map(([id, raw]) => (raw as { area_id?: string }).area_id ?? id)
+      ),
+    [entities, areas]
+  );
 }
