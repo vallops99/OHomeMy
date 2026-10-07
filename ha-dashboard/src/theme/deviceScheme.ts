@@ -1,49 +1,45 @@
 /**
- * Whether this device is dark, followed as it changes (#66).
+ * What this device prefers, light or dark, followed as it changes (#66, #70).
  *
- * The renderer follows the device with a `@media (prefers-color-scheme)`
- * rule (`themeCss`), which the browser re-applies by itself. The Builder's
- * preview cannot: it sets its Theme as custom properties on the preview's
- * screen only, so it reads the device here and redraws when the device
- * switches. The switch is instant; there is no one at the screen to fade
- * for.
+ * `none` is a device that cannot say: no media queries at all, or a browser
+ * that does not know `prefers-color-scheme` (it parses the query as
+ * `not all`). A Dashboard following the device shows dark there
+ * (`schemeShown.ts`). A browser that knows the query but has no preference
+ * answers light, as the media query itself does.
  */
 import { useSyncExternalStore } from 'react';
-import type { ThemeMode } from './themes';
+import type { DeviceScheme } from './schemeShown';
 
 export const DARK_QUERY = '(prefers-color-scheme: dark)';
 
 /** The part of a `MediaQueryList` this reads. */
-export type DarkQuery = Pick<MediaQueryList, 'matches'> & {
+export type DarkQuery = Pick<MediaQueryList, 'matches' | 'media'> & {
   addEventListener(type: 'change', listener: () => void): void;
   removeEventListener(type: 'change', listener: () => void): void;
 };
 
-export type DeviceScheme = {
-  /** Whether the device is dark now. */
-  get(): boolean;
+export type DeviceSchemeSource = {
+  /** What the device prefers now. */
+  get(): DeviceScheme;
   subscribe(listener: () => void): () => void;
 };
 
-/** `query` is `null` where there are no media queries; the device is then light. */
-export function createDeviceScheme(query: DarkQuery | null): DeviceScheme {
+/** `query` is `null` where there are no media queries. */
+export function createDeviceScheme(query: DarkQuery | null): DeviceSchemeSource {
+  const known = query !== null && query.media !== 'not all';
   return {
-    get: () => query?.matches ?? false,
+    get: () => (!known ? 'none' : query.matches ? 'dark' : 'light'),
     subscribe(listener) {
-      query?.addEventListener('change', listener);
-      return () => query?.removeEventListener('change', listener);
+      if (!known) return () => {};
+      query.addEventListener('change', listener);
+      return () => query.removeEventListener('change', listener);
     },
   };
 }
 
-/** Whether a Dashboard in `mode` shows its Theme dark, on a device that is or is not. */
-export function isDark(mode: ThemeMode, deviceDark: boolean): boolean {
-  return mode === 'auto' ? deviceDark : mode === 'dark';
-}
-
 const device = createDeviceScheme(typeof window !== 'undefined' ? (window.matchMedia?.(DARK_QUERY) ?? null) : null);
 
-/** Whether this device is dark, re-rendering when it switches. */
-export function useDeviceDark(): boolean {
-  return useSyncExternalStore(device.subscribe, device.get, () => false);
+/** What this device prefers, re-rendering when it changes. */
+export function useDeviceScheme(): DeviceScheme {
+  return useSyncExternalStore(device.subscribe, device.get, () => 'none');
 }

@@ -46,7 +46,7 @@ import {
 } from 'react';
 import { validateWidget } from '../document/schema';
 import type { Dashboard, Page as PageType, Size, Widget } from '../document/types';
-import { useHouse } from '../ha';
+import { useConnected, useHouse, useStateOf } from '../ha';
 import { tr } from '../i18n';
 import { DashboardConcerns } from '../renderer/concerns';
 import { Frame, FRAME_CSS } from '../renderer/Frame';
@@ -54,8 +54,10 @@ import { cellPlacement, gridVariables, RENDERER_CSS } from '../renderer/grid';
 import { initialNav, navbarItems, open } from '../renderer/navigation';
 import { DashboardNavigationProvider, type DashboardNavigation } from '../renderer/navigationContext';
 import { Page } from '../renderer/Page';
-import { isDark, useDeviceDark } from '../theme/deviceScheme';
+import { useDeviceScheme } from '../theme/deviceScheme';
+import { schemeShown } from '../theme/schemeShown';
 import { themeFor } from '../theme/themes';
+import type { ColorScheme } from '../theme/tokens';
 import { WIDGETS_CSS, widgetKind } from '../widgets/registry';
 import { fits, type Extent } from './fit';
 import { canPlace, cellAt, gridOf, moved, overlaps, resized, snapDelta, type Box, type Metrics } from './layout';
@@ -89,7 +91,7 @@ const DRAG_SLOP = 4;
 
 export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, onDelete, onOpenPage, onFit, ghost, handle }: Props) {
   const house = useHouse();
-  const deviceDark = useDeviceDark();
+  const scheme = usePreviewScheme(dashboard.settings.theme);
   const stage = useRef<HTMLDivElement>(null);
   const screenEl = useRef<HTMLDivElement>(null);
   const grid = useRef<HTMLDivElement>(null);
@@ -238,7 +240,7 @@ export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, 
         <div
           className='b-screen'
           ref={screenEl}
-          style={{ width: screen.width, height: screen.height, transform: `scale(${scale})`, ...themeVariables(dashboard, deviceDark) }}
+          style={{ width: screen.width, height: screen.height, transform: `scale(${scale})`, ...themeVariables(dashboard, scheme) }}
           aria-label={tr('builder.dashboard.preview.label', { page: page.name })}
         >
           <style>{RENDERER_CSS}</style>
@@ -349,13 +351,30 @@ function WidgetFrame({
 }
 
 /**
- * The Dashboard's theme, as custom properties on the preview's screen only,
- * so the Builder around it keeps its own. `auto` follows this device, and
- * switches with it while the preview is open.
+ * The scheme the Dashboard would show right now (#70): its Mode, the house's
+ * entity, the device and the connection, through the same fallback chain as
+ * the renderer (`schemeShown`). It switches at once, with no fade and no
+ * waiting for touches: the admin is the one touching, and is watching for
+ * the change.
  */
-function themeVariables(dashboard: Dashboard, deviceDark: boolean): CSSProperties {
-  const { name, mode } = dashboard.settings.theme;
-  const tokens = themeFor(name)[isDark(mode, deviceDark) ? 'dark' : 'light'];
+function usePreviewScheme(theme: Dashboard['settings']['theme']): ColorScheme {
+  const device = useDeviceScheme();
+  const connected = useConnected();
+  const houseState = useStateOf(theme.mode === 'follow-house' ? (theme.entity ?? null) : null);
+  // What it showed last, kept the way React keeps a value from the previous
+  // render: it only matters while the connection is down.
+  const [shown, setShown] = useState<ColorScheme | null>(null);
+  const scheme = schemeShown({ mode: theme.mode, houseState, connected, device, previous: shown });
+  if (scheme !== shown) setShown(scheme);
+  return scheme;
+}
+
+/**
+ * The Dashboard's theme, as custom properties on the preview's screen only,
+ * so the Builder around it keeps its own.
+ */
+function themeVariables(dashboard: Dashboard, scheme: ColorScheme): CSSProperties {
+  const tokens = themeFor(dashboard.settings.theme.name)[scheme];
   return Object.fromEntries(Object.entries(tokens).map(([k, v]) => [`--${k}`, v])) as CSSProperties;
 }
 

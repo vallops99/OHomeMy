@@ -18,9 +18,11 @@ Structure means what any reader of the document relies on:
 What a Widget's `kind` and `settings` may be is not structure. The shared
 TypeScript schema module owns that: the Builder offers only valid choices and
 the renderer skips an invalid Widget, so the server keeps any kind string and
-any settings object. References to entities and Areas are not checked either:
-HA's registries change underneath the document, and the renderer drops what
-no longer exists rather than the document being rewritten.
+any settings object. Whether a referenced entity or Area exists is not
+checked either: HA's registries change underneath the document, and the
+renderer drops what no longer exists rather than the document being
+rewritten. Only the Theme's entity has its Domain checked, since `follow-house`
+can read only a `sun`, `binary_sensor` or `input_boolean`.
 """
 
 from __future__ import annotations

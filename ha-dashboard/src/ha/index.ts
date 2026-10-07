@@ -45,6 +45,7 @@ export {
 } from './document';
 export { usePublished, useSaveDocument, useDocumentAdmin, type DocumentAdmin } from './useDocument';
 export { useHouse } from './useHouse';
+export { useConnected, useEntitiesIn, useStateOf } from './useLive';
 export { DEFAULTS_COMMANDS, type Defaults, type UserDefault } from './defaults';
 export { useDefaults, type DefaultsAdmin, type DefaultsState } from './useDefaults';
 export { useViewerLocale, useHakitLocale, hakitLanguage, viewerLocaleOf, type HassLocale } from './locale';

@@ -413,7 +413,11 @@ export const en = {
   'builder.dashboard.settings.mode': 'Mode',
   'builder.dashboard.settings.mode.light': 'Light',
   'builder.dashboard.settings.mode.dark': 'Dark',
-  'builder.dashboard.settings.mode.auto': 'Follow the device',
+  'builder.dashboard.settings.mode.follow-device': 'Follow the device',
+  'builder.dashboard.settings.mode.follow-house': 'Follow the house',
+  'builder.dashboard.settings.modeEntity': 'Light and dark from',
+  'builder.dashboard.settings.modeEntityHint':
+    'Light while it is on or the sun is up, dark while it is off or the sun is down. If it cannot say, the device decides.',
   'builder.dashboard.settings.theme.casa-panel': 'Casa Panel',
   'builder.dashboard.navbar.title': 'Navbar',
   'builder.dashboard.navbar.on': 'Show a Navbar',

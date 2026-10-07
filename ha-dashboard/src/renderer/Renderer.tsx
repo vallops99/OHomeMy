@@ -8,14 +8,15 @@
  * Inside Home Assistant the panel's `config.dashboard_id` names the
  * Dashboard; on the dev server `?dashboard=<slug>` does (`select.ts`).
  *
- * Four `<style>`s go in with it, and so into the shadow root: the theme's
- * custom properties, the grid's and the frame's stylesheets, every Widget
+ * Six `<style>`s go in with it, and so into the shadow root: the theme's
+ * custom properties, in the scheme its Mode shows now, and their fade
+ * (`useSchemeShown`), the grid's and the frame's stylesheets, every Widget
  * kind's own and the Popup layer's. They are plain elements in the tree,
  * which React 19 leaves in place (it hoists only a `<style>` given `href`
  * and `precedence`), so they move with the tree on each remount.
  */
-import { useState, type ReactNode } from 'react';
-import type { Id } from '../document/types';
+import { useRef, useState, type ReactNode } from 'react';
+import type { DashboardSettings, Id } from '../document/types';
 import { usePublished } from '../ha';
 import { tr } from '../i18n';
 import { useLocalised } from '../i18n/useLocalised';
@@ -29,6 +30,7 @@ import { RENDERER_CSS } from './grid';
 import type { Nav } from './navigation';
 import { POPUP_CSS, PopupLayer } from './PopupLayer';
 import { dashboardRef, selectHomePage } from './select';
+import { useSchemeShown } from './useSchemeShown';
 
 /**
  * What the renderer says when there is nothing to draw: quietly, in the
@@ -53,7 +55,8 @@ export function Renderer() {
   if (!published) return null;
 
   const selection = selectHomePage(published.document, dashboardRef(panel?.config, window.location.search));
-  const theme = selection.state === 'page' ? selection.dashboard.settings.theme : { name: DEFAULT_THEME, mode: 'auto' as const };
+  const theme: DashboardSettings['theme'] =
+    selection.state === 'page' ? selection.dashboard.settings.theme : { name: DEFAULT_THEME, mode: 'follow-device' };
 
   let body: ReactNode;
   if (selection.state !== 'page') body = <Notice {...NOTICES[selection.state]()} />;
@@ -73,14 +76,35 @@ export function Renderer() {
       </DashboardConcerns>
     );
 
+  return <Themed theme={theme} localised={localised} body={body} />;
+}
+
+/**
+ * The Dashboard in the scheme its Mode shows now (`useSchemeShown`, #70). It
+ * mounts with the first document, so its first render already knows the
+ * Mode, and shows its scheme without a fade.
+ */
+function Themed({
+  theme,
+  localised,
+  body,
+}: {
+  theme: DashboardSettings['theme'];
+  localised: ReturnType<typeof useLocalised>;
+  body: ReactNode;
+}) {
+  const root = useRef<HTMLDivElement>(null);
+  const fade = useRef<HTMLStyleElement>(null);
+  const scheme = useSchemeShown(theme, root, fade);
   return (
     <>
-      <style>{themeCss(theme.name, theme.mode)}</style>
+      <style>{themeCss(theme.name, scheme)}</style>
+      <style ref={fade} />
       <style>{RENDERER_CSS}</style>
       <style>{FRAME_CSS}</style>
       <style>{WIDGETS_CSS}</style>
       <style>{POPUP_CSS}</style>
-      <div className='ohm-dashboard' lang={localised.lang} dir={localised.dir} style={localised.style}>
+      <div ref={root} className='ohm-dashboard' lang={localised.lang} dir={localised.dir} style={localised.style}>
         {body}
       </div>
     </>

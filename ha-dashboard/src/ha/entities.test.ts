@@ -49,7 +49,7 @@ const dashboard: Dashboard = {
     supported_range: { min: { width: 1, height: 1 }, max: { width: 2, height: 2 } },
     idle_return: null,
     back_history: true,
-    theme: { name: 'casa-panel', mode: 'auto' },
+    theme: { name: 'casa-panel', mode: 'follow-device' },
   },
   navbar: null,
   pages: [{ id: 'home', name: 'home', popup: null, grid: { columns: 4, rows: 4 }, widgets: [toggle] }],

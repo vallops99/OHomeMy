@@ -75,7 +75,7 @@ const dashboard = (pages: Page[]): Dashboard => ({
     supported_range: { min: { width: 1, height: 1 }, max: { width: 2, height: 2 } },
     idle_return: null,
     back_history: true,
-    theme: { name: 'casa-panel', mode: 'auto' },
+    theme: { name: 'casa-panel', mode: 'follow-device' },
   },
   navbar: null,
   pages,

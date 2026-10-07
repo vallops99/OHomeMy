@@ -22,7 +22,7 @@ Run `npm run build` and it will build the files for you, you can then upload the
 
 - `src/document/types.ts` is the document's shape; `src/document/schema.ts` is what makes a Widget valid (field types, `validateWidget`, `fitsGrid`). The renderer skips an invalid Widget without a word; the Builder offers only what a schema allows.
 - `src/renderer/grid.ts` is the proportional grid: a Page's columns share its width, its rows share one screen's height, and each Widget's box is a size container named `widget`.
-- `src/theme/themes.ts` holds the themes, applied as CSS custom properties on the shadow root (`:host`), in light, dark or `auto`.
+- `src/theme/themes.ts` holds the themes, applied as CSS custom properties on the shadow root (`:host`) in light or dark. Which one a Dashboard shows is its Mode's (`light`, `dark`, `follow-device`, `follow-house`), decided at runtime by `src/theme/schemeShown.ts`; `src/renderer/useSchemeShown.ts` fades each switch over 300 ms and holds it while anyone touches the screen (`src/renderer/touchHold.ts`).
 
 ### Navigation (#54)
 

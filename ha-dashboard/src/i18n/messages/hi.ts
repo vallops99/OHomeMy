@@ -394,7 +394,11 @@ export const hi: Catalogue = {
   'builder.dashboard.settings.mode': 'मोड',
   'builder.dashboard.settings.mode.light': 'लाइट',
   'builder.dashboard.settings.mode.dark': 'डार्क',
-  'builder.dashboard.settings.mode.auto': 'डिवाइस के अनुसार',
+  'builder.dashboard.settings.mode.follow-device': 'डिवाइस के अनुसार',
+  'builder.dashboard.settings.mode.follow-house': 'घर के अनुसार',
+  'builder.dashboard.settings.modeEntity': 'लाइट और डार्क इससे',
+  'builder.dashboard.settings.modeEntityHint':
+    'चालू होने या सूरज निकले रहने पर लाइट, बंद होने या सूरज ढलने पर डार्क। अगर यह न बता सके, तो डिवाइस तय करता है।',
   'builder.dashboard.settings.theme.casa-panel': 'Casa Panel',
   'builder.dashboard.navbar.title': 'नेवबार',
   'builder.dashboard.navbar.on': 'नेवबार दिखाएँ',

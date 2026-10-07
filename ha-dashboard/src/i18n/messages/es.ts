@@ -396,7 +396,11 @@ export const es: Catalogue = {
   'builder.dashboard.settings.mode': 'Modo',
   'builder.dashboard.settings.mode.light': 'Claro',
   'builder.dashboard.settings.mode.dark': 'Oscuro',
-  'builder.dashboard.settings.mode.auto': 'Según el dispositivo',
+  'builder.dashboard.settings.mode.follow-device': 'Según el dispositivo',
+  'builder.dashboard.settings.mode.follow-house': 'Según la casa',
+  'builder.dashboard.settings.modeEntity': 'Claro y oscuro según',
+  'builder.dashboard.settings.modeEntityHint':
+    'Claro mientras está encendido o el sol está arriba, oscuro mientras está apagado o el sol se ha puesto. Si no lo sabe, decide el dispositivo.',
   'builder.dashboard.settings.theme.casa-panel': 'Casa Panel',
   'builder.dashboard.navbar.title': 'Navbar',
   'builder.dashboard.navbar.on': 'Mostrar una Navbar',

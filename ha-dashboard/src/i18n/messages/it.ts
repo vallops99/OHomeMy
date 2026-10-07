@@ -399,7 +399,11 @@ export const it: Catalogue = {
   'builder.dashboard.settings.mode': 'Modalità',
   'builder.dashboard.settings.mode.light': 'Chiara',
   'builder.dashboard.settings.mode.dark': 'Scura',
-  'builder.dashboard.settings.mode.auto': 'Come il dispositivo',
+  'builder.dashboard.settings.mode.follow-device': 'Come il dispositivo',
+  'builder.dashboard.settings.mode.follow-house': 'Come la casa',
+  'builder.dashboard.settings.modeEntity': 'Chiaro e scuro da',
+  'builder.dashboard.settings.modeEntityHint':
+    "Chiara quando è acceso o il sole è sopra l'orizzonte, scura quando è spento o il sole è tramontato. Se non lo sa dire, decide il dispositivo.",
   'builder.dashboard.settings.theme.casa-panel': 'Casa Panel',
   'builder.dashboard.navbar.title': 'Navbar',
   'builder.dashboard.navbar.on': 'Mostra una Navbar',

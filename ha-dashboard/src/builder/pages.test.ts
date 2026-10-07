@@ -139,7 +139,10 @@ test('settings refuse an idle return under a second and a range turned inside ou
   assert.equal(setSettings(d, { idle_return: 0 }), d);
   assert.equal(setSettings(d, { supported_range: { min: { width: 1300, height: 800 }, max: { width: 1280, height: 800 } } }), d);
   assert.equal(setSettings(d, { back_history: false }).settings.back_history, false);
-  assert.deepEqual(setSettings(d, { theme: { name: 'casa-panel', mode: 'auto' } }).settings.theme, { name: 'casa-panel', mode: 'auto' });
+  assert.deepEqual(setSettings(d, { theme: { name: 'casa-panel', mode: 'follow-device' } }).settings.theme, {
+    name: 'casa-panel',
+    mode: 'follow-device',
+  });
 });
 
 test('one end of the range set past the other carries it along', () => {

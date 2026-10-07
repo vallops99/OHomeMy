@@ -3,7 +3,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { THEMES, themeCss, themeFor } from './themes';
+import { COLOR_TOKENS, FADE_MS, registerThemeColors, THEME_FADE_CSS, THEMES, themeCss, themeFor } from './themes';
 
 test('Casa Panel carries every token under its design-system name, type styles included', () => {
   const dark = THEMES['casa-panel'].dark;
@@ -52,13 +52,46 @@ test('light mode emits the light set only', () => {
   assert.doesNotMatch(css, /@media/);
 });
 
-test('auto is the light set, and the dark set when the device prefers dark', () => {
-  const css = themeCss('casa-panel', 'auto');
-  assert.match(css, /^:host \{ color-scheme: light;/);
-  assert.match(css, /@media \(prefers-color-scheme: dark\) \{\n:host \{ color-scheme: dark;/);
-  const [light, dark] = css.split('@media');
-  assert.match(light, /--bg: #efeee9;/);
-  assert.doesNotMatch(light, /#0e0f0d/);
-  assert.match(dark, /--bg: #0e0f0d;/);
-  assert.doesNotMatch(dark, /#efeee9/);
+test('no scheme is left to the device: one set, chosen before the stylesheet is written (#70)', () => {
+  for (const scheme of ['light', 'dark'] as const) assert.doesNotMatch(themeCss('casa-panel', scheme), /@media|prefers-color-scheme/);
+});
+
+test('the theme itself transitions nothing, so the first render shows its scheme at once', () => {
+  assert.doesNotMatch(themeCss('casa-panel', 'dark'), /transition/);
+});
+
+test('the fade transitions every colour token, and only colour, over 300 ms, on the host and the root', () => {
+  const [host, root] = THEME_FADE_CSS.split('\n');
+  assert.match(host, /^:host \{ transition: /);
+  assert.equal(root, host.replace(':host', ':root'));
+  const transition = /transition: ([^;]+);/.exec(host)?.[1] ?? '';
+  const faded = transition.split(', ').map(t => t.split(' ')[0]);
+  assert.deepEqual(faded.sort(), COLOR_TOKENS.map(t => `--${t}`).sort());
+  assert.match(transition, /^--[a-z-]+ 300ms ease/);
+  assert.ok(COLOR_TOKENS.includes('bg') && COLOR_TOKENS.includes('accent-soft'));
+  assert.ok(!COLOR_TOKENS.includes('radius-tile') && !COLOR_TOKENS.includes('font-sans'));
+  assert.equal(FADE_MS, 300);
+});
+
+test('the colour tokens are registered as colours, so a transition can interpolate them', () => {
+  const registered: PropertyDefinition[] = [];
+  registerThemeColors({ registerProperty: d => void registered.push(d) });
+  assert.deepEqual(
+    registered.map(d => d.name),
+    COLOR_TOKENS.map(t => `--${t}`)
+  );
+  for (const d of registered) {
+    assert.equal(d.syntax, '<color>');
+    assert.equal(d.inherits, true);
+    assert.equal(d.initialValue, THEMES['casa-panel'].dark[d.name.slice(2)]);
+  }
+});
+
+test('registering again (a hot reload), or where the browser cannot, is harmless', () => {
+  registerThemeColors({
+    registerProperty: () => {
+      throw new DOMException('already registered', 'InvalidModificationError');
+    },
+  });
+  registerThemeColors(undefined);
 });

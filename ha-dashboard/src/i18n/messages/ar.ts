@@ -469,7 +469,11 @@ export const ar: Catalogue = {
   'builder.dashboard.settings.mode': 'الوضع',
   'builder.dashboard.settings.mode.light': 'فاتح',
   'builder.dashboard.settings.mode.dark': 'داكن',
-  'builder.dashboard.settings.mode.auto': 'حسب الجهاز',
+  'builder.dashboard.settings.mode.follow-device': 'حسب الجهاز',
+  'builder.dashboard.settings.mode.follow-house': 'حسب المنزل',
+  'builder.dashboard.settings.modeEntity': 'الفاتح والداكن حسب',
+  'builder.dashboard.settings.modeEntityHint':
+    'فاتح عندما يكون مشغّلًا أو الشمس فوق الأفق، وداكن عندما يكون مطفأً أو الشمس تحت الأفق. إن لم يستطع التحديد، يقرّر الجهاز.',
   'builder.dashboard.settings.theme.casa-panel': 'Casa Panel',
   'builder.dashboard.navbar.title': 'شريط التنقل',
   'builder.dashboard.navbar.on': 'إظهار شريط التنقل',

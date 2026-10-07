@@ -80,7 +80,11 @@ export type Dashboard = {
 };
 
 export const OVERFLOWS = ['fit', 'scroll'] as const;
-export const MODES = ['light', 'dark', 'auto'] as const;
+export const MODES = ['light', 'dark', 'follow-device', 'follow-house'] as const;
+/** The Domains `follow-house` may read: each says light or dark in two states. */
+export const HOUSE_MODE_DOMAINS = ['sun', 'binary_sensor', 'input_boolean'] as const;
+/** What choosing `follow-house` reads until the admin picks another entity. */
+export const HOUSE_MODE_DEFAULT = 'sun.sun';
 
 export type DashboardSettings = {
   /**
@@ -101,8 +105,19 @@ export type DashboardSettings = {
   theme: {
     /** A Theme's name, e.g. `casa-panel`. Which names exist is the frontend's. */
     name: string;
-    /** `auto` follows the device. */
+    /**
+     * `light` or `dark` always; `follow-device` follows the device's own
+     * preference; `follow-house` follows `entity` (CONTEXT.md "Mode",
+     * "Follow the house"). Where the house or the device cannot say, the
+     * Dashboard is dark.
+     */
     mode: (typeof MODES)[number];
+    /**
+     * Under `follow-house` only, and required there: a `sun`, `binary_sensor`
+     * or `input_boolean`, light when `above_horizon` or `on` and dark when
+     * `below_horizon` or `off`. Absent under every other Mode.
+     */
+    entity?: string;
   };
 };
 
