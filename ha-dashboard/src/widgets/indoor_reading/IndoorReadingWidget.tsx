@@ -29,7 +29,12 @@ export function IndoorReadingWidget({ widget, settings }: WidgetProps<(typeof in
             </span>
             <span className='ohm-indoor_reading-text'>
               {title !== '' && <span dir='auto'>{title}</span>}
-              {reading.fault && <span>{title !== '' && ' · '}{tr('state.unavailable')}</span>}
+              {reading.fault && (
+                <span>
+                  {title !== '' && ' · '}
+                  {tr('state.unavailable')}
+                </span>
+              )}
             </span>
           </span>
         )}
