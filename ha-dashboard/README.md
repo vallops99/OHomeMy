@@ -54,6 +54,8 @@ A kind is one folder, `src/widgets/<kind>/`, named exactly as `Widget.kind` (`ro
 
 `src/widgets/clock/` and `src/widgets/toggle/` are the two to copy from. A kind that stands for one entity of some Domains (`lock`, `climate`, `sensor`, ...) needs only its schema: its component is `shared/EntityWidget`, which draws the entity in its Domain's shape from `shared/shapes.tsx` (the same table a Group draws its members with), and the Fault tile while it is Unavailable. Its Domains go in `shared/domains.ts`. `shared/` has no `index.ts`, so it is not a kind.
 
+The Builder offers a new kind in its palette with no change (#56): its inspector is generated from the schema, one control per field type. Two optional touches make it read better there: a name in `src/builder/editorStrings.ts` (`kinds`, and `settingNames` for its settings; otherwise both are spelled from their ids) and the size it is placed at in `src/builder/inspector.ts` (`DEFAULT_SIZE`; otherwise 3 x 2 cells).
+
 ## Deploy to Home Assistant via SSH
 1. Replace the values in the .env file provided with your `VITE_SSH_USERNAME`, `VITE_SSH_HOSTNAME` and `VITE_SSH_PASSWORD`.
 2. To automatically deploy to your home assistant instance, you can run `npm run deploy` after you've retrieved the SSH information specified [here](https://shannonhochkins.github.io/ha-component-kit/?path=/docs/introduction-deploying--docs), NOTE! The script has already been created for you, you just need to run it after you've updated the .env values.

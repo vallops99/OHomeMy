@@ -56,7 +56,7 @@ import { Page } from '../renderer/Page';
 import { themeFor } from '../theme/themes';
 import { WIDGETS_CSS, widgetKind } from '../widgets/registry';
 import { fits, type Extent } from './fit';
-import { canPlace, cellAt, gridOf, moved, resized, snapDelta, type Box, type Metrics } from './layout';
+import { canPlace, cellAt, gridOf, moved, overlaps, resized, snapDelta, type Box, type Metrics } from './layout';
 import { fromId } from './editorStrings';
 import { strings } from './strings';
 
@@ -156,6 +156,9 @@ export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, 
     if (!m) return;
     const target = e.currentTarget as HTMLElement;
     target.setPointerCapture(e.pointerId);
+    // Pressing kept the focus where it was (no text selection mid-drag), so
+    // the frame takes it here, for the keys that move it next.
+    target.closest<HTMLElement>('.b-frame')?.focus({ preventScroll: true });
     const start = { x: e.clientX, y: e.clientY };
     let dragging = false;
     let last: Ghost | null = null;
@@ -264,13 +267,12 @@ export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, 
                       onPointerDown={() => onSelect(null)}
                     >
                       <div className='ohm-grid b-grid' ref={grid} style={gridVariables(page.grid)}>
-                        {Array.from({ length: guides * page.grid.columns }, (_, i) => (
-                          <div
-                            key={`g${i}`}
-                            className='b-guide'
-                            style={cellPlacement({ x: i % page.grid.columns, y: Math.floor(i / page.grid.columns), w: 1, h: 1 })}
-                          />
-                        ))}
+                        {Array.from({ length: guides * page.grid.columns }, (_, i) => {
+                          const cell = { x: i % page.grid.columns, y: Math.floor(i / page.grid.columns), w: 1, h: 1 };
+                          // Drawn under every cell, but seen only on free ones: a line across a Widget is noise.
+                          const covered = page.widgets.some(w => w.id !== drag?.id && overlaps(cell, w));
+                          return <div key={`g${i}`} className='b-guide' data-covered={covered} style={cellPlacement(cell)} />;
+                        })}
                         {page.widgets.map(w => (
                           <WidgetFrame
                             key={w.id}

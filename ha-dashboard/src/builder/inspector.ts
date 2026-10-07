@@ -201,6 +201,9 @@ export const DEFAULT_SIZE: Readonly<Record<string, { w: number; h: number }>> = 
   sensor: { w: 3, h: 1 },
   binary_sensor: { w: 3, h: 1 },
   select: { w: 3, h: 1 },
+  room_tile: { w: 3, h: 2 },
+  room_grid: { w: 8, h: 4 },
+  link: { w: 3, h: 1 },
 };
 
 export const sizeFor = (kind: string) => DEFAULT_SIZE[kind] ?? { w: 3, h: 2 };

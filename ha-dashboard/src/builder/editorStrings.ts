@@ -155,6 +155,13 @@ export const editorStrings = {
     cameras: 'Cameras',
     alarm: 'Alarm',
     power: 'Power sensor',
+    area: 'Area',
+    areas: 'Areas',
+    light: 'Light',
+    lights: 'Lights, one per Area',
+    temperature: 'Temperature',
+    temperatures: 'Temperatures, one per Area',
+    icon: 'Icon',
   } as Record<string, string>,
 };
 

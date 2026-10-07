@@ -272,6 +272,10 @@
   pointer-events: none;
 }
 
+.b-guide[data-covered='true'] {
+  visibility: hidden;
+}
+
 .b-frame {
   position: relative;
   z-index: 1;

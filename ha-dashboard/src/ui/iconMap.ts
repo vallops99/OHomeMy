@@ -367,15 +367,16 @@ export function lucideFor(name: string): LucideIcon {
 }
 
 /**
- * One MDI name per glyph this map draws, with its `mdi:` prefix, in the
- * map's order: what the Builder offers wherever an icon is chosen (#56), so
- * every choice is drawn and none is two names for one picture.
+ * One MDI name per glyph this map draws, with its `mdi:` prefix, sorted:
+ * what the Builder offers wherever an icon is chosen (#56), so every choice
+ * is drawn and none is two names for one picture. Of a glyph's names the
+ * shortest stands for it (`thermometer`, not `home-thermometer`).
  */
 export function iconChoices(): string[] {
-  const seen = new Set<LucideIcon>();
-  return Object.entries(MDI_TO_LUCIDE).flatMap(([name, glyph]) => {
-    if (seen.has(glyph)) return [];
-    seen.add(glyph);
-    return [`mdi:${name}`];
-  });
+  const best = new Map<LucideIcon, string>();
+  for (const [name, glyph] of Object.entries(MDI_TO_LUCIDE)) {
+    const held = best.get(glyph);
+    if (held === undefined || name.length < held.length) best.set(glyph, name);
+  }
+  return [...best.values()].sort().map(name => `mdi:${name}`);
 }
