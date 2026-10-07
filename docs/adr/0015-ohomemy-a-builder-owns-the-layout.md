@@ -171,8 +171,10 @@ the first piece of work must confirm before working around them:
    Dashboard renders into its own shadow root, with the emotion cache, the CSS
    and the `portalRoot` inside it.
 2. HassConnect cannot reconnect after a remount, because its module-level
-   `attemptedUrls` is never cleared. One React root per Dashboard survives the
-   element being disconnected, and the fix goes upstream.
+   `attemptedUrls` is never cleared. One React root per page survives the
+   element being disconnected, and the fix goes upstream. It is per page, not
+   per Dashboard, because @hakit's state is module-level: two roots would share
+   and reset it (#46, [hakit-in-a-panel.md](../research/hakit-in-a-panel.md)).
 3. @hakit's handling of a hidden tab would suspend HA's own connection. It is
    given `suspendWhenHidden: false`.
 
