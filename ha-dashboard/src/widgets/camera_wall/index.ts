@@ -5,10 +5,12 @@ import { cameraWallSchema } from './schema';
 export default defineWidget({
   schema: cameraWallSchema,
   Component: CameraWallWidget,
+  smallest: { full: { width: 233, height: 390 } },
   // A wide box puts the strip beside the big Feed, one 16:9 thumbnail a row
   // from the top, while the big Feed spans the whole height. A box under
   // 600 px puts the strip under it, two thumbnails a line, since a strip
-  // beside it would leave the big one a sliver. With one camera there is no
+  // beside it would leave the big one a sliver: a look choice, not a fit
+  // edge (#72), as every Feed scales to its cell either way. With one camera there is no
   // strip. Cells are placed by `--ohm-cw-strip` (their place in the strip)
   // and `--ohm-cw-thumbs` (how many there are), so the DOM order never changes (the component's
   // header says why).

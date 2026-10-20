@@ -4,7 +4,7 @@
  * `registry.ts` with no list to edit; see the README's "Adding a Widget kind".
  */
 import type { ComponentType } from 'react';
-import type { Fields, SettingsOf, WidgetSchema } from '../document/schema';
+import type { Fields, SettingsOf, Variant, WidgetSchema } from '../document/schema';
 import type { Widget } from '../document/types';
 
 /** What a kind's component receives, once its Widget has passed the schema. */
@@ -13,6 +13,24 @@ export type WidgetProps<F extends Fields = Fields> = {
   widget: Widget;
   /** Its settings, checked, with defaults filled in and missing entities dropped. */
   settings: SettingsOf<F>;
+};
+
+/** A box in CSS pixels. */
+export type FitBox = { width: number; height: number };
+
+/**
+ * The lowest box of one layout step a kind's container queries make: just
+ * past the threshold below which a denser step takes over, so the headroom
+ * (`WIDGET_HEADROOM_PX`) is all the room it has to spare, on the axis the
+ * threshold guards. The fit check measures every one (`scripts/fit-widgets.ts`).
+ */
+export type LayoutStep = {
+  /** The Variants it applies to; both when absent. */
+  variants?: readonly Variant[];
+  box: FitBox;
+  guards: 'width' | 'height';
+  /** Which step this is, for the check's report. */
+  name: string;
 };
 
 export type WidgetKind<F extends Fields = Fields> = {
@@ -43,6 +61,16 @@ export type WidgetKind<F extends Fields = Fields> = {
    *   control.
    */
   tap?: 'own' | 'none' | 'page';
+  /**
+   * Its Smallest box for each of its Variants (CONTEXT.md), in px: the
+   * least box its sparsest layout step fits in, plus `WIDGET_HEADROOM_PX`
+   * on each axis, with the kind at its fullest (`src/fit/cases.ts`) in every
+   * catalogue: measured with `npm run fit -- --least`, checked with `npm run
+   * fit`. Below it nothing is promised, and nothing enforces it.
+   */
+  smallest: Readonly<Partial<Record<Variant, FitBox>>>;
+  /** Each layout step its container queries make, at its lowest box; none for a kind with no container queries. */
+  steps?: readonly LayoutStep[];
 };
 
 /** Declares a kind with its settings' types carried from schema to component. */

@@ -5,6 +5,7 @@ import { indoorReadingSchema } from './schema';
 export default defineWidget({
   schema: indoorReadingSchema,
   Component: IndoorReadingWidget,
+  smallest: { full: { width: 59, height: 98 }, compact: { width: 49, height: 46 } },
   // Nothing happens on a tap, so an `on_tap` makes the whole reading a way
   // to its Page, as the label-driven Dashboard's indoor reading led to the
   // thermostat's (#32).
@@ -72,7 +73,9 @@ export default defineWidget({
     .ohm-indoor_reading[data-variant='compact'] .ohm-indoor_reading-number {
       font-size: clamp(32px, min(85cqh, 30cqw), var(--type-temp-hero-size));
     }
-    /* A narrow strip keeps the words and lets the icons go. */
+    /* A narrow strip keeps the words and lets the icons go. A look choice,
+       not a fit edge (#72): the number scales with the box, so no width is
+       where it stops fitting; under 220 px the words get the icons' room. */
     @container widget (max-width: 220px) {
       .ohm-indoor_reading[data-variant='compact'] .ohm-indoor_reading-icon { display: none; }
     }

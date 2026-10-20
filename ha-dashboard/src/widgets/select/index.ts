@@ -5,4 +5,5 @@ import { selectSchema } from './schema';
 export default defineWidget({
   schema: selectSchema,
   Component: EntityWidget,
+  smallest: { full: { width: 211, height: 37 } },
 });

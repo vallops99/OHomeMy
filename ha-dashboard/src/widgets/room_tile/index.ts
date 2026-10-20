@@ -6,6 +6,7 @@ import { roomTileSchema } from './schema';
 export default defineWidget({
   schema: roomTileSchema,
   Component: RoomTileWidget,
+  smallest: { full: { width: 111, height: 219 }, compact: { width: 127, height: 65 } },
   // The tile's own stylesheet, which the Room Grid's tiles use too: every
   // kind's CSS goes into the shadow root, whichever kinds a Page holds.
   css: ROOM_TILE_CSS,

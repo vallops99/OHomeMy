@@ -5,6 +5,7 @@ import { groupSchema } from './schema';
 export default defineWidget({
   schema: groupSchema,
   Component: GroupWidget,
+  smallest: { full: { width: 101, height: 501 }, compact: { width: 96, height: 423 } },
   // A Member's row: its shape, and its Open button when it has one
   // (`.ohm-open`, the renderer's). A row that opens a Page across it presses
   // as a Widget's box does.

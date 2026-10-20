@@ -1,10 +1,20 @@
+import { stepAt } from '../../ui/vars';
 import { defineWidget } from '../types';
 import { statsSchema } from './schema';
 import { StatsWidget } from './StatsWidget';
 
+/**
+ * Two numbers side by side, in px, measured with `npm run fit` in every
+ * catalogue: two cards at their least, and the gap. Narrower than that plus
+ * the headroom, they go one over the other.
+ */
+const SIDE_BY_SIDE = 220;
+
 export default defineWidget({
   schema: statsSchema,
   Component: StatsWidget,
+  smallest: { full: { width: 112, height: 226 } },
+  steps: [{ name: 'two numbers side by side', box: { width: stepAt(SIDE_BY_SIDE), height: 226 }, guards: 'width' }],
   // Two columns whether or not the power card is there, so the lights card
   // keeps its width rather than stretching across the box; one over the
   // other once the box is too narrow for two numbers side by side. A card
@@ -16,7 +26,7 @@ export default defineWidget({
       grid-auto-rows: minmax(0, 1fr);
       gap: var(--space-3);
     }
-    @container widget (max-width: 359px) {
+    @container widget (width < ${stepAt(SIDE_BY_SIDE)}px) {
       .ohm-stats { grid-template-columns: minmax(0, 1fr); }
     }
     .ohm-stats-card {

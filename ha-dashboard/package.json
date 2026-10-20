@@ -15,7 +15,8 @@
     "sync": "npx tsx scripts/sync-types.ts",
     "prebuild": "npm run prettier",
     "deploy": "npx tsx scripts/deploy.ts",
-    "measure": "npx tsx scripts/measure-panel.ts"
+    "measure": "npx tsx scripts/measure-panel.ts",
+    "fit": "npx tsx scripts/fit-widgets.ts"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",

@@ -1,43 +1,62 @@
+import type { Variant } from '../../document/schema';
+import { CASA } from '../../theme/tokens';
+import { stepAt } from '../../ui/vars';
 import { FULL_TILE_MIN_H, ROW_TILE_MIN_H } from '../room_tile/RoomTile';
-import { defineWidget } from '../types';
+import { defineWidget, type FitBox, type LayoutStep } from '../types';
 import { RoomGridWidget } from './RoomGridWidget';
 import { roomGridSchema } from './schema';
 
 /**
- * The widest box at which a grid takes at most this many columns, per
- * Variant: a `full` tile wants about 180 px, a row about 250. Below the
- * last, one column.
+ * The width a tile needs, per Variant: a `full` tile about 180 px, a row
+ * about 250, Casa Panel's room tile. What a tile needs to show its name and
+ * its line whole; a tile still fits narrower, its words cut short.
  */
-const NARROW: Record<'full' | 'compact', [maxWidth: number, columns: number][]> = {
-  full: [
-    [759, 3],
-    [569, 2],
-    [379, 1],
-  ],
-  compact: [
-    [1079, 3],
-    [799, 2],
-    [529, 1],
-  ],
-};
+const TILE_W: Record<Variant, number> = { full: 180, compact: 250 };
+
+/** The gap between two tiles, `--space-3`. */
+const GAP = CASA.space[3];
+
+/**
+ * The width `columns` tiles need side by side: their widths and the gaps
+ * between them. A box narrower than that plus the headroom takes one column
+ * fewer, down to one.
+ */
+const across = (variant: Variant, columns: number) => columns * TILE_W[variant] + (columns - 1) * GAP;
 
 const columns = (n: number) => `grid-template-columns: repeat(${n}, minmax(0, 1fr));`;
 
 /** The column counts the table gives, cut down in a narrow box. */
 const COLUMNS_CSS = [
   ...[1, 2, 3, 4].map(n => `.ohm-room-grid-tiles[data-columns='${n}'] { ${columns(n)} }`),
-  ...Object.entries(NARROW).flatMap(([variant, steps]) =>
-    steps.map(([width, cap]) => {
-      const wider = [cap + 1, cap + 2, cap + 3].filter(n => n <= 4);
-      const rules = wider.map(n => `.ohm-room-grid-tiles[data-variant='${variant}'][data-columns='${n}'] { ${columns(cap)} }`);
-      return `@container widget (max-width: ${width}px) { ${rules.join(' ')} }`;
+  ...(['full', 'compact'] as const).flatMap(variant =>
+    [2, 3, 4].map(wanted => {
+      const cap = wanted - 1;
+      const rules = [wanted, wanted + 1, wanted + 2]
+        .filter(n => n <= 4)
+        .map(n => `.ohm-room-grid-tiles[data-variant='${variant}'][data-columns='${n}'] { ${columns(cap)} }`);
+      return `@container widget (width < ${stepAt(across(variant, wanted))}px) { ${rules.join(' ')} }`;
     })
   ),
 ].join('\n');
 
+/** The Smallest box: six Areas, measured with `npm run fit -- --least`. */
+const SMALLEST: Record<Variant, FitBox> = { full: { width: 235, height: 788 }, compact: { width: 258, height: 377 } };
+
+/** The lowest box at which each column count holds, for the fit check. */
+const steps: LayoutStep[] = (['full', 'compact'] as const).flatMap(variant =>
+  [2, 3, 4].map(n => ({
+    name: `${n} columns`,
+    variants: [variant],
+    box: { width: stepAt(across(variant, n)), height: SMALLEST[variant].height },
+    guards: 'width' as const,
+  }))
+);
+
 export default defineWidget({
   schema: roomGridSchema,
   Component: RoomGridWidget,
+  smallest: SMALLEST,
+  steps,
   // The tiles' own stylesheet is the Room Tile kind's (`room_tile/RoomTile.tsx`).
   css: `
     .ohm-room-grid { height: 100%; min-height: 0; display: flex; flex-direction: column; gap: var(--space-3); }

@@ -104,7 +104,9 @@ export function boxScaleVariables(tokens: Tokens): string {
  * The widest box that takes the phone's sizes. A box, not a screen, so it
  * holds in the Builder's preview and on any device; the value is where the
  * two met on the screens they were drawn for (measured on the real app,
- * #62). On the wall, at 1280x800 on a 12-column grid, the narrowest Widget
+ * #62). A look choice, not a fit edge (#72): it picks the scale a box's
+ * content is drawn at, and each kind's content fits at both, down to its
+ * Smallest box, with the headroom (`npm run fit`). On the wall, at 1280x800 on a 12-column grid, the narrowest Widget
  * drawn through these components is two columns, 194 px; on a 390 px phone
  * the widest such one on that Dashboard is 114 px, and half of a 2-column
  * Dashboard's width is 177 px. 179 keeps all three as they were. A
@@ -112,6 +114,26 @@ export function boxScaleVariables(tokens: Tokens): string {
  * its box has room for.
  */
 export const NARROW_BOX_MAX_W = 179;
+
+/**
+ * The room a Widget's content keeps to spare at every layout step (#72),
+ * on both axes: a container query steps down at the content's size plus
+ * this, never at the content's exact size, so a box a few pixels short of
+ * what the Builder laid out -- another device's rounding, another language's
+ * words -- still fits rather than scrolls. In px, not a share: rounding is
+ * under a pixel whatever the box, and words run longer by a few pixels, not
+ * by a fraction of the box. 8 is ADR-0007's choice of headroom over
+ * presence, at the scale of one Widget. Container queries cannot read
+ * custom properties, so every threshold is built in TS from this.
+ */
+export const WIDGET_HEADROOM_PX = 8;
+
+/**
+ * Where a layout step stops: at its content's size plus the headroom. A
+ * container query for the denser step below reads `(height < ${stepAt(c)}px)`,
+ * so the step above it always has the headroom to spare.
+ */
+export const stepAt = (content: number) => content + WIDGET_HEADROOM_PX;
 
 /**
  * Each Widget's box sets its own scale (`.ohm-widget` is the size container

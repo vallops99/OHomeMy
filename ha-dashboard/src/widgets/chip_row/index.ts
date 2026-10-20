@@ -1,14 +1,29 @@
+import { CASA } from '../../theme/tokens';
+import { stepAt } from '../../ui/vars';
 import { defineWidget } from '../types';
 import { chipRowSchema } from './schema';
 import { ChipRowWidget } from './ChipRowWidget';
 
+/** The gap between two chips, and between two lines of them. */
+const GAP = 10;
+
+/**
+ * Two lines of chips, in px: two chips' height (Casa Panel's `target-min`,
+ * at the wall's sizes) and the gap between the lines. A box this tall plus
+ * the headroom wraps.
+ */
+const TWO_LINES = 2 * CASA.size.targetMin + GAP;
+
 export default defineWidget({
   schema: chipRowSchema,
   Component: ChipRowWidget,
+  smallest: { full: { width: 45, height: 122 } },
+  steps: [{ name: 'two lines, wrapped', box: { width: 500, height: stepAt(TWO_LINES) }, guards: 'height' }],
   // One line in a box one chip tall, as Casa Panel's status bar has it:
   // past the box's width the row scrolls sideways, resting on whole chips,
   // and since the Fault leads, what scrolls out of view is the least urgent.
-  // A box tall enough for two lines wraps instead, so every chip is shown
+  // A box tall enough for two lines (`TWO_LINES`, with the headroom) wraps
+  // instead, so every chip is shown
   // whole. A chip never wraps inside itself; past the box's width its words
   // end in an ellipsis.
   //
@@ -19,14 +34,14 @@ export default defineWidget({
       display: flex;
       align-items: center;
       align-content: center;
-      gap: 10px;
+      gap: ${GAP}px;
       min-width: 0;
       overflow-x: auto;
       overflow-y: hidden;
       scroll-snap-type: x mandatory;
       scrollbar-width: none;
     }
-    @container widget (min-height: 106px) {
+    @container widget (height >= ${stepAt(TWO_LINES)}px) {
       .ohm-chip_row { flex-wrap: wrap; overflow-x: hidden; }
     }
     .ohm-chip_row-chip {
