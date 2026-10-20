@@ -12,9 +12,10 @@
  *
  * Two lessons from the @hakit version carry over. The track is optimistic
  * while held and after, until Home Assistant catches up (`pending.ts`), so a
- * round-trip does not snap it back under the finger or after it lifts, and `onChangeApplied` -- the one that calls a service -- fires
- * once, when the gesture ends, never on every step. The release is also
- * watched on `window`, so a finger that slides off the track still commits.
+ * round-trip does not snap it back under the finger or after it lifts; and
+ * `onChangeApplied` -- the one that calls a service -- fires once, when the
+ * gesture ends, never on every step. The release is also watched on
+ * `window`, so a finger that slides off the track still commits.
  */
 import { useRef } from 'react';
 import { usePendingValue } from './usePendingValue';

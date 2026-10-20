@@ -10,10 +10,10 @@
  *
  * `Slider`'s two lessons carry over. The bar is optimistic while it is held
  * and after, until Home Assistant catches up (`pending.ts`), so a round-trip
- * does not snap it back under the finger or after it lifts, and
- * the service is called once, when the hold ends -- never on every step of a
- * drag. The release is also watched on `window`, so a finger that slides off
- * the bar before lifting still commits.
+ * does not snap it back under the finger or after it lifts; and the service
+ * is called once, when the hold ends -- never on every step of a drag. The
+ * release is also watched on `window`, so a finger that slides off the bar
+ * before lifting still commits.
  */
 import { useRef } from 'react';
 import { fmt, tr } from '../i18n';

@@ -9,8 +9,8 @@
  * Pressing the body toggles the entity. A light that can be dimmed also gets
  * the brightness slider, optimistic until Home Assistant catches up
  * (`pending.ts`); anything else -- an on/off light, a switch -- shows its
- * state in the slider's place instead. A slider that moves and dims nothing would be
- * a dead control that looks live (see `supportsBrightness`).
+ * state in the slider's place instead. A slider that moves and dims nothing
+ * would be a dead control that looks live (see `supportsBrightness`).
  */
 import { useActions, type Entity } from '../ha';
 import { isPhone } from './device';

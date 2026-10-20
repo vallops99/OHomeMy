@@ -18,9 +18,11 @@ test('released, the bar keeps the released value while the live value has not mo
   assert.equal(pendingShown(released, 40, 1000 + PENDING_MS - 1), 70);
 });
 
-test('held, released, then the live value changes: the live value wins', () => {
+test('released, then the live value changes to the one sent: the live value is shown', () => {
+  // Pending until Home Assistant reports, then the report itself.
   assert.equal(pendingShown(released, 40, 1200), 70);
   assert.equal(pendingShown(released, 70, 1300), 70);
+  assert.equal(pendingShown(released, 75, 1400), 75, 'and later changes follow the live value too');
 });
 
 test('a live value other than the one sent still wins: rounding and clamping', () => {
