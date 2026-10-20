@@ -255,7 +255,7 @@ async def test_publishing_without_a_dashboard_clears_the_defaults_naming_it(
     assert "default_panel" not in system.data["core"]
 
 
-# Undo gives the defaults back (#67): what a Publish cleared is recorded on
+# A Restore gives the defaults back (#67): what a Publish cleared is recorded on
 # its history entry, and a later Publish in which the Dashboard reappears, by
 # id, restores those defaults that are still unset.
 
@@ -269,9 +269,9 @@ async def publish(hass: HomeAssistant, *dashboards: dict[str, Any]) -> None:
     )
 
 
-async def undo(hass: HomeAssistant) -> None:
+async def restore(hass: HomeAssistant) -> None:
     """Publish again the document from before the last Publish, as the Builder's
-    undo does: an ordinary Publish."""
+    Restore does: an ordinary Publish."""
     published = hass.data[DATA_PUBLISHED]
     await published.async_publish(
         published.history[1]["document"], published.revision, None
@@ -341,11 +341,11 @@ async def test_a_deletion_nobodys_default_named_still_shadows_older_records(
     assert await default_panels(hass, hass_read_only_user) == [None, None]
 
 
-async def test_undoing_the_publish_gives_the_defaults_back(
+async def test_restoring_the_revision_before_gives_the_defaults_back(
     hass: HomeAssistant, hass_read_only_user: User, wall_is_their_default: None
 ) -> None:
     await publish(hass, dashboard("phone"))
-    await undo(hass)
+    await restore(hass)
     assert await default_panels(hass, hass_read_only_user) == [
         "ohomemy-wall",
         "ohomemy-wall",
@@ -360,7 +360,7 @@ async def test_a_default_chosen_since_wins_over_the_record(
 ) -> None:
     await publish(hass, dashboard("phone"))
     await set_user(admin, hass_read_only_user.id, "phone")
-    await undo(hass)
+    await restore(hass)
     assert await default_panels(hass, hass_read_only_user) == [
         "ohomemy-wall",
         "ohomemy-phone",
@@ -375,7 +375,7 @@ async def test_a_user_removed_since_is_skipped(
     await publish(hass, dashboard("phone"))
     await hass.auth.async_remove_user(kitchen)
 
-    await undo(hass)
+    await restore(hass)
     assert await default_panels(hass) == ["ohomemy-wall"]
 
 
@@ -446,7 +446,7 @@ async def test_history_from_before_the_record_loads_and_restores_nothing(
     published = hass.data[DATA_PUBLISHED]
     assert [e["revision"] for e in published.history] == [2, 1]
 
-    await undo(hass)
+    await restore(hass)
     assert published.revision == 3
     assert await default_panels(hass, hass_admin_user) == [None, None]
 
@@ -465,7 +465,7 @@ async def test_without_frontend_storage_a_publish_still_succeeds(
     before = published.revision
 
     await publish(hass, dashboard("phone"))
-    await undo(hass)
+    await restore(hass)
 
     assert published.revision == before + 2
     entries = hass_storage[HISTORY_KEY]["data"]["entries"]

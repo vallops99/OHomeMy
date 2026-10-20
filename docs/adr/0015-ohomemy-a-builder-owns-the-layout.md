@@ -103,13 +103,14 @@ setting on each widget.
   default. A test pins the internal call, so an HA upgrade that moves it fails
   loudly. A wall tablet logs in as its own non-admin user, with "Always hide
   the sidebar" on and "suspend when hidden" off.
-- **Deleting a Dashboard clears the defaults that named it, and undo gives
-  them back** (#67). Left alone, HA would send those users to `home` rather
+- **Deleting a Dashboard clears the defaults that named it, and a Restore
+  gives them back** (#67). Left alone, HA would send those users to `home` rather
   than the system default, and a later Dashboard with the same slug would
   quietly become theirs. Defaults stay out of the document, but the history
   entry of the Publish that cleared them records which users (and whether the
   system default) named which Dashboard. Any later Publish in which that
-  Dashboard reappears, by id (an undo, a restore, an import), sets those
+  Dashboard reappears, by id (a Restore, a Draft whose deletion was undone,
+  an import), sets those
   defaults again, at its panel as that Publish names it, but only where they
   are still unset: a default chosen since wins, and a user removed since is
   skipped. The record lasts as long as its history entry, and the newest one

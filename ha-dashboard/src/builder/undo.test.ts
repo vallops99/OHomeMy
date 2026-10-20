@@ -120,6 +120,14 @@ test('each drag is a step; a run of arrow-key nudges of one Widget is one', () =
   assert.equal(home(nudged).widgets[0].x, 0);
 });
 
+test('two Widgets placed one after the other are two steps', () => {
+  const s = run(start, addClock('wall', clock('a')), addClock('wall', clock('b', 4)), undo('wall'));
+  assert.deepEqual(
+    home(s).widgets.map(w => w.id),
+    ['a']
+  );
+});
+
 test('edits that cancel out leave no step', () => {
   const s = run(start, addClock('wall', clock('a')), title('wall', 'a', 'S'), title('wall', 'a', ''));
   const back = sessionReducer(s, title('wall', 'a', null as unknown as string))!;

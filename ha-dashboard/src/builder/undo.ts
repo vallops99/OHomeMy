@@ -216,8 +216,10 @@ function changedPath(before: Dashboard, after: Dashboard): string | null {
   const paths: string[] = [];
   const walk = (a: unknown, b: unknown, path: string) => {
     if (paths.length > 1 || Object.is(a, b)) return;
-    if (Array.isArray(a) && Array.isArray(b) && a.length === b.length) {
-      a.forEach((item, i) => walk(item, b[i], `${path}/${idOf(item) ?? i}`));
+    if (Array.isArray(a) && Array.isArray(b)) {
+      // An item added or removed is not one value changed: never merged.
+      if (a.length !== b.length) paths.push(path, path);
+      else a.forEach((item, i) => walk(item, b[i], `${path}/${idOf(item) ?? i}`));
     } else if (isRecord(a) && isRecord(b) && !Array.isArray(a) && !Array.isArray(b)) {
       for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) walk(a[key], b[key], `${path}/${key}`);
     } else if (!sameJson(a, b)) {
