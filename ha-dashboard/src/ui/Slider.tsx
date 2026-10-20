@@ -11,12 +11,13 @@
  * at the same inline edge, so the finger and the fill always agree.
  *
  * Two lessons from the @hakit version carry over. The track is optimistic
- * while held, so a Home Assistant round-trip does not snap it back under the
- * finger, and `onChangeApplied` -- the one that calls a service -- fires
+ * while held and after, until Home Assistant catches up (`pending.ts`), so a
+ * round-trip does not snap it back under the finger or after it lifts, and `onChangeApplied` -- the one that calls a service -- fires
  * once, when the gesture ends, never on every step. The release is also
  * watched on `window`, so a finger that slides off the track still commits.
  */
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
+import { usePendingValue } from './usePendingValue';
 import { v } from './vars';
 
 export type SliderProps = {
@@ -45,16 +46,16 @@ export type SliderProps = {
 const BASELINE = 9;
 
 export function Slider({ value, onChange, onChangeApplied, disabled, thickness, onInteracting }: SliderProps) {
-  // Held, the track shows the finger; released, the incoming `value` is
-  // authoritative again, whether Home Assistant accepts the change or not.
-  const [held, setHeld] = useState<number | null>(null);
+  // Held, the track shows the finger; released, it keeps the released value
+  // until Home Assistant reports a change, or gives up waiting (`pending.ts`).
+  const pending = usePendingValue(value);
   const latest = useRef<number | null>(null);
-  const shown = held ?? value;
+  const shown = pending.shown;
 
   const commit = () => {
     const v = latest.current;
     latest.current = null;
-    setHeld(null);
+    if (v !== null) pending.release(v);
     onInteracting?.(false);
     if (v !== null) onChangeApplied?.(v);
   };
@@ -102,7 +103,7 @@ export function Slider({ value, onChange, onChangeApplied, disabled, thickness, 
         onChange={e => {
           const v = Math.round(Number(e.target.value));
           latest.current = v;
-          setHeld(v);
+          pending.hold(v);
           onChange?.(v);
         }}
         // A key press is a whole gesture of its own.

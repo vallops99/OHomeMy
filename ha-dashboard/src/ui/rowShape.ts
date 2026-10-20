@@ -1,10 +1,11 @@
 /**
  * The old Row's shape, which `ToggleTile` and the read-only rows keep after
  * the Row itself became a Room Tile (#42): the row surface with its state
- * marker, and the slider's optimistic drag. Two components rendering the
+ * marker, and the slider's long-press disarm. Two components rendering the
  * same shape must not drift apart one copied line at a time.
  */
 import { useState, type CSSProperties } from 'react';
+import { usePendingValue } from './usePendingValue';
 import { v } from './vars';
 
 /**
@@ -42,13 +43,14 @@ export function rowStyle({ active, unavailable }: { active: boolean; unavailable
 }
 
 /**
- * The value a row's slider shows, and a `ToggleTile`'s long-press disarm.
+ * A row's brightness percentage as its meta line reads it, and a
+ * `ToggleTile`'s long-press disarm.
  *
- * The optimistic drag state lives in `Slider`, which owns the gesture and
- * the commit. This only mirrors what the slider reports so the row's own
- * notion of "current brightness" tracks the finger; the `from === live`
- * guard falls it back to the live value the instant a drag ends, rather
- * than staying pinned to a stale optimistic number (RoomTile, #7).
+ * The bar's own optimistic value lives in `Slider`, which owns the gesture
+ * and the commit; the row passes it the live brightness. A row that also
+ * prints the percentage follows the slider's `onChange` and `onChangeApplied`
+ * through `hold` and `release`, under the same rule (`pending.ts`), so the
+ * text and the bar agree while held and until Home Assistant catches up.
  *
  * Adjusting the slider must not also open the row's long-press modal over
  * the control being used -- see the note in `Slider`. `sliding` is what a
@@ -56,13 +58,7 @@ export function rowStyle({ active, unavailable }: { active: boolean; unavailable
  * progress. A Row has no modal to disarm (ADR-0010) and ignores it.
  */
 export function useRowSlider(live: number) {
-  const [dragged, setDragged] = useState<{ value: number; from: number } | null>(null);
+  const { shown, hold, release } = usePendingValue(live);
   const [sliding, setSliding] = useState(false);
-  return {
-    shown: dragged && dragged.from === live ? dragged.value : live,
-    sliding,
-    setSliding,
-    /** Record where the finger is, against the live value it started from. */
-    track: (value: number) => setDragged({ value, from: live }),
-  };
+  return { shown, hold, release, sliding, setSliding };
 }

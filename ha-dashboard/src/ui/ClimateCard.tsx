@@ -33,8 +33,8 @@ export type ClimateCardProps = {
 /**
  * The setpoint as the finger left it, until Home Assistant reports the new
  * one: presses in quick succession each step from the last press, not from a
- * setpoint that has not arrived yet. The same `from === live` guard as
- * `useRowSlider`: the moment the live value changes, it wins.
+ * setpoint that has not arrived yet. The same `from === live` guard as a
+ * released slider (`pending.ts`): the moment the live value changes, it wins.
  */
 function useSetpoint(live: number | null) {
   const [pressed, setPressed] = useState<{ value: number; from: number | null } | null>(null);

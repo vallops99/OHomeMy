@@ -34,7 +34,8 @@ export type ToggleViewProps = {
 
 export function ToggleView({ entity, variant, style }: ToggleViewProps) {
   const actions = useActions();
-  const slider = useRowSlider(brightnessPercent(entity));
+  const brightness = brightnessPercent(entity);
+  const slider = useRowSlider(brightness);
 
   const unavailable = entity.unavailable;
   const on = entity.state === 'on';
@@ -82,12 +83,12 @@ export function ToggleView({ entity, variant, style }: ToggleViewProps) {
         {slides && (
           <div className='ohm-toggle-slider' onClick={e => e.stopPropagation()}>
             <Slider
-              value={slider.shown}
+              value={brightness}
               thickness={v.size.targetControl}
               onInteracting={slider.setSliding}
-              onChange={slider.track}
+              onChange={slider.hold}
               onChangeApplied={v => {
-                slider.track(v);
+                slider.release(v);
                 actions.setBrightness(entity, v);
               }}
             />

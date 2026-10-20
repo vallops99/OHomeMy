@@ -8,15 +8,17 @@
  * it: keyboard and screen readers get a real slider for free, and the browser
  * owns the gesture.
  *
- * `Slider`'s two lessons carry over. The bar is optimistic while it is held,
- * so a Home Assistant round-trip does not snap it back under the finger, and
+ * `Slider`'s two lessons carry over. The bar is optimistic while it is held
+ * and after, until Home Assistant catches up (`pending.ts`), so a round-trip
+ * does not snap it back under the finger or after it lifts, and
  * the service is called once, when the hold ends -- never on every step of a
  * drag. The release is also watched on `window`, so a finger that slides off
  * the bar before lifting still commits.
  */
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { fmt, tr } from '../i18n';
 import { Icon } from './Icon';
+import { usePendingValue } from './usePendingValue';
 import { v } from './vars';
 
 export type DimmerProps = {
@@ -29,17 +31,18 @@ export type DimmerProps = {
 };
 
 export function Dimmer({ value, onCommit, label }: DimmerProps) {
-  // Held, the bar shows the finger; released, the incoming `value` is
-  // authoritative again, whether Home Assistant accepts the change or not.
-  const [held, setHeld] = useState<number | null>(null);
+  // Held, the bar shows the finger; released, it keeps the released value
+  // until Home Assistant reports a change, or gives up waiting (`pending.ts`).
+  const pending = usePendingValue(value);
   const latest = useRef<number | null>(null);
-  const shown = held ?? value;
+  const shown = pending.shown;
 
   const commit = () => {
     const v = latest.current;
     latest.current = null;
-    setHeld(null);
-    if (v !== null) onCommit(v);
+    if (v === null) return;
+    pending.release(v);
+    onCommit(v);
   };
   const watchRelease = () => {
     const release = () => {
@@ -96,7 +99,7 @@ export function Dimmer({ value, onCommit, label }: DimmerProps) {
         onChange={e => {
           const v = Number(e.target.value);
           latest.current = v;
-          setHeld(v);
+          pending.hold(v);
         }}
         // A key press is a whole gesture of its own.
         onKeyUp={commit}

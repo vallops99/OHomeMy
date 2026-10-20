@@ -7,8 +7,9 @@
  * control (`rowShape.ts`).
  *
  * Pressing the body toggles the entity. A light that can be dimmed also gets
- * the brightness slider, with its optimistic drag (`rowShape.ts`); anything else -- an on/off light, a switch -- shows its state in
- * the slider's place instead. A slider that moves and dims nothing would be
+ * the brightness slider, optimistic until Home Assistant catches up
+ * (`pending.ts`); anything else -- an on/off light, a switch -- shows its
+ * state in the slider's place instead. A slider that moves and dims nothing would be
  * a dead control that looks live (see `supportsBrightness`).
  */
 import { useActions, type Entity } from '../ha';
@@ -31,19 +32,10 @@ export function ToggleTile({ entity }: ToggleTileProps) {
   const unavailable = entity.unavailable;
   const dimmable = supportsBrightness(entity);
 
-  const slider = useRowSlider(brightnessPercent(entity));
+  const brightness = brightnessPercent(entity);
+  const slider = useRowSlider(brightness);
 
-  const sliderEl = (
-    <Slider
-      value={slider.shown}
-      onInteracting={slider.setSliding}
-      onChange={slider.track}
-      onChangeApplied={v => {
-        slider.track(v);
-        actions.setBrightness(entity, v);
-      }}
-    />
-  );
+  const sliderEl = <Slider value={brightness} onInteracting={slider.setSliding} onChangeApplied={v => actions.setBrightness(entity, v)} />;
   // On a phone the 200 px slider leaves the name a few letters; it folds
   // under the name, full width, as a phone Row's does (ADR-0011).
   const folded = isPhone && dimmable && !unavailable;
