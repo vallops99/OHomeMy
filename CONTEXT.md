@@ -42,9 +42,20 @@ _Avoid_: Unsaved changes, pending layout
 
 **Publish**:
 Making a Draft the version every open Dashboard shows. It is refused if
-someone else Published since the Draft began, and each Publish can be undone
-from history.
+someone else Published since the Draft began, and an earlier Publish can be
+Restored from history.
 _Avoid_: Save, deploy, apply
+
+**Undo**:
+Taking back the last edit to the Draft, which Redo puts back. Undo lasts
+until the Draft is Published or discarded; after that, only a Restore goes
+back.
+_Avoid_: Revert, rollback
+
+**Restore**:
+Publishing an earlier Publish's document again, over everything since. It is
+a Publish of its own, so history only grows.
+_Avoid_: Undo, rollback
 
 **Default Dashboard**:
 The Dashboard a Home Assistant user lands on when they open Home Assistant.
