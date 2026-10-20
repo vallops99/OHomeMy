@@ -1,12 +1,12 @@
 /**
- * The last Publishes, and undo: restoring one Publishes its document again,
- * as a new revision (`history.ts`).
+ * The last Publishes, and Restore: restoring one Publishes its document
+ * again, as a new revision (`history.ts`).
  */
 import { useEffect, useState } from 'react';
 import type { DocumentAdmin, HistoryEntry } from '../ha';
 import { fmt, tr } from '../i18n';
 import type { Ask } from './Builder';
-import { historyRows, undoTarget, type HistoryRow } from './history';
+import { historyRows, restoreTarget, type HistoryRow } from './history';
 import { messageOf } from './messageOf';
 import { canReplace, isDirty, type Session } from './session';
 import { discards } from './words';
@@ -41,7 +41,7 @@ export function HistorySection({
   }, [admin, revision]);
 
   const rows = loaded && 'history' in loaded ? historyRows(loaded.history, revision) : [];
-  const undo = undoTarget(rows);
+  const previous = restoreTarget(rows);
   const enabled = canReplace(session);
   const confirmRestore = (row: HistoryRow) =>
     ask({
@@ -54,9 +54,9 @@ export function HistorySection({
     <section className='b-section' aria-labelledby='b-history'>
       <div className='b-section-head'>
         <h2 id='b-history'>{tr('builder.history.title')}</h2>
-        {undo && (
-          <button className='b-button' disabled={!enabled} onClick={() => confirmRestore(undo)}>
-            {tr('builder.history.undo', { revision: rows[0].revision })}
+        {previous && (
+          <button className='b-button' disabled={!enabled} onClick={() => confirmRestore(previous)}>
+            {tr('builder.history.restoreLast', { revision: previous.revision })}
           </button>
         )}
       </div>

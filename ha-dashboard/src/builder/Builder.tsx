@@ -4,10 +4,16 @@
  * dragging on a preview (#56, `DashboardScreen.tsx`), in place of the sections.
  *
  * All the rules are in `session.ts` (the Draft against the published
- * document), `draft.ts` (what an edit does) and `history.ts`; this file
- * wires them to the websocket and to buttons.
+ * document), `draft.ts` (what an edit does), `undo.ts` and `history.ts`;
+ * this file wires them to the websocket, to buttons and to keys.
+ *
+ * Undo and Redo (#74) act on the stack of the screen in front of the admin:
+ * the Dashboard being laid out, or the list. Ctrl/Cmd+Z and Shift+Ctrl/Cmd+Z
+ * work anywhere in the Builder, a text field included: the Builder's own
+ * step replaces the browser's text undo, so a field and the Draft never
+ * disagree. Leaving a field ends its step.
  */
-import { useEffect, useReducer, useState, type ReactNode } from 'react';
+import { useEffect, useReducer, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { membersInFull } from '../document/members';
 import type { OHomeMyDocument } from '../document/types';
 import { useDocumentAdmin, usePublished, type ImportOutcome } from '../ha';
@@ -22,6 +28,7 @@ import { HistorySection } from './HistorySection';
 import { messageOf } from './messageOf';
 import { mapDashboard } from './pages';
 import { canPublish, inConflict, isDirty, sessionReducer, type PublishOutcome, type Session } from './session';
+import { stackOf, undoAsks, type Where } from './undo';
 import { TransferSection } from './TransferSection';
 
 /** A question the admin answers before something is thrown away. */
@@ -37,6 +44,8 @@ export function Builder() {
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   /** The Dashboard being laid out, by id, or `null` for the list. */
   const [editing, setEditing] = useState<string | null>(null);
+  /** Where the last Undo or Redo on a Dashboard was, for its screen to show. */
+  const [landing, setLanding] = useState<{ where: Where } | null>(null);
 
   useEffect(() => {
     if (published) dispatch({ type: 'received', published });
@@ -65,11 +74,44 @@ export function Builder() {
   const dirty = isDirty(session);
   const conflict = inConflict(session);
   const edited = editing === null ? undefined : session.draft.dashboards.find(d => d.id === editing);
+  const scope = edited ? edited.id : null;
+  const stack = stackOf(session.undo, scope);
+
+  /** Undo or Redo on the stack in front of the admin; removing a Dashboard edited since it was made is asked first. */
+  const travel = (from: 'undo' | 'redo') => {
+    const step = stack[from].at(-1);
+    if (session.publishing || !step) return;
+    const go = () => {
+      dispatch({ type: from === 'undo' ? 'undone' : 'redone', scope });
+      if (scope !== null && step.where) setLanding({ where: step.where });
+    };
+    const asks = from === 'undo' && scope === null ? undoAsks(session.undo, session.draft) : null;
+    if (asks)
+      setConfirmation({ message: tr('builder.undo.removeConfirm', { name: asks.name }), confirmLabel: tr('builder.undo'), onConfirm: go });
+    else go();
+  };
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.key.toLowerCase() !== 'z') return;
+    e.preventDefault();
+    travel(e.shiftKey ? 'redo' : 'undo');
+  };
 
   return (
-    <div className='b-app' lang={lang} dir={dir} style={style}>
+    <div
+      className='b-app'
+      lang={lang}
+      dir={dir}
+      style={style}
+      // Capture, so the browser's own text undo never runs in a field.
+      onKeyDownCapture={onKeyDown}
+      onBlur={() => dispatch({ type: 'sealed' })}
+    >
       <Header
         session={session}
+        canUndo={stack.undo.length > 0 && !session.publishing}
+        canRedo={stack.redo.length > 0 && !session.publishing}
+        onUndo={() => travel('undo')}
+        onRedo={() => travel('redo')}
         onPublish={() => {
           // Every Group's Members in full (#73): an old Group saves in the new shape.
           const document = membersInFull(session.draft, kind => widgetKind(kind)?.schema);
@@ -139,7 +181,14 @@ export function Builder() {
           <DashboardScreen
             key={edited.id}
             dashboard={edited}
-            edit={f => dispatch({ type: 'edited', edit: d => mapDashboard(d, edited.id, f) })}
+            edit={(f, key) =>
+              dispatch({
+                type: 'edited',
+                edit: d => mapDashboard(d, edited.id, f),
+                on: { stack: 'dashboard', id: edited.id, ...(key !== undefined && { key }) },
+              })
+            }
+            landing={landing}
             ask={setConfirmation}
             disabled={!!session.publishing || conflict}
             onClose={() => setEditing(null)}
@@ -150,7 +199,7 @@ export function Builder() {
           base={session.base.document}
           draft={session.draft}
           disabled={!!session.publishing || conflict}
-          edit={edit => dispatch({ type: 'edited', edit })}
+          edit={edit => dispatch({ type: 'edited', edit, on: { stack: 'list' } })}
           ask={setConfirmation}
           onEdit={setEditing}
         />
@@ -176,7 +225,23 @@ export function Builder() {
   );
 }
 
-function Header({ session, onPublish, onDiscard }: { session: Session; onPublish: () => void; onDiscard: () => void }) {
+function Header({
+  session,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
+  onPublish,
+  onDiscard,
+}: {
+  session: Session;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
+  onPublish: () => void;
+  onDiscard: () => void;
+}) {
   const { narrow } = usePanelProps();
   const dirty = isDirty(session);
   const status = session.publishing
@@ -209,6 +274,12 @@ function Header({ session, onPublish, onDiscard }: { session: Session; onPublish
         </p>
       </div>
       <div className='b-actions'>
+        <button className='b-button' disabled={!canUndo} onClick={onUndo} aria-keyshortcuts='Control+Z Meta+Z'>
+          {tr('builder.undo')}
+        </button>
+        <button className='b-button' disabled={!canRedo} onClick={onRedo} aria-keyshortcuts='Control+Shift+Z Meta+Shift+Z'>
+          {tr('builder.redo')}
+        </button>
         <button className='b-button' disabled={!dirty || !!session.publishing} onClick={onDiscard}>
           {tr('builder.discard')}
         </button>

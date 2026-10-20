@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { OHomeMyDocument } from '../document/types';
 import type { HistoryEntry } from '../ha/document';
-import { historyRows, undoTarget } from './history';
+import { historyRows, restoreTarget } from './history';
 
 const doc = (n: number): OHomeMyDocument => ({ dashboards: [{ n } as never] });
 const entry = (revision: number): HistoryEntry => ({ revision, saved_at: `t${revision}`, user_id: 'u', document: doc(revision) });
@@ -37,13 +37,13 @@ test('a history cut short (it keeps the last 20) has no revision 0', () => {
   );
 });
 
-test('undoing the last Publish restores the revision before it', () => {
-  assert.equal(undoTarget(historyRows([entry(5), entry(4)], 5))?.revision, 4);
-  assert.equal(undoTarget(historyRows([entry(1)], 1))?.revision, 0, 'even the first');
+test('Restore goes back to the revision before the last Publish', () => {
+  assert.equal(restoreTarget(historyRows([entry(5), entry(4)], 5))?.revision, 4);
+  assert.equal(restoreTarget(historyRows([entry(1)], 1))?.revision, 0, 'even the first');
 });
 
-test('there is nothing to undo with no earlier revision, or a stale history', () => {
-  assert.equal(undoTarget(historyRows([], 0)), null);
-  assert.equal(undoTarget(historyRows([entry(30)], 30)), null);
-  assert.equal(undoTarget(historyRows([entry(5), entry(4)], 6)), null);
+test('there is nothing to Restore with no earlier revision, or a stale history', () => {
+  assert.equal(restoreTarget(historyRows([], 0)), null);
+  assert.equal(restoreTarget(historyRows([entry(30)], 30)), null);
+  assert.equal(restoreTarget(historyRows([entry(5), entry(4)], 6)), null);
 });

@@ -242,6 +242,9 @@ export const en = {
   'builder.status.conflict': 'Draft cannot be published',
   'builder.publish': 'Publish',
   'builder.discard': 'Discard Draft',
+  'builder.undo': 'Undo',
+  'builder.redo': 'Redo',
+  'builder.undo.removeConfirm': 'Undo creating “{name}”? Its edits go with it.',
   'builder.discardConfirm': 'Discard every change in your Draft?',
   'builder.published': 'Published as revision {revision}. Every open Dashboard shows it now.',
   'builder.failed': 'Not published: {message}',
@@ -293,7 +296,7 @@ export const en = {
   'builder.history.empty': 'No Dashboards',
   'builder.history.current': 'Current',
   'builder.history.dashboards': { one: '{count} Dashboard', other: '{count} Dashboards' },
-  'builder.history.undo': 'Undo revision {revision}',
+  'builder.history.restoreLast': 'Restore revision {revision}',
   'builder.history.restore': 'Restore',
   'builder.history.restoreConfirm': 'Publish revision {revision} again, as a new revision?',
   'builder.discardsDraft': 'This discards your Draft.',
@@ -322,9 +325,9 @@ export const en = {
   'builder.defaults.publishFirst': '{name} (Publish it first)',
   'builder.defaults.lostTitle': 'Default Dashboards will be cleared',
   'builder.defaults.lost':
-    '“{name}” is deleted in this Draft, and it is the Default Dashboard of {who}. When you Publish, they go back to Home Assistant’s default. Undoing the Publish gives these defaults back, unless another has been chosen since.',
+    '“{name}” is deleted in this Draft, and it is the Default Dashboard of {who}. When you Publish, they go back to Home Assistant’s default. Restoring the revision before it gives these defaults back, unless another has been chosen since.',
   'builder.defaults.lostToSystem':
-    '“{name}” is deleted in this Draft, and it is the Default Dashboard of {who}. When you Publish, they go back to the default for everyone else. Undoing the Publish gives these defaults back, unless another has been chosen since.',
+    '“{name}” is deleted in this Draft, and it is the Default Dashboard of {who}. When you Publish, they go back to the default for everyone else. Restoring the revision before it gives these defaults back, unless another has been chosen since.',
 
   // ── The Dashboard screen (`builder/DashboardScreen.tsx` and its parts) ──
   'builder.dashboard.open': 'Open',

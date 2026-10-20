@@ -1,11 +1,11 @@
 /**
  * The Builder's view of the history store (#55): the last Publishes, and
- * what undoing one restores.
+ * which one Restore goes back to.
  *
- * Undo is a Publish, never a rewind. Restoring a past revision Publishes its
- * document again over the current revision, as a new revision, with the
- * same conflict check as any other; the history only grows. Undoing the
- * latest Publish restores the revision before it.
+ * A Restore (CONTEXT.md) is a Publish, never a rewind. Restoring a past
+ * revision Publishes its document again over the current revision, as a new
+ * revision, with the same conflict check as any other; the history only
+ * grows. It is not Undo, which takes back edits to the Draft (`undo.ts`).
  */
 import { emptyDocument, type OHomeMyDocument } from '../document/types';
 import type { HistoryEntry } from '../ha/document';
@@ -23,7 +23,7 @@ export type HistoryRow = {
 /**
  * The history, newest first, as the Builder lists it. When it reaches back
  * to revision 1, revision 0 (no Dashboards) is listed after it, so even the
- * first Publish can be undone.
+ * Draft before the first Publish can be Restored.
  */
 export function historyRows(history: HistoryEntry[], currentRevision: number): HistoryRow[] {
   const rows: HistoryRow[] = history.map(e => ({
@@ -40,10 +40,10 @@ export function historyRows(history: HistoryEntry[], currentRevision: number): H
 }
 
 /**
- * What "Undo the last Publish" restores: the row just before the current
+ * What "Restore revision N" goes back to: the row just before the current
  * one, or `null` when there is none, or the history is not of the current
  * revision (it is fetched again after each Publish, so it can lag).
  */
-export function undoTarget(rows: HistoryRow[]): HistoryRow | null {
+export function restoreTarget(rows: HistoryRow[]): HistoryRow | null {
   return rows[0]?.current ? (rows[1] ?? null) : null;
 }

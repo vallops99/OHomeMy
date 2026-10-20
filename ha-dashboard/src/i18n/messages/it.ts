@@ -226,6 +226,9 @@ export const it: Catalogue = {
   'builder.status.conflict': 'La Bozza non può essere pubblicata',
   'builder.publish': 'Pubblica',
   'builder.discard': 'Scarta la Bozza',
+  'builder.undo': 'Annulla',
+  'builder.redo': 'Ripeti',
+  'builder.undo.removeConfirm': 'Annullare la creazione di «{name}»? Le sue modifiche se ne vanno con lei.',
   'builder.discardConfirm': 'Scartare tutte le modifiche della Bozza?',
   'builder.published': 'Pubblicata come revisione {revision}. Ogni Dashboard aperta ora la mostra.',
   'builder.failed': 'Non pubblicata: {message}',
@@ -277,7 +280,7 @@ export const it: Catalogue = {
   'builder.history.empty': 'Nessuna Dashboard',
   'builder.history.current': 'Attuale',
   'builder.history.dashboards': { one: '{count} Dashboard', other: '{count} Dashboard' },
-  'builder.history.undo': 'Annulla la revisione {revision}',
+  'builder.history.restoreLast': 'Ripristina la revisione {revision}',
   'builder.history.restore': 'Ripristina',
   'builder.history.restoreConfirm': 'Pubblicare di nuovo la revisione {revision}, come nuova revisione?',
   'builder.discardsDraft': 'La tua Bozza verrà scartata.',
@@ -306,9 +309,9 @@ export const it: Catalogue = {
   'builder.defaults.publishFirst': '{name} (prima Pubblicala)',
   'builder.defaults.lostTitle': 'Alcune Dashboard predefinite verranno azzerate',
   'builder.defaults.lost':
-    '«{name}» è eliminata in questa Bozza ed è la Dashboard predefinita di {who}. Quando Pubblichi, torneranno alla predefinita di Home Assistant. Se annulli la Pubblicazione, queste predefinite tornano, a meno che nel frattempo non ne sia stata scelta un’altra.',
+    '«{name}» è eliminata in questa Bozza ed è la Dashboard predefinita di {who}. Quando Pubblichi, torneranno alla predefinita di Home Assistant. Se ripristini la revisione precedente, queste predefinite tornano, a meno che nel frattempo non ne sia stata scelta un’altra.',
   'builder.defaults.lostToSystem':
-    '«{name}» è eliminata in questa Bozza ed è la Dashboard predefinita di {who}. Quando Pubblichi, torneranno alla predefinita di tutti gli altri. Se annulli la Pubblicazione, queste predefinite tornano, a meno che nel frattempo non ne sia stata scelta un’altra.',
+    '«{name}» è eliminata in questa Bozza ed è la Dashboard predefinita di {who}. Quando Pubblichi, torneranno alla predefinita di tutti gli altri. Se ripristini la revisione precedente, queste predefinite tornano, a meno che nel frattempo non ne sia stata scelta un’altra.',
 
   'builder.dashboard.open': 'Apri',
   'builder.dashboard.back': 'Tutte le Dashboard',

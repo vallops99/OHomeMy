@@ -33,15 +33,16 @@ cleared. Left alone, HA would send those users to `home`, not to the system
 default (its fallback is per panel lookup, not per level), and a later
 Dashboard given the same slug would silently become their default.
 
-Undo gives them back (#67). The Publish's history entry records, under
+A Restore gives them back (#67). The Publish's history entry records, under
 `cleared_defaults`, whose defaults it cleared: `{dashboard_id: {users,
 system}}`, with an empty record for a Dashboard that was nobody's. A later
-Publish in which that Dashboard reappears, by id (an undo, a restore, an
-import), sets them again at its panel as that document names it, but only
-where they are still unset: a default chosen since wins, and a user removed
-since is skipped. The newest record for a Dashboard wins, so its newest
-deletion always speaks for it: an empty record sets nothing, even where an
-older one named someone. A record lasts as long as its history entry.
+Publish in which that Dashboard reappears, by id (a Restore, a Draft whose
+deletion was undone, an import), sets them again at its panel as that
+document names it, but only where they are still unset: a default chosen
+since wins, and a user removed since is skipped. The newest record for a
+Dashboard wins, so its newest deletion always speaks for it: an empty
+record sets nothing, even where an older one named someone. A record lasts
+as long as its history entry.
 
 Both run inside the Publish, before its history entry is saved, so the
 record is on disk by the time the Publish is acknowledged.
@@ -251,7 +252,7 @@ def async_follow_publishes(hass: HomeAssistant, published: Published) -> None:
             try:
                 await async_restore(hass, published.history, back)
             except Unavailable as err:
-                # What clearing did is still recorded, for an undo to give back.
+                # What clearing did is still recorded, for a Restore to give back.
                 _LOGGER.warning("Default Dashboards were not restored: %s", err)
         return {CLEARED: cleared} if cleared else {}
 

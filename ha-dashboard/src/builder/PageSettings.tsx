@@ -4,6 +4,7 @@
  * what `pages.ts` accepts: the grid cannot shrink past its Widgets, and the
  * Home Page cannot be removed.
  */
+import { useState } from 'react';
 import type { Dashboard, Page } from '../document/types';
 import { tr } from '../i18n';
 import type { Ask } from './Builder';
@@ -107,17 +108,31 @@ export function PageSettings({
   );
 }
 
-/** The name, committed as typed unless blank, which the server refuses. */
+/**
+ * The name, committed as typed unless blank, which the server refuses. The
+ * text is kept here, since the Page's name is stored trimmed and a space
+ * typed between two words would otherwise vanish; it follows the Page's
+ * name whenever that changes to something else, as an Undo changes it (#74).
+ */
 function PageName({ id, name, onChange }: { id: string; name: string; onChange: (name: string) => void }) {
+  const [text, setText] = useState(name);
+  const [shown, setShown] = useState(name);
+  if (name !== shown) {
+    setShown(name);
+    if (text.trim() !== name) setText(name);
+  }
   return (
     <input
       className='b-input'
       id={id}
       name='page-name'
-      defaultValue={name}
-      onChange={e => e.target.value.trim() !== '' && onChange(e.target.value)}
-      onBlur={e => {
-        if (e.target.value.trim() === '') e.target.value = name;
+      value={text}
+      onChange={e => {
+        setText(e.target.value);
+        if (e.target.value.trim() !== '') onChange(e.target.value);
+      }}
+      onBlur={() => {
+        if (text.trim() === '') setText(name);
       }}
     />
   );

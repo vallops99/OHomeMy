@@ -9,7 +9,7 @@ Draft started from, and is refused with `Conflict` if anyone Published since.
 The losing Builder already holds the newer document from its subscription.
 
 `.storage/ohomemy.history` keeps the last `HISTORY_SIZE` Publishes, newest
-first, for undo. Its entries are documents too, so it shares the document's
+first, for Restore. Its entries are documents too, so it shares the document's
 version and runs the same migrations: an old entry can always be Published
 again.
 

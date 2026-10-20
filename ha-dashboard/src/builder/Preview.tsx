@@ -84,7 +84,8 @@ type Props = {
   screen: Size;
   selected: Selection | null;
   onSelect: (selection: Selection | null) => void;
-  onPlace: (id: string, box: Box) => void;
+  /** A Widget moved or resized: by a drag of the pointer, or a nudge of an arrow key. */
+  onPlace: (id: string, box: Box, how: 'drag' | 'nudge') => void;
   onDelete: (id: string) => void;
   onRemoveMember: (group: Widget, entity: string) => void;
   onMoveMember: (group: Widget, entity: string, by: -1 | 1) => void;
@@ -213,7 +214,7 @@ export function Preview({
       target.removeEventListener('pointercancel', cancel);
       setDrag(null);
       if (!dragging) onSelect(selectionTap(before, widget.id, memberAt));
-      else if (last?.valid) onPlace(widget.id, last.box);
+      else if (last?.valid) onPlace(widget.id, last.box, 'drag');
     };
     const cancel = () => {
       dragging = false;
@@ -251,7 +252,7 @@ export function Preview({
       e.preventDefault();
       const [dx, dy] = step[e.key];
       const box = e.shiftKey ? resized(widget, { dx, dy }, gridCtx) : moved(widget, { dx, dy }, gridCtx);
-      if (canPlace(box, page.widgets, gridCtx, widget.id)) onPlace(widget.id, box);
+      if (canPlace(box, page.widgets, gridCtx, widget.id)) onPlace(widget.id, box, 'nudge');
     } else if (e.key === 'Delete' || e.key === 'Backspace') {
       e.preventDefault();
       onDelete(widget.id);

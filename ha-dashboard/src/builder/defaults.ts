@@ -8,7 +8,7 @@
  * Published Dashboard can be chosen. A Dashboard deleted in the Draft is
  * still Published until the Draft is, and on that Publish the integration
  * clears every default naming it (`defaults.py`): its users fall back to the
- * system default, then to Home Assistant's own. Undoing that Publish gives
+ * system default, then to Home Assistant's own. Restoring the revision before gives
  * them back, unless one has been chosen since (#67).
  */
 import type { Dashboard, OHomeMyDocument } from '../document/types';

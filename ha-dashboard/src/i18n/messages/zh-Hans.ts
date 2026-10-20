@@ -223,6 +223,9 @@ export const zhHans: Catalogue = {
   'builder.status.conflict': '草稿无法发布',
   'builder.publish': '发布',
   'builder.discard': '放弃草稿',
+  'builder.undo': '撤销',
+  'builder.redo': '重做',
+  'builder.undo.removeConfirm': '撤销创建“{name}”？它的编辑也会一并删除。',
   'builder.discardConfirm': '放弃草稿中的所有更改？',
   'builder.published': '已发布为第 {revision} 版。所有打开的仪表板现在都显示它。',
   'builder.failed': '未发布：{message}',
@@ -273,7 +276,7 @@ export const zhHans: Catalogue = {
   'builder.history.empty': '没有仪表板',
   'builder.history.current': '当前',
   'builder.history.dashboards': { other: '{count} 个仪表板' },
-  'builder.history.undo': '撤销第 {revision} 版',
+  'builder.history.restoreLast': '恢复第 {revision} 版',
   'builder.history.restore': '恢复',
   'builder.history.restoreConfirm': '将第 {revision} 版作为新版本重新发布？',
   'builder.discardsDraft': '这会放弃你的草稿。',
@@ -302,9 +305,9 @@ export const zhHans: Catalogue = {
   'builder.defaults.publishFirst': '{name}（请先发布）',
   'builder.defaults.lostTitle': '部分默认仪表板将被清除',
   'builder.defaults.lost':
-    '“{name}”在此草稿中已删除，而它是 {who} 的默认仪表板。发布后，他们将回到 Home Assistant 的默认。撤销该次发布会恢复这些默认，除非之后已另选其他默认。',
+    '“{name}”在此草稿中已删除，而它是 {who} 的默认仪表板。发布后，他们将回到 Home Assistant 的默认。恢复上一修订会让这些默认回来，除非之后已另选其他默认。',
   'builder.defaults.lostToSystem':
-    '“{name}”在此草稿中已删除，而它是 {who} 的默认仪表板。发布后，他们将回到其他所有人的默认。撤销该次发布会恢复这些默认，除非之后已另选其他默认。',
+    '“{name}”在此草稿中已删除，而它是 {who} 的默认仪表板。发布后，他们将回到其他所有人的默认。恢复上一修订会让这些默认回来，除非之后已另选其他默认。',
 
   'builder.dashboard.open': '打开',
   'builder.dashboard.back': '所有仪表板',

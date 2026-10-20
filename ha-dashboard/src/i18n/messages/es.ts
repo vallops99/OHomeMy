@@ -223,6 +223,9 @@ export const es: Catalogue = {
   'builder.status.conflict': 'El Borrador no se puede publicar',
   'builder.publish': 'Publicar',
   'builder.discard': 'Descartar Borrador',
+  'builder.undo': 'Deshacer',
+  'builder.redo': 'Rehacer',
+  'builder.undo.removeConfirm': '¿Deshacer la creación de «{name}»? Sus cambios se van con él.',
   'builder.discardConfirm': '¿Descartar todos los cambios del Borrador?',
   'builder.published': 'Publicado como revisión {revision}. Todos los Dashboards abiertos la muestran ya.',
   'builder.failed': 'No publicado: {message}',
@@ -274,7 +277,7 @@ export const es: Catalogue = {
   'builder.history.empty': 'Ningún Dashboard',
   'builder.history.current': 'Actual',
   'builder.history.dashboards': { one: '{count} Dashboard', other: '{count} Dashboards' },
-  'builder.history.undo': 'Deshacer la revisión {revision}',
+  'builder.history.restoreLast': 'Restaurar la revisión {revision}',
   'builder.history.restore': 'Restaurar',
   'builder.history.restoreConfirm': '¿Publicar de nuevo la revisión {revision}, como una revisión nueva?',
   'builder.discardsDraft': 'Esto descarta tu Borrador.',
@@ -303,9 +306,9 @@ export const es: Catalogue = {
   'builder.defaults.publishFirst': '{name} (publícalo primero)',
   'builder.defaults.lostTitle': 'Se quitarán Dashboards predeterminados',
   'builder.defaults.lost':
-    '«{name}» se elimina en este Borrador y es el Dashboard predeterminado de {who}. Al Publicar, volverán al predeterminado de Home Assistant. Deshacer la Publicación devuelve estos predeterminados, salvo que desde entonces se haya elegido otro.',
+    '«{name}» se elimina en este Borrador y es el Dashboard predeterminado de {who}. Al Publicar, volverán al predeterminado de Home Assistant. Restaurar la revisión anterior devuelve estos predeterminados, salvo que desde entonces se haya elegido otro.',
   'builder.defaults.lostToSystem':
-    '«{name}» se elimina en este Borrador y es el Dashboard predeterminado de {who}. Al Publicar, volverán al predeterminado de todos los demás. Deshacer la Publicación devuelve estos predeterminados, salvo que desde entonces se haya elegido otro.',
+    '«{name}» se elimina en este Borrador y es el Dashboard predeterminado de {who}. Al Publicar, volverán al predeterminado de todos los demás. Restaurar la revisión anterior devuelve estos predeterminados, salvo que desde entonces se haya elegido otro.',
 
   'builder.dashboard.open': 'Abrir',
   'builder.dashboard.back': 'Todos los Dashboards',

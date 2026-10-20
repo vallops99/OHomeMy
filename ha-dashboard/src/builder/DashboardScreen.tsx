@@ -23,6 +23,7 @@ import { addPage } from './pages';
 import { PageSettings } from './PageSettings';
 import { Preview, type Ghost, type PreviewHandle } from './Preview';
 import { shownSelection, type Selection } from './selection';
+import type { Where } from './undo';
 import { kindName } from './words';
 
 type Tab = 'widget' | 'page' | 'dashboard';
@@ -36,12 +37,16 @@ export function DashboardScreen({
   ask,
   disabled,
   onClose,
+  landing,
 }: {
   dashboard: Dashboard;
-  edit: (f: (d: Dashboard) => Dashboard) => void;
+  /** An edit to this Dashboard; `key` says how it merges into Undo's steps (`undo.ts`). */
+  edit: (f: (d: Dashboard) => Dashboard, key?: string | null) => void;
   ask: Ask;
   disabled: boolean;
   onClose: () => void;
+  /** Where the last Undo or Redo was: its Page is shown, and its Widget selected. */
+  landing: { where: Where } | null;
 }) {
   const [pageId, setPageId] = useState(dashboard.home_page);
   const page = dashboard.pages.find(p => p.id === pageId) ?? dashboard.pages.find(p => p.id === dashboard.home_page) ?? dashboard.pages[0];
@@ -64,9 +69,22 @@ export function DashboardScreen({
   const preview = useRef<PreviewHandle | null>(null);
   const grid = gridOf(page, dashboard.settings.overflow);
 
-  const change = (f: (d: Dashboard) => Dashboard) => {
-    if (!disabled) edit(f);
+  const change = (f: (d: Dashboard) => Dashboard, key?: string | null) => {
+    if (!disabled) edit(f, key);
   };
+
+  // After an Undo or Redo: the Page it changed, and the Widget, if still there.
+  const [landed, setLanded] = useState(landing);
+  if (landing !== landed) {
+    setLanded(landing);
+    const where = landing?.where;
+    if (where?.page && dashboard.pages.some(p => p.id === where.page)) {
+      setPageId(where.page);
+      const target = dashboard.pages.find(p => p.id === where.page)!.widgets.some(w => w.id === where.widget) ? where.widget : null;
+      setSelected(target === null ? null : { widget: target, member: null });
+      if (target !== null) setTab('widget');
+    }
+  }
 
   const select = (selection: Selection | null) => {
     setSelected(selection);
@@ -237,7 +255,8 @@ export function DashboardScreen({
             screen={screen}
             selected={selected}
             onSelect={select}
-            onPlace={(id, box) => change(d => placeWidget(d, page.id, id, box))}
+            // Each drag is a step of its own; a run of nudges of one Widget is one.
+            onPlace={(id, box, how) => change(d => placeWidget(d, page.id, id, box), how === 'drag' ? null : `nudge:${id}`)}
             onDelete={id => change(d => deleteWidget(d, page.id, id))}
             onRemoveMember={(group, entity) => removeFrom(group, entity)}
             onMoveMember={(group, entity, by) => editMembers(group, raw => moveMember(raw, entity, by))}

@@ -276,6 +276,9 @@ export const ar: Catalogue = {
   'builder.status.conflict': 'لا يمكن نشر المسودة',
   'builder.publish': 'نشر',
   'builder.discard': 'تجاهل المسودة',
+  'builder.undo': 'تراجع',
+  'builder.redo': 'إعادة',
+  'builder.undo.removeConfirm': 'التراجع عن إنشاء «{name}»؟ ستذهب تعديلاتها معها.',
   'builder.discardConfirm': 'تجاهل كل التغييرات في مسودتك؟',
   'builder.published': 'نُشرت بوصفها المراجعة {revision}. تعرضها الآن كل لوحة مفتوحة.',
   'builder.failed': 'لم يُنشر: {message}',
@@ -340,7 +343,7 @@ export const ar: Catalogue = {
     many: '{count} لوحة',
     other: '{count} لوحة',
   },
-  'builder.history.undo': 'التراجع عن المراجعة {revision}',
+  'builder.history.restoreLast': 'استعادة المراجعة {revision}',
   'builder.history.restore': 'استعادة',
   'builder.history.restoreConfirm': 'نشر المراجعة {revision} مرة أخرى بوصفها مراجعة جديدة؟',
   'builder.discardsDraft': 'سيؤدي هذا إلى تجاهل مسودتك.',
@@ -369,9 +372,9 @@ export const ar: Catalogue = {
   'builder.defaults.publishFirst': '{name} (انشرها أولًا)',
   'builder.defaults.lostTitle': 'ستُمسح لوحات افتراضية',
   'builder.defaults.lost':
-    '«{name}» محذوفة في هذه المسودة، وهي اللوحة الافتراضية لـ {who}. عند النشر يعودون إلى افتراضي Home Assistant. التراجع عن النشر يعيد هذه الافتراضيات، ما لم يُختر غيرها منذ ذلك الحين.',
+    '«{name}» محذوفة في هذه المسودة، وهي اللوحة الافتراضية لـ {who}. عند النشر يعودون إلى افتراضي Home Assistant. استعادة المراجعة السابقة تعيد هذه الافتراضيات، ما لم يُختر غيرها منذ ذلك الحين.',
   'builder.defaults.lostToSystem':
-    '«{name}» محذوفة في هذه المسودة، وهي اللوحة الافتراضية لـ {who}. عند النشر يعودون إلى افتراضي الجميع غيرهم. التراجع عن النشر يعيد هذه الافتراضيات، ما لم يُختر غيرها منذ ذلك الحين.',
+    '«{name}» محذوفة في هذه المسودة، وهي اللوحة الافتراضية لـ {who}. عند النشر يعودون إلى افتراضي الجميع غيرهم. استعادة المراجعة السابقة تعيد هذه الافتراضيات، ما لم يُختر غيرها منذ ذلك الحين.',
 
   'builder.dashboard.open': 'فتح',
   'builder.dashboard.back': 'كل اللوحات',

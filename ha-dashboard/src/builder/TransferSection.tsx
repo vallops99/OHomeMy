@@ -1,7 +1,8 @@
 /**
  * Export what is published as a JSON file, and import one in its place. An
  * import is a Publish (the server migrates an older export first), so it
- * goes through the same conflict check, and history can undo it.
+ * goes through the same conflict check, and history can Restore what was
+ * before it.
  */
 import { useRef, useState } from 'react';
 import type { DocumentAdmin } from '../ha';

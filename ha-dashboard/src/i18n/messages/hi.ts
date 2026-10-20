@@ -223,6 +223,9 @@ export const hi: Catalogue = {
   'builder.status.conflict': 'ड्राफ़्ट प्रकाशित नहीं हो सकता',
   'builder.publish': 'प्रकाशित करें',
   'builder.discard': 'ड्राफ़्ट हटाएँ',
+  'builder.undo': 'पूर्ववत करें',
+  'builder.redo': 'फिर से करें',
+  'builder.undo.removeConfirm': '“{name}” बनाना पूर्ववत करें? इसके संपादन भी इसके साथ चले जाएँगे।',
   'builder.discardConfirm': 'अपने ड्राफ़्ट के सभी बदलाव हटाएँ?',
   'builder.published': 'संशोधन {revision} के रूप में प्रकाशित। हर खुला डैशबोर्ड अब इसे दिखाता है।',
   'builder.failed': 'प्रकाशित नहीं हुआ: {message}',
@@ -274,7 +277,7 @@ export const hi: Catalogue = {
   'builder.history.empty': 'कोई डैशबोर्ड नहीं',
   'builder.history.current': 'मौजूदा',
   'builder.history.dashboards': { one: '{count} डैशबोर्ड', other: '{count} डैशबोर्ड' },
-  'builder.history.undo': 'संशोधन {revision} पूर्ववत करें',
+  'builder.history.restoreLast': 'संशोधन {revision} बहाल करें',
   'builder.history.restore': 'बहाल करें',
   'builder.history.restoreConfirm': 'संशोधन {revision} को नए संशोधन के रूप में फिर से प्रकाशित करें?',
   'builder.discardsDraft': 'इससे आपका ड्राफ़्ट हट जाएगा।',
@@ -303,9 +306,9 @@ export const hi: Catalogue = {
   'builder.defaults.publishFirst': '{name} (पहले प्रकाशित करें)',
   'builder.defaults.lostTitle': 'डिफ़ॉल्ट डैशबोर्ड हट जाएँगे',
   'builder.defaults.lost':
-    'इस ड्राफ़्ट में “{name}” हटाया गया है, और यह {who} का डिफ़ॉल्ट डैशबोर्ड है। प्रकाशित करने पर वे Home Assistant के डिफ़ॉल्ट पर लौट जाएँगे। प्रकाशन को पूर्ववत करने पर ये डिफ़ॉल्ट वापस आ जाएँगे, जब तक कि इसके बाद कोई दूसरा न चुना गया हो।',
+    'इस ड्राफ़्ट में “{name}” हटाया गया है, और यह {who} का डिफ़ॉल्ट डैशबोर्ड है। प्रकाशित करने पर वे Home Assistant के डिफ़ॉल्ट पर लौट जाएँगे। पिछला संशोधन बहाल करने पर ये डिफ़ॉल्ट वापस आ जाएँगे, जब तक कि इसके बाद कोई दूसरा न चुना गया हो।',
   'builder.defaults.lostToSystem':
-    'इस ड्राफ़्ट में “{name}” हटाया गया है, और यह {who} का डिफ़ॉल्ट डैशबोर्ड है। प्रकाशित करने पर वे बाकी सभी के डिफ़ॉल्ट पर लौट जाएँगे। प्रकाशन को पूर्ववत करने पर ये डिफ़ॉल्ट वापस आ जाएँगे, जब तक कि इसके बाद कोई दूसरा न चुना गया हो।',
+    'इस ड्राफ़्ट में “{name}” हटाया गया है, और यह {who} का डिफ़ॉल्ट डैशबोर्ड है। प्रकाशित करने पर वे बाकी सभी के डिफ़ॉल्ट पर लौट जाएँगे। पिछला संशोधन बहाल करने पर ये डिफ़ॉल्ट वापस आ जाएँगे, जब तक कि इसके बाद कोई दूसरा न चुना गया हो।',
 
   'builder.dashboard.open': 'खोलें',
   'builder.dashboard.back': 'सभी डैशबोर्ड',
