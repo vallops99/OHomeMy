@@ -92,6 +92,12 @@ _Avoid_: Card, component, tile (a tile is one Variant's look), block
 A Widget's full or compact form, chosen per Widget where its kind has both.
 _Avoid_: Size, mode, style
 
+**Smallest box**:
+The least box a Widget kind's Variant is promised to fit in, with some room
+to spare. A Widget can be made smaller, but then nothing promises it fits, as
+outside a Dashboard's Supported range.
+_Avoid_: Minimum size, floor
+
 **Navbar**:
 A Dashboard's own bar of destinations, at most one per Dashboard, along one
 edge of every Page. The admin chooses each item's Page and icon, and the
