@@ -17,7 +17,7 @@ import { sensorSchema } from '../sensor/schema';
 import { toggleSchema } from '../toggle/schema';
 import { vacuumSchema } from '../vacuum/schema';
 import { weatherSchema } from '../weather/schema';
-import { entityKindSchema, GROUP_DOMAINS, KIND_DOMAINS } from './domains';
+import { entityKindSchema, GROUP_DOMAINS, KIND_DOMAINS, VARIANT_DOMAINS } from './domains';
 
 const widget = (kind: string, settings: Record<string, unknown>, variant: Widget['variant'] = 'full'): Widget => ({
   id: 'w',
@@ -76,7 +76,8 @@ test('a gate, a vacuum and a select have one form', () => {
 
 test('a Group holds members of one shaped Domain, in order', () => {
   const ok = validateWidget(widget('group', { members: ['lock.cancello', 'lock.cancelletto'] }), groupSchema);
-  assert.deepEqual(ok, { ok: true, settings: { members: ['lock.cancello', 'lock.cancelletto'] } });
+  const member = (entity: string) => ({ entity, name: null, variant: null, on_tap: null });
+  assert.deepEqual(ok, { ok: true, settings: { members: [member('lock.cancello'), member('lock.cancelletto')] } });
   assert.equal(validateWidget(widget('group', { members: ['lock.cancello', 'light.salone'] }), groupSchema).ok, false);
   assert.equal(validateWidget(widget('group', { members: ['camera.ingresso'] }), groupSchema).ok, false);
   assert.equal(validateWidget(widget('group', { members: ['group.accessi'] }), groupSchema).ok, false);
@@ -86,4 +87,11 @@ test('a Group holds members of one shaped Domain, in order', () => {
 test('every Domain a kind stands for can be a Group member', () => {
   assert.deepEqual([...GROUP_DOMAINS].sort(), Object.values(KIND_DOMAINS).flat().sort());
   assert.equal(new Set(GROUP_DOMAINS).size, GROUP_DOMAINS.length, 'no Domain belongs to two kinds');
+});
+
+test("a Member takes a Variant where its Domain's kind has both forms", () => {
+  const both = Object.entries(SCHEMAS).flatMap(([kind, schema]) =>
+    schema.variants.length > 1 ? [...KIND_DOMAINS[kind as keyof typeof KIND_DOMAINS]] : []
+  );
+  assert.deepEqual([...VARIANT_DOMAINS].sort(), both.sort());
 });

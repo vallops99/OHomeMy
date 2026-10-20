@@ -14,6 +14,7 @@
  * No React: `pages.test.ts` runs this under plain Node. Ids come from the
  * caller, as in `draft.ts`.
  */
+import { mapMemberTaps } from '../document/members';
 import {
   HOUSE_MODE_DEFAULT,
   HOUSE_MODE_DOMAINS,
@@ -49,7 +50,7 @@ export function renamePage(dashboard: Dashboard, pageId: string, name: string): 
 
 /**
  * The Page gone with its Widgets, and every reference to it with it: a
- * Widget that opened it opens nothing, and a Navbar item for it goes. The
+ * Widget or a Member that opened it opens nothing, and a Navbar item for it goes. The
  * Home Page cannot be removed (choose another first), nor the last Page.
  */
 export function removePage(dashboard: Dashboard, pageId: string): Dashboard {
@@ -59,7 +60,10 @@ export function removePage(dashboard: Dashboard, pageId: string): Dashboard {
     navbar: dashboard.navbar && { ...dashboard.navbar, items: dashboard.navbar.items.filter(i => i.page !== pageId) },
     pages: dashboard.pages
       .filter(p => p.id !== pageId)
-      .map(p => ({ ...p, widgets: p.widgets.map(w => (w.on_tap === pageId ? { ...w, on_tap: null } : w)) })),
+      .map(p => ({
+        ...p,
+        widgets: p.widgets.map(w => mapMemberTaps(w.on_tap === pageId ? { ...w, on_tap: null } : w, to => (to === pageId ? null : to))),
+      })),
   };
 }
 

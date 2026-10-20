@@ -6,6 +6,7 @@
  * Ids are made by the caller (`newId`), so the tests can name them.
  * Laying out Pages and Widgets is #56's.
  */
+import { mapMemberTaps } from '../document/members';
 import type { Dashboard, OHomeMyDocument, Page } from '../document/types';
 
 export type NewId = () => string;
@@ -97,7 +98,7 @@ export function duplicateDashboard(
     pages: original.pages.map(p => ({
       ...p,
       id: page(p.id),
-      widgets: p.widgets.map(w => ({ ...w, id: newId(), on_tap: w.on_tap === null ? null : page(w.on_tap) })),
+      widgets: p.widgets.map(w => mapMemberTaps({ ...w, id: newId(), on_tap: w.on_tap === null ? null : page(w.on_tap) }, page)),
     })),
   });
 

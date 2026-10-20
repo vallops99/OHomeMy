@@ -12,7 +12,7 @@ import { tr } from '../i18n';
 import { iconChoices } from '../ui/iconMap';
 import { widgetKind } from '../widgets/registry';
 import { Field, IconPicker, NumberInput, OrderedList, Picker, Switch } from './fields';
-import { controlsFor, withSetting, type Control, type HouseLists } from './inspector';
+import { controlsFor, withMemberIds, withSetting, type Control, type HouseLists } from './inspector';
 import { gridOf } from './layout';
 import { ordinaryPages } from './pages';
 import { kindName, settingName } from './words';
@@ -27,6 +27,7 @@ export function Inspector({
   fits,
   onChange,
   onDelete,
+  onSelectMember,
 }: {
   dashboard: Dashboard;
   page: Page;
@@ -35,6 +36,8 @@ export function Inspector({
   fits: boolean;
   onChange: (patch: Partial<Omit<Widget, 'id'>>) => void;
   onDelete: () => void;
+  /** A Group's Member picked from its list, to edit it (#73). */
+  onSelectMember: (entity: string) => void;
 }) {
   const lists = useHouseLists();
   const house = useHouse();
@@ -136,7 +139,12 @@ export function Inspector({
         <>
           <h4 className='b-subhead'>{tr('builder.dashboard.widget.settings')}</h4>
           {controlsFor(schema, widget.settings, lists, ICONS).map(c => (
-            <SettingControl key={c.key} control={c} onChange={v => onChange({ settings: withSetting(widget.settings, c.key, v) })} />
+            <SettingControl
+              key={c.key}
+              control={c}
+              onChange={v => onChange({ settings: withSetting(widget.settings, c.key, v) })}
+              onSelectMember={onSelectMember}
+            />
           ))}
         </>
       )}
@@ -144,7 +152,15 @@ export function Inspector({
   );
 }
 
-function SettingControl({ control: c, onChange }: { control: Control; onChange: (value: unknown) => void }) {
+function SettingControl({
+  control: c,
+  onChange,
+  onSelectMember,
+}: {
+  control: Control;
+  onChange: (value: unknown) => void;
+  onSelectMember: (entity: string) => void;
+}) {
   const label = settingName(c.key);
   return (
     <Field label={label}>
@@ -176,6 +192,18 @@ function SettingControl({ control: c, onChange }: { control: Control; onChange: 
           case 'entities':
           case 'areas':
             return <OrderedList id={id} chosen={c.chosen} options={c.options} min={c.min} onChange={onChange} />;
+          case 'members':
+            // Every Member written in full, its own settings kept, as it is reordered.
+            return (
+              <OrderedList
+                id={id}
+                chosen={c.chosen}
+                options={c.options}
+                min={c.min}
+                onChange={ids => onChange(withMemberIds(c.value, ids))}
+                onSelect={onSelectMember}
+              />
+            );
           case 'boolean':
             return <Switch id={id} checked={c.value} label={label} onChange={onChange} />;
           case 'choice':

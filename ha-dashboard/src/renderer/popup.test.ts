@@ -83,6 +83,19 @@ test('only a Widget with an on tap opens a Page', () => {
   assert.equal(opensPage(p, null), false);
 });
 
+test("a Member's tap on a Popup's Page opens a Page too", () => {
+  const group: Widget = {
+    ...widget('group'),
+    kind: 'group',
+    settings: { members: [{ entity: 'lock.gate', name: null, variant: null, on_tap: 'gates' }, 'lock.door'] },
+  };
+  const p = page('p-doorbell', 'doorbell', [group]);
+  assert.equal(opensPage(p, 'group', 'lock.gate'), true);
+  assert.equal(opensPage(p, 'group', 'lock.door'), false);
+  assert.equal(opensPage(p, 'group', 'lock.elsewhere'), false);
+  assert.equal(opensPage(p, 'group', null), false, "the Group's own tap is unset");
+});
+
 test('the activity gate reports a touch, then none until the interval has passed', () => {
   const gate = activityGate(5_000);
   assert.equal(gate(1_000), true);

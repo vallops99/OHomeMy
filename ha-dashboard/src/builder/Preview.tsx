@@ -18,6 +18,13 @@
  * drawn at every size. Frames are drawn for every Widget, including one the
  * renderer skips (not yet valid), which shows why instead.
  *
+ * ## A Group's Members
+ *
+ * While a Group is selected, each of its Members gets a tap area of its
+ * own over the row the renderer draws for it, measured from the renderer's
+ * DOM (`data-member`), so a Member is selected where it is seen (#73,
+ * `selection.ts`). A drag that starts on one still moves the Group.
+ *
  * ## Size and zoom
  *
  * The screen is laid out at the chosen size in CSS pixels, then zoomed out
@@ -61,6 +68,8 @@ import type { ColorScheme } from '../theme/tokens';
 import { WIDGETS_CSS, widgetKind } from '../widgets/registry';
 import { fits, type Extent } from './fit';
 import { canPlace, cellAt, gridOf, moved, overlaps, resized, snapDelta, type Box, type Metrics } from './layout';
+import { membersOf } from './members';
+import { selectionKey, selectionTap, type Selection } from './selection';
 import { kindName } from './words';
 
 /** What the Dashboard screen asks of the preview: which cell is under a point of the screen, if any. */
@@ -73,10 +82,12 @@ type Props = {
   dashboard: Dashboard;
   page: PageType;
   screen: Size;
-  selected: string | null;
-  onSelect: (id: string | null) => void;
+  selected: Selection | null;
+  onSelect: (selection: Selection | null) => void;
   onPlace: (id: string, box: Box) => void;
   onDelete: (id: string) => void;
+  onRemoveMember: (group: Widget, entity: string) => void;
+  onMoveMember: (group: Widget, entity: string, by: -1 | 1) => void;
   /** A Navbar item tapped on the preview: edit its Page. */
   onOpenPage: (pageId: string) => void;
   /** The Widgets that do not fit their boxes at this size, by id. */
@@ -89,7 +100,21 @@ type Props = {
 /** Pixels a pointer must travel before a press on a frame is a drag, not a tap. */
 const DRAG_SLOP = 4;
 
-export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, onDelete, onOpenPage, onFit, ghost, handle }: Props) {
+export function Preview({
+  dashboard,
+  page,
+  screen,
+  selected,
+  onSelect,
+  onPlace,
+  onDelete,
+  onRemoveMember,
+  onMoveMember,
+  onOpenPage,
+  onFit,
+  ghost,
+  handle,
+}: Props) {
   const house = useHouse();
   const scheme = usePreviewScheme(dashboard.settings.theme);
   const stage = useRef<HTMLDivElement>(null);
@@ -148,8 +173,12 @@ export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, 
   };
 
   useFitReport(screenEl, onFit, `${screen.width}x${screen.height}`);
+  const memberAreas = useMemberAreas(screenEl, selected?.widget ?? null);
 
-  /** A press on a frame: a tap selects it, a drag moves it, a drag on its corner resizes it. */
+  /**
+   * A press on a frame: a tap selects it, or the Member under it once its
+   * Group is selected; a drag moves it, a drag on its corner resizes it.
+   */
   const press = (widget: Widget, mode: 'move' | 'resize') => (e: ReactPointerEvent) => {
     if (e.button !== 0) return;
     e.preventDefault();
@@ -162,6 +191,9 @@ export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, 
     // the frame takes it here, for the keys that move it next.
     target.closest<HTMLElement>('.b-frame')?.focus({ preventScroll: true });
     const start = { x: e.clientX, y: e.clientY };
+    const before = selected;
+    const memberAt =
+      mode === 'move' ? ((e.target as HTMLElement).closest<HTMLElement>('[data-member-area]')?.dataset.memberArea ?? null) : null;
     let dragging = false;
     let last: Ghost | null = null;
 
@@ -180,7 +212,7 @@ export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, 
       target.removeEventListener('pointerup', up);
       target.removeEventListener('pointercancel', cancel);
       setDrag(null);
-      if (!dragging) onSelect(widget.id);
+      if (!dragging) onSelect(selectionTap(before, widget.id, memberAt));
       else if (last?.valid) onPlace(widget.id, last.box);
     };
     const cancel = () => {
@@ -191,11 +223,29 @@ export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, 
     target.addEventListener('pointermove', move);
     target.addEventListener('pointerup', up);
     target.addEventListener('pointercancel', cancel);
-    onSelect(widget.id);
+    // Another Widget is selected at once, so it can be dragged straight
+    // away; within the selected one, only a tap changes the selection.
+    if (before?.widget !== widget.id) onSelect({ widget: widget.id, member: null });
   };
 
-  /** Arrows move the selected Widget a cell, Shift and arrows resize it, Delete removes it. */
+  /**
+   * Arrows move the selected Widget a cell, Shift and arrows resize it,
+   * Delete removes it. On a Group, Enter goes to its first Member; on a
+   * Member, Escape comes back, Delete removes the Member from the Group and
+   * Up and Down reorder it (`selection.ts`).
+   */
   const keyFor = (widget: Widget) => (e: ReactKeyboardEvent) => {
+    if (selected?.widget === widget.id) {
+      const members = membersOf(widget).map(m => m.entity);
+      const result = selectionKey(selected, e.key, e.shiftKey, members);
+      if (result !== null) {
+        e.preventDefault();
+        if ('selection' in result) onSelect(result.selection);
+        else if ('removeMember' in result) onRemoveMember(widget, result.removeMember);
+        else if ('moveMember' in result) onMoveMember(widget, result.moveMember.entity, result.moveMember.by);
+        return;
+      }
+    }
     const step: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
     if (e.key in step) {
       e.preventDefault();
@@ -205,8 +255,6 @@ export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, 
     } else if (e.key === 'Delete' || e.key === 'Backspace') {
       e.preventDefault();
       onDelete(widget.id);
-    } else if (e.key === 'Escape') {
-      onSelect(null);
     }
   };
 
@@ -279,7 +327,9 @@ export function Preview({ dashboard, page, screen, selected, onSelect, onPlace, 
                           <WidgetFrame
                             key={w.id}
                             widget={w}
-                            selected={w.id === selected}
+                            selected={w.id !== selected?.widget ? false : selected.member === null ? true : 'member'}
+                            members={w.id === selected?.widget ? memberAreas : []}
+                            member={w.id === selected?.widget ? selected.member : null}
                             dragging={drag?.id === w.id}
                             problem={problems.get(w.id) ?? null}
                             onPress={press}
@@ -309,13 +359,19 @@ const schemaOf = (kind: string) => widgetKind(kind)?.schema;
 function WidgetFrame({
   widget,
   selected,
+  members,
+  member,
   dragging,
   problem,
   onPress,
   onKey,
 }: {
   widget: Widget;
-  selected: boolean;
+  /** `member` while one of its Members is: outlined, not selected, and not resized. */
+  selected: boolean | 'member';
+  /** Its Members' tap areas, while it is selected. */
+  members: readonly MemberArea[];
+  member: string | null;
   dragging: boolean;
   problem: string | null;
   onPress: (widget: Widget, mode: 'move' | 'resize') => (e: ReactPointerEvent) => void;
@@ -332,7 +388,7 @@ function WidgetFrame({
       style={cellPlacement(widget)}
       tabIndex={0}
       role='button'
-      aria-pressed={selected}
+      aria-pressed={selected === true}
       aria-label={widget.title ? `${name}: ${widget.title}` : name}
       onPointerDown={onPress(widget, 'move')}
       onKeyDown={onKey}
@@ -343,7 +399,16 @@ function WidgetFrame({
         <span className='b-frame-fit'> · {tr('builder.dashboard.preview.notFitting')}</span>
       </span>
       {problem !== null && <span className='b-frame-problem'>{problem}</span>}
-      {selected && (
+      {members.map(m => (
+        <span
+          key={m.entity}
+          className='b-member'
+          data-member-area={m.entity}
+          data-selected={m.entity === member}
+          style={{ left: m.left, top: m.top, width: m.width, height: m.height }}
+        />
+      ))}
+      {selected === true && (
         <span className='b-handle' aria-label={tr('builder.dashboard.preview.resize')} onPointerDown={onPress(widget, 'resize')} />
       )}
     </div>
@@ -435,6 +500,71 @@ function useFitReport(screen: { current: HTMLDivElement | null }, report: (ids: 
       sizes.disconnect();
     };
   }, [screen, size]);
+}
+
+/** Where a Member's row is drawn, in the frame's own pixels. */
+type MemberArea = { entity: string; left: number; top: number; width: number; height: number };
+
+/** The frame's border, which its absolutely placed children sit inside. */
+const FRAME_BORDER = 2;
+
+/**
+ * The rows the renderer draws for the selected Widget's Members
+ * (`data-member`, `GroupWidget`), measured after every change on screen as
+ * `useFitReport` measures, so they follow a resize, a scroll and a state
+ * change. Rows scrolled out of the box are not tappable.
+ */
+function useMemberAreas(screen: { current: HTMLDivElement | null }, widgetId: string | null): MemberArea[] {
+  // Kept with the Widget they were measured for, so another Widget's never show.
+  const [measured, setMeasured] = useState<{ widget: string; areas: MemberArea[] } | null>(null);
+  useEffect(() => {
+    const root = screen.current;
+    if (!root || widgetId === null) return;
+    const setAreas = (areas: MemberArea[]) =>
+      setMeasured(prev =>
+        prev?.widget === widgetId && JSON.stringify(prev.areas) === JSON.stringify(areas) ? prev : { widget: widgetId, areas }
+      );
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const measure = () => {
+      const cell = root.querySelector<HTMLElement>(`.b-shown .ohm-cell[data-widget="${CSS.escape(widgetId)}"]`);
+      if (!cell || cell.offsetWidth === 0) return setAreas([]);
+      const c = cell.getBoundingClientRect();
+      const zoom = c.width / cell.offsetWidth;
+      const next = [...cell.querySelectorAll<HTMLElement>('[data-member]')].flatMap(el => {
+        const r = el.getBoundingClientRect();
+        const top = Math.max(r.top, c.top);
+        const bottom = Math.min(r.bottom, c.bottom);
+        if (bottom <= top) return [];
+        return [
+          {
+            entity: el.dataset.member!,
+            left: (r.left - c.left) / zoom - FRAME_BORDER,
+            top: (top - c.top) / zoom - FRAME_BORDER,
+            width: r.width / zoom,
+            height: (bottom - top) / zoom,
+          },
+        ];
+      });
+      setAreas(next);
+    };
+    const soon = () => {
+      clearTimeout(timer);
+      timer = setTimeout(measure, 60);
+    };
+    const mutations = new MutationObserver(soon);
+    mutations.observe(root, { subtree: true, childList: true, characterData: true, attributes: true });
+    const sizes = new ResizeObserver(soon);
+    sizes.observe(root);
+    root.addEventListener('scroll', soon, true);
+    soon();
+    return () => {
+      clearTimeout(timer);
+      mutations.disconnect();
+      sizes.disconnect();
+      root.removeEventListener('scroll', soon, true);
+    };
+  }, [screen, widgetId]);
+  return measured !== null && measured.widget === widgetId ? measured.areas : [];
 }
 
 const extent = (el: HTMLElement): Extent => ({

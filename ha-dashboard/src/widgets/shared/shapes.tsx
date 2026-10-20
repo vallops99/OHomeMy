@@ -164,8 +164,13 @@ const SHAPES: Record<ShapedDomain, ComponentType<ShapeProps>> = {
  * One entity in its Domain's shape, or the Fault tile while it is
  * Unavailable. A Domain with no shape draws nothing; the schemas let none
  * through.
+ *
+ * `name`, a Member's own (#73), replaces Home Assistant's in the shape and
+ * in its Fault tile; the Concern list keeps Home Assistant's, beside its
+ * Area, since it lists the house and not this Group.
  */
-export function EntityShape({ entity, variant, member }: ShapeProps) {
+export function EntityShape({ entity: given, name, variant, member }: ShapeProps & { name?: string | null }) {
+  const entity = name ? { ...given, name } : given;
   if (entity.unavailable) {
     return <FaultTile icon='mdi:alert-circle' label={entity.name} detail={stateLabel(entity)} style={box(member, TILE_ALONE)} />;
   }

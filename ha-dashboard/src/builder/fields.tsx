@@ -160,7 +160,8 @@ export function IconPicker(props: Parameters<typeof Picker>[0]) {
 
 /**
  * An ordered list of chosen items, each moved or removed in place, and a
- * picker that adds one of what is left at the end.
+ * picker that adds one of what is left at the end. With `onSelect`, a row
+ * is also a way to select its item (a Group's Member, #73), missing or not.
  */
 export function OrderedList({
   id,
@@ -168,12 +169,14 @@ export function OrderedList({
   options,
   min,
   onChange,
+  onSelect,
 }: {
   id?: string;
   chosen: readonly Option[];
   options: readonly Option[];
   min: number;
   onChange: (values: string[]) => void;
+  onSelect?: (value: string) => void;
 }) {
   const values = chosen.map(o => o.value);
   const swap = (i: number, j: number) => {
@@ -187,10 +190,22 @@ export function OrderedList({
         <ol className='b-ordered-list'>
           {chosen.map((o, i) => (
             <li key={o.value} className='b-ordered-item' data-missing={!!o.missing}>
-              <span className='b-ordered-text'>
-                <span>{o.missing ? tr('builder.dashboard.field.missing', { id: o.value }) : o.label}</span>
-                {o.detail && !o.missing && <span className='b-meta'>{o.detail}</span>}
-              </span>
+              {onSelect ? (
+                <button
+                  type='button'
+                  className='b-ordered-text b-ordered-select'
+                  aria-label={tr('builder.dashboard.member.select', { name: o.label })}
+                  onClick={() => onSelect(o.value)}
+                >
+                  <span>{o.missing ? tr('builder.dashboard.field.missing', { id: o.value }) : o.label}</span>
+                  {o.detail && !o.missing && <span className='b-meta'>{o.detail}</span>}
+                </button>
+              ) : (
+                <span className='b-ordered-text'>
+                  <span>{o.missing ? tr('builder.dashboard.field.missing', { id: o.value }) : o.label}</span>
+                  {o.detail && !o.missing && <span className='b-meta'>{o.detail}</span>}
+                </span>
+              )}
               <span className='b-actions'>
                 <button
                   type='button'

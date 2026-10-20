@@ -87,6 +87,22 @@ test('removing a Page removes every way to it', () => {
   );
 });
 
+test("removing a Page clears every Member's tap to it, and keeps the rest", () => {
+  const member = (entity: string, on_tap: string | null) => ({ entity, name: null, variant: null, on_tap });
+  const group: Widget = {
+    ...widget('g', 2, 0, 2, 2),
+    kind: 'group',
+    settings: { members: [member('light.a', 'climate'), member('light.b', 'home'), 'light.c'] },
+  };
+  const d = wall();
+  d.pages[0].widgets.push(group);
+  assert.deepEqual(removePage(d, 'climate').pages[0].widgets[1].settings.members, [
+    member('light.a', null),
+    member('light.b', 'home'),
+    'light.c',
+  ]);
+});
+
 test('the Home Page and the last Page cannot be removed', () => {
   const d = wall();
   assert.equal(removePage(d, 'home'), d);

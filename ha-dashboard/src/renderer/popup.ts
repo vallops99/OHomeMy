@@ -10,6 +10,7 @@
  *
  * No React, so `popup.test.ts` runs it under plain Node.
  */
+import { memberOnTap } from '../document/members';
 import type { Dashboard, Page } from '../document/types';
 
 /** The select that opens a Popup, provided by the integration (`select.py`). */
@@ -45,13 +46,15 @@ export function popupPage(dashboard: Dashboard, name: string | null): Page | nul
 }
 
 /**
- * Whether tapping this Widget of the Popup's Page opens a Page. Navigating
- * from inside a Popup closes it, everywhere: the Page opens underneath, on
- * this Dashboard, and the select goes back to `none`.
+ * Whether tapping this Widget of the Popup's Page, or its Member for the
+ * entity `member` (#73), opens a Page. Navigating from inside a Popup closes
+ * it, everywhere: the Page opens underneath, on this Dashboard, and the
+ * select goes back to `none`.
  */
-export function opensPage(page: Page, widgetId: string | null): boolean {
-  if (widgetId === null) return false;
-  return page.widgets.some(w => w.id === widgetId && w.on_tap !== null);
+export function opensPage(page: Page, widgetId: string | null, member: string | null = null): boolean {
+  const widget = widgetId === null ? undefined : page.widgets.find(w => w.id === widgetId);
+  if (!widget) return false;
+  return member === null ? widget.on_tap !== null : memberOnTap(widget, member) !== null;
 }
 
 /**

@@ -8,7 +8,8 @@
  * Read off each kind's schema, never per kind, so a kind added later counts
  * with no change here:
  *
- * - an `entity` or `entities` setting names its entities, which are shown;
+ * - an `entity`, `entities` or `members` setting names its entities, which
+ *   are shown;
  * - an `area` or `areas` setting shows, from each Area, the entities of the
  *   Domains its field lists in `shows`, as a Room Tile counts its lights.
  *
@@ -22,7 +23,7 @@
  *
  * No React, no @hakit: `shows.test.ts` runs this under plain Node.
  */
-import { validateWidget, type House, type WidgetSchema } from './schema';
+import { validateWidget, type House, type Member, type WidgetSchema } from './schema';
 import type { Dashboard } from './types';
 
 export type DashboardShows = {
@@ -60,6 +61,9 @@ export function dashboardShows(dashboard: Dashboard, schemaOf: (kind: string) =>
             break;
           case 'entities':
             (value as string[]).forEach(id => entities.add(id));
+            break;
+          case 'members':
+            (value as Member[]).forEach(m => entities.add(m.entity));
             break;
           case 'area':
             if (typeof value === 'string') addArea(value, spec.shows);

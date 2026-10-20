@@ -23,7 +23,7 @@
  * Builder can call it on a Draft with no house connected.
  */
 import { fmt, tr } from '../i18n';
-import { VARIANTS, type DashboardSettings, type Page, type Widget } from './types';
+import { VARIANTS, type DashboardSettings, type Id, type Page, type Widget } from './types';
 
 export type Variant = (typeof VARIANTS)[number];
 
@@ -46,6 +46,20 @@ export type FieldSpec =
       min?: number;
       /** Every member of one Domain, whichever of `domains` it is: a Group. */
       sameDomain?: boolean;
+    }
+  /**
+   * A Group's Members (CONTEXT.md, #73): an ordered set of entities as
+   * `entities` is, with the same rules, each with its own name, Variant and
+   * tap (`Member`). A plain id, as a Group saved before Members wrote one,
+   * reads as a Member with nothing set. Only Members of `variantDomains`
+   * take a Variant; on any other it is ignored.
+   */
+  | {
+      type: 'members';
+      domains: readonly string[];
+      min?: number;
+      sameDomain?: boolean;
+      variantDomains: readonly string[];
     }
   /**
    * One Area, by its id in Home Assistant's area registry. `shows` is the
@@ -88,13 +102,22 @@ export type FieldValue<S extends FieldSpec> = S extends { type: 'entity' | 'area
     : string
   : S extends { type: 'entities' | 'areas' }
     ? string[]
-    : S extends { type: 'boolean' }
-      ? boolean
-      : S extends { type: 'choice'; options: readonly (infer O)[] }
-        ? O
-        : S extends { type: 'number' }
-          ? number
-          : never;
+    : S extends { type: 'members' }
+      ? Member[]
+      : S extends { type: 'boolean' }
+        ? boolean
+        : S extends { type: 'choice'; options: readonly (infer O)[] }
+          ? O
+          : S extends { type: 'number' }
+            ? number
+            : never;
+
+/**
+ * One entity in a Group, with its own settings, each `null` while unset as a
+ * Widget's are: its name (never `''`), its Variant, and the ordinary Page a
+ * tap on it opens.
+ */
+export type Member = { entity: string; name: string | null; variant: Variant | null; on_tap: Id | null };
 
 /** A kind's settings, checked, defaults filled in: what its component receives. */
 export type SettingsOf<F extends Fields> = { -readonly [K in keyof F]: FieldValue<F[K]> };
@@ -178,22 +201,26 @@ function checkField(spec: FieldSpec, value: unknown, house: House | undefined): 
       return ok(id);
     }
     case 'entities':
-    case 'areas': {
-      const one = spec.type === 'entities' ? ({ type: 'entity', domains: spec.domains } as const) : ({ type: 'area' } as const);
+    case 'areas':
+    case 'members': {
+      const one = spec.type === 'areas' ? ({ type: 'area' } as const) : ({ type: 'entity', domains: spec.domains } as const);
       if (!Array.isArray(value)) return no(tr('schema.notList'));
-      const ids: string[] = [];
+      // Each item's id, and what it reads as: the id itself, or the Member.
+      const items: { id: string; read: unknown }[] = [];
       for (const item of value) {
-        const id = checkId(one, item);
-        if (typeof id !== 'string') return id;
-        if (ids.includes(id)) return no(tr('schema.twice', { id }));
-        ids.push(id);
+        const read = spec.type === 'members' ? checkMember(spec, item) : checkId(one, item);
+        if (typeof read !== 'string' && 'ok' in read) return read;
+        const id = typeof read === 'string' ? read : read.entity;
+        if (items.some(i => i.id === id)) return no(tr('schema.twice', { id }));
+        items.push({ id, read });
       }
       // On every id written, before any is dropped, so a Group never turns
       // valid, or changes Domain, because a member left Home Assistant.
-      if (spec.type === 'entities' && spec.sameDomain && new Set(ids.map(domainOf)).size > 1) return no(tr('schema.mixedDomains'));
-      const present = house ? ids.filter(id => exists(one, id, house)) : ids;
+      if (spec.type !== 'areas' && spec.sameDomain && new Set(items.map(i => domainOf(i.id))).size > 1)
+        return no(tr('schema.mixedDomains'));
+      const present = house ? items.filter(i => exists(one, i.id, house)) : items;
       const min = spec.min ?? 1;
-      return present.length >= min ? ok(present) : no(tr('schema.fewerThan', { min }));
+      return present.length >= min ? ok(present.map(i => i.read)) : no(tr('schema.fewerThan', { min }));
     }
     case 'boolean':
       if (value === undefined) return ok(spec.default);
@@ -226,6 +253,35 @@ function checkId(spec: { type: 'entity'; domains: readonly string[] } | { type: 
   if (spec.domains.length > 0 && !spec.domains.includes(domain))
     return no(tr('schema.wrongDomain', { id: value, domains: fmt.list(spec.domains, 'disjunction') }));
   return value;
+}
+
+const MEMBER_KEYS: readonly string[] = ['entity', 'name', 'variant', 'on_tap'];
+
+/** The Member, a plain id read as one with nothing set, or why it is not one. */
+function checkMember(spec: Extract<FieldSpec, { type: 'members' }>, value: unknown): Member | Checked {
+  const one = { type: 'entity', domains: spec.domains } as const;
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    const entity = checkId(one, value);
+    return typeof entity === 'string' ? { entity, name: null, variant: null, on_tap: null } : entity;
+  }
+  const given = value as Record<string, unknown>;
+  for (const key of Object.keys(given)) {
+    if (!MEMBER_KEYS.includes(key)) return no(tr('schema.unknownSetting', { setting: JSON.stringify(key) }));
+  }
+  const entity = checkId(one, given.entity);
+  if (typeof entity !== 'string') return entity;
+  const { name = null, variant = null, on_tap = null } = given;
+  if (name !== null && typeof name !== 'string') return no(tr('schema.notText'));
+  if (typeof name === 'string' && name.length > TEXT_MAX) return no(tr('schema.tooLong'));
+  if (variant !== null && !VARIANTS.includes(variant as Variant)) return no(tr('schema.notOneOf', { options: VARIANTS.join(', ') }));
+  if (on_tap !== null && typeof on_tap !== 'string') return no(tr('schema.notText'));
+  return {
+    entity,
+    // An empty name is never written; read, it is unset.
+    name: name === '' ? null : name,
+    variant: spec.variantDomains.includes(domainOf(entity)) ? (variant as Variant | null) : null,
+    on_tap,
+  };
 }
 
 const domainOf = (entityId: string) => entityId.slice(0, entityId.indexOf('.'));

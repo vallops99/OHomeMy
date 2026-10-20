@@ -10,6 +10,8 @@
  * | `entity`   | a picker of the house's entities in the field's Domains     |
  * | `entities` | an ordered list, added to from the same picker; for a       |
  * |            | `sameDomain` field, once one is chosen, only its Domain     |
+ * | `members`  | the same list; each Member's own settings are set from its  |
+ * |            | own inspector (`MemberInspector.tsx`, #73)                  |
  * | `area`     | a picker of the house's Areas                               |
  * | `areas`    | an ordered list of Areas                                    |
  * | `boolean`  | a switch                                                    |
@@ -25,7 +27,8 @@
  * No React, no @hakit: the house comes in as plain lists, and
  * `inspector.test.ts` runs this under plain Node.
  */
-import type { FieldSpec, WidgetSchema } from '../document/schema';
+import { readMembers } from '../document/members';
+import type { FieldSpec, Member, WidgetSchema } from '../document/schema';
 import { HOUSE_MODE_DOMAINS, type Widget } from '../document/types';
 import type { Box } from './layout';
 
@@ -41,6 +44,8 @@ export type Control =
   | { key: string; type: 'entity' | 'area' | 'icon'; value: string | null; optional: boolean; options: Option[] }
   /** `chosen` in order; `options` is what may still be added. */
   | { key: string; type: 'entities' | 'areas'; value: string[]; chosen: Option[]; options: Option[]; min: number }
+  /** As `entities`, by entity id; `value` is every Member in full. */
+  | { key: string; type: 'members'; value: Member[]; chosen: Option[]; options: Option[]; min: number }
   | { key: string; type: 'boolean'; value: boolean }
   | { key: string; type: 'choice'; value: string; options: Option[] }
   | { key: string; type: 'number'; value: number; min: number; max: number; step: number }
@@ -64,20 +69,20 @@ function controlFor(key: string, spec: FieldSpec, raw: unknown, house: HouseList
       const value = typeof raw === 'string' ? raw : null;
       return { key, type: 'entity', value, optional: !!spec.optional, options: withCurrent(entityOptions(house, spec.domains), value) };
     }
-    case 'entities': {
-      const value = stringList(raw);
+    case 'entities':
+    case 'members': {
+      const members = spec.type === 'members' ? readMembers(raw) : null;
+      const value = members ? members.map(m => m.entity) : stringList(raw);
       // A Group's members are all of one Domain: once there is one, offer
       // only that Domain (`sameDomain`, checked by `validateWidget`).
       const domains = spec.sameDomain && value.length > 0 ? [domainOf(value[0])] : spec.domains;
       const all = entityOptions(house, spec.domains);
-      return {
-        key,
-        type: 'entities',
-        value,
+      const list = {
         chosen: value.map(id => all.find(o => o.value === id) ?? missing(id)),
         options: entityOptions(house, domains).filter(o => !value.includes(o.value)),
         min: spec.min ?? 1,
       };
+      return members ? { key, type: 'members', value: members, ...list } : { key, type: 'entities', value, ...list };
     }
     case 'area': {
       const value = typeof raw === 'string' ? raw : null;
@@ -180,6 +185,41 @@ export function withSetting(settings: Record<string, unknown>, key: string, valu
   return next;
 }
 
+/** The settings key of the kind's `members` field, or `null` for a kind with none. */
+export function membersKey(schema: WidgetSchema): string | null {
+  return Object.entries(schema.settings).find(([, spec]) => spec.type === 'members')?.[0] ?? null;
+}
+
+/**
+ * The Members for the list's ids, in its order: each one kept keeps its own
+ * settings, each new one has nothing set. Every Member is written in full,
+ * so a Group saved before Members takes the new shape once edited.
+ */
+export function withMemberIds(raw: unknown, ids: readonly string[]): Member[] {
+  const members = readMembers(raw);
+  return ids.map(id => members.find(m => m.entity === id) ?? { entity: id, name: null, variant: null, on_tap: null });
+}
+
+/** The Members with the one for `entity` changed. */
+export function updateMember(raw: unknown, entity: string, patch: Partial<Omit<Member, 'entity'>>): Member[] {
+  return readMembers(raw).map(m => (m.entity === entity ? { ...m, ...patch } : m));
+}
+
+/** The Members with the one for `entity` moved one place earlier (`-1`) or later (`1`). */
+export function moveMember(raw: unknown, entity: string, by: -1 | 1): Member[] {
+  const members = readMembers(raw);
+  return moveItem(
+    members,
+    members.findIndex(m => m.entity === entity),
+    by
+  );
+}
+
+/** The Members without the one for `entity`. */
+export function removeMember(raw: unknown, entity: string): Member[] {
+  return readMembers(raw).filter(m => m.entity !== entity);
+}
+
 /** The list with `item` moved one place earlier (`-1`) or later (`1`). */
 export function moveItem<T>(list: readonly T[], index: number, by: -1 | 1): T[] {
   const next = [...list];
@@ -229,7 +269,7 @@ export const sizeFor = (kind: string) => DEFAULT_SIZE[kind] ?? { w: 3, h: 2 };
 export function newWidget(schema: WidgetSchema, id: string, box: Box): Widget {
   const settings = Object.fromEntries(
     Object.entries(schema.settings)
-      .filter(([, spec]) => spec.type === 'entities' || spec.type === 'areas')
+      .filter(([, spec]) => spec.type === 'entities' || spec.type === 'members' || spec.type === 'areas')
       .map(([key]) => [key, []])
   );
   return { id, kind: schema.kind, ...box, variant: schema.variants[0], title: null, on_tap: null, settings };

@@ -36,6 +36,12 @@ const SCHEMAS: Record<string, WidgetSchema> = {
     titled: true,
     settings: { areas: { type: 'areas', shows: ['light', 'climate'] } },
   }),
+  group: defineSchema({
+    kind: 'group',
+    variants: ['full'],
+    titled: true,
+    settings: { members: { type: 'members', domains: ['lock'], variantDomains: [] } },
+  }),
   bare_area: defineSchema({ kind: 'bare_area', variants: ['full'], titled: false, settings: { area: { type: 'area' } } }),
   nothing: defineSchema({ kind: 'nothing', variants: ['full'], titled: false, settings: {} }),
 };
@@ -93,6 +99,12 @@ test('every entity a setting names, on every Page, counts as shown', () => {
   );
   for (const id of ['lock.gate', 'camera.door', 'camera.yard']) assert.ok(isShown(shows, e(id)), id);
   assert.ok(!isShown(shows, e('camera.garage')));
+});
+
+test("each Member's entity counts as shown, a plain id or a Member with settings", () => {
+  const members = [{ entity: 'lock.gate', name: 'Cancello', variant: null, on_tap: null }, 'lock.door'];
+  const shows = dashboardShows(dashboard([page('home', [widget('group', { members })])]), schemaOf);
+  assert.deepEqual([...shows.entities], ['lock.gate', 'lock.door']);
 });
 
 test('a Popup Page is one of the Dashboard’s Pages too', () => {

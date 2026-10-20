@@ -140,6 +140,11 @@ Group of locks would otherwise open every gate at once.
 _In this house_: Accessi, the two gates.
 _Avoid_: Section, card, category
 
+**Member**:
+One entity in a Group, with its own name, Variant and tap. It is not a
+Widget: it has no place on the grid.
+_Avoid_: Item, row, child
+
 **Clock**:
 A Widget showing the time and date in the viewer's own formats. It is not an
 entity and not a control.

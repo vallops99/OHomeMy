@@ -122,6 +122,26 @@ test("a duplicate's references follow its Pages to their new ids", () => {
   assert.equal(home.widgets[1].on_tap, null);
 });
 
+test("a duplicate's Member taps follow its Pages to their new ids", () => {
+  const original = wall();
+  const member = (entity: string, on_tap: string | null) => ({ entity, name: 'N', variant: null, on_tap });
+  original.pages[1].widgets.push({
+    id: 'g',
+    kind: 'group',
+    x: 0,
+    y: 0,
+    w: 2,
+    h: 2,
+    variant: 'full',
+    title: null,
+    on_tap: null,
+    settings: { members: [member('light.a', 'home'), member('light.b', null), 'light.c'] },
+  });
+  const { dashboard } = duplicateDashboard(doc(original), 'wall', { name: 'Copy', slug: 'copy' }, counter());
+  const [home, climate] = dashboard.pages;
+  assert.deepEqual(climate.widgets[0].settings.members, [member('light.a', home.id), member('light.b', null), 'light.c']);
+});
+
 test('a duplicate shares nothing with its original', () => {
   const original = wall();
   const { dashboard } = duplicateDashboard(doc(original), 'wall', { name: 'Copy', slug: 'copy' }, counter());

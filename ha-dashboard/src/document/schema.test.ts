@@ -147,6 +147,59 @@ test('a list of one Domain: members of two Domains are invalid, however many are
   assert.match(reason(validateWidget(w(['light.a', 'lock.gone']), group, { house: one })), /not all of one Domain/);
 });
 
+const groupOf = defineSchema({
+  kind: 'group',
+  variants: ['full', 'compact'],
+  titled: true,
+  settings: { members: { type: 'members', domains: ['light', 'lock', 'sensor'], sameDomain: true, variantDomains: ['light', 'sensor'] } },
+});
+const grouped = (members: unknown[]) => widget({ kind: 'group', settings: { members } });
+const unset = (entity: string) => ({ entity, name: null, variant: null, on_tap: null });
+
+test('a Group saved before Members reads each plain id as a Member with nothing set', () => {
+  const v = validateWidget(grouped(['light.a', 'light.b']), groupOf);
+  assert.equal(v.ok, true);
+  if (!v.ok) return;
+  assert.deepEqual(v.settings.members, [unset('light.a'), unset('light.b')]);
+});
+
+test('a Member reads with its name, Variant and tap', () => {
+  const member = { entity: 'light.a', name: 'Sopra il tavolo', variant: 'compact', on_tap: 'rooms' };
+  const v = validateWidget(grouped([member, 'light.b']), groupOf);
+  assert.equal(v.ok, true);
+  if (!v.ok) return;
+  assert.deepEqual(v.settings.members, [member, unset('light.b')]);
+});
+
+test('an empty name is unset, and a Variant on a Domain with one form is ignored', () => {
+  const v = validateWidget(grouped([{ entity: 'lock.a', name: '', variant: 'compact', on_tap: null }]), groupOf);
+  assert.equal(v.ok, true);
+  if (!v.ok) return;
+  assert.deepEqual(v.settings.members, [unset('lock.a')]);
+});
+
+test('a Member must be well formed', () => {
+  assert.match(reason(validateWidget(grouped([{ entity: 'light' }]), groupOf)), /members: not an entity id/);
+  assert.match(reason(validateWidget(grouped([{ ...unset('light.a'), name: 3 }]), groupOf)), /members: not text/);
+  assert.match(reason(validateWidget(grouped([{ ...unset('light.a'), variant: 'tiny' }]), groupOf)), /members: not one of full, compact/);
+  assert.match(reason(validateWidget(grouped([{ ...unset('light.a'), on_tap: 7 }]), groupOf)), /members: not text/);
+  assert.match(reason(validateWidget(grouped([{ ...unset('light.a'), colour: 'red' }]), groupOf)), /members: unknown setting "colour"/);
+  assert.match(reason(validateWidget(grouped([42]), groupOf)), /members: not an entity id/);
+  assert.match(reason(validateWidget(grouped({} as unknown as unknown[]), groupOf)), /members: not a list/);
+});
+
+test("Members keep the list's rules: Domains, no duplicates, one Domain, dropped when gone, a minimum", () => {
+  assert.match(reason(validateWidget(grouped(['switch.a']), groupOf)), /members: switch.a/);
+  assert.match(reason(validateWidget(grouped(['light.a', unset('light.a')]), groupOf)), /members: light.a twice/);
+  assert.match(reason(validateWidget(grouped(['light.a', unset('lock.b')]), groupOf)), /not all of one Domain/);
+  const one: House = { hasEntity: id => id === 'light.a', hasArea: () => false };
+  assert.match(reason(validateWidget(grouped(['light.a', 'lock.gone']), groupOf, { house: one })), /not all of one Domain/);
+  const v = validateWidget(grouped([unset('light.gone'), { ...unset('light.a'), name: 'A' }]), groupOf, { house: one });
+  assert.equal(v.ok, true);
+  if (v.ok) assert.deepEqual(v.settings.members, [{ ...unset('light.a'), name: 'A' }]);
+  assert.match(reason(validateWidget(grouped(['light.gone']), groupOf, { house: one })), /members: fewer than 1/);
+});
+
 test('the grid: inside the columns always, inside the rows only when the Dashboard fits', () => {
   const fit = { columns: 12, rows: 8, overflow: 'fit' } as const;
   const scroll = { ...fit, overflow: 'scroll' } as const;

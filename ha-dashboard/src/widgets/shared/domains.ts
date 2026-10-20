@@ -24,6 +24,28 @@ export const KIND_DOMAINS = {
 export const GROUP_DOMAINS: readonly string[] = Object.values(KIND_DOMAINS).flat();
 
 /**
+ * The Domains whose kind has both Variants: a Group's Member of one takes a
+ * Variant of its own (#73). Lock, vacuum and select have one form.
+ */
+export const VARIANT_DOMAINS: readonly string[] = [
+  ...KIND_DOMAINS.toggle,
+  ...KIND_DOMAINS.alarm,
+  ...KIND_DOMAINS.climate,
+  ...KIND_DOMAINS.media,
+  ...KIND_DOMAINS.weather,
+  ...KIND_DOMAINS.sensor,
+  ...KIND_DOMAINS.binary_sensor,
+];
+
+/**
+ * The Domains whose shape does nothing on a tap: a Member of one with a tap
+ * is a way to its Page across its row. Every other Domain acts on a tap (a
+ * light toggles, a gate holds to open), keeps it, and the Member gets an
+ * Open button instead (`renderer/tap.ts`, #73).
+ */
+export const TAPLESS_DOMAINS: readonly string[] = [...KIND_DOMAINS.weather, ...KIND_DOMAINS.sensor, ...KIND_DOMAINS.binary_sensor];
+
+/**
  * A per-Domain kind's schema: titled, and one entity of the kind's own
  * Domains, which is all such a kind takes. Only its Variants differ.
  */

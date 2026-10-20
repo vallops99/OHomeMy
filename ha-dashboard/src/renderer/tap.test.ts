@@ -3,7 +3,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { widgetTap } from './tap';
+import { memberTap, widgetTap } from './tap';
 
 const opens = (page: string) => page === 'rooms';
 
@@ -26,4 +26,19 @@ test('a kind with no tap of its own becomes the way to the Page, the whole box',
 test('an on_tap naming no ordinary Page counts as none', () => {
   assert.deepEqual(widgetTap('own', 'ring', opens), { as: 'plain' });
   assert.deepEqual(widgetTap('page', 'ring', opens), { as: 'skipped' });
+});
+
+test("a Member's tap is decided by its Domain: kept with an Open button, or the whole row", () => {
+  for (const id of ['light.a', 'switch.a', 'lock.a', 'climate.a', 'media_player.a', 'alarm_control_panel.a', 'vacuum.a', 'select.a']) {
+    assert.deepEqual(memberTap(id, 'rooms', opens), { as: 'button', page: 'rooms' }, id);
+  }
+  for (const id of ['sensor.a', 'binary_sensor.a', 'weather.a']) {
+    assert.deepEqual(memberTap(id, 'rooms', opens), { as: 'box', page: 'rooms' }, id);
+  }
+});
+
+test("a Member's tap naming no ordinary Page, or none, adds nothing", () => {
+  assert.deepEqual(memberTap('light.a', null, opens), { as: 'plain' });
+  assert.deepEqual(memberTap('sensor.a', 'ring', opens), { as: 'plain' });
+  assert.deepEqual(memberTap('light.a', 'gone', opens), { as: 'plain' });
 });

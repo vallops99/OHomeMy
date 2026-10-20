@@ -298,6 +298,25 @@
   box-shadow: 0 0 0 2px var(--primary);
 }
 
+/* One of its Members is selected (#73): the Group stays outlined, not selected. */
+.b-frame[data-selected='member'] {
+  border-color: var(--primary);
+}
+
+/* A Member's tap area, over its row, while its Group is selected. */
+.b-member {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+.b-member[data-selected='true'] {
+  border: 2px solid var(--primary);
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
 .b-frame[data-dragging='true'] {
   opacity: 0.4;
 }
@@ -530,6 +549,38 @@
 
 .b-ordered-item[data-missing='true'] {
   color: var(--alert);
+}
+
+/* A row that selects its item: a Group's Member (#73). */
+.b-ordered-select {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.b-ordered-select:hover > span:first-child {
+  text-decoration: underline;
+}
+
+.b-ordered-select:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-control);
+}
+
+/* A way back up, in a heading: the Group from its Member's inspector. */
+.b-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .b-ordered-text {

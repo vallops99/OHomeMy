@@ -1,7 +1,20 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { defineSchema, validateWidget } from '../document/schema';
-import { controlsFor, houseModeOptions, moveItem, newWidget, sizeFor, withSetting, type HouseLists } from './inspector';
+import {
+  controlsFor,
+  houseModeOptions,
+  membersKey,
+  moveItem,
+  moveMember,
+  newWidget,
+  removeMember,
+  sizeFor,
+  updateMember,
+  withMemberIds,
+  withSetting,
+  type HouseLists,
+} from './inspector';
 
 const house: HouseLists = {
   entities: [
@@ -191,4 +204,70 @@ test('the house entity for follow-house is offered from suns, binary sensors and
   assert.ok(options.every(o => !o.missing));
   const gone = houseModeOptions(entities, 'binary_sensor.removed');
   assert.deepEqual(gone[0], { value: 'binary_sensor.removed', label: 'binary_sensor.removed', missing: true });
+});
+
+const groupSchema = defineSchema({
+  kind: 'group',
+  variants: ['full', 'compact'],
+  titled: true,
+  settings: { members: { type: 'members', domains: ['light', 'switch', 'lock'], sameDomain: true, variantDomains: ['light', 'switch'] } },
+});
+const unset = (entity: string) => ({ entity, name: null, variant: null, on_tap: null });
+
+test('a Group saved before Members lists its members as Members with nothing set', () => {
+  const [c] = controlsFor(groupSchema, { members: ['light.salone', 'light.gone'] }, house, ICONS);
+  assert.equal(c.type, 'members');
+  if (c.type !== 'members') return;
+  assert.deepEqual(c.value, [unset('light.salone'), unset('light.gone')]);
+  assert.deepEqual(
+    c.chosen.map(o => [o.value, !!o.missing]),
+    [
+      ['light.salone', false],
+      ['light.gone', true],
+    ]
+  );
+  assert.deepEqual(
+    c.options.map(o => o.value),
+    ['light.cucina'],
+    'only the Domain of the first, not yet chosen'
+  );
+});
+
+test('the list keeps each Member’s settings, and writes every Member in full', () => {
+  const kept = { entity: 'light.salone', name: 'Divano', variant: 'compact', on_tap: 'rooms' } as const;
+  assert.deepEqual(withMemberIds([kept, 'light.cucina'], ['light.cucina', 'light.salone', 'light.new']), [
+    unset('light.cucina'),
+    kept,
+    unset('light.new'),
+  ]);
+});
+
+test('a Member is changed, moved and removed by its entity, and the rest are written in full', () => {
+  const members = ['light.a', { entity: 'light.b', name: 'B', variant: null, on_tap: null }, 'light.c'];
+  assert.deepEqual(updateMember(members, 'light.a', { name: 'A', variant: 'full' }), [
+    { ...unset('light.a'), name: 'A', variant: 'full' },
+    { ...unset('light.b'), name: 'B' },
+    unset('light.c'),
+  ]);
+  assert.deepEqual(
+    moveMember(members, 'light.c', -1).map(m => m.entity),
+    ['light.a', 'light.c', 'light.b']
+  );
+  assert.deepEqual(
+    moveMember(members, 'light.a', -1).map(m => m.entity),
+    ['light.a', 'light.b', 'light.c']
+  );
+  assert.deepEqual(
+    removeMember(members, 'light.b').map(m => m.entity),
+    ['light.a', 'light.c']
+  );
+});
+
+test('the settings key that holds Members, if the kind has one', () => {
+  assert.equal(membersKey(groupSchema), 'members');
+  assert.equal(membersKey(schema), null);
+});
+
+test('a new Group starts with no Members', () => {
+  assert.deepEqual(newWidget(groupSchema, 'g', { x: 0, y: 0, w: 4, h: 3 }).settings, { members: [] });
 });
