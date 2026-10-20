@@ -13,8 +13,8 @@
  *
  * No React: the tests run it under plain Node.
  */
-import type { Member } from './schema';
-import type { Id, Widget } from './types';
+import type { Member, WidgetSchema } from './schema';
+import type { Id, OHomeMyDocument, Widget } from './types';
 
 const isMember = (item: unknown): item is Member =>
   typeof item === 'object' && item !== null && !Array.isArray(item) && 'entity' in item && 'on_tap' in item;
@@ -61,7 +61,47 @@ export function readMembers(raw: unknown): Member[] {
   return raw.flatMap((item): Member[] => {
     if (typeof item === 'string') return [{ entity: item, name: null, variant: null, on_tap: null }];
     if (typeof item !== 'object' || item === null || typeof item.entity !== 'string') return [];
-    const { entity, name = null, variant = null, on_tap = null } = item as Partial<Member>;
-    return [{ entity: entity!, name, variant, on_tap }];
+    const { entity, name, variant, on_tap } = item as Record<string, unknown>;
+    return [
+      {
+        entity: entity as string,
+        // As `validateWidget` reads them: an empty name is unset, and a value of the wrong type is too.
+        name: typeof name === 'string' && name !== '' ? name : null,
+        variant: variant === 'full' || variant === 'compact' ? variant : null,
+        on_tap: typeof on_tap === 'string' ? on_tap : null,
+      },
+    ];
   });
 }
+
+/**
+ * The document with every `members` setting written in full, as a Publish
+ * sends it: a Group saved before Members takes the new shape the next time
+ * it is Published, edited or not. The same document when nothing changes.
+ */
+export function membersInFull(document: OHomeMyDocument, schemaOf: (kind: string) => WidgetSchema | undefined): OHomeMyDocument {
+  const rewritten = (widget: Widget): Widget => {
+    const schema = schemaOf(widget.kind);
+    if (!schema) return widget;
+    let settings = widget.settings;
+    for (const [key, spec] of Object.entries(schema.settings)) {
+      if (spec.type !== 'members' || !(key in settings)) continue;
+      const full = readMembers(settings[key]);
+      if (!sameJson(full, settings[key])) settings = { ...settings, [key]: full };
+    }
+    return settings === widget.settings ? widget : { ...widget, settings };
+  };
+  let changed = false;
+  const dashboards = document.dashboards.map(d => {
+    const pages = d.pages.map(p => {
+      const widgets = p.widgets.map(rewritten);
+      if (widgets.every((w, i) => w === p.widgets[i])) return p;
+      changed = true;
+      return { ...p, widgets };
+    });
+    return pages.every((p, i) => p === d.pages[i]) ? d : { ...d, pages };
+  });
+  return changed ? { ...document, dashboards } : document;
+}
+
+const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);

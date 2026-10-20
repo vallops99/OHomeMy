@@ -22,6 +22,7 @@ import { pressable } from '../../ui/pressable';
 import { CARD_ALONE, EntityShape } from '../shared/shapes';
 import type { WidgetProps } from '../types';
 import type { groupSchema } from './schema';
+import { memberShown } from './members';
 import { groupDefaultTitle } from './title';
 
 export function GroupWidget({ widget, settings }: WidgetProps<(typeof groupSchema)['settings']>) {
@@ -46,7 +47,7 @@ export function GroupWidget({ widget, settings }: WidgetProps<(typeof groupSchem
             data-member={entity.id}
             {...(tap.as === 'box' && { ...pressable(() => navigation.open(tap.page)), style: undefined, 'data-opens': true })}
           >
-            <EntityShape entity={entity} name={member.name} variant={member.variant ?? widget.variant} member />
+            <EntityShape {...memberShown(member, entity, widget.variant)} member />
             {tap.as === 'button' && (
               <button
                 type='button'

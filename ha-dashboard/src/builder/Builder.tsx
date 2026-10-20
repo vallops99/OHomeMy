@@ -8,11 +8,13 @@
  * wires them to the websocket and to buttons.
  */
 import { useEffect, useReducer, useState, type ReactNode } from 'react';
+import { membersInFull } from '../document/members';
 import type { OHomeMyDocument } from '../document/types';
 import { useDocumentAdmin, usePublished, type ImportOutcome } from '../ha';
 import { tr } from '../i18n';
 import { useLocalised } from '../i18n/useLocalised';
 import { usePanelProps } from '../panel/panelProps';
+import { widgetKind } from '../widgets/registry';
 import { DashboardList } from './DashboardList';
 import { DashboardScreen } from './DashboardScreen';
 import { DefaultsSection } from './DefaultsSection';
@@ -68,7 +70,11 @@ export function Builder() {
     <div className='b-app' lang={lang} dir={dir} style={style}>
       <Header
         session={session}
-        onPublish={() => publish(session.draft, () => admin.save(session.draft, base))}
+        onPublish={() => {
+          // Every Group's Members in full (#73): an old Group saves in the new shape.
+          const document = membersInFull(session.draft, kind => widgetKind(kind)?.schema);
+          publish(document, () => admin.save(document, base));
+        }}
         onDiscard={() =>
           setConfirmation({
             message: tr('builder.discardConfirm'),
