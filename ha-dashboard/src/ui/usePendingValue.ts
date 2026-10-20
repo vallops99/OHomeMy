@@ -16,22 +16,20 @@ export function usePendingValue(live: number) {
   // The release is watched on `window` from a listener added at the press,
   // so it reads the live value at the commit through this, not its closure.
   const liveRef = useRef(live);
-  liveRef.current = live;
+  useEffect(() => {
+    liveRef.current = live;
+  });
 
-  // Once the live value moves, or the time runs out, the pending value is
-  // done with: dropped, it cannot come back should the live value return.
+  // The time running out is this timer's, which drops the pending value and
+  // renders again; so a render reads the rule as of the release.
   useEffect(() => {
     if (pending === null) return;
-    if (pending.from !== live) {
-      setPending(null);
-      return;
-    }
     const timer = setTimeout(() => setPending(null), Math.max(0, pending.at + PENDING_MS - Date.now()));
     return () => clearTimeout(timer);
-  }, [pending, live]);
+  }, [pending]);
 
   return {
-    shown: held ?? pendingShown(pending, live, Date.now()),
+    shown: held ?? pendingShown(pending, live, pending?.at ?? 0),
     hold: (value: number) => setHeld(value),
     release: (value: number) => {
       setHeld(null);
