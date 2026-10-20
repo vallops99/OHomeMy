@@ -104,14 +104,16 @@ export function boxScaleVariables(tokens: Tokens): string {
  * The widest box that takes the phone's sizes. A box, not a screen, so it
  * holds in the Builder's preview and on any device; the value is where the
  * two met on the screens they were drawn for (measured on the real app,
- * #62). A look choice, not a fit edge (#72): it picks the scale a box's
- * content is drawn at, and each kind's content fits at both, down to its
- * Smallest box, with the headroom (`npm run fit`). On the wall, at 1280x800 on a 12-column grid, the narrowest Widget
+ * #62). On the wall, at 1280x800 on a 12-column grid, the narrowest Widget
  * drawn through these components is two columns, 194 px; on a 390 px phone
  * the widest such one on that Dashboard is 114 px, and half of a 2-column
  * Dashboard's width is 177 px. 179 keeps all three as they were. A
  * full-width Widget on a phone (366 px) now takes the wall's sizes, which
  * its box has room for.
+ *
+ * A look choice, not a fit edge (#72): it picks the scale a box's content
+ * is drawn at, and each kind's content fits at both, down to its Smallest
+ * box, with the headroom (`npm run fit`).
  */
 export const NARROW_BOX_MAX_W = 179;
 

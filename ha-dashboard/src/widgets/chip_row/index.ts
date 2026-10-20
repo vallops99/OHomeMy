@@ -23,9 +23,8 @@ export default defineWidget({
   // past the box's width the row scrolls sideways, resting on whole chips,
   // and since the Fault leads, what scrolls out of view is the least urgent.
   // A box tall enough for two lines (`TWO_LINES`, with the headroom) wraps
-  // instead, so every chip is shown
-  // whole. A chip never wraps inside itself; past the box's width its words
-  // end in an ellipsis.
+  // instead, so every chip is shown whole. A chip never wraps inside itself;
+  // past the box's width its words end in an ellipsis.
   //
   // The Concern list is portalled out of the box, so its classes are
   // styled against the screen, not the Widget.
