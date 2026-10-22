@@ -103,3 +103,15 @@ test('the activity gate reports a touch, then none until the interval has passed
   assert.equal(gate(5_999), false);
   assert.equal(gate(6_000), true);
 });
+
+test("a Room Grid Member's tap on a Popup's Page opens a Page too", () => {
+  const grid: Widget = {
+    ...widget('grid'),
+    kind: 'room_grid',
+    settings: { areas: [{ area: 'salone', on_tap: 'rooms' }, 'cucina'] },
+  };
+  const p = page('p-doorbell', 'doorbell', [grid]);
+  assert.equal(opensPage(p, 'grid', 'salone'), true);
+  assert.equal(opensPage(p, 'grid', 'cucina'), false);
+  assert.equal(opensPage(p, 'grid', null), false, "the Room Grid's own tap is unset");
+});

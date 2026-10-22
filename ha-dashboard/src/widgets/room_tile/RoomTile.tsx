@@ -6,18 +6,30 @@
  * The switch and the dimmer drive the chosen light in place. What the tile
  * says and which controls it gets is `roomTile.ts`; this file only draws it.
  *
- * The tile opens nothing itself, and draws no chevron: its switch and dimmer
- * keep their taps, so a Room Tile Widget with `on_tap` gets the renderer's
- * Open button beside it (`tap: 'own'`, #54), where `ui/RoomTile.tsx` laid a
- * whole-tile button under its controls and a chevron after the name.
+ * With a Page to open (`page`: a Room Tile Widget's `on_tap`, or a Room
+ * Grid Member's, #75), the whole tile opens it but for its switch and dimmer,
+ * which keep their taps, and a chevron after the name says so (ADR-0016, the
+ * renderer's one named exception, `renderer/tap.ts`). This holds with or
+ * without a light, on, off or Unavailable. Without one the tile opens
+ * nothing and draws no chevron.
+ *
+ * The way to the Page is a transparent button laid under the controls, as
+ * their sibling, as `ui/RoomTile.tsx` laid it: never around them, since a
+ * button inside a button is not readable by assistive technology, and so a
+ * drag that starts on the dimmer and ends on the surface (or the reverse)
+ * is a click on neither. The switch and the dimmer are positioned, so they
+ * paint over it and take their own taps; the icon and the text are not, so
+ * a tap on them lands on it.
  *
  * One DOM, two layouts (`ROOM_TILE_CSS`): `full` is Casa Panel's tile, icon
  * and switch over the name and meta, the dimmer at its foot; `compact` is a
  * row, the switch at its end, no dimmer. A `full` tile in a box too short
  * for it gives up the dimmer first, then becomes the row.
  */
+import type { Id } from '../../document/types';
 import { useActions, type Area, type Entity } from '../../ha';
 import { tr } from '../../i18n';
+import { useDashboardNavigation } from '../../renderer/navigationContext';
 import { Dimmer } from '../../ui/Dimmer';
 import { Icon } from '../../ui/Icon';
 import { brightnessPercent } from '../../ui/lightState';
@@ -32,10 +44,18 @@ export type RoomTileProps = {
   light: Entity | null;
   temperature: Entity | null;
   variant: Variant;
+  /** The ordinary Page the tile's surface opens, known to exist (`roomTileTap`), or `null`. */
+  page: Id | null;
+  /**
+   * Marks the tile as a Room Grid's Member (`data-area-member`), which the
+   * Popup layer reads to close on its tap.
+   */
+  member?: boolean;
 };
 
-export function RoomTile({ area, name, light, temperature, variant }: RoomTileProps) {
+export function RoomTile({ area, name, light, temperature, variant, page, member = false }: RoomTileProps) {
   const actions = useActions();
+  const navigation = useDashboardNavigation();
   const state = roomTile(area, light, temperature);
   const look = state.fault ? 'fault' : state.lit ? 'lit' : state.lights === 'none' ? 'static' : 'off';
   // An Unavailable light is shown, never commanded (actions.ts): no controls.
@@ -43,8 +63,17 @@ export function RoomTile({ area, name, light, temperature, variant }: RoomTilePr
   const on = chosen?.state === 'on';
 
   return (
-    <div className='ohm-room-tile' data-variant={variant}>
+    <div className='ohm-room-tile' data-variant={variant} data-area-member={member ? area.id : undefined}>
       <div className='ohm-room-tile-body' data-look={look}>
+        {page !== null && (
+          <button
+            type='button'
+            className='ohm-room-tile-surface'
+            data-opens
+            aria-label={tr('renderer.open', { page: navigation.pageName(page) ?? '' })}
+            onClick={() => navigation.open(page)}
+          />
+        )}
         <span className='ohm-room-tile-icon'>
           <Icon name={area.icon ?? 'mdi:sofa'} size={30} />
         </span>
@@ -54,8 +83,15 @@ export function RoomTile({ area, name, light, temperature, variant }: RoomTilePr
           </span>
         )}
         <span className='ohm-room-tile-text'>
-          <span className='ohm-room-tile-name' dir='auto'>
-            {name}
+          <span className='ohm-room-tile-title'>
+            <span className='ohm-room-tile-name' dir='auto'>
+              {name}
+            </span>
+            {page !== null && (
+              <span className='ohm-room-tile-chevron' aria-hidden>
+                <Icon name='mdi:chevron-right' size={20} mirrored />
+              </span>
+            )}
           </span>
           <span className='ohm-room-tile-meta'>{state.meta}</span>
         </span>
@@ -135,18 +171,36 @@ export const ROOM_TILE_CSS = `
     background: var(--surface-tile);
     color: var(--ink-secondary);
     overflow: hidden;
+    position: relative;
+    transition: transform .12s ease;
   }
+  /* The way to the Page, under the switch and the dimmer (positioned, so
+     they paint over it), over the icon and the text. */
+  .ohm-room-tile-surface {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .ohm-room-tile-surface:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+  .ohm-room-tile-body:has(> .ohm-room-tile-surface:active) { transform: scale(.98); }
   .ohm-room-tile-body[data-look='static'] { background: var(--surface-static); border-color: var(--line); color: var(--ink-muted); }
   .ohm-room-tile-body[data-look='lit'] { background: var(--lit-surface); border-color: var(--lit-line); color: var(--accent); }
   .ohm-room-tile-body[data-look='fault'] { background: var(--alert-surface); border-color: var(--alert-line); color: var(--alert); }
   .ohm-room-tile-icon { grid-area: icon; display: flex; align-self: start; }
   /* The switch's hit area overhangs the padding, so it can be large without
      pushing the name down (Casa Panel's -12 / -14). */
-  .ohm-room-tile-switch { grid-area: switch; justify-self: end; align-self: start; margin-block: -12px 0; margin-inline: 0 -14px; }
+  .ohm-room-tile-switch { position: relative; grid-area: switch; justify-self: end; align-self: start; margin-block: -12px 0; margin-inline: 0 -14px; }
   .ohm-room-tile-text { grid-area: text; display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+  .ohm-room-tile-title { display: flex; align-items: center; gap: var(--space-1); min-width: 0; }
+  .ohm-room-tile-chevron { display: flex; flex: none; color: var(--ink-muted); }
   .ohm-room-tile-name {
     min-width: 0;
-   
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -162,7 +216,7 @@ export const ROOM_TILE_CSS = `
   .ohm-room-tile-body[data-look='static'] .ohm-room-tile-meta { color: var(--ink-faint); }
   .ohm-room-tile-body[data-look='lit'] .ohm-room-tile-meta { color: var(--lit-ink); }
   .ohm-room-tile-body[data-look='fault'] .ohm-room-tile-meta { color: var(--alert); font-weight: 500; }
-  .ohm-room-tile-dimmer { grid-area: dimmer; align-self: end; min-width: 0; }
+  .ohm-room-tile-dimmer { position: relative; grid-area: dimmer; align-self: end; min-width: 0; }
 
   @container room-tile (max-height: ${FULL_TILE_MIN_H - 1}px) {
     .ohm-room-tile-dimmer { display: none; }

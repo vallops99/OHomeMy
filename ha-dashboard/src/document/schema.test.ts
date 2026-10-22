@@ -231,3 +231,51 @@ function reason(v: { ok: boolean; reason?: string }): string {
   assert.equal(v.ok, false, 'expected the Widget to be invalid');
   return v.reason ?? '';
 }
+
+const gridOf = defineSchema({
+  kind: 'room_grid',
+  variants: ['full'],
+  titled: true,
+  settings: { areas: { type: 'areas' } },
+});
+const grid = (areas: unknown[]) => widget({ kind: 'room_grid', settings: { areas } });
+
+test('a Room Grid saved before its Areas were Members reads each plain id as a Member with no tap', () => {
+  const v = validateWidget(grid(['salone', 'cucina']), gridOf);
+  assert.equal(v.ok, true);
+  if (!v.ok) return;
+  assert.deepEqual(v.settings.areas, [
+    { area: 'salone', on_tap: null },
+    { area: 'cucina', on_tap: null },
+  ]);
+});
+
+test("a Room Grid's Member reads with its tap, beside plain ids", () => {
+  const v = validateWidget(grid([{ area: 'salone', on_tap: 'rooms' }, 'cucina', { area: 'bagno' }]), gridOf);
+  assert.equal(v.ok, true);
+  if (!v.ok) return;
+  assert.deepEqual(v.settings.areas, [
+    { area: 'salone', on_tap: 'rooms' },
+    { area: 'cucina', on_tap: null },
+    { area: 'bagno', on_tap: null },
+  ]);
+});
+
+test("a Room Grid's Member must be well formed, and keeps the list's rules", () => {
+  assert.match(reason(validateWidget(grid([{ area: 'salone', name: 'Sala' }]), gridOf)), /areas: unknown setting "name"/);
+  assert.match(reason(validateWidget(grid([{ area: 'salone', on_tap: 7 }]), gridOf)), /areas: not text/);
+  assert.match(reason(validateWidget(grid([{ area: 'Salone!' }]), gridOf)), /areas: not an Area id/);
+  assert.match(reason(validateWidget(grid([{ on_tap: 'rooms' }]), gridOf)), /areas: not an Area id/);
+  assert.match(reason(validateWidget(grid(['salone', { area: 'salone', on_tap: null }]), gridOf)), /areas: salone twice/);
+  const one: House = { hasEntity: () => false, hasArea: id => id === 'salone' };
+  const v = validateWidget(
+    grid([
+      { area: 'gone', on_tap: 'rooms' },
+      { area: 'salone', on_tap: 'rooms' },
+    ]),
+    gridOf,
+    { house: one }
+  );
+  assert.equal(v.ok, true);
+  if (v.ok) assert.deepEqual(v.settings.areas, [{ area: 'salone', on_tap: 'rooms' }]);
+});

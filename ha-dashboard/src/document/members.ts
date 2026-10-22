@@ -1,23 +1,29 @@
 /**
- * A Member's tap (CONTEXT.md, #73), wherever a Widget keeps Members: a Page
- * reference inside `settings`, which the server never looks into (ADR-0015).
- * So the client keeps it valid, as it keeps a Widget's `on_tap`: removing a
- * Page clears the taps to it, and duplicating a Dashboard follows them to
- * the copy's Pages.
+ * A Member's tap (CONTEXT.md), wherever a Widget keeps Members: a Group's
+ * entities (#73) and a Room Grid's Areas (#75). A Page reference inside
+ * `settings`, which the server never looks into (ADR-0015). So the client
+ * keeps it valid, as it keeps a Widget's `on_tap`: removing a Page clears the
+ * taps to it, and duplicating a Dashboard follows them to the copy's Pages.
  *
- * Read off the settings' shape, not the kind's schema: a `members` field is
- * the only setting whose items are objects with an `on_tap`, and the pure
- * modules that need this (`builder/pages.ts`, `builder/draft.ts`,
- * `renderer/popup.ts`) have no registry to ask. A plain id, as a Group saved
- * before Members wrote one, has no tap.
+ * Read off the settings' shape, not the kind's schema: a list item that is
+ * an object with an `on_tap` is a Member, whichever it stands for (its
+ * `entity` or its `area`), since the pure modules that need this
+ * (`builder/pages.ts`, `builder/draft.ts`, `renderer/popup.ts`) have no
+ * registry to ask. A plain id, as a Group saved before Members wrote one, or
+ * a Room Grid before its Areas were Members, has no tap.
  *
  * No React: the tests run it under plain Node.
  */
-import type { Member, WidgetSchema } from './schema';
+import type { AreaMember, Member, WidgetSchema } from './schema';
 import type { Id, OHomeMyDocument, Widget } from './types';
 
-const isMember = (item: unknown): item is Member =>
-  typeof item === 'object' && item !== null && !Array.isArray(item) && 'entity' in item && 'on_tap' in item;
+/** A Member as written, of either shape: what its tap is, and what it stands for. */
+type Tapped = { on_tap: Id | null; entity?: unknown; area?: unknown };
+
+const isMember = (item: unknown): item is Tapped => typeof item === 'object' && item !== null && !Array.isArray(item) && 'on_tap' in item;
+
+/** The entity or Area the Member stands for. */
+const memberId = (member: Tapped): unknown => member.entity ?? member.area;
 
 /** The Widget with each Member's tap passed through `f`; the same Widget when none changes. */
 export function mapMemberTaps(widget: Widget, f: (page: Id) => Id | null): Widget {
@@ -40,11 +46,11 @@ export function mapMemberTaps(widget: Widget, f: (page: Id) => Id | null): Widge
   return changed ? { ...widget, settings } : widget;
 }
 
-/** The Page a tap on the Widget's Member for `entity` opens, as written, or `null`. */
-export function memberOnTap(widget: Widget, entity: string): Id | null {
+/** The Page a tap on the Widget's Member for `id`, an entity or an Area, opens, as written, or `null`. */
+export function memberOnTap(widget: Widget, id: string): Id | null {
   for (const value of Object.values(widget.settings)) {
     if (!Array.isArray(value)) continue;
-    const member = value.find(item => isMember(item) && item.entity === entity);
+    const member = value.find((item): item is Tapped => isMember(item) && memberId(item) === id);
     if (member) return member.on_tap;
   }
   return null;
@@ -71,6 +77,21 @@ export function readMembers(raw: unknown): Member[] {
         on_tap: typeof on_tap === 'string' ? on_tap : null,
       },
     ];
+  });
+}
+
+/**
+ * A Room Grid's `areas` setting as written, each Area a Member in full, for
+ * the Builder to edit: a plain id reads as a Member with no tap, and a
+ * mistyped tap as none. Nothing is checked or dropped, as `readMembers`.
+ */
+export function readAreaMembers(raw: unknown): AreaMember[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item): AreaMember[] => {
+    if (typeof item === 'string') return [{ area: item, on_tap: null }];
+    if (typeof item !== 'object' || item === null || typeof item.area !== 'string') return [];
+    const { area, on_tap } = item as Record<string, unknown>;
+    return [{ area: area as string, on_tap: typeof on_tap === 'string' ? on_tap : null }];
   });
 }
 

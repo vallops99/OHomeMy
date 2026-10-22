@@ -436,6 +436,7 @@ export const ar: Catalogue = {
   'builder.dashboard.member.variantFollow': 'مثل المجموعة ({variant})',
   'builder.dashboard.member.onTapNone': 'لا شيء (يحتفظ بعناصر التحكم الخاصة به)',
   'builder.dashboard.member.select': 'تحديد {name}',
+  'builder.dashboard.area.onTap': '{area}: عند النقر، افتح',
   'builder.dashboard.field.choose': 'اختر…',
   'builder.dashboard.field.none': 'لا شيء',
   'builder.dashboard.field.add': 'إضافة…',

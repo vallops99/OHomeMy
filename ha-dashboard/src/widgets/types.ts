@@ -59,8 +59,11 @@ export type WidgetKind<F extends Fields = Fields> = {
    * - `page`: the kind is only a way to a Page (the Link): as `none`, and a
    *   Widget of it without an `on_tap` is skipped, since it would be a dead
    *   control.
+   * - `surface`: the Room Tile (ADR-0016): it acts on a tap with its switch
+   *   and dimmer, and with `on_tap` the rest of its surface opens the Page.
+   *   The renderer adds nothing; the kind draws it (`renderer/tap.ts`).
    */
-  tap?: 'own' | 'none' | 'page';
+  tap?: 'own' | 'none' | 'page' | 'surface';
   /**
    * Its Smallest box for each of its Variants (CONTEXT.md), in px: the
    * least box its sparsest layout step fits in, plus `WIDGET_HEADROOM_PX`

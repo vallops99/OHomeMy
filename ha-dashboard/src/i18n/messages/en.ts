@@ -387,6 +387,7 @@ export const en = {
   'builder.dashboard.member.variantFollow': 'Follow the Group ({variant})',
   'builder.dashboard.member.onTapNone': 'Nothing (it keeps its own controls)',
   'builder.dashboard.member.select': 'Select {name}',
+  'builder.dashboard.area.onTap': '{area}: on tap, open',
   'builder.dashboard.field.choose': 'Choose…',
   'builder.dashboard.field.none': 'None',
   'builder.dashboard.field.add': 'Add…',

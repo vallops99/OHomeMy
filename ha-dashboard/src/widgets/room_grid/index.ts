@@ -39,8 +39,11 @@ const COLUMNS_CSS = [
   ),
 ].join('\n');
 
-/** The Smallest box: six Areas, measured with `npm run fit -- --least`. */
-const SMALLEST: Record<Variant, FitBox> = { full: { width: 235, height: 788 }, compact: { width: 258, height: 377 } };
+/**
+ * The Smallest box: six Areas, each with its chevron to a Page (ADR-0016),
+ * measured with `npm run fit -- --least`.
+ */
+const SMALLEST: Record<Variant, FitBox> = { full: { width: 235, height: 788 }, compact: { width: 306, height: 377 } };
 
 /** The lowest box at which each column count holds, for the fit check. */
 const steps: LayoutStep[] = (['full', 'compact'] as const).flatMap(variant =>

@@ -68,7 +68,12 @@ export type FieldSpec =
    * and Concerns (`./shows`). None by default.
    */
   | { type: 'area'; optional?: boolean; shows?: readonly string[] }
-  /** An ordered set of Areas; dropped and counted as `entities` is. */
+  /**
+   * An ordered set of Areas, dropped and counted as `entities` is, each a
+   * Member with its own tap (`AreaMember`, #75): a Room Grid's. A plain id,
+   * as a Room Grid saved before its Areas were Members wrote one, reads as a
+   * Member with no tap.
+   */
   | { type: 'areas'; min?: number; shows?: readonly string[] }
   | { type: 'boolean'; default: boolean }
   | { type: 'choice'; options: readonly string[]; default: string }
@@ -100,17 +105,19 @@ export type FieldValue<S extends FieldSpec> = S extends { type: 'entity' | 'area
   ? S extends { optional: true }
     ? string | null
     : string
-  : S extends { type: 'entities' | 'areas' }
+  : S extends { type: 'entities' }
     ? string[]
-    : S extends { type: 'members' }
-      ? Member[]
-      : S extends { type: 'boolean' }
-        ? boolean
-        : S extends { type: 'choice'; options: readonly (infer O)[] }
-          ? O
-          : S extends { type: 'number' }
-            ? number
-            : never;
+    : S extends { type: 'areas' }
+      ? AreaMember[]
+      : S extends { type: 'members' }
+        ? Member[]
+        : S extends { type: 'boolean' }
+          ? boolean
+          : S extends { type: 'choice'; options: readonly (infer O)[] }
+            ? O
+            : S extends { type: 'number' }
+              ? number
+              : never;
 
 /**
  * One entity in a Group, with its own settings, each `null` while unset as a
@@ -118,6 +125,12 @@ export type FieldValue<S extends FieldSpec> = S extends { type: 'entity' | 'area
  * tap on it opens.
  */
 export type Member = { entity: string; name: string | null; variant: Variant | null; on_tap: Id | null };
+
+/**
+ * One Area in a Room Grid (CONTEXT.md "Member", #75): the ordinary Page a tap
+ * on its tile opens, `null` while unset. No name or Variant of its own yet.
+ */
+export type AreaMember = { area: string; on_tap: Id | null };
 
 /** A kind's settings, checked, defaults filled in: what its component receives. */
 export type SettingsOf<F extends Fields> = { -readonly [K in keyof F]: FieldValue<F[K]> };
@@ -208,9 +221,9 @@ function checkField(spec: FieldSpec, value: unknown, house: House | undefined): 
       // Each item's id, and what it reads as: the id itself, or the Member.
       const items: { id: string; read: unknown }[] = [];
       for (const item of value) {
-        const read = spec.type === 'members' ? checkMember(spec, item) : checkId(one, item);
+        const read = spec.type === 'members' ? checkMember(spec, item) : spec.type === 'areas' ? checkAreaMember(item) : checkId(one, item);
         if (typeof read !== 'string' && 'ok' in read) return read;
-        const id = typeof read === 'string' ? read : read.entity;
+        const id = typeof read === 'string' ? read : 'area' in read ? read.area : read.entity;
         if (items.some(i => i.id === id)) return no(tr('schema.twice', { id }));
         items.push({ id, read });
       }
@@ -282,6 +295,26 @@ function checkMember(spec: Extract<FieldSpec, { type: 'members' }>, value: unkno
     variant: spec.variantDomains.includes(domainOf(entity)) ? (variant as Variant | null) : null,
     on_tap,
   };
+}
+
+const AREA_MEMBER_KEYS: readonly string[] = ['area', 'on_tap'];
+
+/** The Area as a Member, a plain id read as one with no tap, or why it is not one. */
+function checkAreaMember(value: unknown): AreaMember | Checked {
+  const one = { type: 'area' } as const;
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    const area = checkId(one, value);
+    return typeof area === 'string' ? { area, on_tap: null } : area;
+  }
+  const given = value as Record<string, unknown>;
+  for (const key of Object.keys(given)) {
+    if (!AREA_MEMBER_KEYS.includes(key)) return no(tr('schema.unknownSetting', { setting: JSON.stringify(key) }));
+  }
+  const area = checkId(one, given.area);
+  if (typeof area !== 'string') return area;
+  const { on_tap = null } = given;
+  if (on_tap !== null && typeof on_tap !== 'string') return no(tr('schema.notText'));
+  return { area, on_tap };
 }
 
 const domainOf = (entityId: string) => entityId.slice(0, entityId.indexOf('.'));

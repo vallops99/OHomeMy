@@ -362,6 +362,7 @@ export const zhHans: Catalogue = {
   'builder.dashboard.member.variantFollow': '跟随组（{variant}）',
   'builder.dashboard.member.onTapNone': '无（保留其自身控件）',
   'builder.dashboard.member.select': '选择 {name}',
+  'builder.dashboard.area.onTap': '{area}：点按时打开',
   'builder.dashboard.field.choose': '选择…',
   'builder.dashboard.field.none': '无',
   'builder.dashboard.field.add': '添加…',

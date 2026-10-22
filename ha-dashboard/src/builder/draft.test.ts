@@ -182,3 +182,22 @@ test('the same JSON is the same whatever the order of its keys', () => {
   assert.ok(!sameJson({ a: null }, { a: {} }));
   assert.ok(!sameJson([], {}));
 });
+
+test("a duplicate's Room Grid Member taps follow its Pages to their new ids", () => {
+  const original = wall();
+  original.pages[1].widgets.push({
+    id: 'r',
+    kind: 'room_grid',
+    x: 0,
+    y: 0,
+    w: 2,
+    h: 2,
+    variant: 'full',
+    title: null,
+    on_tap: null,
+    settings: { areas: [{ area: 'salone', on_tap: 'home' }, { area: 'cucina', on_tap: null }, 'bagno'] },
+  });
+  const { dashboard } = duplicateDashboard(doc(original), 'wall', { name: 'Copy', slug: 'copy' }, counter());
+  const [home, climate] = dashboard.pages;
+  assert.deepEqual(climate.widgets[0].settings.areas, [{ area: 'salone', on_tap: home.id }, { area: 'cucina', on_tap: null }, 'bagno']);
+});

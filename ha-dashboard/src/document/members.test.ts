@@ -3,7 +3,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { membersInFull, readMembers } from './members';
+import { mapMemberTaps, memberOnTap, membersInFull, readAreaMembers, readMembers } from './members';
 import { defineSchema } from './schema';
 import type { OHomeMyDocument, Widget } from './types';
 
@@ -51,5 +51,26 @@ test('a document already in full is returned as it is', () => {
 test('an empty or mistyped field reads as unset', () => {
   assert.deepEqual(readMembers([{ entity: 'light.a', name: '', variant: 'tiny', on_tap: 3 }]), [
     { entity: 'light.a', name: null, variant: null, on_tap: null },
+  ]);
+});
+
+test("a Room Grid's Members carry taps as a Group's do", () => {
+  const grid = widget('room_grid', { areas: [{ area: 'salone', on_tap: 'rooms' }, 'cucina', { area: 'bagno', on_tap: null }] });
+  assert.equal(memberOnTap(grid, 'salone'), 'rooms');
+  assert.equal(memberOnTap(grid, 'cucina'), null);
+  assert.equal(memberOnTap(grid, 'bagno'), null);
+  const moved = mapMemberTaps(grid, p => (p === 'rooms' ? 'rooms-2' : p));
+  assert.deepEqual(moved.settings.areas, [{ area: 'salone', on_tap: 'rooms-2' }, 'cucina', { area: 'bagno', on_tap: null }]);
+  assert.equal(
+    mapMemberTaps(grid, p => p),
+    grid
+  );
+});
+
+test("a Room Grid's Areas read in full for the Builder, a plain id with no tap", () => {
+  assert.deepEqual(readAreaMembers(['salone', { area: 'cucina', on_tap: 'rooms' }, { area: 'bagno', on_tap: 3 }, 7]), [
+    { area: 'salone', on_tap: null },
+    { area: 'cucina', on_tap: 'rooms' },
+    { area: 'bagno', on_tap: null },
   ]);
 });

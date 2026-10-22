@@ -3,7 +3,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { memberTap, widgetTap } from './tap';
+import { memberTap, roomTileTap, widgetTap } from './tap';
 
 const opens = (page: string) => page === 'rooms';
 
@@ -41,4 +41,15 @@ test("a Member's tap naming no ordinary Page, or none, adds nothing", () => {
   assert.deepEqual(memberTap('light.a', null, opens), { as: 'plain' });
   assert.deepEqual(memberTap('sensor.a', 'ring', opens), { as: 'plain' });
   assert.deepEqual(memberTap('light.a', 'gone', opens), { as: 'plain' });
+});
+
+test('a Room Tile opens its Page from its surface, as a Widget and as a Room Grid Member (ADR-0016)', () => {
+  assert.deepEqual(widgetTap('surface', 'rooms', opens), { as: 'surface', page: 'rooms' });
+  assert.deepEqual(roomTileTap('rooms', opens), { as: 'surface', page: 'rooms' });
+});
+
+test('a Room Tile with no Page, or one that no longer exists, adds nothing', () => {
+  assert.deepEqual(widgetTap('surface', null, opens), { as: 'plain' });
+  assert.deepEqual(roomTileTap(null, opens), { as: 'plain' });
+  assert.deepEqual(roomTileTap('gone', opens), { as: 'plain' });
 });

@@ -10,7 +10,9 @@ import {
   newWidget,
   removeMember,
   sizeFor,
+  updateAreaTap,
   updateMember,
+  withAreaIds,
   withMemberIds,
   withSetting,
   type HouseLists,
@@ -270,4 +272,33 @@ test('the settings key that holds Members, if the kind has one', () => {
 
 test('a new Group starts with no Members', () => {
   assert.deepEqual(newWidget(groupSchema, 'g', { x: 0, y: 0, w: 4, h: 3 }).settings, { members: [] });
+});
+
+test("a Room Grid's Areas are listed with each one's tap", () => {
+  const c = byKey({ rooms: ['cucina', { area: 'salone', on_tap: 'climate' }] }).rooms;
+  assert.ok(c.type === 'areas');
+  assert.deepEqual(c.value, [
+    { area: 'cucina', on_tap: null },
+    { area: 'salone', on_tap: 'climate' },
+  ]);
+  assert.deepEqual(
+    c.chosen.map(o => o.label),
+    ['Cucina', 'Salone']
+  );
+});
+
+test("an Area's tap is kept as the list is reordered, and set or cleared on its own", () => {
+  const raw = ['cucina', { area: 'salone', on_tap: 'climate' }];
+  assert.deepEqual(withAreaIds(raw, ['salone', 'esterno']), [
+    { area: 'salone', on_tap: 'climate' },
+    { area: 'esterno', on_tap: null },
+  ]);
+  assert.deepEqual(updateAreaTap(raw, 'cucina', 'home'), [
+    { area: 'cucina', on_tap: 'home' },
+    { area: 'salone', on_tap: 'climate' },
+  ]);
+  assert.deepEqual(updateAreaTap(raw, 'salone', null), [
+    { area: 'cucina', on_tap: null },
+    { area: 'salone', on_tap: null },
+  ]);
 });
