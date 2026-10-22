@@ -14,7 +14,7 @@ import { pressable } from './pressable';
 import { t } from './theme';
 
 export type StatsProps = {
-  /** How many zones have their `main` light on: the lit-zones Concern's count. */
+  /** How many lights are on, light by light: the lit Concern's count. */
   lightsOn: number;
   /** Instantaneous house draw in watts, or null when no power sensor reports one. */
   watts: number | null;

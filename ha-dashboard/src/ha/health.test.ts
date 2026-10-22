@@ -63,9 +63,9 @@ test('open doors and unlocked gates are one Concern, each carrying only its own'
   );
 });
 
-test('the lights-on Concern carries the main lights left on', () => {
+test('the lights-on Concern carries the rendered lights left on, not ones in no Area', () => {
   const lit = entity('light.salone', { state: 'on', labels: ['main'] });
-  const report = houseReport([lit, entity('light.lamp', { state: 'on' })]);
+  const report = houseReport([lit, entity('light.lamp', { state: 'on', areaId: null })]);
   assert.equal(report.verdict.level, 'on');
   assert.deepEqual(
     report.verdict.entities.map(e => e.id),
@@ -95,6 +95,28 @@ test('the lights-on Concern is reported under a fault, for the lights stat', () 
     ['light.salone', 'light.cucina']
   );
   assert.ok(report.also.every(h => h.level !== 'on'));
+});
+
+test('a Light group and its 3 placed members, all on, are 3 lights, worded as lights', () => {
+  const members = ['a', 'b', 'c'].map(n => entity(`light.${n}`, { state: 'on' }));
+  const group = entity('light.cucina', { state: 'on', attributes: { entity_id: ['light.a', 'light.b', 'light.c'] } });
+  const report = houseReport([group, ...members]);
+  assert.equal(report.lit?.count, 3);
+  assert.equal(report.lit?.headline, '3 luci accese');
+  assert.deepEqual(
+    report.lit?.entities.map(e => e.id),
+    ['light.a', 'light.b', 'light.c']
+  );
+});
+
+test('one light on is worded Una luce accesa', () => {
+  assert.equal(houseReport([entity('light.a', { state: 'on' })]).lit?.headline, 'Una luce accesa');
+});
+
+test('members of a placed Light group count though placed nowhere themselves', () => {
+  const bare = (id: string) => entity(id, { state: 'on', areaId: null });
+  const group = entity('light.g', { state: 'on', attributes: { entity_id: ['light.a', 'light.b'] } });
+  assert.equal(houseReport([group, bare('light.a'), bare('light.b')]).lit?.count, 2);
 });
 
 test('a house with no light on has no lights-on Concern', () => {

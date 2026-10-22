@@ -11,6 +11,7 @@
  * No React, no @hakit: it runs under plain Node.
  */
 import type { Area, Entity } from '../../ha';
+import { countedLights } from '../../ha/lights';
 import { supportsBrightness } from '../../ui/lightState';
 import { fmt, tr } from '../../i18n';
 import { stateLabel } from '../../ui/stateLabel';
@@ -33,14 +34,6 @@ export type RoomTileState = {
 };
 
 /**
- * A light group (`entity_id` lists its members) stands for other lights; one
- * standing beside them in the Area would count each of them twice. With
- * nothing but groups, the groups are the Area's lights and count as
- * themselves.
- */
-const isGroup = (light: Entity) => Array.isArray(light.attributes.entity_id);
-
-/**
  * The entity a Room Tile shows as its light or temperature (ADR-0018):
  * `id` if it is in this Area, otherwise `null`, as for no choice. One in
  * another Area, or that Home Assistant no longer has, reads as unset: no
@@ -53,13 +46,13 @@ export function inArea(area: Area, id: string | null): Entity | null {
 }
 
 /**
- * The lights the meta line counts: the Area's. The chosen light is one of
- * them (`inArea`), since it is the one the switch drives.
+ * The lights the meta line counts: the Area's, light by light (#77,
+ * `countedLights`). The chosen light is one of them (`inArea`); a Light
+ * group is its members, found anywhere in the house through `find`.
  */
-function counted(area: Area): Entity[] {
+function counted(area: Area, light: Entity | null, find: (id: string) => Entity | undefined): Entity[] {
   const lights = area.entities.filter(e => e.domain === 'light');
-  const single = lights.filter(e => !isGroup(e));
-  return single.length > 0 ? single : lights;
+  return countedLights(light ? [...lights, light] : lights, find);
 }
 
 function lightsMeta(lights: Entity[]): string {
@@ -68,10 +61,19 @@ function lightsMeta(lights: Entity[]): string {
   return on === 0 ? tr('roomTile.allOff', { count: lights.length }) : tr('roomTile.lightsOn', { count: on });
 }
 
-export function roomTile(area: Area, light: Entity | null, temperature: Entity | null): RoomTileState {
+/**
+ * `find` looks up a Light group's members in the whole house; by default
+ * only the Area's own entities are known.
+ */
+export function roomTile(
+  area: Area,
+  light: Entity | null,
+  temperature: Entity | null,
+  find: (id: string) => Entity | undefined = id => area.entities.find(e => e.id === id)
+): RoomTileState {
   const reading = temperatureReading(temperature);
   const withTemperature = (text: string) => (reading === null ? text : `${text} · ${reading}`);
-  const all = counted(area);
+  const all = counted(area, light, find);
   const lit = all.some(e => e.state === 'on');
 
   // No controls, but still lit while a light is on: the surface says what

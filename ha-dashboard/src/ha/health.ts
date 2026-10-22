@@ -17,6 +17,7 @@
  * (#44) is where they are said: not as a chip, but by the lights StatCard,
  * which is why the report carries them as `lit` of their own.
  */
+import { countedLights } from './lights';
 import { groupMemberIds } from './placement';
 import type { Area, Entity } from './types';
 
@@ -53,7 +54,7 @@ export type HouseReport = {
   /** Lower-ranked concerns, still shown as chips. Empty when there are none. Never the lights on. */
   also: Health[];
   /**
-   * The lights-on Concern, whatever outranks it, or null when no main light is on.
+   * The lights-on Concern, whatever outranks it, or null when no light is on.
    * Not a chip (#44): the lights StatCard states it, and reads its count
    * here so the card and the Verdict count by the one rule. The same object
    * as `verdict` when it leads.
@@ -161,11 +162,15 @@ function concerns(entities: Entity[]): Health[] {
     });
   }
 
-  const lit = entities.filter(e => e.domain === 'light' && e.labels.includes('main') && e.state === 'on');
+  // Lights on, light by light (#77, `./lights`), over what is rendered: the
+  // placed lights, and the members of a placed Light group.
+  const byId = new Map(entities.map(e => [e.id, e]));
+  const rendered = entities.filter(e => e.domain === 'light' && (isPlaced(e) || grouped.has(e.id)));
+  const lit = countedLights(rendered, id => byId.get(id)).filter(e => e.state === 'on');
   if (lit.length > 0) {
     out.push({
       level: 'on',
-      headline: plural(lit.length, 'Una zona accesa', `${lit.length} zone accese`),
+      headline: plural(lit.length, 'Una luce accesa', `${lit.length} luci accese`),
       detail: lit
         .map(e => e.name)
         .slice(0, 3)

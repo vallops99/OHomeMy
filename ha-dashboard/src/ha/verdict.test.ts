@@ -80,11 +80,47 @@ test('an entity shown from its Area counts: an Unavailable light a Room Tile cou
   assert.deepEqual(concernAt(concerns, 'fault')?.entities, [lamp]);
 });
 
-test('a light on is one a Widget names, not every light shown from an Area', () => {
-  const chosen = entity('light.salone', 'on', { areaId: 'salone' });
-  const other = entity('light.lamp', 'on', { areaId: 'salone' });
-  const concerns = dashboardConcerns([chosen, other], shows(['light.salone'], { salone: ['light'] }));
-  assert.deepEqual(concernAt(concerns, 'lit')?.entities, [chosen]);
+const group = (id: string, members: string[], state: string, extra: Partial<Entity> = {}) =>
+  entity(id, state, { attributes: { entity_id: members }, ...extra });
+const ids = (c: { entities: Entity[] } | null | undefined) => c?.entities.map(e => e.id);
+
+test('a Room Tile naming a Light group counts its three members on, neither 1 nor 4', () => {
+  const lights = [
+    group('light.cucina', ['light.a', 'light.b', 'light.c'], 'on', { areaId: 'cucina' }),
+    entity('light.a', 'on', { areaId: 'cucina' }),
+    entity('light.b', 'on', { areaId: 'cucina' }),
+    entity('light.c', 'on', { areaId: 'cucina' }),
+  ];
+  const s = shows([], { cucina: ['light'] });
+  const named: DashboardShows = { ...s, inAreas: new Map([['light.cucina', new Set(['cucina'])]]) };
+  assert.deepEqual(ids(concernAt(dashboardConcerns(lights, named), 'lit')), ['light.a', 'light.b', 'light.c']);
+});
+
+test('a Light group named only by a toggle counts its members that are on', () => {
+  const lights = [
+    group('light.cucina', ['light.a', 'light.b', 'light.c'], 'on'),
+    entity('light.a', 'on'),
+    entity('light.b', 'off'),
+    entity('light.c', 'on'),
+  ];
+  assert.deepEqual(ids(concernAt(dashboardConcerns(lights, shows(['light.cucina'])), 'lit')), ['light.a', 'light.c']);
+});
+
+test('a light reached through a group and from its Area is counted once', () => {
+  const lights = [group('light.g', ['light.a'], 'on', { areaId: 'cucina' }), entity('light.a', 'on', { areaId: 'cucina' })];
+  assert.deepEqual(ids(concernAt(dashboardConcerns(lights, shows(['light.g'], { cucina: ['light'] })), 'lit')), ['light.a']);
+});
+
+test('an Area shown with only a single light, on, counts that light', () => {
+  const lamp = entity('light.lamp', 'on', { areaId: 'salone' });
+  assert.deepEqual(ids(concernAt(dashboardConcerns([lamp], shows([], { salone: ['light'] })), 'lit')), ['light.lamp']);
+});
+
+test('an Unavailable member of a shown Light group is a Fault', () => {
+  const lights = [group('light.g', ['light.a', 'light.b'], 'on'), entity('light.a', 'on'), entity('light.b', 'unavailable')];
+  const concerns = dashboardConcerns(lights, shows(['light.g']));
+  assert.deepEqual(ids(concernAt(concerns, 'fault')), ['light.b']);
+  assert.deepEqual(ids(concernAt(concerns, 'lit')), ['light.a']);
 });
 
 test('a button resting at unknown is no Fault, but one Home Assistant cannot reach is', () => {

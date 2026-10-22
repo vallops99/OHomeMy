@@ -27,7 +27,7 @@
  * for it gives up the dimmer first, then becomes the row.
  */
 import type { Id } from '../../document/types';
-import { useActions, type Area, type Entity } from '../../ha';
+import { useActions, useEntities, type Area, type Entity } from '../../ha';
 import { tr } from '../../i18n';
 import { useDashboardNavigation } from '../../renderer/navigationContext';
 import { Dimmer } from '../../ui/Dimmer';
@@ -57,7 +57,8 @@ export type RoomTileProps = {
 export function RoomTile({ area, name, light, temperature, variant, page, member = false }: RoomTileProps) {
   const actions = useActions();
   const navigation = useDashboardNavigation();
-  const state = roomTile(area, light, temperature);
+  const house = useEntities();
+  const state = roomTile(area, light, temperature, id => house.get(id));
   const look = state.fault ? 'fault' : state.lit ? 'lit' : state.lights === 'none' ? 'static' : 'off';
   // An Unavailable light is shown, never commanded (actions.ts): no controls.
   const chosen = state.fault ? null : state.light;

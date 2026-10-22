@@ -12,16 +12,18 @@
  *
  * - **Fault**: an Unavailable entity the Dashboard shows.
  * - **Open**: a door, window or gate the Dashboard shows, standing open.
- * - **Lit**: a light a Widget names itself, on. A named light is the one a
- *   Widget stands for (a Room Tile's chosen light, a toggle's), which is
- *   what an Area's `main` light used to be; the other lights a Room Tile
- *   counts in its Area are not each counted.
+ * - **Lit**: a light the Dashboard shows, on, counted light by light (#77,
+ *   `./lights`): a Light group is never counted itself but as its members
+ *   that are on, even when no Widget shows them on their own. A Light
+ *   group's members are shown for Faults too.
  *
  * No React, no @hakit: `verdict.test.ts` runs this under plain Node. The
  * words are the Widgets', not this module's.
  */
-import { isNamed, isShown, type DashboardShows } from '../document/shows';
+import { isShown, type DashboardShows } from '../document/shows';
 import { isOpenDoor } from './health';
+import { countedLights, isLightGroup } from './lights';
+import { groupMemberIds } from './placement';
 import type { Entity } from './types';
 
 /** Worst first. */
@@ -50,17 +52,27 @@ const isOpenGate = (e: Entity) => e.domain === 'lock' && e.state === 'unlocked';
 
 /** Every Concern the Dashboard has, worst first; empty when there is nothing to report. */
 export function dashboardConcerns(entities: Iterable<Entity>, shows: DashboardShows): Concern[] {
+  const all = [...entities];
+  const byId = new Map(all.map(e => [e.id, e]));
+  const direct = all.filter(e => isShown(shows, e));
+  // A shown Light group shows its members too (#77): a Fault in one is this
+  // Dashboard's, though no Widget names it.
+  const viaGroups = direct.filter(isLightGroup).flatMap(g => groupMemberIds(g) ?? []);
+  const shown = new Set([...direct.map(e => e.id), ...viaGroups.filter(id => byId.has(id))]);
+
   const faults: Entity[] = [];
   const open: Entity[] = [];
-  const lit: Entity[] = [];
-  for (const e of entities) {
-    if (!isShown(shows, e)) continue;
+  for (const e of all) {
+    if (!shown.has(e.id)) continue;
     // A Fault is all that can be said of an entity Home Assistant cannot
     // reach: its last state is not one the house can vouch for.
     if (isFault(e)) faults.push(e);
     else if (isOpenDoor(e) || isOpenGate(e)) open.push(e);
-    else if (e.domain === 'light' && e.state === 'on' && isNamed(shows, e)) lit.push(e);
   }
+  const lit = countedLights(
+    direct.filter(e => e.domain === 'light'),
+    id => byId.get(id)
+  ).filter(e => e.state === 'on');
   const found: Concern[] = [
     { level: 'fault', entities: faults },
     { level: 'open', entities: open },

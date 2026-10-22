@@ -113,3 +113,25 @@ test('a temperature that cannot be read is not shown', () => {
   assert.equal(temperatureReading(entity('climate.t', 'heat', {})), null);
   assert.equal(temperatureReading(entity('climate.t', 'unavailable', { current_temperature: 20 })), null);
 });
+
+// ---- Lights counted light by light (#77) ----
+
+test('a Light group counts as its three members on, not as 1 or 4', () => {
+  const group = entity('light.cucina', 'on', { ...DIMMABLE, entity_id: ['light.a', 'light.b', 'light.c'] });
+  const members = ['a', 'b', 'c'].map(n => entity(`light.${n}`, 'on'));
+  assert.equal(roomTile(area(group, ...members), group, null).meta, '3 lights on');
+});
+
+test('a tile whose Area holds only a Light group counts members belonging to another Area', () => {
+  const group = entity('light.cucina', 'on', { ...DIMMABLE, group_entities: ['light.a', 'light.b'] });
+  const others = [entity('light.a', 'on'), entity('light.b', 'off')].map(e => ({ ...e, areaId: 'altra' }));
+  const house = new Map(others.map(e => [e.id, e]));
+  assert.equal(roomTile(area(group), group, null, id => house.get(id)).meta, '1 light on');
+});
+
+test('an Unavailable member does not put the tile in its fault state', () => {
+  const group = entity('light.g', 'on', { ...DIMMABLE, entity_id: ['light.a', 'light.b'] });
+  const tile = roomTile(area(group, entity('light.a', 'on'), entity('light.b', 'unavailable')), group, null);
+  assert.equal(tile.fault, false);
+  assert.equal(tile.meta, '1 light on');
+});
