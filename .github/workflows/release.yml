@@ -1,0 +1,63 @@
+# Publishes OHomeMy for HACS: on a `v*` tag, build both frontend bundles into
+# the integration, zip it and attach the zip to a GitHub release. HACS installs
+# that zip (`hacs.json`: zip_release, filename), since the bundles are never
+# committed.
+#
+#     git tag v0.1.0 && git push origin v0.1.0
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      COMPONENT: custom_components/ohomemy
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ha-dashboard/.nvmrc
+          cache: npm
+          cache-dependency-path: ha-dashboard/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ha-dashboard
+        run: npm ci
+
+      # The same bundles as scripts/dev-integration.sh: the npm script, the
+      # directory it builds into under ha-dashboard/, and the custom element
+      # that names its directory under frontend/ (bundles.py).
+      - name: Build the frontend bundles
+        run: |
+          for bundle in "build:panel dist-panel ohomemy-dashboard" \
+                        "build:builder dist-builder ohomemy-builder"; do
+            read -r script out element <<<"$bundle"
+            (cd ha-dashboard && npm run --silent "$script")
+            rm -rf "$COMPONENT/frontend/$element"
+            cp -r "ha-dashboard/$out" "$COMPONENT/frontend/$element"
+          done
+
+      - name: Stamp the tag's version into the manifest
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          jq --arg v "$version" '.version = $v' "$COMPONENT/manifest.json" > manifest.tmp
+          mv manifest.tmp "$COMPONENT/manifest.json"
+
+      # HACS unpacks the zip into custom_components/ohomemy/, so the files sit
+      # at its root.
+      - name: Zip the integration
+        run: |
+          cd "$COMPONENT"
+          zip -r "$GITHUB_WORKSPACE/ohomemy.zip" . -x '*__pycache__*'
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" ohomemy.zip --generate-notes
