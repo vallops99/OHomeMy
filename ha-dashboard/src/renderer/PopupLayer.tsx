@@ -60,11 +60,12 @@ function Popup({ page, overflow, onClose, onActivity }: PopupProps) {
   const onClick = (e: MouseEvent) => {
     // Only the part that navigates: the whole box of a Widget whose kind
     // does nothing on a tap, or the Open button beside one that does (a
-    // toggle on a Popup still just toggles; `tap.ts`), and the same for a
-    // Group's Member.
+    // toggle on a Popup still just toggles; `tap.ts`), a Room Tile's
+    // surface, and the same for a Group's Member or a Room Grid's.
     const opener = e.target instanceof Element ? e.target.closest('[data-opens]') : null;
     const box = opener?.closest('[data-widget]');
-    const member = opener?.closest('[data-member]')?.getAttribute('data-member') ?? null;
+    const memberOf = opener?.closest('[data-member], [data-area-member]');
+    const member = memberOf?.getAttribute('data-member') ?? memberOf?.getAttribute('data-area-member') ?? null;
     if (opensPage(page, box?.getAttribute('data-widget') ?? null, member)) onClose();
   };
 

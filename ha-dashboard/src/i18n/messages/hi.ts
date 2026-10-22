@@ -367,6 +367,7 @@ export const hi: Catalogue = {
   'builder.dashboard.member.variantFollow': 'समूह जैसा ({variant})',
   'builder.dashboard.member.onTapNone': 'कुछ नहीं (इसके अपने नियंत्रण रहते हैं)',
   'builder.dashboard.member.select': '{name} चुनें',
+  'builder.dashboard.area.onTap': '{area}: टैप करने पर खोलें',
   'builder.dashboard.field.choose': 'चुनें…',
   'builder.dashboard.field.none': 'कोई नहीं',
   'builder.dashboard.field.add': 'जोड़ें…',

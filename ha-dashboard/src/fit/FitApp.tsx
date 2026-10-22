@@ -41,12 +41,13 @@ import { useEntities, useHouse } from '../ha';
 import { DEFAULT_LOCALE, scriptFont, setViewerLocale, viewerDirection, type Language } from '../i18n';
 import { DashboardConcerns } from '../renderer/concerns';
 import { RENDERER_CSS } from '../renderer/grid';
+import { DashboardNavigationProvider, type DashboardNavigation } from '../renderer/navigationContext';
 import { themeCss } from '../theme/themes';
 import { CASA } from '../theme/tokens';
 import { HakitTheme } from '../ui';
 import { WIDGET_HEADROOM_PX } from '../ui/vars';
 import { WIDGETS_CSS, widgetKind, widgetSchemas } from '../widgets/registry';
-import { FULLEST, type Measured, type Probe } from './cases';
+import { FIT_PAGE, FULLEST, type Measured, type Probe } from './cases';
 
 declare global {
   interface Window {
@@ -95,9 +96,15 @@ const widgetOf = (probe: Probe): Widget => ({
   h: 1,
   variant: probe.variant,
   title: FULLEST[probe.kind].title ?? null,
-  on_tap: null,
+  // Opening the sheet's own Page, so a kind that draws its own way to a Page
+  // (a Room Tile's chevron, ADR-0016) is measured with it. The renderer's
+  // Open button sits outside the box and is not measured.
+  on_tap: FIT_PAGE,
   settings: FULLEST[probe.kind].settings,
 });
+
+/** The sheet's one Page, which every probe's tap names and which opens nothing. */
+const FIT_NAVIGATION: DashboardNavigation = { page: FIT_PAGE, open: () => {}, pageName: p => (p === FIT_PAGE ? 'Fit' : undefined) };
 
 /** A Dashboard of every probe, for the Concerns the Chip Row and the Stats read. */
 const dashboardOf = (widgets: Widget[]): Dashboard => ({
@@ -105,7 +112,7 @@ const dashboardOf = (widgets: Widget[]): Dashboard => ({
   slug: 'fit',
   name: 'Fit',
   show_in_sidebar: false,
-  home_page: 'fit',
+  home_page: FIT_PAGE,
   settings: {
     overflow: 'scroll',
     supported_range: { min: { width: 1, height: 1 }, max: { width: 9999, height: 9999 } },
@@ -114,7 +121,7 @@ const dashboardOf = (widgets: Widget[]): Dashboard => ({
     theme: { name: 'casa-panel', mode: 'dark' },
   },
   navbar: null,
-  pages: [{ id: 'fit', name: 'Fit', popup: null, grid: { columns: 1, rows: widgets.length }, widgets }],
+  pages: [{ id: FIT_PAGE, name: 'Fit', popup: null, grid: { columns: 1, rows: widgets.length }, widgets }],
 });
 
 const extent = (el: HTMLElement): Extent => ({
@@ -318,30 +325,32 @@ function Check() {
       <div ref={root} className='ohm-dashboard fit-sheet' lang={language} dir={viewerDirection()} style={{ fontFamily: font }}>
         {!loaded && <p>Waiting for Home Assistant: {named.filter(id => !entities.has(id)).join(', ')}</p>}
         {loaded && (
-          <DashboardConcerns dashboard={dashboard} schemaOf={kind => widgetKind(kind)?.schema}>
-            {all.map((probe, i) => {
-              const kind = widgetKind(probe.kind)!;
-              const valid = validateWidget(widgets[i], kind.schema, { house });
-              return (
-                <section key={probe.id} className='fit-case'>
-                  <p className='fit-label'>
-                    {probe.id} · {probe.width}×{probe.height}
-                  </p>
-                  <div
-                    className='ohm-widget'
-                    data-probe={probe.id}
-                    data-kind={probe.kind}
-                    data-variant={probe.variant as Variant}
-                    style={{ width: probe.width, height: probe.height }}
-                  >
-                    <div className='fit-content'>
-                      {valid.ok ? <kind.Component widget={widgets[i]} settings={valid.settings} /> : <span>{valid.reason}</span>}
+          <DashboardNavigationProvider value={FIT_NAVIGATION}>
+            <DashboardConcerns dashboard={dashboard} schemaOf={kind => widgetKind(kind)?.schema}>
+              {all.map((probe, i) => {
+                const kind = widgetKind(probe.kind)!;
+                const valid = validateWidget(widgets[i], kind.schema, { house });
+                return (
+                  <section key={probe.id} className='fit-case'>
+                    <p className='fit-label'>
+                      {probe.id} · {probe.width}×{probe.height}
+                    </p>
+                    <div
+                      className='ohm-widget'
+                      data-probe={probe.id}
+                      data-kind={probe.kind}
+                      data-variant={probe.variant as Variant}
+                      style={{ width: probe.width, height: probe.height }}
+                    >
+                      <div className='fit-content'>
+                        {valid.ok ? <kind.Component widget={widgets[i]} settings={valid.settings} /> : <span>{valid.reason}</span>}
+                      </div>
                     </div>
-                  </div>
-                </section>
-              );
-            })}
-          </DashboardConcerns>
+                  </section>
+                );
+              })}
+            </DashboardConcerns>
+          </DashboardNavigationProvider>
         )}
       </div>
     </>

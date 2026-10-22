@@ -13,7 +13,8 @@
  * | `members`  | the same list; each Member's own settings are set from its  |
  * |            | own inspector (`MemberInspector.tsx`, #73)                  |
  * | `area`     | a picker of the house's Areas                               |
- * | `areas`    | an ordered list of Areas                                    |
+ * | `areas`    | an ordered list of Areas, each with the Page its tile opens |
+ * |            | (#75), from the same picker as a Widget's tap                |
  * | `boolean`  | a switch                                                    |
  * | `choice`   | a picker of its options                                     |
  * | `number`   | a number between its `min` and `max`, whole if `integer`    |
@@ -27,8 +28,8 @@
  * No React, no @hakit: the house comes in as plain lists, and
  * `inspector.test.ts` runs this under plain Node.
  */
-import { readMembers } from '../document/members';
-import type { FieldSpec, Member, WidgetSchema } from '../document/schema';
+import { readAreaMembers, readMembers } from '../document/members';
+import type { AreaMember, FieldSpec, Member, WidgetSchema } from '../document/schema';
 import { HOUSE_MODE_DOMAINS, type Widget } from '../document/types';
 import type { Box } from './layout';
 
@@ -43,7 +44,9 @@ export type Option = { value: string; label: string; detail?: string; missing?: 
 export type Control =
   | { key: string; type: 'entity' | 'area' | 'icon'; value: string | null; optional: boolean; options: Option[] }
   /** `chosen` in order; `options` is what may still be added. */
-  | { key: string; type: 'entities' | 'areas'; value: string[]; chosen: Option[]; options: Option[]; min: number }
+  | { key: string; type: 'entities'; value: string[]; chosen: Option[]; options: Option[]; min: number }
+  /** As `entities`, by Area id; `value` is every Area as a Member in full. */
+  | { key: string; type: 'areas'; value: AreaMember[]; chosen: Option[]; options: Option[]; min: number }
   /** As `entities`, by entity id; `value` is every Member in full. */
   | { key: string; type: 'members'; value: Member[]; chosen: Option[]; options: Option[]; min: number }
   | { key: string; type: 'boolean'; value: boolean }
@@ -89,14 +92,15 @@ function controlFor(key: string, spec: FieldSpec, raw: unknown, house: HouseList
       return { key, type: 'area', value, optional: !!spec.optional, options: withCurrent(areaOptions(house), value) };
     }
     case 'areas': {
-      const value = stringList(raw);
+      const value = readAreaMembers(raw);
+      const ids = value.map(m => m.area);
       const all = areaOptions(house);
       return {
         key,
         type: 'areas',
         value,
-        chosen: value.map(id => all.find(o => o.value === id) ?? missing(id)),
-        options: all.filter(o => !value.includes(o.value)),
+        chosen: ids.map(id => all.find(o => o.value === id) ?? missing(id)),
+        options: all.filter(o => !ids.includes(o.value)),
         min: spec.min ?? 1,
       };
     }
@@ -198,6 +202,20 @@ export function membersKey(schema: WidgetSchema): string | null {
 export function withMemberIds(raw: unknown, ids: readonly string[]): Member[] {
   const members = readMembers(raw);
   return ids.map(id => members.find(m => m.entity === id) ?? { entity: id, name: null, variant: null, on_tap: null });
+}
+
+/**
+ * A Room Grid's Areas for the list's ids, in its order: each one kept keeps
+ * its tap, each new one has none. Written in full, as `withMemberIds`.
+ */
+export function withAreaIds(raw: unknown, ids: readonly string[]): AreaMember[] {
+  const members = readAreaMembers(raw);
+  return ids.map(id => members.find(m => m.area === id) ?? { area: id, on_tap: null });
+}
+
+/** A Room Grid's Areas with the tap of the one for `area` set, or cleared with `null`. */
+export function updateAreaTap(raw: unknown, area: string, on_tap: string | null): AreaMember[] {
+  return readAreaMembers(raw).map(m => (m.area === area ? { ...m, on_tap } : m));
 }
 
 /** The Members with the one for `entity` changed. */

@@ -135,7 +135,10 @@ test('an Area counts the Domains its kind says it shows there, and only those', 
 
 test('the Domains several Widgets show from one Area add up', () => {
   const shows = dashboardShows(
-    dashboard([page('home', [widget('room', { area: 'salone' })]), page('rooms', [widget('rooms', { areas: ['salone', 'cucina'] })])]),
+    dashboard([
+      page('home', [widget('room', { area: 'salone' })]),
+      page('rooms', [widget('rooms', { areas: ['salone', { area: 'cucina', on_tap: 'home' }] })]),
+    ]),
     schemaOf
   );
   assert.deepEqual([...(shows.areas.get('salone') ?? [])].sort(), ['climate', 'light']);

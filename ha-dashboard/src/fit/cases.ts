@@ -8,6 +8,9 @@
  */
 import type { Variant } from '../document/schema';
 
+/** The fit sheet's one Page, which a tap in a case may name. */
+export const FIT_PAGE = 'fit';
+
 export type Fullest = {
   settings: Record<string, unknown>;
   title?: string;
@@ -78,15 +81,16 @@ export const FULLEST: Record<string, Fullest> = {
   },
   room_tile: {
     settings: { area: 'salone', light: 'light.luci_salone_2', temperature: 'climate.corridoio_termostato' },
-    why: 'the living room with its lights on, its dimmer and a temperature',
+    why: 'the living room with its lights on, its dimmer, a temperature, and its chevron to a Page',
   },
   room_grid: {
     settings: {
-      areas: ['salone', 'cucina', 'ingresso', 'corridoio', 'camera_chri', 'esterno'],
+      // Each opening a Page, so each tile has its chevron.
+      areas: ['salone', 'cucina', 'ingresso', 'corridoio', 'camera_chri', 'esterno'].map(area => ({ area, on_tap: FIT_PAGE })),
       lights: ['light.luci_salone_2', 'light.luci_cucina_2'],
       temperatures: ['climate.corridoio_termostato'],
     },
-    why: 'six Areas, lights on in two of them, one with a temperature',
+    why: 'six Areas, each opening a Page, lights on in two of them, one with a temperature',
   },
   link: { settings: { icon: 'mdi:sofa' }, title: 'Soggiorno e cucina', why: 'an icon and a two-word title' },
   clock: { settings: {}, why: 'the time and the longest date words of the language' },

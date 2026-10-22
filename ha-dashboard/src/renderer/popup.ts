@@ -46,8 +46,9 @@ export function popupPage(dashboard: Dashboard, name: string | null): Page | nul
 }
 
 /**
- * Whether tapping this Widget of the Popup's Page, or its Member for the
- * entity `member` (#73), opens a Page. Navigating from inside a Popup closes
+ * Whether tapping this Widget of the Popup's Page, or its Member for
+ * `member`, an entity in a Group (#73) or an Area in a Room Grid (#75),
+ * opens a Page. Navigating from inside a Popup closes
  * it, everywhere: the Page opens underneath, on this Dashboard, and the
  * select goes back to `none`.
  */

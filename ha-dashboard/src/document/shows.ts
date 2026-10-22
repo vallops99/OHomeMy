@@ -23,7 +23,7 @@
  *
  * No React, no @hakit: `shows.test.ts` runs this under plain Node.
  */
-import { validateWidget, type House, type Member, type WidgetSchema } from './schema';
+import { validateWidget, type AreaMember, type House, type Member, type WidgetSchema } from './schema';
 import type { Dashboard } from './types';
 
 export type DashboardShows = {
@@ -69,7 +69,7 @@ export function dashboardShows(dashboard: Dashboard, schemaOf: (kind: string) =>
             if (typeof value === 'string') addArea(value, spec.shows);
             break;
           case 'areas':
-            (value as string[]).forEach(id => addArea(id, spec.shows));
+            (value as AreaMember[]).forEach(m => addArea(m.area, spec.shows));
             break;
         }
       }

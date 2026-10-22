@@ -12,7 +12,16 @@ import { tr } from '../i18n';
 import { iconChoices } from '../ui/iconMap';
 import { widgetKind } from '../widgets/registry';
 import { Field, IconPicker, NumberInput, OrderedList, Picker, Switch } from './fields';
-import { controlsFor, withMemberIds, withSetting, type Control, type HouseLists } from './inspector';
+import {
+  controlsFor,
+  updateAreaTap,
+  withAreaIds,
+  withMemberIds,
+  withSetting,
+  type Control,
+  type HouseLists,
+  type Option,
+} from './inspector';
 import { gridOf } from './layout';
 import { ordinaryPages } from './pages';
 import { kindName, settingName } from './words';
@@ -142,6 +151,7 @@ export function Inspector({
             <SettingControl
               key={c.key}
               control={c}
+              pages={pages}
               onChange={v => onChange({ settings: withSetting(widget.settings, c.key, v) })}
               onSelectMember={onSelectMember}
             />
@@ -154,10 +164,13 @@ export function Inspector({
 
 function SettingControl({
   control: c,
+  pages,
   onChange,
   onSelectMember,
 }: {
   control: Control;
+  /** The ordinary Pages a Room Grid's Area may open (#75). */
+  pages: Option[];
   onChange: (value: unknown) => void;
   onSelectMember: (entity: string) => void;
 }) {
@@ -190,8 +203,35 @@ function SettingControl({
               />
             );
           case 'entities':
-          case 'areas':
             return <OrderedList id={id} chosen={c.chosen} options={c.options} min={c.min} onChange={onChange} />;
+          case 'areas':
+            // Each Area a Member with its own tap (#75), kept as it is
+            // reordered, and set from the same picker as a Widget's.
+            return (
+              <>
+                <OrderedList
+                  id={id}
+                  chosen={c.chosen}
+                  options={c.options}
+                  min={c.min}
+                  onChange={ids => onChange(withAreaIds(c.value, ids))}
+                />
+                {c.value.map((m, i) => (
+                  <Field key={m.area} label={tr('builder.dashboard.area.onTap', { area: c.chosen[i].label })}>
+                    {tapId => (
+                      <Picker
+                        id={tapId}
+                        name={`${c.key}-${m.area}-on_tap`}
+                        value={m.on_tap}
+                        options={pages}
+                        none={tr('builder.dashboard.widget.onTapNone')}
+                        onChange={v => onChange(updateAreaTap(c.value, m.area, v))}
+                      />
+                    )}
+                  </Field>
+                ))}
+              </>
+            );
           case 'members':
             // Every Member written in full, its own settings kept, as it is reordered.
             return (

@@ -237,3 +237,18 @@ test('one Dashboard of the document is changed, the others kept', () => {
   assert.equal(next.dashboards[0].pages[0].name, 'Casa');
   assert.equal(next.dashboards[1], other);
 });
+
+test("removing a Page clears every Room Grid Member's tap to it", () => {
+  const grid: Widget = {
+    ...widget('r', 2, 0, 2, 2),
+    kind: 'room_grid',
+    settings: { areas: [{ area: 'salone', on_tap: 'climate' }, { area: 'cucina', on_tap: 'home' }, 'bagno'] },
+  };
+  const d = wall();
+  d.pages[0].widgets.push(grid);
+  assert.deepEqual(removePage(d, 'climate').pages[0].widgets[1].settings.areas, [
+    { area: 'salone', on_tap: null },
+    { area: 'cucina', on_tap: 'home' },
+    'bagno',
+  ]);
+});

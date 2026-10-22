@@ -367,6 +367,7 @@ export const es: Catalogue = {
   'builder.dashboard.member.variantFollow': 'Como el Grupo ({variant})',
   'builder.dashboard.member.onTapNone': 'Nada (conserva sus propios controles)',
   'builder.dashboard.member.select': 'Seleccionar {name}',
+  'builder.dashboard.area.onTap': '{area}: al tocar, abrir',
   'builder.dashboard.field.choose': 'Elegir…',
   'builder.dashboard.field.none': 'Ninguno',
   'builder.dashboard.field.add': 'Añadir…',

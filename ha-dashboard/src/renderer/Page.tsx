@@ -7,7 +7,9 @@
  *
  * Each Widget's `on_tap` is honoured here, the same for every kind
  * (`tap.ts`): the whole box opens its Page when the kind does nothing on a
- * tap, and an Open button beside the box does when the kind acts on one.
+ * tap, and an Open button beside the box does when the kind acts on one. A
+ * Room Tile, the one exception (ADR-0016), draws its own way to the Page
+ * from its surface, so nothing is added here.
  */
 import { Component, useMemo, type ReactNode } from 'react';
 import { Icon } from '../ui/Icon';
