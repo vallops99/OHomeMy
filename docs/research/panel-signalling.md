@@ -1,7 +1,7 @@
 # Signalling the panel from Home Assistant
 
-Research for [#22](https://github.com/vallops99/homeassistant-frontend/issues/22),
-under the map [#19](https://github.com/vallops99/homeassistant-frontend/issues/19).
+Research for [#22](https://github.com/vallops99/OHomeMy/issues/22),
+under the map [#19](https://github.com/vallops99/OHomeMy/issues/19).
 It answers whether the Popup protocol's two moves (an automation fires a custom
 event the panel listens for, and the same automation wakes the screen) can be
 done, and what happens when the event is missed.

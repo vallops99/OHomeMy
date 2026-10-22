@@ -2,7 +2,7 @@
 
 **Status:** superseded by [ADR-0005](0005-placement-protocol.md) (2026-09-22)
 **Date:** 2026-09-21
-**Ticket:** [#9](https://github.com/vallops99/homeassistant-frontend/issues/9)
+**Ticket:** [#9](https://github.com/vallops99/OHomeMy/issues/9)
 
 > **Superseded.** Screens are gone. Layout is declared in Home Assistant with
 > `page:` + `region:` labels and this repo holds none of it -- see

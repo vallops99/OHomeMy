@@ -6,7 +6,7 @@ supersedes: ADR-0015 in part
 # Groups mix Domains
 
 A Group's Members may be of any Domains a Group can show, mixed freely
-([#76](https://github.com/vallops99/homeassistant-frontend/issues/76)). This
+([#76](https://github.com/vallops99/OHomeMy/issues/76)). This
 replaces ADR-0015's "a Group card holds an ordered member list of one Domain".
 A house often has a single thermostat, and its humidity is a `sensor`, so a
 one-Domain Group could never put the thermostat and its humidity in one card.

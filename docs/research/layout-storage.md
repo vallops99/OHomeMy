@@ -72,7 +72,7 @@ the alternatives.
    the sidecar ends up holding most of the layout. There are then two sources
    of truth that can be edited independently, and nothing makes a change to
    both atomic.
-6. **On HACS:** the repo must be **public**, and `vallops99/homeassistant-frontend`
+6. **On HACS:** the repo must be **public**, and `vallops99/OHomeMy`
    is currently private. The repo must hold exactly one
    `custom_components/<domain>/`. HACS does not build anything, so the built
    renderer and Builder bundles must either be committed inside that directory
@@ -410,7 +410,7 @@ A few things should be decided before building the integration:
 
 - **Repo visibility.** HACS works only with public GitHub repos
   (`publish/start.md` "Only public repositories on GitHub will work with HACS")
-  **[verified]**. `vallops99/homeassistant-frontend` is private **[verified:
+  **[verified]**. `vallops99/OHomeMy` is private **[verified:
   `gh api`]**. Either make it public, publish the integration from a separate
   public repo, or install it by hand without HACS.
 - **Repo layout.** There must be one directory under

@@ -1,7 +1,7 @@
 # What the Ring integration exposes in Home Assistant
 
-Research for [#21](https://github.com/vallops99/homeassistant-frontend/issues/21),
-under the map [#19](https://github.com/vallops99/homeassistant-frontend/issues/19)
+Research for [#21](https://github.com/vallops99/OHomeMy/issues/21),
+under the map [#19](https://github.com/vallops99/OHomeMy/issues/19)
 (Hold, camera Page and Popups). Researched 2026-09-23.
 
 **Sources pinned:**

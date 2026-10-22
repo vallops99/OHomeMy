@@ -11,7 +11,7 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 - **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
 - **Close**: `gh issue close <number> --comment "..."`
 
-The repo is **`vallops99/homeassistant-frontend`**; `gh` infers it automatically when run inside this clone.
+The repo is **`vallops99/OHomeMy`**; `gh` infers it automatically when run inside this clone.
 
 ## Pull requests as a triage surface
 

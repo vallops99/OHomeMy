@@ -2,7 +2,7 @@
 
 **Status:** layout superseded by [ADR-0005](0005-placement-protocol.md) (2026-09-22); its findings stand
 **Date:** 2026-09-21
-**Ticket:** [#8](https://github.com/vallops99/homeassistant-frontend/issues/8)
+**Ticket:** [#8](https://github.com/vallops99/OHomeMy/issues/8)
 
 > **The region model is superseded twice over.** The four-row grid below was
 > reverted to variant D by the amendment at the foot of this file; variant D's
@@ -150,7 +150,7 @@ three so the tile stays readable at 2 m. A quiet room shows none.
 ## Amendment (2026-09-22): the grid superseded variant D without arguing it
 
 The layout decided above is reverted. The panel is variant D — the layout
-[#6](https://github.com/vallops99/homeassistant-frontend/issues/6) chose after
+[#6](https://github.com/vallops99/OHomeMy/issues/6) chose after
 building and judging four candidates at 1280x800 — and this ADR's four-row
 grid is superseded.
 

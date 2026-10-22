@@ -7,7 +7,7 @@ status: accepted
 A Room Grid's tiles took their light and temperature from two lists across
 the whole grid, each tile the first entry in its Area. Now each of the grid's
 Areas, a Member, chooses its own
-([#78](https://github.com/vallops99/homeassistant-frontend/issues/78)), and
+([#78](https://github.com/vallops99/OHomeMy/issues/78)), and
 the lists are gone. Wherever a Room Tile appears, as a Room Tile Widget or a
 grid's Member, its light and temperature are its Area's own: one that leaves
 the Area reads as unset, as one Home Assistant no longer has does.

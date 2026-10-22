@@ -1,4 +1,4 @@
-# homeassistant-frontend
+# OHomeMy
 
 Home Assistant frontend dashboard built on [@hakit](https://github.com/shannonhochkins/ha-component-kit) (ha-component-kit).
 
@@ -6,7 +6,7 @@ Home Assistant frontend dashboard built on [@hakit](https://github.com/shannonho
 
 ### Issue tracker
 
-Issues live as GitHub issues in `vallops99/homeassistant-frontend`, driven by the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues live as GitHub issues in `vallops99/OHomeMy`, driven by the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

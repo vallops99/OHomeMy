@@ -1,6 +1,6 @@
 # A Dashboard mounted as a Home Assistant panel
 
-Research for [#46](https://github.com/vallops99/homeassistant-frontend/issues/46),
+Research for [#46](https://github.com/vallops99/OHomeMy/issues/46),
 the spike under [ADR-0015](../adr/0015-ohomemy-a-builder-owns-the-layout.md).
 ADR-0015's "Running inside a panel" lists three problems with @hakit that were
 found by reading code ([layout-storage.md §7.7](layout-storage.md)). This note

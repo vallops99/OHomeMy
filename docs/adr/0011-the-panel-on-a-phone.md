@@ -20,13 +20,13 @@ back gesture goes up one level. The type scale is retuned for arm's length.
 Everything else is the same: the same URL, the same Labels, the same components.
 The wall panel is unchanged.
 
-Decided on [#15](https://github.com/vallops99/homeassistant-frontend/issues/15)
+Decided on [#15](https://github.com/vallops99/OHomeMy/issues/15)
 from a prototype, kept on the branch
-[`prototype/phone-layout`](https://github.com/vallops99/homeassistant-frontend/tree/prototype/phone-layout).
+[`prototype/phone-layout`](https://github.com/vallops99/OHomeMy/tree/prototype/phone-layout).
 
 ## Context
 
-[#10](https://github.com/vallops99/homeassistant-frontend/issues/10) removed the
+[#10](https://github.com/vallops99/OHomeMy/issues/10) removed the
 only phone mechanism the panel had (ADR-0003's per-slot `phone` span), and the
 placement protocol has four fixed Regions, a 2x2 by definition. A phone is one
 narrow column. The wall `Panel` on a 390 px phone pushes `right`, the rooms,

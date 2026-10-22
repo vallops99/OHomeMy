@@ -11,7 +11,7 @@ status: accepted
 > tile navigates. Holding still opens nothing.
 
 A Row opens its Area's Page when it is swiped right
-([#27](https://github.com/vallops99/homeassistant-frontend/issues/27)). Two
+([#27](https://github.com/vallops99/OHomeMy/issues/27)). Two
 things change with that swipe: holding a Row no longer opens @hakit's light
 modal, and every Row gets a trailing chevron that opens the same Page with one
 tap. The gesture mechanism and its sources are in

@@ -10,9 +10,9 @@ Popup's close button clears it too. The panel never keeps a Popup open or closed
 on its own: the helper is the only source of truth. The obvious design, an HA
 automation firing a custom event the panel listens for, was rejected for the
 two reasons below, found in
-[Signalling the panel from Home Assistant](https://github.com/vallops99/homeassistant-frontend/issues/22).
+[Signalling the panel from Home Assistant](https://github.com/vallops99/OHomeMy/issues/22).
 The rest of the protocol was settled in
-[Popup protocol](https://github.com/vallops99/homeassistant-frontend/issues/23).
+[Popup protocol](https://github.com/vallops99/OHomeMy/issues/23).
 
 ## Considered Options
 

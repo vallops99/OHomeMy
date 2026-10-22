@@ -20,18 +20,18 @@ it renders an explicit message rather than four empty Regions.
 ## Context
 
 [ADR-0003](0003-screen-definition-format.md) deliberately left this question
-open. As [#14](https://github.com/vallops99/homeassistant-frontend/issues/14)
+open. As [#14](https://github.com/vallops99/OHomeMy/issues/14)
 puts it: *"there is no router yet, and inventing one before a second screen
 exists would be guessing."* At the time there was exactly one screen. Under
 [ADR-0005](0005-placement-protocol.md), a Page exists the moment something
 carries a `page:` Label — any value creates one — so a second Page now exists
 in principle the instant a house is labelled for it. The guess ADR-0003
-deferred is forced, and [#14](https://github.com/vallops99/homeassistant-frontend/issues/14)
+deferred is forced, and [#14](https://github.com/vallops99/OHomeMy/issues/14)
 is that guess, made and recorded.
 
 #14 is a `wayfinder:grilling` ticket, not a task: it posed five open questions
 rather than a spec. This ADR is the record of having settled them, per
-[#11](https://github.com/vallops99/homeassistant-frontend/issues/11)'s
+[#11](https://github.com/vallops99/OHomeMy/issues/11)'s
 instruction that #14 "needs grilling before code." A sixth, consequent
 decision — what an empty Page does — followed from the other five during that
 grilling and is recorded alongside them.
@@ -89,7 +89,7 @@ The tempting alternative: `glance` is the Verdict, the house's own judgement,
 not the home screen's — so make it persist across every Page rather than
 resolve per-Page, on the reasoning that a judgement about the house should not
 disappear just because you tapped through to `page:corridoio`. It lost
-because [#10](https://github.com/vallops99/homeassistant-frontend/issues/10)
+because [#10](https://github.com/vallops99/OHomeMy/issues/10)
 already gave `glance` a `page:` Label like every other Region, and carving out
 the one Region that ignores its own `page:` would make the protocol's single
 uniform rule — Region determines Rendering contract, resolved per Page —
@@ -109,7 +109,7 @@ panel returns to `page:main` on its own.
 The panel sits at the entrance; its resting state is the house's Verdict, and
 whoever walks up to it next should not find whatever Area Page the previous
 person left it on.
-[#2](https://github.com/vallops99/homeassistant-frontend/issues/2)
+[#2](https://github.com/vallops99/OHomeMy/issues/2)
 established that wake is Fully Kiosk's own camera-based motion detection, not
 a Home Assistant entity — the panel **cannot** react to someone approaching,
 because nothing tells it someone is approaching. It can react to time, and

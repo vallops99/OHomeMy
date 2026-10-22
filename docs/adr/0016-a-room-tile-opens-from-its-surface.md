@@ -4,15 +4,15 @@ status: accepted
 
 # A Room Tile opens its Page from its surface
 
-A Widget's or a Member's tap ([#54](https://github.com/vallops99/homeassistant-frontend/issues/54),
-[#73](https://github.com/vallops99/homeassistant-frontend/issues/73)) follows
+A Widget's or a Member's tap ([#54](https://github.com/vallops99/OHomeMy/issues/54),
+[#73](https://github.com/vallops99/OHomeMy/issues/73)) follows
 one rule: a tap never does two things, and a control is never covered. So
 something that acts on a tap keeps its whole surface and gains a separate Open
 button, and the surface around its controls opens nothing.
 
 A Room Tile is the exception, wherever it appears: as a Room Tile Widget, or
 as a Room Grid's Member
-([#75](https://github.com/vallops99/homeassistant-frontend/issues/75)). With a
+([#75](https://github.com/vallops99/OHomeMy/issues/75)). With a
 Page to open, its whole surface opens it, except its switch and dimmer, which
 keep their own taps, and a chevron says that it opens a Page. This applies
 whether or not a light is chosen.
