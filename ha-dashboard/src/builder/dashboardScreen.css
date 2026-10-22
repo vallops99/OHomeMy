@@ -499,6 +499,11 @@
   min-width: 0;
 }
 
+.b-row-inline > .b-domain-filter {
+  flex: 0 1 auto;
+  max-width: 40%;
+}
+
 .b-icon-picker {
   display: flex;
   align-items: center;

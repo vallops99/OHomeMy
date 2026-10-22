@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { defineSchema, fitsGrid, inSupportedRange, shownTitle, validateWidget, type House } from './schema';
+import { groupSchema } from '../widgets/group/schema';
 import type { Widget } from './types';
 
 const schema = defineSchema({
@@ -131,27 +132,24 @@ test('a list left shorter than its minimum is invalid', () => {
   assert.match(reason(validateWidget(w, needsOne, { house })), /cameras: fewer than 1/);
 });
 
-test('a list of one Domain: members of two Domains are invalid, however many are left', () => {
-  const group = defineSchema({
-    kind: 'group',
-    variants: ['full'],
-    titled: true,
-    settings: { members: { type: 'entities', domains: ['light', 'lock'], sameDomain: true } },
-  });
+test('a Group mixes Domains freely, but never takes a camera (ADR-0017)', () => {
   const w = (members: string[]) => widget({ kind: 'group', settings: { members } });
-  assert.equal(validateWidget(w(['light.a', 'light.b']), group).ok, true);
-  assert.match(reason(validateWidget(w(['light.a', 'lock.b']), group)), /members: not all of one Domain/);
-  // Checked before the house drops anything, so a Group never changes Domain
-  // because a member was deleted.
-  const one: House = { hasEntity: id => id === 'light.a', hasArea: () => false };
-  assert.match(reason(validateWidget(w(['light.a', 'lock.gone']), group, { house: one })), /not all of one Domain/);
+  const thermostat = ['climate.corridoio_termostato', 'sensor.corridoio_termostato_umidita', 'light.corridoio'];
+  const v = validateWidget(w(thermostat), groupSchema);
+  assert.equal(v.ok, true);
+  if (!v.ok) return;
+  assert.deepEqual(
+    (v.settings.members as { entity: string }[]).map(m => m.entity),
+    thermostat
+  );
+  assert.match(reason(validateWidget(w(['light.a', 'camera.porta']), groupSchema)), /members:/);
 });
 
 const groupOf = defineSchema({
   kind: 'group',
   variants: ['full', 'compact'],
   titled: true,
-  settings: { members: { type: 'members', domains: ['light', 'lock', 'sensor'], sameDomain: true, variantDomains: ['light', 'sensor'] } },
+  settings: { members: { type: 'members', domains: ['light', 'lock', 'sensor'], variantDomains: ['light', 'sensor'] } },
 });
 const grouped = (members: unknown[]) => widget({ kind: 'group', settings: { members } });
 const unset = (entity: string) => ({ entity, name: null, variant: null, on_tap: null });
@@ -188,12 +186,10 @@ test('a Member must be well formed', () => {
   assert.match(reason(validateWidget(grouped({} as unknown as unknown[]), groupOf)), /members: not a list/);
 });
 
-test("Members keep the list's rules: Domains, no duplicates, one Domain, dropped when gone, a minimum", () => {
+test("Members keep the list's rules: Domains, no duplicates, dropped when gone, a minimum", () => {
   assert.match(reason(validateWidget(grouped(['switch.a']), groupOf)), /members: switch.a/);
   assert.match(reason(validateWidget(grouped(['light.a', unset('light.a')]), groupOf)), /members: light.a twice/);
-  assert.match(reason(validateWidget(grouped(['light.a', unset('lock.b')]), groupOf)), /not all of one Domain/);
   const one: House = { hasEntity: id => id === 'light.a', hasArea: () => false };
-  assert.match(reason(validateWidget(grouped(['light.a', 'lock.gone']), groupOf, { house: one })), /not all of one Domain/);
   const v = validateWidget(grouped([unset('light.gone'), { ...unset('light.a'), name: 'A' }]), groupOf, { house: one });
   assert.equal(v.ok, true);
   if (v.ok) assert.deepEqual(v.settings.members, [{ ...unset('light.a'), name: 'A' }]);

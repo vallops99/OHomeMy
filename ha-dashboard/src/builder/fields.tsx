@@ -109,6 +109,8 @@ export function Picker({
   placeholder,
   disabled,
   name,
+  label,
+  className,
 }: {
   id?: string;
   value: string | null;
@@ -118,12 +120,16 @@ export function Picker({
   placeholder?: string;
   disabled?: boolean;
   name?: string;
+  /** Its name, for a picker with no `Field` label of its own. */
+  label?: string;
+  className?: string;
 }) {
   return (
     <select
-      className='b-input b-select'
+      className={['b-input b-select', className].filter(Boolean).join(' ')}
       id={id}
       name={name}
+      aria-label={label}
       value={value ?? ''}
       disabled={disabled}
       onChange={e => onChange(e.target.value === '' ? null : e.target.value)}
@@ -168,6 +174,8 @@ export function IconPicker(props: Parameters<typeof Picker>[0]) {
  * An ordered list of chosen items, each moved or removed in place, and a
  * picker that adds one of what is left at the end. With `onSelect`, a row
  * is also a way to select its item (a Group's Member, #73), missing or not.
+ * `filter`, when given, sits beside the picker; `empty`, when given, says so
+ * where the picker was once nothing is left to add.
  */
 export function OrderedList({
   id,
@@ -176,6 +184,8 @@ export function OrderedList({
   min,
   onChange,
   onSelect,
+  filter,
+  empty,
 }: {
   id?: string;
   chosen: readonly Option[];
@@ -183,6 +193,8 @@ export function OrderedList({
   min: number;
   onChange: (values: string[]) => void;
   onSelect?: (value: string) => void;
+  filter?: ReactNode;
+  empty?: string;
 }) {
   const values = chosen.map(o => o.value);
   const swap = (i: number, j: number) => {
@@ -245,14 +257,19 @@ export function OrderedList({
         </ol>
       )}
       {chosen.length < min && <span className='b-error'>{tr('builder.dashboard.field.atLeast', { count: min })}</span>}
-      {options.length > 0 && (
-        <Picker
-          id={id}
-          value={null}
-          options={options}
-          placeholder={tr('builder.dashboard.field.add')}
-          onChange={v => v && onChange([...values, v])}
-        />
+      {options.length > 0 ? (
+        <div className='b-row-inline'>
+          {filter}
+          <Picker
+            id={id}
+            value={null}
+            options={options}
+            placeholder={tr('builder.dashboard.field.add')}
+            onChange={v => v && onChange([...values, v])}
+          />
+        </div>
+      ) : (
+        empty && <span className='b-meta'>{empty}</span>
       )}
     </div>
   );

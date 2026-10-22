@@ -4,6 +4,7 @@
  * one control per setting, each offering only what the schema accepts and
  * the house has.
  */
+import { useState } from 'react';
 import { validateWidget } from '../document/schema';
 import type { Dashboard, Page, Size, Widget } from '../document/types';
 import { useHouse } from '../ha';
@@ -11,11 +12,21 @@ import { tr } from '../i18n';
 import { iconChoices } from '../ui/iconMap';
 import { widgetKind } from '../widgets/registry';
 import { Field, IconPicker, NumberInput, OrderedList, Picker, Switch } from './fields';
-import { changeSetting, controlsFor, retiredLists, withAreaIds, withMemberIds, withoutRetiredLists, type Control } from './inspector';
+import {
+  changeSetting,
+  controlsFor,
+  domainFilter,
+  retiredLists,
+  titleControl,
+  withAreaIds,
+  withMemberIds,
+  withoutRetiredLists,
+  type Control,
+} from './inspector';
 import { gridOf } from './layout';
 import { ordinaryPages } from './pages';
 import { useHouseLists } from './useHouseLists';
-import { kindName, settingName } from './words';
+import { domainName, kindName, settingName } from './words';
 
 const ICONS = iconChoices();
 
@@ -90,7 +101,7 @@ export function Inspector({
         </Field>
       )}
 
-      {schema?.titled && (
+      {schema && titleControl(schema) === 'default-or-own' && (
         <Field label={tr('builder.dashboard.widget.title')} hint={widget.title !== null && tr('builder.dashboard.widget.titleHint')}>
           {id => (
             <div className='b-title'>
@@ -123,6 +134,22 @@ export function Inspector({
                 </div>
               )}
             </div>
+          )}
+        </Field>
+      )}
+
+      {schema && titleControl(schema) === 'text' && (
+        // A Group has no Default title (ADR-0017): only what is written here.
+        <Field label={tr('builder.dashboard.widget.title')} hint={tr('builder.dashboard.widget.titleHint')}>
+          {id => (
+            <input
+              className='b-input'
+              id={id}
+              name='title'
+              value={widget.title ?? ''}
+              maxLength={200}
+              onChange={e => onChange({ title: e.target.value })}
+            />
           )}
         </Field>
       )}
@@ -210,17 +237,7 @@ function SettingControl({
               />
             );
           case 'members':
-            // Every Member written in full, its own settings kept, as it is reordered.
-            return (
-              <OrderedList
-                id={id}
-                chosen={c.chosen}
-                options={c.options}
-                min={c.min}
-                onChange={ids => onChange(withMemberIds(c.value, ids))}
-                onSelect={onSelectMember}
-              />
-            );
+            return <MemberList id={id} control={c} onChange={onChange} onSelect={onSelectMember} />;
           case 'boolean':
             return <Switch id={id} checked={c.value} label={label} onChange={onChange} />;
           case 'choice':
@@ -241,5 +258,48 @@ function SettingControl({
         }
       }}
     </Field>
+  );
+}
+
+/**
+ * A Group's Members, added to from a picker narrowed by Domain (#76). The
+ * Domain picked is Builder state: never the Draft, so never an Undo step.
+ */
+function MemberList({
+  id,
+  control,
+  onChange,
+  onSelect,
+}: {
+  id: string;
+  control: Extract<Control, { type: 'members' }>;
+  onChange: (value: unknown) => void;
+  onSelect?: (entity: string) => void;
+}) {
+  const [picked, setPicked] = useState<string | null>(null);
+  const filter = domainFilter(control.options, picked);
+  return (
+    // Every Member written in full, its own settings kept, as it is reordered.
+    <OrderedList
+      id={id}
+      chosen={control.chosen}
+      options={filter.options}
+      min={control.min}
+      onChange={ids => onChange(withMemberIds(control.value, ids))}
+      onSelect={onSelect}
+      empty={tr('builder.dashboard.member.noneLeft')}
+      filter={
+        filter.domains.length > 0 && (
+          <Picker
+            className='b-domain-filter'
+            label={tr('builder.dashboard.field.domain')}
+            value={filter.picked}
+            none={tr('builder.dashboard.field.allDomains')}
+            options={filter.domains.map(d => ({ value: d, label: domainName(d) })).sort((a, b) => a.label.localeCompare(b.label))}
+            onChange={setPicked}
+          />
+        )
+      }
+    />
   );
 }

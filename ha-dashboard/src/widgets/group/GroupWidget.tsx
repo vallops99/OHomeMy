@@ -11,7 +11,6 @@
  * is marked `data-member`, which the Popup layer reads to close on a
  * Member's tap and the Builder's preview to find each Member.
  */
-import { shownTitle } from '../../document/schema';
 import { useEntities } from '../../ha';
 import { tr } from '../../i18n';
 import { useDashboardNavigation } from '../../renderer/navigationContext';
@@ -23,7 +22,7 @@ import { CARD_ALONE, EntityShape } from '../shared/shapes';
 import type { WidgetProps } from '../types';
 import type { groupSchema } from './schema';
 import { memberShown } from './members';
-import { groupDefaultTitle } from './title';
+import { groupTitle } from './title';
 
 export function GroupWidget({ widget, settings }: WidgetProps<(typeof groupSchema)['settings']>) {
   const entities = useEntities();
@@ -35,9 +34,8 @@ export function GroupWidget({ widget, settings }: WidgetProps<(typeof groupSchem
   // Checked present by the schema; this covers the render in between.
   if (members.length === 0) return null;
 
-  const title = shownTitle(widget.title, groupDefaultTitle(members[0].entity.domain));
   return (
-    <Card title={title === '' ? undefined : title} style={CARD_ALONE}>
+    <Card title={groupTitle(widget.title)} style={CARD_ALONE}>
       {members.map(({ member, entity }) => {
         const tap = memberTap(entity.id, member.on_tap, p => navigation.pageName(p) !== undefined);
         return (

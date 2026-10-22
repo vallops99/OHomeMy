@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import { defineSchema, validateWidget } from '../document/schema';
 import {
   controlsFor,
+  domainFilter,
   houseModeOptions,
   changeSetting,
   memberKeys,
@@ -15,6 +16,7 @@ import {
   removeMember,
   retiredLists,
   sizeFor,
+  titleControl,
   tileOptions,
   updateAreaMember,
   updateMember,
@@ -24,6 +26,7 @@ import {
   withSetting,
   type HouseLists,
 } from './inspector';
+import { groupSchema as realGroupSchema } from '../widgets/group/schema';
 
 const house: HouseLists = {
   entities: [
@@ -47,7 +50,7 @@ const schema = defineSchema({
   settings: {
     light: { type: 'entity', domains: ['light', 'switch'] },
     power: { type: 'entity', domains: ['sensor'], optional: true },
-    members: { type: 'entities', domains: ['light', 'switch', 'lock'], sameDomain: true },
+    members: { type: 'entities', domains: ['light', 'switch', 'lock'] },
     room: { type: 'area', optional: true },
     rooms: { type: 'areas', min: 0 },
     dim: { type: 'boolean', default: true },
@@ -102,7 +105,7 @@ test('a value the house no longer has is still listed, marked missing', () => {
   assert.equal(c.value, 'light.gone');
 });
 
-test('a list offers what is not chosen yet, and a Group only the Domain of its first member', () => {
+test('a list offers what is not chosen yet, of every Domain it takes', () => {
   const empty = byKey({}).members;
   assert.ok(empty.type === 'entities');
   assert.equal(empty.options.length, 4);
@@ -114,7 +117,7 @@ test('a list offers what is not chosen yet, and a Group only the Domain of its f
   );
   assert.deepEqual(
     one.options.map(o => o.value),
-    ['light.cucina']
+    ['light.cucina', 'lock.cancello', 'switch.fontana']
   );
   assert.equal(one.min, 1);
 });
@@ -219,7 +222,7 @@ const groupSchema = defineSchema({
   kind: 'group',
   variants: ['full', 'compact'],
   titled: true,
-  settings: { members: { type: 'members', domains: ['light', 'switch', 'lock'], sameDomain: true, variantDomains: ['light', 'switch'] } },
+  settings: { members: { type: 'members', domains: ['light', 'switch', 'lock'], variantDomains: ['light', 'switch'] } },
 });
 const unset = (entity: string) => ({ entity, name: null, variant: null, on_tap: null });
 
@@ -237,9 +240,71 @@ test('a Group saved before Members lists its members as Members with nothing set
   );
   assert.deepEqual(
     c.options.map(o => o.value),
-    ['light.cucina'],
-    'only the Domain of the first, not yet chosen'
+    ['light.cucina', 'lock.cancello', 'switch.fontana'],
+    'every Domain, not yet chosen'
   );
+});
+
+test('a Group with a thermostat still offers its humidity, and takes it (ADR-0017)', () => {
+  const hallway: HouseLists = {
+    entities: [
+      { id: 'climate.corridoio_termostato', name: 'Termostato', domain: 'climate', areaId: null },
+      { id: 'sensor.corridoio_termostato_umidita', name: 'Umidità', domain: 'sensor', areaId: null },
+      { id: 'light.corridoio', name: 'Corridoio', domain: 'light', areaId: null },
+      { id: 'camera.porta', name: 'Porta', domain: 'camera', areaId: null },
+    ],
+    areas: [],
+  };
+  const settings = { members: [unset('climate.corridoio_termostato')] };
+  const [c] = controlsFor(realGroupSchema, settings, hallway, ICONS);
+  assert.ok(c.type === 'members');
+  assert.deepEqual(
+    c.options.map(o => o.value),
+    ['light.corridoio', 'sensor.corridoio_termostato_umidita']
+  );
+  const members = withMemberIds(c.value, [...c.value.map(m => m.entity), 'sensor.corridoio_termostato_umidita']);
+  const w = { ...newWidget(realGroupSchema, 'g', { x: 0, y: 0, w: 4, h: 3 }), settings: { members } };
+  const v = validateWidget(w, realGroupSchema);
+  assert.equal(v.ok, true);
+  if (v.ok)
+    assert.deepEqual(
+      (v.settings.members as { entity: string }[]).map(m => m.entity),
+      ['climate.corridoio_termostato', 'sensor.corridoio_termostato_umidita']
+    );
+});
+
+test('the Domain filter offers only Domains with something left to add, and narrows the picker', () => {
+  const options = [
+    { value: 'light.a', label: 'A' },
+    { value: 'sensor.b', label: 'B' },
+    { value: 'light.c', label: 'C' },
+  ];
+  const all = domainFilter(options, null);
+  assert.deepEqual(all.domains, ['light', 'sensor']);
+  assert.equal(all.picked, null, 'All by default');
+  assert.equal(all.options, options);
+  const lights = domainFilter(options, 'light');
+  assert.equal(lights.picked, 'light');
+  assert.deepEqual(
+    lights.options.map(o => o.value),
+    ['light.a', 'light.c']
+  );
+});
+
+test('the Domain filter falls back to All once its Domain runs out, and is not offered for one Domain', () => {
+  const sensors = [{ value: 'sensor.b', label: 'B' }];
+  const ranOut = domainFilter([...sensors, { value: 'lock.d', label: 'D' }], 'light');
+  assert.equal(ranOut.picked, null);
+  assert.equal(ranOut.options.length, 2);
+  assert.deepEqual(domainFilter(sensors, 'sensor').domains, [], 'one Domain left: no filter');
+  assert.equal(domainFilter(sensors, 'sensor').picked, null);
+  assert.deepEqual(domainFilter([], null), { domains: [], picked: null, options: [] });
+});
+
+test("a Group's title is a plain text field; other titled Widgets keep Default or Own", () => {
+  assert.equal(titleControl(realGroupSchema), 'text');
+  assert.equal(titleControl(schema), 'default-or-own');
+  assert.equal(titleControl({ ...schema, titled: false }), null);
 });
 
 test('the list keeps each Member’s settings, and writes every Member in full', () => {

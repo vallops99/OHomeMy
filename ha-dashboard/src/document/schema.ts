@@ -46,13 +46,7 @@ export type FieldSpec =
    * longer has are dropped, not fatal; the Widget is skipped only if fewer
    * than `min` (default 1) are left.
    */
-  | {
-      type: 'entities';
-      domains: readonly string[];
-      min?: number;
-      /** Every member of one Domain, whichever of `domains` it is: a Group. */
-      sameDomain?: boolean;
-    }
+  | { type: 'entities'; domains: readonly string[]; min?: number }
   /**
    * A Group's Members (CONTEXT.md, #73): an ordered set of entities as
    * `entities` is, with the same rules, each with its own name, Variant and
@@ -64,7 +58,6 @@ export type FieldSpec =
       type: 'members';
       domains: readonly string[];
       min?: number;
-      sameDomain?: boolean;
       variantDomains: readonly string[];
     }
   /**
@@ -96,8 +89,11 @@ export type WidgetSchema<F extends Fields = Fields> = {
   kind: string;
   /** The Variants it has; `['full']` for a kind with one form. */
   variants: readonly Variant[];
-  /** Whether it shows a title, so the Builder offers one. */
-  titled: boolean;
+  /**
+   * Whether it shows a title, so the Builder offers one. `'own'`: only a
+   * title someone writes, with no Default title (a Group, ADR-0017).
+   */
+  titled: boolean | 'own';
   settings: F;
 };
 
@@ -241,10 +237,6 @@ function checkField(spec: FieldSpec, value: unknown, house: House | undefined): 
         if (items.some(i => i.id === id)) return no(tr('schema.twice', { id }));
         items.push({ id, read });
       }
-      // On every id written, before any is dropped, so a Group never turns
-      // valid, or changes Domain, because a member left Home Assistant.
-      if (spec.type !== 'areas' && spec.sameDomain && new Set(items.map(i => domainOf(i.id))).size > 1)
-        return no(tr('schema.mixedDomains'));
       const present = house ? items.filter(i => exists(one, i.id, house)) : items;
       const min = spec.min ?? 1;
       return present.length >= min ? ok(present.map(i => i.read)) : no(tr('schema.fewerThan', { min }));

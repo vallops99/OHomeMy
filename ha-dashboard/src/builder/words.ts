@@ -31,6 +31,9 @@ export const kindName = (kind: string) => wordFor('builder.dashboard.kind', kind
 /** What a setting is called; one with no word is named from its key. */
 export const settingName = (key: string) => wordFor('builder.dashboard.setting', key) ?? fromId(key);
 
+/** What a Domain's entities are called, as the Members picker's filter lists them; one with no word is named from its id. */
+export const domainName = (domain: string) => wordFor('builder.dashboard.domain', domain) ?? fromId(domain);
+
 /** `room_tile` as "Room tile": a name for a kind or setting nobody wrote one for. */
 const fromId = (id: string) => (id.charAt(0).toUpperCase() + id.slice(1)).replace(/_/g, ' ');
 

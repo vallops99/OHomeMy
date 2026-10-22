@@ -74,11 +74,11 @@ test('a gate, a vacuum and a select have one form', () => {
   assert.equal(validateWidget(widget('lock', { entity: 'lock.cancello' }, 'compact'), lockSchema).ok, false);
 });
 
-test('a Group holds members of one shaped Domain, in order', () => {
+test('a Group holds members of any shaped Domains, mixed, in order', () => {
   const ok = validateWidget(widget('group', { members: ['lock.cancello', 'lock.cancelletto'] }), groupSchema);
   const member = (entity: string) => ({ entity, name: null, variant: null, on_tap: null });
   assert.deepEqual(ok, { ok: true, settings: { members: [member('lock.cancello'), member('lock.cancelletto')] } });
-  assert.equal(validateWidget(widget('group', { members: ['lock.cancello', 'light.salone'] }), groupSchema).ok, false);
+  assert.equal(validateWidget(widget('group', { members: ['lock.cancello', 'light.salone'] }), groupSchema).ok, true);
   assert.equal(validateWidget(widget('group', { members: ['camera.ingresso'] }), groupSchema).ok, false);
   assert.equal(validateWidget(widget('group', { members: ['group.accessi'] }), groupSchema).ok, false);
   assert.equal(validateWidget(widget('group', { members: [] }), groupSchema).ok, false);

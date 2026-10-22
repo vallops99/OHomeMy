@@ -9,8 +9,8 @@
  * | ---------- | ----------------------------------------------------------- |
  * | `entity`   | a picker of the house's entities in the field's Domains; for |
  * |            | an `inArea` field, only those in that Area (#78)            |
- * | `entities` | an ordered list, added to from the same picker; for a       |
- * |            | `sameDomain` field, once one is chosen, only its Domain     |
+ * | `entities` | an ordered list, added to from the same picker, of any of   |
+ * |            | its Domains, mixed (ADR-0017)                               |
  * | `members`  | the same list; each Member's own settings are set from its  |
  * |            | own inspector (`MemberInspector.tsx`, #73)                  |
  * | `area`     | a picker of the house's Areas                               |
@@ -85,13 +85,10 @@ function controlFor(key: string, spec: FieldSpec, settings: Record<string, unkno
     case 'members': {
       const members = spec.type === 'members' ? readMembers(raw) : null;
       const value = members ? members.map(m => m.entity) : stringList(raw);
-      // A Group's members are all of one Domain: once there is one, offer
-      // only that Domain (`sameDomain`, checked by `validateWidget`).
-      const domains = spec.sameDomain && value.length > 0 ? [domainOf(value[0])] : spec.domains;
       const all = entityOptions(house, spec.domains);
       const list = {
         chosen: value.map(id => all.find(o => o.value === id) ?? missing(id)),
-        options: entityOptions(house, domains).filter(o => !value.includes(o.value)),
+        options: all.filter(o => !value.includes(o.value)),
         min: spec.min ?? 1,
       };
       return members ? { key, type: 'members', value: members, ...list } : { key, type: 'entities', value, ...list };
@@ -175,6 +172,29 @@ export function tileOptions(house: HouseLists, area: string | null, domains: rea
   if (current === null || options.some(o => o.value === current)) return options;
   const known = entityOptions(house, []).find(o => o.value === current);
   return [known ? { ...known, elsewhere: true } : { ...missing(current), elsewhere: true }, ...options];
+}
+
+/**
+ * How the inspector sets a Widget's title: not at all, as a plain line of
+ * text (a Group, which has no Default title, ADR-0017), or as its Default
+ * title or one of its own.
+ */
+export function titleControl(schema: WidgetSchema): 'text' | 'default-or-own' | null {
+  if (!schema.titled) return null;
+  return schema.titled === 'own' ? 'text' : 'default-or-own';
+}
+
+/**
+ * The Domain filter beside a list's picker (#76): the Domains it may pick,
+ * each with an entity left to add, none when fewer than two are; and the
+ * options narrowed to the `picked` one. A Domain that ran out, or a filter
+ * not offered, picks All (`null`). Builder state, never the Draft.
+ */
+export function domainFilter(options: Option[], picked: string | null): { domains: string[]; picked: string | null; options: Option[] } {
+  const left = [...new Set(options.map(o => domainOf(o.value)))].sort();
+  const domains = left.length > 1 ? left : [];
+  const shown = picked !== null && domains.includes(picked) ? picked : null;
+  return { domains, picked: shown, options: shown === null ? options : options.filter(o => domainOf(o.value) === shown) };
 }
 
 function areaOptions(house: HouseLists): Option[] {

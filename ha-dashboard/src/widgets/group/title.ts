@@ -1,13 +1,9 @@
 /**
- * The Group's Default title (CONTEXT.md), by its members' Domain, in the
- * viewer's language (`group.title.<domain>`, #59): "Lights", "Locks". A
- * title someone wrote replaces it, as written (`shownTitle`).
+ * A Group's title (ADR-0017): only what someone wrote, as written. It has no
+ * Default title, so with none written, or an empty one, the card has none.
  *
  * No React, so `title.test.ts` runs it under plain Node.
  */
-import { isKey, tr, trKey } from '../../i18n';
-
-export function groupDefaultTitle(domain: string): string {
-  const key = `group.title.${domain}`;
-  return isKey(key) ? trKey(key) : tr('group.title');
+export function groupTitle(title: string | null): string | undefined {
+  return title || undefined;
 }
