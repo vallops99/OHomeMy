@@ -6,7 +6,8 @@
 
 > **Superseded.** Screens are gone. Layout is declared in Home Assistant with
 > `page:` + `region:` labels and this repo holds none of it -- see
-> [ADR-0005](0005-placement-protocol.md) and [the protocol](../protocol.md).
+> [ADR-0005](0005-placement-protocol.md) and the protocol (`docs/protocol.md`,
+> deleted at the cutover, #61; `git show cc99535:docs/protocol.md`).
 > The format below did what it was asked; the requirement changed. Read this
 > ADR for *why* compiler-checked names were worth having, because ADR-0005
 > gives them up knowingly and records what that costs.

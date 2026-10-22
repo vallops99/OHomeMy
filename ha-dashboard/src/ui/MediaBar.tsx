@@ -79,7 +79,7 @@ export function MediaBar({ entities, style }: MediaBarProps) {
     <div style={{ ...box, ...style }}>
       {/*
         `sm` top and bottom, not the tile's `md`: the transport's 44 px
-        buttons plus `md` made the strip 74 px, past `layout.footerH` (a
+        buttons plus `md` made the strip 74 px, past the 64 px footer (a
         `minHeight`, so content wins), and the footer took 10 px from the
         left column whenever something played (#32).
       */}

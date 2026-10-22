@@ -224,7 +224,7 @@ export function buildTokens(scale: Scale = 'wall') {
  * finger at a wall).
  *
  * The display sizes shrink by about a third: they were extrapolated for 1-2 m,
- * and a 112 px hero at 40 cm is a third of the screen for one number. Body
+ * and a 112 px reading at 40 cm is a third of the screen for one number. Body
  * text barely moves: 17 was already the phone platforms' own body size (iOS
  * 17 pt, Android 16 sp), so the wall's "readable at 2 m" floor was never a
  * wall-sized number. Picked on the #15 prototype, not measured on hardware.
@@ -232,7 +232,7 @@ export function buildTokens(scale: Scale = 'wall') {
 function armTokens(wall: ReturnType<typeof buildWallTokens>): ReturnType<typeof buildWallTokens> {
   return {
     ...wall,
-    font: { ...wall.font, hero: 72, glanceXL: 40, glanceL: 26, glanceM: 19, body: 16, caption: 13 },
+    font: { ...wall.font, glanceXL: 40, glanceL: 26, glanceM: 19, body: 16, caption: 13 },
     // The one touch size that moves, and it grows (#45): the ADR-0001 floor
     // of 44 predates Casa Panel, whose `target-min` is 52, and the phone's
     // restyle was done when every target on it reached 52. The wall's
@@ -307,14 +307,6 @@ function buildWallTokens() {
        * that stalls must leave the house labelled in the fallback, not blank.
        */
       family: CASA.font.sans,
-      /**
-       * The hero temperature, read on approach from 2 m. Variant D sets this
-       * as the one number the panel leads with (#6); it is a token rather
-       * than a literal so ADR-0001's rule holds -- nothing downstream
-       * hardcodes a font size. Casa Panel's `temp-hero` since #44 (112
-       * before); the phone keeps its own (`armTokens`).
-       */
-      hero: CASA.type.tempHero.size,
       glanceXL: 56, // the one number you read on approach
       glanceL: 34,
       glanceM: 22,
@@ -331,8 +323,6 @@ function buildWallTokens() {
      * 1280x800 when the label-driven panel was drawn with them.
      *
      *   rowRoom      the height of one Area row: a 64 px control plus padding
-     *   footerH      a footer floor: exactly `touch.primary`, which is all a
-     *                `MediaBar` needs to stay a full touch target
      *   popupClose   the round close button (#24): over `touch.primary`
      *                because it is the only way out, reached for from a step back
      *   tileMaxH     the cap `Tile` puts on every card built on `CardBase`
@@ -343,7 +333,6 @@ function buildWallTokens() {
      */
     layout: {
       rowRoom: 76,
-      footerH: 64,
       popupClose: 80,
       tileMaxH: 100,
       mediaBarMinW: 420,
