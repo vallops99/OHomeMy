@@ -425,7 +425,7 @@ export const ar: Catalogue = {
   'builder.dashboard.field.none': 'لا شيء',
   'builder.dashboard.field.add': 'إضافة…',
   'builder.dashboard.field.allDomains': 'الكل',
-  'builder.dashboard.field.domain': 'عرض',
+  'builder.dashboard.field.domain': 'تصفية حسب النطاق',
   'builder.dashboard.member.noneLeft': 'كل الكيانات موجودة بالفعل في هذه المجموعة',
   'builder.dashboard.domain.light': 'الأضواء',
   'builder.dashboard.domain.switch': 'المفاتيح',

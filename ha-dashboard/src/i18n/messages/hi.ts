@@ -356,7 +356,7 @@ export const hi: Catalogue = {
   'builder.dashboard.field.none': 'कोई नहीं',
   'builder.dashboard.field.add': 'जोड़ें…',
   'builder.dashboard.field.allDomains': 'सभी',
-  'builder.dashboard.field.domain': 'दिखाएँ',
+  'builder.dashboard.field.domain': 'डोमेन से छाँटें',
   'builder.dashboard.member.noneLeft': 'हर एंटिटी पहले से इस समूह में है',
   'builder.dashboard.domain.light': 'लाइटें',
   'builder.dashboard.domain.switch': 'स्विच',

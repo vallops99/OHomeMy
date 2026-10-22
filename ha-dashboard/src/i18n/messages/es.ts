@@ -357,7 +357,7 @@ export const es: Catalogue = {
   'builder.dashboard.field.none': 'Ninguno',
   'builder.dashboard.field.add': 'Añadir…',
   'builder.dashboard.field.allDomains': 'Todos',
-  'builder.dashboard.field.domain': 'Mostrar',
+  'builder.dashboard.field.domain': 'Filtrar por Dominio',
   'builder.dashboard.member.noneLeft': 'Todas las entidades ya están en este Grupo',
   'builder.dashboard.domain.light': 'Luces',
   'builder.dashboard.domain.switch': 'Interruptores',

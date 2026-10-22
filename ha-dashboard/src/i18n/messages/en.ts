@@ -376,7 +376,7 @@ export const en = {
   'builder.dashboard.field.none': 'None',
   'builder.dashboard.field.add': 'Add…',
   'builder.dashboard.field.allDomains': 'All',
-  'builder.dashboard.field.domain': 'Show',
+  'builder.dashboard.field.domain': 'Filter by Domain',
   'builder.dashboard.member.noneLeft': 'Every entity is already in this Group',
   'builder.dashboard.domain.light': 'Lights',
   'builder.dashboard.domain.switch': 'Switches',

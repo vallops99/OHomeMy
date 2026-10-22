@@ -351,7 +351,7 @@ export const zhHans: Catalogue = {
   'builder.dashboard.field.none': '无',
   'builder.dashboard.field.add': '添加…',
   'builder.dashboard.field.allDomains': '全部',
-  'builder.dashboard.field.domain': '显示',
+  'builder.dashboard.field.domain': '按域筛选',
   'builder.dashboard.member.noneLeft': '所有实体都已在此分组中',
   'builder.dashboard.domain.light': '灯',
   'builder.dashboard.domain.switch': '开关',

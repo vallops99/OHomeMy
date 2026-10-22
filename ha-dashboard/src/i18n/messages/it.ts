@@ -359,7 +359,7 @@ export const it: Catalogue = {
   'builder.dashboard.field.none': 'Nessuno',
   'builder.dashboard.field.add': 'Aggiungi…',
   'builder.dashboard.field.allDomains': 'Tutti',
-  'builder.dashboard.field.domain': 'Mostra',
+  'builder.dashboard.field.domain': 'Filtra per Dominio',
   'builder.dashboard.member.noneLeft': 'Ogni entità è già in questo Gruppo',
   'builder.dashboard.domain.light': 'Luci',
   'builder.dashboard.domain.switch': 'Interruttori',
