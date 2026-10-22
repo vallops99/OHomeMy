@@ -135,10 +135,14 @@ light is on. Each of its Areas is a Member.
 _Avoid_: Stanze card, area list
 
 **Group**:
-A Widget holding an ordered set of entities of one Domain under one title,
-each shown in its own shape. The Group itself controls nothing as a whole: a
-Group of locks would otherwise open every gate at once.
-_In this house_: Accessi, the two gates.
+A Widget holding an ordered set of entities under one title, each shown in
+its own shape. Its Members may be of any Domains a Group can show, mixed
+freely; a camera is never a Member. It has no Default title: its title is
+only what someone writes, and with none written it shows no title. The Group
+itself controls nothing as a whole: a Group of locks would otherwise open
+every gate at once.
+_In this house_: Accessi, the two gates; the hallway thermostat with its
+humidity.
 _Avoid_: Section, card, category
 
 **Member**:

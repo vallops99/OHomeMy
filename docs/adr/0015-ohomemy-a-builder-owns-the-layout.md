@@ -140,7 +140,8 @@ setting on each widget.
   longer branches on wall versus phone.
 - **The first widgets are the existing components**, plus Link. The Room
   Tile's light and temperature are settings on the widget, which is where the
-  `main` Label went. A Group card holds an ordered member list of one Domain.
+  `main` Label went. A Group card holds an ordered member list of one Domain
+  (superseded by [ADR-0017](0017-groups-mix-domains.md): Groups mix Domains).
 - **Popups** are opened by a `select.ohomemy_popup` entity that the
   integration provides. Its options are the Popup names across all
   Dashboards, plus none. Each Dashboard lays out its own Page for any Popup
