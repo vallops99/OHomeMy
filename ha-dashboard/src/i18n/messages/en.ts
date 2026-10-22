@@ -383,7 +383,6 @@ export const en = {
   'builder.dashboard.member.remove': 'Remove from Group',
   'builder.dashboard.member.missing': '{id} is not in Home Assistant any more: it is not shown, and keeps its place in the Group.',
   'builder.dashboard.member.name': 'Name',
-  'builder.dashboard.member.nameDefault': "Home Assistant's name",
   'builder.dashboard.member.nameOwn': 'Own name',
   'builder.dashboard.member.variantFollow': 'Follow the Group ({variant})',
   'builder.dashboard.member.onTapNone': 'Nothing (it keeps its own controls)',

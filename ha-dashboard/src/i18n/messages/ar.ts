@@ -432,7 +432,6 @@ export const ar: Catalogue = {
   'builder.dashboard.member.remove': 'إزالة من المجموعة',
   'builder.dashboard.member.missing': '{id} لم يعد موجودًا في Home Assistant: لا يُعرض، ويحتفظ بمكانه في المجموعة.',
   'builder.dashboard.member.name': 'الاسم',
-  'builder.dashboard.member.nameDefault': 'اسم Home Assistant',
   'builder.dashboard.member.nameOwn': 'اسم خاص',
   'builder.dashboard.member.variantFollow': 'مثل المجموعة ({variant})',
   'builder.dashboard.member.onTapNone': 'لا شيء (يحتفظ بعناصر التحكم الخاصة به)',

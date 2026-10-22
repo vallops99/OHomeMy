@@ -363,7 +363,6 @@ export const hi: Catalogue = {
   'builder.dashboard.member.remove': 'समूह से हटाएँ',
   'builder.dashboard.member.missing': '{id} अब Home Assistant में नहीं है: यह नहीं दिखता, और समूह में अपनी जगह रखता है।',
   'builder.dashboard.member.name': 'नाम',
-  'builder.dashboard.member.nameDefault': 'Home Assistant का नाम',
   'builder.dashboard.member.nameOwn': 'अपना नाम',
   'builder.dashboard.member.variantFollow': 'समूह जैसा ({variant})',
   'builder.dashboard.member.onTapNone': 'कुछ नहीं (इसके अपने नियंत्रण रहते हैं)',

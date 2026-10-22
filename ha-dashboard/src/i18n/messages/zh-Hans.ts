@@ -358,7 +358,6 @@ export const zhHans: Catalogue = {
   'builder.dashboard.member.remove': '从组中移除',
   'builder.dashboard.member.missing': '{id} 已不在 Home Assistant 中：不再显示，但保留它在组中的位置。',
   'builder.dashboard.member.name': '名称',
-  'builder.dashboard.member.nameDefault': 'Home Assistant 的名称',
   'builder.dashboard.member.nameOwn': '自定义名称',
   'builder.dashboard.member.variantFollow': '跟随组（{variant}）',
   'builder.dashboard.member.onTapNone': '无（保留其自身控件）',

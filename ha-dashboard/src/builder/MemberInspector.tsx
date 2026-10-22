@@ -69,7 +69,7 @@ export function MemberInspector({
           <div className='b-title'>
             <div className='b-segmented' role='radiogroup' aria-label={tr('builder.dashboard.member.name')}>
               <button type='button' role='radio' aria-checked={member.name === null} onClick={() => onChange({ name: null })}>
-                {tr('builder.dashboard.member.nameDefault')}
+                {tr('builder.dashboard.widget.titleDefault')}
               </button>
               <button
                 type='button'

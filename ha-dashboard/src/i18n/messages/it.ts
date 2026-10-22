@@ -366,7 +366,6 @@ export const it: Catalogue = {
   'builder.dashboard.member.remove': 'Togli dal Gruppo',
   'builder.dashboard.member.missing': '{id} non è più in Home Assistant: non viene mostrato e tiene il suo posto nel Gruppo.',
   'builder.dashboard.member.name': 'Nome',
-  'builder.dashboard.member.nameDefault': 'Nome di Home Assistant',
   'builder.dashboard.member.nameOwn': 'Nome proprio',
   'builder.dashboard.member.variantFollow': 'Come il Gruppo ({variant})',
   'builder.dashboard.member.onTapNone': 'Niente (tiene i suoi comandi)',
