@@ -124,13 +124,14 @@ _Avoid_: Page Opener, shortcut, button
 A Widget for an Area: its name, how many of its lights are on, its
 temperature, and a switch for its chosen light, with a dimmer when that light
 can be dimmed. The admin chooses which light and which temperature. It is the
-one Widget that stands for an Area rather than a single entity.
+one Widget that stands for an Area rather than a single entity. With a Page to
+open, tapping it anywhere but its switch and dimmer opens that Page.
 _Avoid_: Row, area widget
 
 **Room Grid**:
 A Widget holding a chosen set of Room Tiles under one title, with a control
 that turns off every light in all of them. The control does nothing while no
-light is on.
+light is on. Each of its Areas is a Member.
 _Avoid_: Stanze card, area list
 
 **Group**:
@@ -141,7 +142,9 @@ _In this house_: Accessi, the two gates.
 _Avoid_: Section, card, category
 
 **Member**:
-One entity in a Group, with its own name, Variant and tap. It is not a
+One item in a Widget's chosen set, with settings of its own: an entity in a
+Group, with its own name, Variant and tap, or an Area in a Room Grid, with its
+own tap. It is not a
 Widget: it has no place on the grid.
 _Avoid_: Item, row, child
 
