@@ -6,7 +6,6 @@ import {
   houseModeOptions,
   changeSetting,
   memberKeys,
-  membersKey,
   membersSetting,
   moveAreaMember,
   moveItem,
@@ -274,8 +273,8 @@ test('a Member is changed, moved and removed by its entity, and the rest are wri
 });
 
 test('the settings key that holds Members, if the kind has one', () => {
-  assert.equal(membersKey(groupSchema), 'members');
-  assert.equal(membersKey(tileSchemaPlain), null);
+  assert.equal(membersSetting(groupSchema)?.key, 'members');
+  assert.equal(membersSetting(tileSchemaPlain), null);
 });
 
 test('a new Group starts with no Members', () => {
@@ -329,7 +328,7 @@ test('the settings key and type of the Members: a Group’s entities or a Room G
   assert.deepEqual(membersSetting(groupSchema), { key: 'members', type: 'members' });
   assert.deepEqual(membersSetting(gridSchema), { key: 'areas', type: 'areas' });
   assert.equal(membersSetting(tileSchemaPlain), null);
-  assert.equal(membersKey(gridSchema), 'areas');
+  assert.equal(membersSetting(gridSchema)?.key, 'areas');
 });
 
 test('the Member keys, in order: entity ids for a Group, Area ids for a Room Grid', () => {

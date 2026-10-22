@@ -219,11 +219,6 @@ export function membersSetting(schema: WidgetSchema): { key: string; type: 'memb
   return found ? { key: found[0], type: found[1].type as 'members' | 'areas' } : null;
 }
 
-/** The settings key of the kind's Members, or `null` for a kind with none. */
-export function membersKey(schema: WidgetSchema): string | null {
-  return membersSetting(schema)?.key ?? null;
-}
-
 /** The kind's Members by key, in order: entity ids for a Group, Area ids for a Room Grid. */
 export function memberKeys(schema: WidgetSchema, settings: Record<string, unknown>): string[] {
   const found = membersSetting(schema);
