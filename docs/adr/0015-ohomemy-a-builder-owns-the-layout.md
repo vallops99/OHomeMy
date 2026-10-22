@@ -246,3 +246,12 @@ the first piece of work must confirm before working around them:
   to trigger it from outside the integration.
 - **A Popup cannot be named `none`**, the select's option for no Popup open.
   The server refuses such a document.
+- **Lights on are counted light by light** (#77), reversing #53's rule that a
+  light on is one a Widget names. Under that rule a Room Tile naming the
+  kitchen's Light group counted 1 while its three lights were on, and the
+  lights StatCard said *1 luce accesa* beside a tile saying *3 luci accese*.
+  Now every light the Dashboard shows counts, and a Light group never counts
+  itself, only its members that are on, each once. Its members are shown
+  wherever it is, for Faults too, so a dead bulb behind a lit group is
+  reported. The Room Tile's count, the StatCard, the Verdict and the phone's
+  report all use this one rule.

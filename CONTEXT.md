@@ -145,10 +145,18 @@ _In this house_: Accessi, the two gates; the hallway thermostat with its
 humidity.
 _Avoid_: Section, card, category
 
+**Light group**:
+A light in Home Assistant that stands for other lights, its members, and is
+on while any of them is. It is never itself a light that is on: wherever
+lights are counted, it counts as its members.
+_In this house_: the kitchen's, standing for its three lights.
+_Avoid_: Group (that is a Widget), aggregate, main light
+
 **Member**:
 One item in a Widget's chosen set, with settings of its own: an entity in a
 Group, with its own name, Variant and tap, or an Area in a Room Grid, with its
-own tap. It is not a Widget: it has no place on the grid.
+own light, temperature and tap, each one of that Area's own. It is not a
+Widget: it has no place on the grid.
 _Avoid_: Item, row, child
 
 **Clock**:
@@ -203,7 +211,8 @@ _Avoid_: Status, summary, overview
 One ranked kind of thing worth reporting (Faults, open ways in, lights on)
 and the entities behind it, counted over what one Dashboard shows. The Verdict
 is the highest-ranked Concern. Concerns are never capped: hiding one to keep
-things short would be a lie.
+things short would be a lie. Lights on are counted light by light, every one
+the Dashboard shows, never by the Widget or Area that shows them.
 _Avoid_: Issue, alert, warning, health
 
 **Chip Row**:
