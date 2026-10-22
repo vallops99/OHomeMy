@@ -14,7 +14,10 @@
  *   temperature), and a Room Grid Area's chosen light and temperature, are
  *   shown while in that Area (`inAreas`, ADR-0018);
  * - an `area` or `areas` setting shows, from each Area, the entities of the
- *   Domains its field lists in `shows`, as a Room Tile counts its lights.
+ *   Domains its field lists in `shows`, as a Room Tile counts its lights;
+ * - a shown Light group shows its members too (#77, CONTEXT.md "Light
+ *   group"), though no Widget names them: `isShown` is given the house's
+ *   Light groups for that.
  *
  * A Widget the renderer would skip (unknown kind, refused by its schema)
  * shows nothing, since nothing of it is on screen; `validateWidget` decides
@@ -26,6 +29,8 @@
  *
  * No React, no @hakit: `shows.test.ts` runs this under plain Node.
  */
+import { groupMemberIds } from '../ha/placement';
+import type { Entity } from '../ha/types';
 import { validateWidget, type AreaMember, type House, type Member, type WidgetSchema } from './schema';
 import type { Dashboard } from './types';
 
@@ -108,8 +113,21 @@ export function isNamed(shows: DashboardShows, entity: { id: string; areaId: str
   return entity.areaId !== null && (shows.inAreas.get(entity.id)?.has(entity.areaId) ?? false);
 }
 
-/** Whether the Dashboard shows this entity: named, or shown from its Area. */
-export function isShown(shows: DashboardShows, entity: { id: string; domain: string; areaId: string | null }): boolean {
-  if (isNamed(shows, entity)) return true;
-  return entity.areaId !== null && (shows.areas.get(entity.areaId)?.has(entity.domain) ?? false);
+type Shown = { id: string; domain: string; areaId: string | null };
+
+const isShownDirectly = (shows: DashboardShows, entity: Shown): boolean =>
+  isNamed(shows, entity) || (entity.areaId !== null && (shows.areas.get(entity.areaId)?.has(entity.domain) ?? false));
+
+/**
+ * Whether the Dashboard shows this entity: named, shown from its Area, or a
+ * member of a Light group shown either way (#77). `lightGroups` are the
+ * house's Light groups (`isLightGroup`); without them only what a Widget
+ * names or shows from an Area is shown.
+ */
+export function isShown(shows: DashboardShows, entity: Shown, lightGroups: Iterable<Entity> = []): boolean {
+  if (isShownDirectly(shows, entity)) return true;
+  for (const group of lightGroups) {
+    if (groupMemberIds(group)?.includes(entity.id) && isShownDirectly(shows, group)) return true;
+  }
+  return false;
 }

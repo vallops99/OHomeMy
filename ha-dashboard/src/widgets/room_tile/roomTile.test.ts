@@ -5,6 +5,11 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Area, Entity } from '../../ha';
+import type { Dashboard } from '../../document/types';
+import { dashboardShows } from '../../document/shows';
+import { lightFinder } from '../../ha/lights';
+import { concernAt, dashboardConcerns } from '../../ha/verdict';
+import { roomTileSchema } from './schema';
 import { inArea, roomTile, temperatureReading } from './roomTile';
 
 const DIMMABLE = { supported_color_modes: ['brightness'] };
@@ -127,6 +132,90 @@ test('a tile whose Area holds only a Light group counts members belonging to ano
   const others = [entity('light.a', 'on'), entity('light.b', 'off')].map(e => ({ ...e, areaId: 'altra' }));
   const house = new Map(others.map(e => [e.id, e]));
   assert.equal(roomTile(area(group), group, null, id => house.get(id)).meta, '1 light on');
+});
+
+test('an Area with a single light, on, reads On', () => {
+  const lamp = entity('light.lamp', 'on', ONOFF);
+  assert.equal(roomTile(area(lamp), lamp, null).meta, 'On');
+  assert.equal(roomTile(area(lamp), null, null).lit, true);
+});
+
+// ---- The tile's meta and the lit Concern count the same (#77) ----
+
+const dashboardOfTile = (areaId: string, light: string | null): Dashboard => ({
+  id: 'd',
+  slug: 'd',
+  name: 'D',
+  show_in_sidebar: true,
+  home_page: 'home',
+  settings: {
+    overflow: 'fit',
+    supported_range: { min: { width: 1, height: 1 }, max: { width: 2, height: 2 } },
+    idle_return: null,
+    back_history: true,
+    theme: { name: 'casa-panel', mode: 'follow-device' },
+  },
+  navbar: null,
+  pages: [
+    {
+      id: 'home',
+      name: 'home',
+      popup: null,
+      grid: { columns: 4, rows: 4 },
+      widgets: [
+        {
+          id: 'w',
+          kind: 'room_tile',
+          x: 0,
+          y: 0,
+          w: 1,
+          h: 1,
+          variant: 'full',
+          title: null,
+          on_tap: null,
+          settings: { area: areaId, light, temperature: null },
+        },
+      ],
+    },
+  ],
+});
+
+/** The count a tile's meta line states: "N lights on", "On", or none. */
+const metaCount = (meta: string): number => (meta === 'On' ? 1 : Number(/^(\d+) lights? on/.exec(meta)?.[1] ?? 0));
+
+const tileAndConcern = (house: Entity[], areaId: string, lightId: string | null) => {
+  const shows = dashboardShows(dashboardOfTile(areaId, lightId), kind => (kind === 'room_tile' ? roomTileSchema : undefined));
+  const tileArea: Area = { id: areaId, name: areaId, labels: [], icon: null, entities: house.filter(e => e.areaId === areaId) };
+  const meta = roomTile(tileArea, inArea(tileArea, lightId), null, lightFinder(house)).meta;
+  const lit = concernAt(dashboardConcerns(house, shows), 'lit')?.entities.length ?? 0;
+  return { meta: metaCount(meta), lit };
+};
+
+const inRoom = (areaId: string, e: Entity): Entity => ({ ...e, areaId });
+
+test('a tile and the lit Concern count the same: a group beside its members', () => {
+  const house = [
+    inRoom('salone', entity('light.g', 'on', { ...DIMMABLE, entity_id: ['light.a', 'light.b'] })),
+    inRoom('salone', entity('light.a', 'on')),
+    inRoom('salone', entity('light.b', 'off')),
+    inRoom('salone', entity('light.c', 'on')),
+  ];
+  assert.deepEqual(tileAndConcern(house, 'salone', 'light.g'), { meta: 2, lit: 2 });
+});
+
+test('a tile and the lit Concern count the same: an Area holding only a group whose members are elsewhere', () => {
+  const house = [
+    inRoom('salone', entity('light.g', 'on', { ...DIMMABLE, entity_id: ['light.a', 'light.b', 'light.c'] })),
+    inRoom('altra', entity('light.a', 'on')),
+    inRoom('altra', entity('light.b', 'on')),
+    inRoom('altra', entity('light.c', 'off')),
+  ];
+  assert.deepEqual(tileAndConcern(house, 'salone', 'light.g'), { meta: 2, lit: 2 });
+});
+
+test('a tile and the lit Concern count the same: a single light, on', () => {
+  const house = [inRoom('salone', entity('light.lamp', 'on', ONOFF))];
+  assert.deepEqual(tileAndConcern(house, 'salone', 'light.lamp'), { meta: 1, lit: 1 });
 });
 
 test('an Unavailable member does not put the tile in its fault state', () => {

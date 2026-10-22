@@ -17,7 +17,7 @@
  * (#44) is where they are said: not as a chip, but by the lights StatCard,
  * which is why the report carries them as `lit` of their own.
  */
-import { countedLights } from './lights';
+import { countedLights, lightFinder } from './lights';
 import { groupMemberIds } from './placement';
 import type { Area, Entity } from './types';
 
@@ -164,9 +164,8 @@ function concerns(entities: Entity[]): Health[] {
 
   // Lights on, light by light (#77, `./lights`), over what is rendered: the
   // placed lights, and the members of a placed Light group.
-  const byId = new Map(entities.map(e => [e.id, e]));
   const rendered = entities.filter(e => e.domain === 'light' && (isPlaced(e) || grouped.has(e.id)));
-  const lit = countedLights(rendered, id => byId.get(id)).filter(e => e.state === 'on');
+  const lit = countedLights(rendered, lightFinder(entities)).filter(e => e.state === 'on');
   if (lit.length > 0) {
     out.push({
       level: 'on',

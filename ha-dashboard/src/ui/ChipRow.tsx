@@ -13,7 +13,7 @@
  *
  * A fault does not silence an open gate: `statusChips` reads the verdict
  * and every entry in `report.also`, and the gate keeps its own chip. Lit
- * zones are not a chip any more; the lights StatCard states them.
+ * lights on are not a chip any more; the lights StatCard states them.
  *
  * Every chip that leads somewhere can be tapped (#30). A Concern chip opens
  * a Concern list of the entities behind that one Concern (`ConcernList`);

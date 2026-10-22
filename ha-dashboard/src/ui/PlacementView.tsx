@@ -434,7 +434,7 @@ function FooterMember({ entity, labelOrder, children }: { entity: Entity; labelO
  *     cameras are Placed as Feeds (`placedPageFor`, #29).
  *   - `Stats`'s `lightsOn` count and `ChipRow`'s `report` (the Verdict,
  *     `houseReport`) are **not** sourced from what is Placed in `glance`.
- *     Both are whole-house Derived facts -- "how many zones are lit
+ *     Both are whole-house Derived facts -- "how many lights are on
  *     anywhere", "the worst concern anywhere" -- and nothing in the set of
  *     Domains this function looks for (`climate`, `sensor`,
  *     `alarm_control_panel`) stands for either of those the way a
@@ -496,7 +496,7 @@ function GlanceView({ placed, labelOrder, part }: { placed: Placed[]; labelOrder
   );
 
   // Whole-house Derived, deliberately not narrowed to `placedEntities` -- see
-  // the header note above. The lights stat counts the lit-zones Concern, so
+  // the header note above. The lights stat counts the lights-on Concern, so
   // it and the Verdict count by the one rule (#44).
   const report = houseReport([...entities.values()]);
   const lightsOn = report.lit?.count ?? 0;

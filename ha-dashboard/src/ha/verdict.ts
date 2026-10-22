@@ -22,8 +22,7 @@
  */
 import { isShown, type DashboardShows } from '../document/shows';
 import { isOpenDoor } from './health';
-import { countedLights, isLightGroup } from './lights';
-import { groupMemberIds } from './placement';
+import { countedLights, isLightGroup, lightFinder } from './lights';
 import type { Entity } from './types';
 
 /** Worst first. */
@@ -53,26 +52,20 @@ const isOpenGate = (e: Entity) => e.domain === 'lock' && e.state === 'unlocked';
 /** Every Concern the Dashboard has, worst first; empty when there is nothing to report. */
 export function dashboardConcerns(entities: Iterable<Entity>, shows: DashboardShows): Concern[] {
   const all = [...entities];
-  const byId = new Map(all.map(e => [e.id, e]));
-  const direct = all.filter(e => isShown(shows, e));
-  // A shown Light group shows its members too (#77): a Fault in one is this
-  // Dashboard's, though no Widget names it.
-  const viaGroups = direct.filter(isLightGroup).flatMap(g => groupMemberIds(g) ?? []);
-  const shown = new Set([...direct.map(e => e.id), ...viaGroups.filter(id => byId.has(id))]);
+  // A shown Light group shows its members too (#77, `isShown`): a Fault in
+  // one is this Dashboard's, though no Widget names it.
+  const groups = all.filter(isLightGroup);
+  const shown = all.filter(e => isShown(shows, e, groups));
 
   const faults: Entity[] = [];
   const open: Entity[] = [];
-  for (const e of all) {
-    if (!shown.has(e.id)) continue;
+  for (const e of shown) {
     // A Fault is all that can be said of an entity Home Assistant cannot
     // reach: its last state is not one the house can vouch for.
     if (isFault(e)) faults.push(e);
     else if (isOpenDoor(e) || isOpenGate(e)) open.push(e);
   }
-  const lit = countedLights(
-    direct.filter(e => e.domain === 'light'),
-    id => byId.get(id)
-  ).filter(e => e.state === 'on');
+  const lit = countedLights(shown.filter(e => e.domain === 'light'), lightFinder(all)).filter(e => e.state === 'on');
   const found: Concern[] = [
     { level: 'fault', entities: faults },
     { level: 'open', entities: open },

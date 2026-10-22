@@ -3,7 +3,7 @@
  * side on a two-column grid -- how many lights are on, and how hard the
  * house is drawing right now.
  *
- * The lights card is where lit zones are said now that they are not a chip
+ * The lights card is where lights on are said now that they are not a chip
  * (docs/protocol.md "The chips"): its count is `HouseReport.lit`'s, so the
  * card and the Verdict count by the one rule, and its icon takes `accent`
  * while any is on -- colour is state (ADR-0013), and that is this state.

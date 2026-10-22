@@ -100,6 +100,15 @@ const dashboard = (pages: Page[]): Dashboard => ({
 
 const e = (id: string, areaId: string | null = null) => ({ id, domain: id.split('.')[0], areaId });
 
+test('a member of a shown Light group is shown, though nothing else names it', () => {
+  const shows = dashboardShows(dashboard([page('home', [widget('one', { entity: 'light.g' })])]), schemaOf);
+  const group = { ...e('light.g'), name: 'g', deviceId: null, labels: [], state: 'on', unavailable: false, attributes: { entity_id: ['light.a'] } };
+  const other = { ...group, id: 'light.h', attributes: { entity_id: ['light.b'] } };
+  assert.ok(isShown(shows, e('light.a'), [group, other]));
+  assert.ok(!isShown(shows, e('light.b'), [group, other]), 'a group no Widget shows');
+  assert.ok(!isShown(shows, e('light.a')), 'without the groups, only what is named');
+});
+
 test('every entity a setting names, on every Page, counts as shown', () => {
   const shows = dashboardShows(
     dashboard([

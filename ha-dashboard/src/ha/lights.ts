@@ -12,6 +12,13 @@
 import { groupMemberIds } from './placement';
 import type { Entity } from './types';
 
+/** The `find` for `countedLights`: a lookup of any entity of the house by id. */
+export function lightFinder(entities: Iterable<Entity>): (id: string) => Entity | undefined {
+  const byId = new Map<string, Entity>();
+  for (const e of entities) byId.set(e.id, e);
+  return id => byId.get(id);
+}
+
 /** A light that stands for other lights (its `entity_id` / `group_entities` lists them). */
 export const isLightGroup = (e: Entity): boolean => e.domain === 'light' && groupMemberIds(e) !== null;
 

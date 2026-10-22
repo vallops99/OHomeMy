@@ -2,14 +2,14 @@
  * The status bar's chips, decided (#44, docs/protocol.md "The chips").
  *
  * `glance`'s reports, in this order: a Fault, an open way in, the cameras,
- * the alarm -- each only when there is one to show. Lit zones are not here:
+ * the alarm -- each only when there is one to show. Lights on are not here:
  * the lights StatCard states them (`HouseReport.lit`), and `ok` is not a
  * chip either, since the absence of an alert chip already says it. The row
  * is never capped: a Concern hidden to keep it short would be a lie.
  *
  * The Concerns keep `houseReport`'s ranking, and a fault still does not
  * silence an open gate (health.ts): the verdict and `also` are both read,
- * and only their lit zones are dropped.
+ * and only their lights on are dropped.
  *
  * No React and no @hakit (types only), so `statusChips.test.ts` runs it
  * under plain Node. `ChipRow.tsx` renders what this decides.
