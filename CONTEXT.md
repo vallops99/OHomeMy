@@ -123,7 +123,8 @@ _Avoid_: Page Opener, shortcut, button
 **Room Tile**:
 A Widget for an Area: its name, how many of its lights are on, its
 temperature, and a switch for its chosen light, with a dimmer when that light
-can be dimmed. The admin chooses which light and which temperature. It is the
+can be dimmed. The admin chooses which light and which temperature, each one
+of the Area's own; one that leaves the Area is no longer the tile's. It is the
 one Widget that stands for an Area rather than a single entity. With a Page to
 open, tapping it anywhere but its switch and dimmer opens that Page.
 _Avoid_: Row, area widget
