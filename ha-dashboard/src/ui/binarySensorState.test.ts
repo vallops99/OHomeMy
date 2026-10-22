@@ -17,7 +17,6 @@ const sensor = (state: string, device_class?: string): Entity => ({
   name: 'X',
   areaId: 'ingresso',
   deviceId: null,
-  labels: [],
   state,
   attributes: device_class ? { device_class } : {},
   unavailable: state === 'unavailable' || state === 'unknown',

@@ -21,13 +21,12 @@ const entity = (id: string, state: string, attributes: Record<string, unknown> =
   name: id,
   areaId: 'salone',
   deviceId: null,
-  labels: [],
   state,
   attributes,
   unavailable: state === 'unavailable',
 });
 
-const area = (...entities: Entity[]): Area => ({ id: 'salone', name: 'Soggiorno', labels: [], icon: null, entities });
+const area = (...entities: Entity[]): Area => ({ id: 'salone', name: 'Soggiorno', icon: null, entities });
 
 test('a dimmable chosen light gets a switch and a dimmer', () => {
   const light = entity('light.salone', 'off', DIMMABLE);
@@ -185,7 +184,7 @@ const metaCount = (meta: string): number => (meta === 'On' ? 1 : Number(/^(\d+) 
 
 const tileAndConcern = (house: Entity[], areaId: string, lightId: string | null) => {
   const shows = dashboardShows(dashboardOfTile(areaId, lightId), kind => (kind === 'room_tile' ? roomTileSchema : undefined));
-  const tileArea: Area = { id: areaId, name: areaId, labels: [], icon: null, entities: house.filter(e => e.areaId === areaId) };
+  const tileArea: Area = { id: areaId, name: areaId, icon: null, entities: house.filter(e => e.areaId === areaId) };
   const meta = roomTile(tileArea, inArea(tileArea, lightId), null, lightFinder(house)).meta;
   const lit = concernAt(dashboardConcerns(house, shows), 'lit')?.entities.length ?? 0;
   return { meta: metaCount(meta), lit };

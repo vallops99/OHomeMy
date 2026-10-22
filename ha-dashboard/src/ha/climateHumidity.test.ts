@@ -13,7 +13,6 @@ const entity = (id: string, deviceId: string | null, state = 'on', attributes: R
   name: id,
   areaId: 'corridoio',
   deviceId,
-  labels: [],
   state,
   attributes,
   unavailable: state === 'unavailable' || state === 'unknown',

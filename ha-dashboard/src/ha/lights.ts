@@ -1,7 +1,7 @@
 /**
  * Lights on, counted light by light (#77; CONTEXT.md "Light group",
  * "Concern"). The one rule every place that counts lights uses: the
- * Verdict's lit Concern, a Room Tile's meta line, the phone's `houseReport`.
+ * Verdict's lit Concern and a Room Tile's meta line.
  *
  * A Light group is never counted itself; it counts as its members. A light
  * reached both through a group and directly is counted once. A Light group
@@ -9,7 +9,7 @@
  *
  * Pure, no React, no @hakit: it runs under plain Node.
  */
-import { groupMemberIds } from './placement';
+import { groupMemberIds } from './groups';
 import type { Entity } from './types';
 
 /** The `find` for `countedLights`: a lookup of any entity of the house by id. */

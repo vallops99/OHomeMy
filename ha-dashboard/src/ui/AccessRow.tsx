@@ -5,7 +5,7 @@
  *
  * Every `lock` is one, in a Group's card or alone in its own (`Card`): a gate
  * opened by a stray tap is a gate open onto the street, so the hold is
- * where the safety is (docs/protocol.md). The hold's rules are
+ * where the safety is. The hold's rules are
  * `accessHold.ts`; this file binds them to the pointer and to timers.
  *
  * Not a `Tile`: the row is not pressable, only its button is, and @hakit's

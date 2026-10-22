@@ -17,7 +17,6 @@ const alarm = (state: string, supported_features = 15): Entity => ({
   name: 'Allarme',
   areaId: null,
   deviceId: null,
-  labels: [],
   state,
   attributes: { supported_features },
   unavailable: state === 'unavailable',

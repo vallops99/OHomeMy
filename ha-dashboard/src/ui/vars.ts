@@ -15,9 +15,8 @@
  * - The sizes the wall and the phone used to differ in -- the older type
  *   scale (`v.font.body`, `glanceM`, ...), the touch floor, the tile's cap
  *   -- are box-scale properties, `--ohm-<group>-<name>`. Inside a Widget its
- *   box sets them (`BOX_SCALE_CSS`). Everywhere else, the label-driven
- *   Dashboard and an overlay that covers the whole screen, the page root sets
- *   them by device (`HakitTheme`): there the screen is the box.
+ *   box sets them (`BOX_SCALE_CSS`). In an overlay that covers the whole
+ *   screen, the page root sets them by device (`HakitTheme`): there the screen is the box.
  * - Sizes the wall and the phone always agreed on, which the Theme does not
  *   name (`v.space.md`, `v.touch.primary`), are plain lengths.
  *

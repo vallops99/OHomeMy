@@ -13,7 +13,6 @@ const entity = (id: string, unavailable = false): Entity => ({
   name: 'Lampada',
   areaId: null,
   deviceId: null,
-  labels: [],
   state: unavailable ? 'unavailable' : 'on',
   attributes: {},
   unavailable,

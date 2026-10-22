@@ -5,6 +5,10 @@ supersedes: ADR-0003, and ADR-0004's region model
 
 # Layout moves out of the repo entirely: the house declares placement with labels
 
+> `docs/protocol.md`, the protocol this ADR made normative, was deleted with
+> the label-driven renderer at the cutover (#61). Read it in git history:
+> `git show cc99535:docs/protocol.md`.
+
 Screens are deleted. What appears on the panel, on which page, in which region,
 is declared in Home Assistant with a `page:` + `region:` label pair on Areas
 and entities. The frontend becomes a renderer for that protocol

@@ -2,7 +2,7 @@
  * What a `media_player` can be asked to do, read from its
  * `supported_features` bitmask (#35). A control the player cannot do is
  * never offered: a button that does nothing is a dead control that looks
- * live (PlacementView.tsx).
+ * live.
  */
 import type { Entity } from '../ha';
 

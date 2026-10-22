@@ -12,13 +12,11 @@ npm >=7.0.0
 ```
 
 ## Building
-Run `npm run build` and it will build the files for you, you can then upload them to your home assistant instance using the deploy script mentioned below.
-
-`npm run build:panel` builds the same renderer as a Home Assistant panel instead: `dist-panel/ohomemy-dashboard.js` defines the `<ohomemy-dashboard>` element for a `panel_custom` with `embed_iframe: false`. See `docs/research/hakit-in-a-panel.md` for why it is built differently.
+`npm run build:panel` builds the renderer as a Home Assistant panel: `dist-panel/ohomemy-dashboard.js` defines the `<ohomemy-dashboard>` element for a `panel_custom` with `embed_iframe: false`. See `docs/research/hakit-in-a-panel.md` for why it is built differently.
 
 ## The document-driven renderer (OHomeMy)
 
-`src/renderer/` draws one Dashboard of the OHomeMy document (ADR-0015): the panel element always does, and the dev server does when given `?dashboard=<slug>`, e.g. `http://localhost:5173/local/ha-dashboard/?dashboard=wall`, against the Home Assistant in `.env.development`. Without the parameter the dev server still shows the label-driven panel until the cutover (#61).
+`src/renderer/` draws one Dashboard of the OHomeMy document (ADR-0015): the panel element always does, and the dev server does when given `?dashboard=<slug>`, e.g. `http://localhost:5173/?dashboard=wall`, against the Home Assistant in `.env.development`. Nothing reads a Home Assistant Label (ADR-0015).
 
 - `src/document/types.ts` is the document's shape; `src/document/schema.ts` is what makes a Widget valid (field types, `validateWidget`, `fitsGrid`). The renderer skips an invalid Widget without a word; the Builder offers only what a schema allows.
 - `src/renderer/grid.ts` is the proportional grid: a Page's columns share its width, its rows share one screen's height, and each Widget's box is a size container named `widget`.
@@ -63,33 +61,26 @@ Every word OHomeMy shows is in `src/i18n/messages/`: `en.ts` is the source, and 
 
 The language is the viewer's (`hass.locale`, the Home Assistant profile's language and formats; `src/ha/locale.ts`), never the server's. Text an admin writes is shown as written; only a Default title (`shownTitle(widget.title, tr(...))`) is translated. Arabic sets `dir="rtl"` on the Dashboard and the Builder: write CSS with logical properties (`padding-inline-start`, `inset-inline-end`, `text-align: start`), give a name from Home Assistant or the admin `dir="auto"`, and mark a glyph that points onward `mirrored` (`<Icon mirrored />`). The grid and the Navbar are never mirrored (ADR-0015): column 1 is on the left for everyone.
 
-## Deploy to Home Assistant via SSH
-1. Replace the values in the .env file provided with your `VITE_SSH_USERNAME`, `VITE_SSH_HOSTNAME` and `VITE_SSH_PASSWORD`.
-2. To automatically deploy to your home assistant instance, you can run `npm run deploy` after you've retrieved the SSH information specified [here](https://shannonhochkins.github.io/ha-component-kit/?path=/docs/introduction-deploying--docs), NOTE! The script has already been created for you, you just need to run it after you've updated the .env values.
-3. The `VITE_FOLDER_NAME` is the folder that will be created on your home assistant instance, this is where the files will be uploaded to.
-
 ## The tablet (Fully Kiosk Browser)
 
-A Row opens its Area's Page when it is swiped right (#27). Several Fully Kiosk
-and Android features claim horizontal swipes or vertical pulls for themselves,
-and have to be turned off on the panel, or the swipe (or a Region's scroll)
-does something else. Why each one matters is in
+The wall tablet signs in to Home Assistant as a dedicated non-admin user whose
+default Dashboard is set from the Builder, with "Always hide the sidebar" on
+and "suspend when hidden" off in that user's profile. Fully Kiosk's Start URL
+is the Home Assistant root, `/`, which opens that default.
+
+Several Fully Kiosk and Android features claim horizontal swipes or vertical
+pulls for themselves, and have to be turned off on the panel, or they fight
+the Dashboard's own scrolling and back gesture. Why each one matters is in
 `docs/research/row-swipe-gesture.md`, section 5.
 
 - **Web Browsing → Swipe to Navigate**: off. A swipe right would be history-back.
 - **Web Browsing → Swipe To Change Tabs**: off.
-- **Web Browsing → Enable Pull to refresh**: off. It competes with scrolling a Region.
+- **Web Browsing → Enable Pull to refresh**: off. It competes with scrolling a Page.
 - **Web Zoom → Enable Zoom**: off.
 - **Kiosk Mode → Kiosk Exit Gesture**: anything but *Swipe from Left*, e.g.
-  *Fast 5 Taps*. A Row in `left` starts near the screen's left edge.
+  *Fast 5 Taps*. Widgets in the first column start near the screen's left edge.
 - **Android system navigation**: prefer 3-button navigation to gesture
   navigation, whose edge swipe is system Back and can't be refused by a web page.
-
-Still to check on the real device: how wide Fully's left-edge zone is, and the
-tablet's actual touch slop (the swipe assumes Android's default 8 dp).
-
-## Folder name & Vite
-The `VITE_FOLDER_NAME` is the folder that will be created on your home assistant instance, this is where the files will be uploaded to. If you change the `VITE_FOLDER_NAME` variable, it will also update the `vite.config.ts` value named `base` to the same value so that when deployed using the deployment script the pathname's are correct.
 
 ## Typescript Sync
 

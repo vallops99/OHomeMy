@@ -1,7 +1,6 @@
 /**
  * The Room Grid's two decisions, kept out of its component so they are
- * checked rather than looked at (#42, docs/protocol.md "Groups and the Room
- * Grid"): how many columns and rows a number of Areas takes, and which lights
+ * checked rather than looked at (#42): how many columns and rows a number of Areas takes, and which lights
  * *Spegni tutto* turns off.
  */
 import type { Area, Entity } from '../ha';

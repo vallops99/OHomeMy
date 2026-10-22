@@ -1,7 +1,7 @@
 /**
  * The camera Page's pure half (#29): which Feed is big, and what a Feed's
  * caption says. No React and no @hakit, so `feeds.test.ts` runs it under
- * plain Node; `Feeds.tsx` and `Feed.tsx` render what this decides.
+ * plain Node; the Camera Wall Widget renders what this decides.
  */
 import type { Entity, Feed } from '../ha';
 import { tr } from '../i18n';
@@ -20,7 +20,7 @@ export const feedPhase = (camera: Entity, feed: Feed): FeedPhase => (camera.unav
 /**
  * The big Feed: the camera last tapped, while it is still here. Until one is
  * tapped, the first camera with motion -- the one someone at the panel most
- * likely wants -- and otherwise the first in Placement order.
+ * likely wants -- and otherwise the first in the Widget's order.
  */
 export function bigCamera(cameras: { id: string; moving: boolean }[], tapped: string | null): string | null {
   const chosen = cameras.find(c => c.id === tapped) ?? cameras.find(c => c.moving) ?? cameras[0];

@@ -1,6 +1,5 @@
 /**
- * The Room Grid's sizing table (docs/protocol.md, "Groups and the Room
- * Grid") and what *Spegni tutto* turns off (#42).
+ * The Room Grid's sizing table and what *Spegni tutto* turns off (#42).
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -29,13 +28,12 @@ const entity = (id: string, state: string, areaId: string): Entity => ({
   name: id,
   areaId,
   deviceId: null,
-  labels: [],
   state,
   attributes: {},
   unavailable: state === 'unavailable',
 });
 
-const area = (id: string, ...entities: Entity[]): Area => ({ id, name: id, labels: [], icon: null, entities });
+const area = (id: string, ...entities: Entity[]): Area => ({ id, name: id, icon: null, entities });
 
 test('Spegni tutto targets every light that is on, in every Area of the grid', () => {
   const areas = [

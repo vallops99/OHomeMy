@@ -1,28 +1,19 @@
 /**
- * The Concern list's pure half (#30, CONTEXT.md "Concern list"): which
- * Concern a tapped chip still stands for, and the rows that list shows.
+ * The Concern list's pure half (#30, CONTEXT.md "Concern list"): the rows
+ * that list shows.
  *
- * The entities come from `Health.entities`, never from a second pass over
+ * The entities come from the Concern's own, never from a second pass over
  * the house: the list shows exactly what the chip counts, by the one rule in
- * `src/ha/health.ts`.
+ * `src/ha/verdict.ts`.
  *
  * No React and no @hakit (types only), so `concernList.test.ts` runs it
  * under plain Node. `ConcernList.tsx` renders what this decides.
  */
-import type { Area, Entity, Health, HealthLevel, HouseReport } from '../ha';
+import type { Area, Entity } from '../ha';
 import { fmt, tr } from '../i18n';
 
 /** One row of a Concern list: the entity, and its Area's name (or the words for none). */
 export type ConcernRow = { entity: Entity; areaName: string };
-
-/**
- * The Concern of this level in the report, or `null` once it has cleared --
- * which is what closes an open list. `ok` is a verdict but never a Concern.
- */
-export function liveConcern(report: HouseReport, level: HealthLevel): Health | null {
-  if (level === 'ok') return null;
-  return [report.verdict, ...report.also].find(h => h.level === level) ?? null;
-}
 
 const byName = fmt.compare;
 
@@ -31,7 +22,7 @@ const byName = fmt.compare;
  * rows in no Area last whatever their name sorts as. The same order for
  * every Concern. `noArea` names the rows in no Area.
  */
-export function concernRows(concern: Pick<Health, 'entities'>, areas: Area[], noArea: string = tr('chips.noArea')): ConcernRow[] {
+export function concernRows(concern: { entities: readonly Entity[] }, areas: Area[], noArea: string = tr('chips.noArea')): ConcernRow[] {
   const names = new Map(areas.map(a => [a.id, a.name]));
   const rows = concern.entities.map(entity => ({
     entity,

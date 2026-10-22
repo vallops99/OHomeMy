@@ -19,7 +19,6 @@ const vacuum = (state: string, supported_features = ALL): Entity => ({
   name: 'Robot',
   areaId: null,
   deviceId: null,
-  labels: [],
   state,
   attributes: { supported_features },
   unavailable: state === 'unavailable' || state === 'unknown',

@@ -14,8 +14,6 @@
     "prettier": "prettier --write .",
     "sync": "npx tsx scripts/sync-types.ts",
     "prebuild": "npm run prettier",
-    "deploy": "npx tsx scripts/deploy.ts",
-    "measure": "npx tsx scripts/measure-panel.ts",
     "fit": "npx tsx scripts/fit-widgets.ts"
   },
   "dependencies": {
@@ -41,7 +39,6 @@
     "@vitejs/plugin-react": "^6.1.1",
     "chalk": "^6.0.0",
     "dotenv": "^18.0.1",
-    "node-scp": "^0.0.25",
     "oxlint": "^1.81.0",
     "playwright-core": "^1.63.0",
     "prettier": "^3.9.8",

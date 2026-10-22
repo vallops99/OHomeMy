@@ -18,7 +18,7 @@ real one -- real service calls, real state machine, real `unavailable`.
 
 ## The manifest is the source of truth
 
-`manifest.yaml` declares every entity once: entity id, Area, Labels, and the
+`manifest.yaml` declares every entity once: entity id, Area, and the
 `kind` that decides how it is faked. Entity ids are taken verbatim from the
 existing `Casa Carina` Lovelace dashboard, which is the statement of intent for
 the real house.
@@ -40,11 +40,10 @@ generator picks per domain. All three routes produce genuine entities:
 | siren | template switch wrapped by `switch_as_x` |
 | event | trigger-based `template` event, fired by pressing an `input_button` |
 | button | `template` button that does nothing when pressed |
-| lock over a button (`button_lock`) | `template` lock that presses the button; the real house needs the same wrapper (docs/protocol.md, "Popups") |
+| lock over a button (`button_lock`) | `template` lock that presses the button; the real house needs the same wrapper |
 | binary_sensor with `device_of` | `template` **helper** (a config entry) linked to that entity's device, created by `apply-registry.py` |
-| input_button (a Page Opener) | a YAML `input_button`, keyed by its object id: a helper the real house needs too, not a fake |
 | `group` (a Group, ADR-0014) | the `group` platform's YAML form over the manifest's `members`: the same entity a Group helper made in Home Assistant's UI is, and one the real house needs too, not a fake |
-| `external` | nothing: a real entity from a real integration (the met.no weather), only labelled |
+| `external` | nothing: a real entity from a real integration (the met.no weather), only given its Area |
 
 A camera's motion is the motion sensor on the camera's own device (CONTEXT.md,
 Derived), and YAML templates cannot join a device. So the three camera motion
@@ -89,7 +88,7 @@ docker run --rm --entrypoint python \
   /fh/scripts/bootstrap-helpers.py --config-dir /config
 docker start ha-local
 
-# 3. Areas, Labels, and the entity ids the non-template platforms don't control
+# 3. Areas, and the entity ids the non-template platforms don't control
 python fake-house/scripts/apply-registry.py --token-from ha-dashboard/.env.development
 ```
 
@@ -101,10 +100,8 @@ homeassistant:
 ```
 
 All three steps are idempotent; re-run them freely. Step 2 keeps each config
-entry's id, so re-running it leaves the entities where they are. Step 3 also
-creates the panel's own helpers: `input_boolean.panel_glance`,
-`input_text.panel_popup` and `input_button.panel_popup_activity`. Step 3 is also the one to
-re-run after editing Areas or Labels in the manifest.
+entry's id, so re-running it leaves the entities where they are. Step 3 is also
+the one to re-run after editing Areas in the manifest.
 
 `generate.py --clean` removes the generated packages;
 `bootstrap-helpers.py --remove` removes the config entries it created.

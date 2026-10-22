@@ -18,8 +18,8 @@
         # fake-house/scripts/*.py generate Home Assistant packages from the manifest
         # and talk to HA's websocket registry API.
         python = pkgs.python3.withPackages (ps: [ ps.pyyaml ps.aiohttp ]);
-        # ha-dashboard/scripts/measure-panel.ts drives a browser to assert the
-        # panel's layout actually fits (ADR-0007). Playwright's own bundled
+        # ha-dashboard/scripts/fit-widgets.ts drives a browser to assert each
+        # Widget's content fits its box (#72). Playwright's own bundled
         # Chromium cannot run on NixOS -- it dies on libglib-2.0.so.0 -- so the
         # harness uses this one via $CHROME. Without it in the devshell, the
         # recipe is a /nix/store path someone found by hand, which is exactly
@@ -44,7 +44,7 @@
             # keep npm's global installs in-project rather than in $HOME
             export NPM_CONFIG_PREFIX="$PWD/.npm-global"
             export PATH="$NPM_CONFIG_PREFIX/bin:$PWD/node_modules/.bin:$PATH"
-            # What `npm run measure` launches; see the chromium note above.
+            # What `npm run fit` launches; see the chromium note above.
             export CHROME="${chromium}/bin/chromium"
           '';
         };

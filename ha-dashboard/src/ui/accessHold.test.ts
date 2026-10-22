@@ -1,5 +1,5 @@
 /**
- * Hold Apri to open, tap Chiudi to close (docs/protocol.md), through the
+ * Hold Apri to open, tap Chiudi to close, through the
  * pure state machine `AccessRow` drives.
  */
 import assert from 'node:assert/strict';

@@ -1,13 +1,11 @@
 /**
- * Icon per Concern level (#8). `Health.headline` already carries the wording.
- * Its own module so a contact's tile (#34) shows an open way in exactly as the
- * Verdict's chip does.
+ * Icon per Concern level (#8). Its own module so a contact's tile (#34) shows
+ * an open way in exactly as the Chip Row's chip does.
  */
-import type { HealthLevel } from '../ha';
+import type { ConcernLevel } from '../ha/verdict';
 
-export const LEVEL_ICON: Record<HealthLevel, string> = {
+export const LEVEL_ICON: Record<ConcernLevel, string> = {
   fault: 'mdi:alert-circle',
   open: 'mdi:door-open',
-  on: 'mdi:lightbulb-on',
-  ok: 'mdi:check-circle',
+  lit: 'mdi:lightbulb-on',
 };

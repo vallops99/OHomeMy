@@ -33,8 +33,8 @@
  *     npm run fit
  *
  * Needs the local Home Assistant up (`.env`'s `VITE_HA_URL`, the token in
- * `.env.development`) and a Chromium: inside `nix develop`, `CHROME` is set,
- * as for `npm run measure`. Run by hand; the repo has no CI. `--verbose`
+ * `.env.development`) and a Chromium: inside `nix develop`, `CHROME` is set.
+ * Run by hand; the repo has no CI. `--verbose`
  * lists every probe with its room to spare, not only the failures.
  *
  *     npm run fit -- --least

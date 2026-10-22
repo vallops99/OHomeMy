@@ -35,8 +35,7 @@ export function ReadingBlock({ icon, value, detail, name, unavailable = false, a
         display: 'flex',
         alignItems: 'center',
         gap: v.space.sm,
-        // The same height budget as a Page block: 64 px of footer, and
-        // `sm` top and bottom (PlacementView.tsx's `PageBlock`).
+        // A footer's height budget: 64 px, and `sm` top and bottom.
         minHeight: v.touch.primary,
         padding: `${v.space.sm} ${v.space.md}`,
         boxSizing: 'border-box',

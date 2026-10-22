@@ -6,12 +6,11 @@
  * What is left out is what Home Assistant itself marks as never for a
  * dashboard: a denylisted Domain, or a `config` or `diagnostic` entity. No
  * Label is read: a Widget names its entities, and nothing else decides
- * whether they are shown (ADR-0015). The one exception is the label-driven
- * renderer, which still honours `ignored` until the cutover (#61) removes it.
+ * whether they are shown (ADR-0015).
  */
 import type { House } from '../document/schema';
 import { effectiveAreaId, type DeviceEntry } from './area';
-import type { AreaId, Entity, EntityId, Label } from './types';
+import type { AreaId, Entity, EntityId } from './types';
 
 /**
  * Domains the dashboard never renders (#3). Infrastructure and plumbing that
@@ -39,7 +38,6 @@ export type RegistryEntry = {
   entity_id?: string;
   area_id?: string | null;
   device_id?: string | null;
-  labels?: string[];
   /**
    * Home Assistant's own marker for plumbing: `config` or `diagnostic`. It
    * sits on firmware-update buttons, device restart switches and the sun
@@ -56,15 +54,11 @@ export type LiveState = { state: string; attributes: Record<string, unknown> };
  * Every renderable entity, keyed by id, with registry facts and live state
  * already merged. Denylisted Domains and `config` or `diagnostic` entities
  * are gone, so callers never filter again.
- *
- * `muteIgnored` is for the label-driven renderer alone, where the `ignored`
- * Label takes an entity off every screen (docs/protocol.md).
  */
 export function houseEntities(
   registry: Iterable<RegistryEntry>,
   states: Record<string, LiveState | undefined> | null | undefined,
-  devices: Record<string, DeviceEntry | undefined> | null | undefined,
-  options: { muteIgnored?: boolean } = {}
+  devices: Record<string, DeviceEntry | undefined> | null | undefined
 ): Map<EntityId, Entity> {
   const out = new Map<EntityId, Entity>();
   for (const entry of registry) {
@@ -82,9 +76,6 @@ export function houseEntities(
     // denylist does not have to grow a rule per integration.
     if (entry.entity_category) continue;
 
-    const labels = (entry.labels ?? []) as Label[];
-    if (options.muteIgnored && labels.includes('ignored')) continue;
-
     const live = states?.[id];
     // No live state at all means Home Assistant has the entity registered
     // but is not reporting it -- a fault, and rendered as one.
@@ -98,7 +89,6 @@ export function houseEntities(
       // The effective Area: the entity's own, else its device's (#38).
       areaId: effectiveAreaId(entry.area_id, entry.device_id, devices),
       deviceId: entry.device_id ?? null,
-      labels,
       state,
       attributes,
       unavailable: isUnavailableState(state),

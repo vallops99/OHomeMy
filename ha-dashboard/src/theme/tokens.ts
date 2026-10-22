@@ -241,19 +241,12 @@ function armTokens(wall: ReturnType<typeof buildWallTokens>): ReturnType<typeof 
     touch: { ...wall.touch, floor: CASA.size.targetMin },
     layout: {
       ...wall.layout,
-      // Sized against the wall's hero, which shrank.
-      gateSlab: 84,
-      // The icon's inset from the slab's edge, which the name is padded clear
-      // of on both sides (GateSlab.tsx). At the wall's 34 a phone-wide slab
-      // left "Cancelletto" ~170 px and cut it off.
-      gateInset: 14,
-      // A phone row is two lines, the slider under the name (ToggleTile.tsx):
-      // 64 px of slider plus a 28 px line plus the card's padding. A row
-      // with no slider has only the first line, centred in the same height,
-      // so the list keeps one rhythm.
+      // A phone row is two lines, the slider under the name: 64 px of
+      // slider plus a 28 px line plus the card's padding. A row with no
+      // slider has only the first line, centred in the same height, so the
+      // list keeps one rhythm.
       tileMaxH: 140,
-      // The phone's footer wraps rather than scrolls (PhoneShell.tsx), and a
-      // 420 px floor is wider than the phone.
+      // A 420 px floor is wider than the phone.
       mediaBarMinW: 0,
     },
   };
@@ -297,10 +290,9 @@ function buildWallTokens() {
     },
     /**
      * Sizes that place things -- the font sizes below, `space`'s named steps,
-     * `touch` and `layout` -- keep the values the current frame was measured
-     * against (`npm run measure`), so restyling onto Casa Panel moves no
-     * Region. The frame (`Panel.tsx`, #41) has taken up Casa's numbered
-     * `space` and `size`; the components inside it follow as they are ported.
+     * `touch` and `layout` -- keep the values the label-driven panel was
+     * measured against, so restyling onto Casa Panel moved nothing. The
+     * renderer's frame takes Casa's numbered `space` and `size`.
      */
     type: CASA.type,
     size: CASA.size,
@@ -335,106 +327,24 @@ function buildWallTokens() {
     /** 64 px minimum for primary controls, 44 px absolute floor (research §2.3) */
     touch: { primary: 64, floor: 44 },
     /**
-     * The panel layout at 1280x800: variant D, "Arrivo calmo" (#6).
+     * Sizes the components in `src/ui` share, measured on the wall at
+     * 1280x800 when the label-driven panel was drawn with them.
      *
-     * Two regions side by side, not a uniform grid. The sidebar is the glance
-     * layer -- the hero temperature, the house's concerns as chips, what the
-     * cameras see, and the gates -- at a fixed width so the hero's 112 px
-     * number has a column it can live in. The main region is the touched
-     * layer: one row per Area, then a strip of secondary controls.
-     *
-     *   sidebar  420  fixed; the arrival column
-     *   main     rest; room rows over a bottom strip
-     *
-     * The regions size their contents intrinsically rather than by row
-     * arithmetic. An earlier 4x4 grid (#8) computed four unequal rows that
-     * filled 800 px exactly, which is a real property this layout gives up:
-     * fit here is a matter of measurement, not of adding the rows up. That
-     * was the trade accepted when variant D was restored -- see the
-     * amendment on ADR-0004.
-     *
-     *   rowRoom  the height of one Area row: a 64 px control plus padding
-     *   strip    the bottom strip, matching the old grid's secondary row
-     *
-     * #13 replaces the two-region layout above with the protocol's 2x2
-     * (docs/protocol.md, ADR-0005): `glance` top-left, `left`
-     * bottom-left, `right` the full-height right column, `footer`
-     * along the floor. #41 replaced the 2x2 with the design system's frame
-     * -- status bar, body, floor -- sized by `size` above, not by these.
-     *
-     * The 2x2 inherits variant D's obligation (ADR-0004's amendment): these
-     * are starting sizes, not a row/column arithmetic that is claimed to sum
-     * to 800 -- fit is measured, not added up. `footerH` was first set to
-     * the old `rowStrip` (96), then measured down to exactly `touch.primary`
-     * (64): at 1280x800 with `glance` on, the left column's fixed content
-     * (two `GateSlab`s, a `CameraGlance`, `Hero`, `Stats`, and `ChipRow`'s own
-     * minimum) needed those 32 px back, and nothing in the footer --
-     * `MediaBar`, `AreaOpenerBlock` -- needs more than the ADR-0001 touch
-     * floor to remain a full touch target. Measured, not guessed: see the
-     * #13 agent's report for the harness output. Since #41 the wall's floor
-     * is `size.dockHeight` (84); `footerH` is the phone's footer floor only.
-     *
-     * `gateSlab` (ADR-0007) was a lie for the whole life of this file.
-     * Nothing read it: `GateSlab.tsx` computed its own height locally
-     * (`ICON + 40 + 24 + 2 * 4 + 2 * 14` = 156), so the token said 96 while
-     * the slab rendered at 156 -- ADR-0001's single source of sizing wrong by
-     * 60 px and unread, which is how every budget above could be computed
-     * carefully and still be computed against a slab that does not exist.
-     * `GateSlab.tsx` now reads this token (and re-exports it as
-     * `GATE_SLAB_H`), so the two cannot drift again.
-     *
-     * 100 is the mockup's height, and it fits with room to spare: the
-     * measurement is committed this time:
-     * `scripts/measure-panel.ts`. With the Hero's negative margins gone
-     * (ADR-0007: they pulled 26 px of real ink outside the element's box, and
-     * the "blank metrics" they claimed to reclaim do not exist -- a Range over
-     * the glyphs measures 130 px of ink in a 128.8 px box), the glance block
-     * needs 274 px. The largest slab that still fits at 1280x768 is 128; 100
-     * leaves 64 px spare at 768 and 96 px at 800. The slab used to be 120 and
-     * a vertical stack; the row layout (icon beside the name, ADR-0008) says
-     * what a gate is in less height, so the extra 20 px goes back to the
-     * column as headroom -- ADR-0007 chooses headroom over presence, and 100
-     * is still far above `touch.primary` (64). Re-derive with `npm run
-     * measure` rather than assuming this number survives a change to the
-     * column's contents.
-     *
-     * `popupSlotW` (#28) is one slot of a Popup's bottom row, sized for a
-     * `GateSlab`. Measured on the real app at 1280x800 and 1280x768 with
-     * `page:citofono`'s three gates: at 403 px "Cancelletto" ellipsised
-     * (218 px of name in 209); at 412, with the row's `md` padding and `sm`
-     * gap, all three names fit whole. Barely -- a fourth gate, a longer name
-     * or a wider gap brings the ellipsis back. `popupClose` is the Popup's
-     * round close button (#24): over `touch.primary` because it is the only
-     * way out, reached for from a step back.
-     *
-     * `feedThumbW` (#29) is the width of the camera Page's strip of
-     * thumbnails beside the big Feed, as in variant B of the prototype:
-     * 16:9 at 300 px is 169 px of picture, so two thumbnails and their
-     * captions sit beside the big Feed at 1280x800 with room to spare.
-     *
-     * `tileMaxH` is the cap `Tile` puts on every card built on `CardBase`. A
-     * Row's swipe wrapper (#27) takes the same cap, or it grows past the
-     * card with the Region and the label it reveals shows below the row
-     * (measured on the real app at 1280x800: 162 px wrapper, 100 px card).
-     *
-     * `mediaBarMinW` (#32) is the least `MediaBar` is squeezed to before the
-     * footer scrolls sideways instead. Without a floor the strip, `flex: 1;
-     * minWidth: 0`, gave way first and a busy footer crushed the transport
-     * rather than scrolling: 32 icon + 3 x 44 buttons + gaps and padding is
-     * 236 px before a single letter of the title. 420 leaves the title
-     * about 180 px. `npm run measure`'s busy footer asserts it.
+     *   rowRoom      the height of one Area row: a 64 px control plus padding
+     *   footerH      a footer floor: exactly `touch.primary`, which is all a
+     *                `MediaBar` needs to stay a full touch target
+     *   popupClose   the round close button (#24): over `touch.primary`
+     *                because it is the only way out, reached for from a step back
+     *   tileMaxH     the cap `Tile` puts on every card built on `CardBase`
+     *   mediaBarMinW (#32) the least `MediaBar` is squeezed to: 32 icon +
+     *                3 x 44 buttons + gaps and padding is 236 px before a
+     *                single letter of the title. 420 leaves the title about
+     *                180 px.
      */
     layout: {
-      sidebarW: 420,
       rowRoom: 76,
-      rowStrip: 96,
-      gateSlab: 100,
-      /** A GateSlab icon's inset from the slab's edge. */
-      gateInset: 34,
       footerH: 64,
-      popupSlotW: 412,
       popupClose: 80,
-      feedThumbW: 300,
       tileMaxH: 100,
       mediaBarMinW: 420,
     },

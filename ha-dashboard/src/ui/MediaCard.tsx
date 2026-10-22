@@ -43,12 +43,10 @@ export function MediaCard({ entity, style }: MediaCardProps) {
         flex: '0 0 auto',
         display: 'flex',
         alignItems: 'center',
-        // In a narrow box the row folds in two, as a Row's does on a phone
-        // (ADR-0011): the artwork and what is playing on one line, the
-        // volume and the buttons under it. Its one row sums past a phone's
-        // width. A Widget's box sets these custom properties
-        // (`src/widgets/media`), and the label-driven Dashboard's page root
-        // does on a phone (`HakitTheme`); unset, the row is one line.
+        // In a narrow box the row folds in two: the artwork and what is
+        // playing on one line, the volume and the buttons under it. Its one
+        // row sums past a phone's width. A Widget's box sets these custom
+        // properties (`src/widgets/media`); unset, the row is one line.
         flexWrap: 'var(--ohm-media-wrap, nowrap)' as CSSProperties['flexWrap'],
         gap: v.space.md,
         padding: v.space.md,

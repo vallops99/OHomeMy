@@ -17,7 +17,6 @@ const climate = (attributes: Record<string, unknown>, state = 'heat'): Entity =>
   name: 'Termostato',
   areaId: null,
   deviceId: null,
-  labels: [],
   state,
   attributes,
   unavailable: false,

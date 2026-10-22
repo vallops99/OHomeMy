@@ -1,18 +1,18 @@
 # Casa Carina — fake house manifest
 #
 # The single source of truth for the unwired house. Every entity the real
-# Casa Carina will expose is declared here once, with the Area it belongs to
-# and any Labels it carries. `scripts/generate.py` turns this into Home
-# Assistant packages; `scripts/apply-registry.py` assigns Area and Labels.
+# Casa Carina will expose is declared here once, with the Area it belongs to.
+# `scripts/generate.py` turns this into Home Assistant packages;
+# `scripts/apply-registry.py` assigns each its Area.
 #
 # Entity ids are taken verbatim from the existing Casa Carina Lovelace
 # dashboard, so that swapping fakes for real devices is a no-op.
 #
 # kind:  light | switch | lock | alarm | vacuum | select | sensor |
 #        binary_sensor | climate | media_player | camera | siren |
-#        event | button | button_lock | input_button | group | external
+#        event | button | button_lock | group | external
 #        (`external`: a real entity from a real integration, not a fake --
-#        generate.py skips it, apply-registry.py only labels it)
+#        generate.py skips it, apply-registry.py only gives it its Area)
 # members: (group only) the entity ids the Group helper holds, in order.
 # dimmable: (light only) false for an on/off light with no brightness.
 #        Defaults to true.
@@ -20,36 +20,26 @@
 #        YAML templates cannot join a device, so apply-registry.py builds
 #        these as template helpers linked to it instead.
 # area:  an area_id from HA's area registry, or null for a Singleton
-# labels: see CONTEXT.md label vocabulary
 
 areas:
   - id: ingresso
     name: Ingresso
     icon: mdi:door-sliding-open
-    labels: [page:main:right]
   - id: corridoio
-    # In the footer, not `right`: a footer block opens that Area's own Page
-    # (#14, docs/protocol.md's worked example places exactly this Area here).
-    # The same Area in `right` would be a Row instead -- the region decides
-    # the shape.
     name: Corridoio
     icon: mdi:walk
-    labels: [page:main:footer]
   - id: salone
     name: Soggiorno
     icon: mdi:sofa
-    labels: [page:main:right]
   - id: camera_chri
     name: Cameretta
     icon: mdi:bed
-    labels: [page:main:right]
   - id: esterno
     name: Esterno
     icon: mdi:garage
   - id: cucina
     name: Cucina
     icon: mdi:stove
-    labels: [page:main:right]
   - id: camera
     name: Camera
     icon: mdi:bed
@@ -57,149 +47,13 @@ areas:
     name: Ufficio
     icon: mdi:microsoft-office
 
-labels:
-  - id: main
-    name: main
-    icon: mdi:star
-  - id: vision
-    name: vision
-    icon: mdi:cctv
-  - id: gate
-    name: gate
-    icon: mdi:gate
-  - id: security
-    name: security
-    icon: mdi:shield-home
-  - id: multiroom
-    name: multiroom
-    icon: mdi:speaker-multiple
-  - id: ignored
-    name: ignored
-    icon: mdi:eye-off
-
-  # --- Placement (docs/protocol.md): `page:<page>:<region>`, one label per
-  # Placement. `page:` is open-ended, so a Page exists purely because something
-  # is labelled for it -- but each Label still has to exist in Home Assistant's
-  # label registry before it can be assigned, so every page x region
-  # combination the house uses is declared here, and only those: a registry
-  # label that places nothing just clutters the picker (ADR-0008).
-  - id: page:main:glance
-    name: page:main:glance
-    icon: mdi:eye-outline
-  - id: page:main:left
-    name: page:main:left
-    icon: mdi:dock-left
-  - id: page:main:right
-    name: page:main:right
-    icon: mdi:dock-right
-  - id: page:main:footer
-    name: page:main:footer
-    icon: mdi:dock-bottom
-  # A second Page, reached from the corridoio footer block (#14).
-  - id: page:corridoio:right
-    name: page:corridoio:right
-    icon: mdi:walk
-  # The Page Home Assistant opens as a Popup when someone rings (#28,
-  # docs/protocol.md "Popups"): the doorbell's picture behind, the gates and
-  # the intercom's door in front. Only the Regions it uses.
-  - id: page:citofono:left
-    name: page:citofono:left
-    icon: mdi:doorbell-video
-  - id: page:citofono:right
-    name: page:citofono:right
-    icon: mdi:doorbell-video
-  # Sicurezza (#34): the alarm and the gates, the cameras' Feeds, and the
-  # contacts and sirens. It took over `page:telecamere`, so the camera glance
-  # on `page:main` opens it: it is the Page Placing all the cameras in
-  # `left` or `right`. Its glance is the house's Verdict, as Clima's is,
-  # without the camera glance -- the Feeds are right there. Without a glance
-  # there would be no left column, and `left` would not render at all
-  # (Panel.tsx).
-  - id: page:sicurezza:glance
-    name: page:sicurezza:glance
-    icon: mdi:shield-home
-  - id: page:sicurezza:left
-    name: page:sicurezza:left
-    icon: mdi:shield-home
-  - id: page:sicurezza:right
-    name: page:sicurezza:right
-    icon: mdi:shield-home
-  - id: page:sicurezza:footer
-    name: page:sicurezza:footer
-    icon: mdi:shield-home
-  # Media (#35): Ovunque as the strip in `left`, every room's player in full
-  # in `right`. The same Verdict glance as Sicurezza, for the same reason:
-  # without one, `left` would not render.
-  - id: page:media:glance
-    name: page:media:glance
-    icon: mdi:speaker
-  - id: page:media:left
-    name: page:media:left
-    icon: mdi:speaker
-  - id: page:media:right
-    name: page:media:right
-    icon: mdi:speaker
-  # Servizi (#36): the vacuum and its selects, the dishwasher, and the main
-  # switch with its readings. The Verdict glance again, so `left` renders.
-  - id: page:servizi:glance
-    name: page:servizi:glance
-    icon: mdi:washing-machine
-  - id: page:servizi:left
-    name: page:servizi:left
-    icon: mdi:washing-machine
-  - id: page:servizi:right
-    name: page:servizi:right
-    icon: mdi:washing-machine
-  # Clima (#33): the thermostat, the weather and the readings. Its glance is
-  # the same as `page:main`'s, so the Verdict is still there.
-  - id: page:clima:glance
-    name: page:clima:glance
-    icon: mdi:thermostat
-  - id: page:clima:left
-    name: page:clima:left
-    icon: mdi:thermostat
-  - id: page:clima:right
-    name: page:clima:right
-    icon: mdi:thermostat
 
 entities:
-  # ---------------- Page Openers ----------------
-  # The Topic Pages' front doors (ADR-0012): an `input_button` opens the Page
-  # its object id names, so `input_button.clima` opens `page:clima`. Not
-  # fakes of a device: the real house needs the same helpers. Its name and
-  # icon are what the block shows. Pressing one in Home Assistant does
-  # nothing.
-  - id: input_button.clima
-    name: Clima
-    kind: input_button
-    icon: mdi:thermostat
-    area: null
-    labels: [page:main:footer]
-  - id: input_button.sicurezza
-    name: Sicurezza
-    kind: input_button
-    icon: mdi:shield-home
-    area: null
-    labels: [page:main:footer]
-  - id: input_button.media
-    name: Media
-    kind: input_button
-    icon: mdi:speaker
-    area: null
-    labels: [page:main:footer]
-  - id: input_button.servizi
-    name: Servizi
-    kind: input_button
-    icon: mdi:washing-machine
-    area: null
-    labels: [page:main:footer]
-
   # ---------------- lights ----------------
   - id: light.luci_salone
     name: Luci Salone
     kind: light
     area: salone
-    labels: [main]
     aggregate_of:
       - light.ingresso_interruttore_ing_salone_lampadario
       - light.ingresso_interruttore_ing_salone_luci_sala_2
@@ -226,7 +80,6 @@ entities:
     name: Luci Cucina
     kind: light
     area: cucina
-    labels: [main]
     aggregate_of:
       - light.luce_cucina
       - light.cucina_faretti_cucina
@@ -249,51 +102,37 @@ entities:
     name: Luce Ingresso
     kind: light
     area: ingresso
-    labels: [main]
   - id: light.luce_corridoio
     name: Luce Corridoio
     kind: light
     area: corridoio
-    # Placed on corridoio's own Page, which is what the footer block above
-    # opens -- docs/protocol.md's worked example, verbatim. `main` still
-    # marks it as the Area's primary light.
-    labels: [main, page:corridoio:right]
   - id: light.luce_camera_chri
     name: Luce Camera Chri
     kind: light
     area: camera_chri
-    labels: [main]
   - id: light.esterno_luce_casetta_2
     name: Luce Casetta
     kind: light
-    # On/off only: the one Area whose `main` light cannot be dimmed, so its
-    # Row shows no slider (#37).
+    # On/off only: a light that cannot be dimmed shows no slider (#37).
     dimmable: false
     area: esterno
-    labels: [main]
 
   # ---------------- gates ----------------
-  # On `page:main` the gates are the Accessi card, `lock.accessi` below,
-  # so they carry no `page:main:left` of their own (ADR-0014).
   - id: lock.esterno_cancello
     name: Cancello
     kind: lock
     area: esterno
-    labels: [gate, main, page:citofono:left, page:sicurezza:left]
   - id: lock.esterno_cancelletto
     name: Cancelletto
     kind: lock
     area: esterno
-    labels: [gate, page:citofono:left, page:sicurezza:left]
-  # A Lock group helper (ADR-0014): Placed, it is a titled card holding its
-  # members, and the panel never shows its own lock -- unlocking it would
+  # A Lock group helper (ADR-0014): a titled card holding its members, and the panel never shows its own lock -- unlocking it would
   # open both gates at once. Not a fake: the real house needs the same one.
   - id: lock.accessi
     name: Accessi
     kind: group
     area: null
     members: [lock.esterno_cancello, lock.esterno_cancelletto]
-    labels: [page:main:left]
 
   # ---------------- doorbell & intercom (Ring) ----------------
   # Entity ids as the Ring integration names them
@@ -304,7 +143,6 @@ entities:
     name: Campanello
     kind: camera
     area: esterno
-    labels: [vision, page:citofono:right]
   # Fired by pressing `input_button.fake_fire_event_campanello_ding`, which
   # is what the Popup's automation triggers on.
   - id: event.campanello_ding
@@ -325,53 +163,40 @@ entities:
     kind: button_lock
     area: ingresso
     button: button.citofono_open_door
-    labels: [gate, page:citofono:left]
 
   # ---------------- security ----------------
   - id: alarm_control_panel.ezviz_alarm
     name: Allarme
     kind: alarm
     area: null
-    labels: [security, main, page:main:glance, page:clima:glance, page:sicurezza:glance, page:sicurezza:left, page:media:glance, page:servizi:glance]
   - id: siren.telecamera_cancello_sirena
     name: Sirena Cancello
     kind: siren
     area: esterno
-    labels: [security, page:sicurezza:footer]
   - id: siren.telecamera_esterno_giardino_sirena
     name: Sirena Giardino
     kind: siren
     area: esterno
-    labels: [security, page:sicurezza:footer]
 
   # ---------------- cameras ----------------
-  # In `glance` on `page:main`, as the motion glance, and in `right` on
-  # `page:sicurezza`, as Feeds (#29, #34). Not in `left`: a 16:9 Feed does
-  # not fit under the gates.
   - id: camera.telecamera_cancello
     name: Telecamera Cancello
     kind: camera
     area: esterno
-    labels: [vision, page:main:glance, page:clima:glance, page:sicurezza:right]
   - id: camera.telecamera_cancelletto
     name: Telecamera Cancelletto
     kind: camera
     area: esterno
-    labels: [vision, page:main:glance, page:clima:glance, page:sicurezza:right]
   - id: camera.telecamera_esterno_giardino
     name: Telecamera Giardino
     kind: camera
     area: esterno
-    labels: [vision, page:main:glance, page:clima:glance, page:sicurezza:right]
 
   # ---------------- climate ----------------
-  # In full on `page:clima`, which makes it where the Hero on `page:main`
-  # leads (#32).
   - id: climate.corridoio_termostato
     name: Termostato
     kind: climate
     area: corridoio
-    labels: [main, page:main:glance, page:clima:glance, page:clima:left, page:sicurezza:glance, page:media:glance, page:servizi:glance]
   - id: sensor.corridoio_termostato_umidita
     name: Umidita Termostato
     kind: sensor
@@ -379,36 +204,28 @@ entities:
     device_class: humidity
     unit: '%'
     initial: 47
-    labels: [page:main:glance, page:clima:glance, page:clima:right, page:sicurezza:glance, page:media:glance, page:servizi:glance]
 
   # ---------------- media ----------------
-  # In `page:media:left` too, so `page:main`'s footer strip leads there
-  # (#32's member chevron, first real case).
   - id: media_player.ovunque
     name: Ovunque
     kind: media_player
     area: null
-    labels: [multiroom, main, page:main:footer, page:media:left]
   - id: media_player.echo_di_christian
     name: Echo di Christian
     kind: media_player
     area: camera_chri
-    labels: [main, page:media:right]
   - id: media_player.echo_show_di_christian
     name: Echo Show di Christian
     kind: media_player
     area: salone
-    labels: [page:media:right]
   - id: media_player.echo_spot_di_christian
     name: Echo Spot di Christian
     kind: media_player
     area: ingresso
-    labels: [main, page:media:right]
   - id: media_player.echo_pop_di_christian
     name: Echo Pop di Christian
     kind: media_player
     area: corridoio
-    labels: [main, page:media:right]
   - id: media_player.christian_s_echo_auto
     name: Echo Auto
     kind: media_player
@@ -417,21 +234,18 @@ entities:
     name: TV Salone
     kind: media_player
     area: salone
-    labels: [page:media:right]
 
   # ---------------- vacuum ----------------
   - id: vacuum.roborock_s5_max
     name: Roborock S5 Max
     kind: vacuum
     area: salone
-    labels: [main, page:servizi:left]
   - id: select.roborock_s5_max_mappa_selezionata
     name: Mappa Selezionata
     kind: select
     area: salone
     options: [Piano Terra, Primo Piano]
     initial: Piano Terra
-    labels: [page:servizi:left]
   - id: select.roborock_s5_max_modalita_panno
     name: Modalita Panno
     kind: select
@@ -439,14 +253,12 @@ entities:
     # Quoted: a bare `Off` is YAML's boolean, and the select offered "False".
     options: ['Off', Basso, Medio, Alto]
     initial: Medio
-    labels: [page:servizi:left]
   - id: select.soggiorno_roborock_s5_max_cleaning_mode
     name: Modalita Pulizia
     kind: select
     area: salone
     options: [Silenzioso, Bilanciato, Turbo, Max]
     initial: Bilanciato
-    labels: [page:servizi:left]
   - id: sensor.roborock_s5_max_batteria
     name: Batteria Roborock
     kind: sensor
@@ -473,21 +285,18 @@ entities:
     area: cucina
     device_class: door
     initial: 'off'
-    labels: [page:servizi:right]
   - id: binary_sensor.cucina_lavastoviglie_salt
     name: Sale Lavastoviglie
     kind: binary_sensor
     area: cucina
     device_class: problem
     initial: 'off'
-    labels: [page:servizi:right]
   - id: binary_sensor.cucina_lavastoviglie_rinse_aid
     name: Brillantante Lavastoviglie
     kind: binary_sensor
     area: cucina
     device_class: problem
     initial: 'on'
-    labels: [page:servizi:right]
 
   # ---------------- doors & motion ----------------
   - id: binary_sensor.portone_ingresso
@@ -496,14 +305,12 @@ entities:
     area: ingresso
     device_class: door
     initial: 'off'
-    labels: [main, page:sicurezza:footer]
   - id: binary_sensor.porta_verandina
     name: Porta Verandina
     kind: binary_sensor
     area: cucina
     device_class: door
     initial: 'off'
-    labels: [page:sicurezza:footer]
   - id: binary_sensor.telecamera_cancello_movimento
     # On the camera's own device, as a real EZVIZ camera's motion sensor
     # is: that is how a Feed finds its motion, since all three cameras
@@ -552,7 +359,6 @@ entities:
     name: Quadro Generale
     kind: switch
     area: ingresso
-    labels: [page:servizi:right]
   - id: sensor.generale_quadro_sonoff_100285d3f0_energy_month
     name: Energia Mensile
     kind: sensor
@@ -561,7 +367,6 @@ entities:
     unit: kWh
     initial: 143.2
     state_class: total_increasing
-    labels: [page:servizi:right]
   - id: sensor.generale_quadro_sonoff_100285d3f0_power
     name: Potenza Attuale
     kind: sensor
@@ -570,23 +375,16 @@ entities:
     unit: W
     initial: 320
     state_class: measurement
-    # In `page:servizi:right` too, which makes Servizi where the consumption
-    # on `page:main` leads (#32).
-    labels: [page:main:glance, page:clima:glance, page:sicurezza:glance, page:media:glance, page:servizi:glance, page:servizi:right]
 
   # ---------------- weather ----------------
-  # Real in `ha-local`, from met.no: not a fake, so it is only labelled.
+  # Real in `ha-local`, from met.no: not a fake, so it is only given its Area.
   - id: weather.forecast_casa
     name: Forecast Casa
     kind: external
     area: null
-    labels: [main, page:clima:right]
 
-  # An Echo's own chip temperature, not the room's. It used to carry
-  # `ignored`, because it won Camera Chri's temperature scan (#8's fault,
-  # found again on the room rows). A Row now reads only a `main` sensor
-  # (roomTemperature.ts), so it can be Placed on `page:clima`, as the old
-  # Lovelace Clima view had it, without reaching the Row.
+  # An Echo's own chip temperature, not the room's: a Widget reads it only
+  # if one names it.
   - id: sensor.echo_di_christian_temperatura
     name: Temperatura Echo
     kind: sensor
@@ -594,9 +392,8 @@ entities:
     device_class: temperature
     unit: "°C"
     initial: 21.5
-    labels: [page:clima:right]
 
-  # ---------------- diagnostics (ignored) ----------------
+  # ---------------- diagnostics ----------------
   - id: sensor.portone_ingresso_batteria
     name: Batteria Portone
     kind: sensor
@@ -604,7 +401,6 @@ entities:
     device_class: battery
     unit: '%'
     initial: 78
-    labels: [ignored]
   - id: sensor.portone_ingresso_sonoff_acc800b914_battery
     name: Batteria Portone Sonoff
     kind: sensor
@@ -612,7 +408,6 @@ entities:
     device_class: battery
     unit: '%'
     initial: 91
-    labels: [ignored]
   - id: sensor.porta_finestra_verandina_sonoff_acc80139a2_battery
     name: Batteria Verandina
     kind: sensor
@@ -620,7 +415,6 @@ entities:
     device_class: battery
     unit: '%'
     initial: 64
-    labels: [ignored]
   - id: sensor.pulsante_cancelletto_sonoff_acc800a92a_battery
     name: Batteria Pulsante Cancelletto
     kind: sensor
@@ -628,7 +422,6 @@ entities:
     device_class: battery
     unit: '%'
     initial: 55
-    labels: [ignored]
   - id: sensor.pulsante_cancelletto_2_sonoff_acc800a92e_battery
     name: Batteria Pulsante Cancelletto 2
     kind: sensor
@@ -636,7 +429,6 @@ entities:
     device_class: battery
     unit: '%'
     initial: 12
-    labels: [ignored]
   - id: sensor.valerio_battery_level
     name: Batteria Valerio
     kind: sensor
@@ -644,7 +436,6 @@ entities:
     device_class: battery
     unit: '%'
     initial: 42
-    labels: [ignored]
   - id: sensor.pixel_9_pro_battery_level
     name: Batteria Pixel 9 Pro
     kind: sensor
@@ -652,4 +443,3 @@ entities:
     device_class: battery
     unit: '%'
     initial: 88
-    labels: [ignored]

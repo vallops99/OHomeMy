@@ -29,7 +29,7 @@
  *
  * No React, no @hakit: `shows.test.ts` runs this under plain Node.
  */
-import { groupMemberIds } from '../ha/placement';
+import { groupMemberIds } from '../ha/groups';
 import type { Entity } from '../ha/types';
 import { validateWidget, type AreaMember, type House, type Member, type WidgetSchema } from './schema';
 import type { Dashboard } from './types';

@@ -1,5 +1,5 @@
 /**
- * The Chip Row's chips, decided (#53, from `ui/statusChips.ts`): in this
+ * The Chip Row's chips, decided (#53): in this
  * order a Fault, an open way in, the cameras, the alarm, each only when there
  * is one to show. Never capped: a Concern hidden to keep the row short would be a
  * lie (CONTEXT.md, Concern).
@@ -19,6 +19,7 @@
 import type { Entity } from '../../ha';
 import type { Concern, ConcernLevel } from '../../ha/verdict';
 import { alarmIcon } from '../../ui/alarmState';
+import { LEVEL_ICON } from '../../ui/levelIcon';
 import { stateLabel } from '../../ui/stateLabel';
 import { tr } from '../../i18n';
 
@@ -26,12 +27,6 @@ const HEADLINE = { fault: 'chips.fault', open: 'chips.open', lit: 'chips.lit' } 
 
 /** What a Concern's chip, and its Concern list's heading, say. */
 export const concernHeadline = (concern: Concern) => tr(HEADLINE[concern.level], { count: concern.entities.length });
-
-export const CONCERN_ICON: Record<ConcernLevel, string> = {
-  fault: 'mdi:alert-circle',
-  open: 'mdi:door-open',
-  lit: 'mdi:lightbulb-on',
-};
 
 /** What a chip does when tapped: open its Concern list, the alarm's dialog, or nothing. */
 export type ChipOpens = { kind: 'concern'; level: ConcernLevel } | { kind: 'alarm' } | null;
@@ -74,7 +69,7 @@ export function chipRow({ concerns, cameras, moving, alarm }: ChipRowInput): Chi
     chips.push({
       key: concern.level,
       tone: concern.level === 'fault' ? 'alert' : 'neutral',
-      icon: CONCERN_ICON[concern.level],
+      icon: LEVEL_ICON[concern.level],
       text: concernHeadline(concern),
       opens: { kind: 'concern', level: concern.level },
     });

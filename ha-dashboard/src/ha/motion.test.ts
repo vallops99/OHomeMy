@@ -13,7 +13,6 @@ const entity = (id: string, deviceId: string | null, state = 'off', attributes: 
   name: id,
   areaId: 'esterno',
   deviceId,
-  labels: [],
   state,
   attributes,
   unavailable: state === 'unavailable' || state === 'unknown',

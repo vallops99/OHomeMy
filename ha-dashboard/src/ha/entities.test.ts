@@ -12,11 +12,12 @@ import { toggleSchema } from '../widgets/toggle/schema';
 import { houseEntities, houseOf, type RegistryEntry } from './entities';
 import { dashboardConcerns } from './verdict';
 
-const registry: RegistryEntry[] = [
-  { entity_id: 'light.salone', area_id: 'salone', labels: [] },
+// Home Assistant still sends an entry's `labels`; nothing reads them.
+const registry: (RegistryEntry & { labels?: string[] })[] = [
+  { entity_id: 'light.salone', area_id: 'salone' },
   { entity_id: 'light.cantina', area_id: 'cantina', labels: ['ignored'] },
-  { entity_id: 'update.router', labels: [] },
-  { entity_id: 'button.restart', labels: [], entity_category: 'config' },
+  { entity_id: 'update.router' },
+  { entity_id: 'button.restart', entity_category: 'config' },
 ];
 const states = {
   'light.salone': { state: 'on', attributes: { friendly_name: 'Salone' } },
@@ -58,7 +59,6 @@ const dashboard: Dashboard = {
 test('an entity carrying `ignored` is still in the house', () => {
   const entities = houseEntities(registry, states, {});
   assert.deepEqual([...entities.keys()].sort(), ['light.cantina', 'light.salone']);
-  assert.deepEqual(entities.get('light.cantina')?.labels, ['ignored']);
 });
 
 test('denylisted Domains and `config` or `diagnostic` entities are still left out', () => {
@@ -79,11 +79,6 @@ test('an entity carrying `ignored` renders when a Widget names it, and counts as
     dashboardConcerns(entities.values(), shows).map(c => [c.level, c.entities.map(e => e.id)]),
     [['fault', ['light.cantina']]]
   );
-});
-
-test('the label-driven renderer still mutes `ignored`, until the cutover', () => {
-  const entities = houseEntities(registry, states, {}, { muteIgnored: true });
-  assert.deepEqual([...entities.keys()], ['light.salone']);
 });
 
 test('no live state reads as Unavailable, and an Area comes from the device', () => {

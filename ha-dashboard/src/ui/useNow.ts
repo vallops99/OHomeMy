@@ -1,6 +1,6 @@
 /**
- * The current time, re-read on every turn of the minute: the Clock's, both
- * the label-driven one and the Clock Widget (#50).
+ * The current time, re-read on every turn of the minute: the Clock
+ * Widget's (#50).
  */
 import { useEffect, useState } from 'react';
 import { msToNextMinute } from './clock';

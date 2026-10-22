@@ -8,30 +8,13 @@
  * import inside this directory is what makes that remedy affordable.
  */
 export { Tile, type TileProps } from './Tile';
-export { Panel, type PanelProps } from './Panel';
-export { Clock } from './Clock';
-export { Dock } from './Dock';
-export { besideDock, dockItems, type DockItem } from './dock';
-export { Strip, type StripProps } from './Strip';
 export { Slider, type SliderProps } from './Slider';
 export { Icon, DOMAIN_ICON, type IconProps } from './Icon';
-export { RoomTile } from './RoomTile';
-export { RoomGrid } from './RoomGrid';
-export { ToggleTile, type ToggleTileProps } from './ToggleTile';
-export { Hero, type HeroProps } from './Hero';
-export { Stats, type StatsProps } from './Stats';
-export { ChipRow, type ChipRowProps } from './ChipRow';
 export { AlarmTile, type AlarmTileProps } from './AlarmTile';
-export { Feeds, type FeedsProps } from './Feeds';
 export { MediaBar, type MediaBarProps } from './MediaBar';
 export { FaultTile, type FaultTileProps } from './FaultTile';
-export { PlacementView, EmptyPageMessage } from './PlacementView';
-export { Popup, type PopupProps } from './Popup';
-export { PhoneShell } from './PhoneShell';
 export { isPhone } from './device';
-export { popupPage } from './popup';
 export { IDLE_RETURN_MS } from './idle';
-export { NavigationProvider, useNavigation, type Navigation } from './NavigationContext';
 export { HakitTheme } from './HakitTheme';
 export { stateLabel } from './stateLabel';
 export { alarmIcon, isArmed, isTriggered } from './alarmState';

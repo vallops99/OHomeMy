@@ -376,14 +376,6 @@ class Builder:
             "press": [],
         }]})
 
-    def _input_button(self, e: dict) -> None:
-        # A Page Opener (ADR-0012), which is a helper rather than a fake of a
-        # device, so it has no backing helpers and no `fake_online_*`: it
-        # holds no state to fake, and the real house creates the same one.
-        # Declared on the same path as the `fake_fire_*` buttons, keyed by
-        # its object id, which is what makes it `input_button.<id>`.
-        self.input_button[e["id"].split(".", 1)[1]] = {"name": e["name"], "icon": e["icon"]}
-
     def _group(self, e: dict) -> None:
         # A Group helper (ADR-0014), which is not a fake of a device either:
         # the real house makes the same one in Settings -> Helpers -> Group.
@@ -400,7 +392,7 @@ class Builder:
 
     def _external(self, e: dict) -> None:
         # A real entity from a real integration (the met.no weather): there
-        # is nothing to fake. apply-registry.py only labels it.
+        # is nothing to fake. apply-registry.py only gives it its Area.
         pass
 
     def _button_lock(self, e: dict) -> None:

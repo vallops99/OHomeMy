@@ -7,10 +7,9 @@ export default defineWidget({
   Component: IndoorReadingWidget,
   smallest: { full: { width: 59, height: 98 }, compact: { width: 49, height: 46 } },
   // Nothing happens on a tap, so an `on_tap` makes the whole reading a way
-  // to its Page, as the label-driven Dashboard's indoor reading led to the
-  // thermostat's (#32).
+  // to its Page (#32).
   tap: 'none',
-  // `full` stacks title, number and humidity, as `ui/Hero.tsx` (the lines
+  // `full` stacks title, number and humidity, as the old Hero did (the lines
   // dissolve into the grid, the title ordered first); `compact` puts the
   // number beside the two lines. The number takes the height the lines
   // leave it, never above Casa Panel's `temp-hero` (144 px on the wall) nor

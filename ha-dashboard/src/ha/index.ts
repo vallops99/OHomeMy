@@ -5,26 +5,10 @@
  * means rewriting `registry.ts`, `actions.ts` and `useFeed.ts` against the same exported
  * types -- every component and screen keeps compiling.
  */
-export type { Area, AreaId, Domain, Entity, EntityId, Label } from './types';
-export {
-  useAreas,
-  useByLabel,
-  usePage,
-  useByDomain,
-  useEntities,
-  useEntityState,
-  IgnoredLabelMute,
-  useLabelOrder,
-  useHassUrl,
-  usePortalRoot,
-  useDeviceBattery,
-  usePower,
-  pickMain,
-  isUnavailableState,
-} from './registry';
-export { houseReport, houseTemperature, houseHumidity, type Health, type HealthLevel, type HouseReport } from './health';
+export type { Area, AreaId, Domain, Entity, EntityId } from './types';
+export { useAreas, useEntities, useEntityState, useHassUrl, usePortalRoot, useDeviceBattery, isUnavailableState } from './registry';
 export { useActions, type Actions } from './actions';
-export { resolvePage, placedPageFor, openerPage, groupMemberIds, type Region, type Placed, type PageLayout } from './placement';
+export { groupMemberIds } from './groups';
 export { cameraMoving } from './motion';
 export { climateHumidity } from './climateHumidity';
 export { useFeed, type Feed } from './useFeed';

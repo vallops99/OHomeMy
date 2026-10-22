@@ -17,7 +17,6 @@ const sensor = (state: string, attributes: Record<string, unknown> = {}): Entity
   name: 'X',
   areaId: null,
   deviceId: null,
-  labels: [],
   state,
   attributes,
   unavailable: state === 'unavailable' || state === 'unknown',

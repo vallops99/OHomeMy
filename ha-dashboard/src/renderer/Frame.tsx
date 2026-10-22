@@ -5,8 +5,7 @@
  * its height from the rows and one at the side its width from the columns;
  * nothing else changes.
  *
- * The Navbar is Casa Panel's NavDock (`src/ui/Dock.tsx` draws the same for
- * the label-driven panel): a `surface` bar, each item its icon over its
+ * The Navbar is Casa Panel's NavDock: a `surface` bar, each item its icon over its
  * Page's name, the current one a `primary` pill. Along the top or bottom its
  * items share the bar's length; down a side they stack from the top. In Tabs
  * mode a dot marks another item with a Page open over its own.

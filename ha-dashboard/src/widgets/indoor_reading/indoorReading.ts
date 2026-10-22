@@ -1,14 +1,14 @@
 /**
  * What an Indoor Reading says (#65, CONTEXT.md), read off the temperature
- * and humidity entities its Widget names: `ui/Hero.tsx`'s two lines, with
+ * and humidity entities its Widget names: the old Hero's two lines, with
  * nothing picked behind the admin's back.
  *
  * A thermostat gives its own `current_temperature` and `current_humidity`, a
  * sensor its state. The temperature is in whole degrees, as the wall has
  * always shown the number read from 2 m; the humidity in whole percent.
  *
- * Unavailable is said, never hidden (CONTEXT.md): `ui/Hero.tsx` drops its
- * humidity line when nothing reports one, which hides a broken sensor. Here
+ * Unavailable is said, never hidden (CONTEXT.md): the Hero dropped its
+ * humidity line when nothing reports one, which hid a broken sensor. Here
  * the line goes only when no humidity is chosen.
  *
  * No React, no @hakit: it runs under plain Node.

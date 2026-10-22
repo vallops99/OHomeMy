@@ -23,7 +23,6 @@ const player = (state: string, supported_features: number, attributes: Record<st
   name: 'Echo',
   areaId: null,
   deviceId: null,
-  labels: [],
   state,
   attributes: { supported_features, ...attributes },
   unavailable: state === 'unavailable' || state === 'unknown',

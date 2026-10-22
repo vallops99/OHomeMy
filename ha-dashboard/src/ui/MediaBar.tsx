@@ -81,7 +81,7 @@ export function MediaBar({ entities, style }: MediaBarProps) {
         `sm` top and bottom, not the tile's `md`: the transport's 44 px
         buttons plus `md` made the strip 74 px, past `layout.footerH` (a
         `minHeight`, so content wins), and the footer took 10 px from the
-        left column whenever something played (#32, `npm run measure`).
+        left column whenever something played (#32).
       */}
       <Tile entity={playing} active strong alwaysFilled disableModal style={{ paddingBlock: v.space.sm }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: v.space.md, height: '100%', color: fg }}>

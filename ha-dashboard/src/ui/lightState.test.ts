@@ -13,7 +13,6 @@ const entity = (id: string, attributes: Record<string, unknown> = {}, state = 'o
   name: id,
   areaId: null,
   deviceId: null,
-  labels: [],
   state,
   attributes,
   unavailable: state === 'unavailable',

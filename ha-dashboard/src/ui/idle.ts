@@ -2,8 +2,7 @@ import { useEffect, useRef } from 'react';
 
 /**
  * Idle return, in milliseconds (#14, decision 4). After this long with no
- * interaction on a non-main Page, the panel returns to `page:main` on its
- * own.
+ * interaction away from the Home Page, the panel returns to it on its own.
  *
  * Shared with the Concern list (#30), which closes after the same spell
  * untouched -- on every Page and on a phone too, where this return never runs.
@@ -33,7 +32,7 @@ export const IDLE_RETURN_MS = 240_000;
 
 /**
  * Close after `IDLE_RETURN_MS` with no touch anywhere on the panel -- the
- * same spell as the idle return, and on every Page, `page:main` and a phone
+ * same spell as the idle return, and on every Page, the Home Page and a phone
  * included, where that return never runs. A touch in a Popup over it is a
  * touch like any other. For the panel-local overlays: the Concern list (#30)
  * and the `select` picker (#36).

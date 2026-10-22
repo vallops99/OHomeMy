@@ -2,8 +2,8 @@
  * A gate's hold-to-open, kept apart from the pointer binding (#43).
  *
  * Opening a gate is physical and hard to undo, so Apri acts only after a
- * press held for 700 ms; Chiudi, the undo, is a single tap (docs/protocol.md,
- * Casa Panel's `HoldButton`). `AccessRow` feeds its pointer events and timers
+ * press held for 700 ms; Chiudi, the undo, is a single tap (Casa Panel's
+ * `HoldButton`). `AccessRow` feeds its pointer events and timers
  * through `holdStep` and words its status line with `accessStatus`; neither
  * knows about React or the DOM.
  */

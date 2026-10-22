@@ -14,7 +14,6 @@ const entity = (id: string, parts: Partial<Entity> = {}): Entity => ({
   name: id,
   areaId: null,
   deviceId: null,
-  labels: [],
   state: 'off',
   attributes: {},
   unavailable: false,

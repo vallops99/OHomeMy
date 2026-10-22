@@ -1,7 +1,6 @@
 import { HassConnect } from '@hakit/core';
 import { useMemo } from 'react';
-import { IgnoredLabelMute, useHakitLocale } from './ha';
-import Dashboard from './Dashboard';
+import { useHakitLocale } from './ha';
 import { Renderer } from './renderer/Renderer';
 import { HakitTheme } from './ui';
 
@@ -25,14 +24,6 @@ type AppProps = {
  */
 const PANEL_RESUME = { suspendWhenHidden: false };
 
-/**
- * The dev server reaches the document-driven renderer with
- * `?dashboard=<slug>` (src/renderer/select.ts); without it, it still shows
- * the label-driven `Dashboard` until the cutover (#61). Inside Home Assistant
- * a panel is always a Dashboard of the document.
- */
-const DEV_DASHBOARD = new URLSearchParams(window.location.search).has('dashboard');
-
 function App({ panel }: AppProps) {
   // @hakit takes its language from the server, not from whoever is looking,
   // so its own surfaces (the entity dialog) are given the viewer's (#59).
@@ -52,15 +43,9 @@ function App({ panel }: AppProps) {
       {/* Drives @hakit's own surfaces -- the entity modal above all -- from
           our tokens. See src/ui/HakitTheme.tsx. */}
       <HakitTheme />
-      {panel || DEV_DASHBOARD ? (
-        <Renderer />
-      ) : (
-        // The `ignored` Label is label code, and only the label-driven
-        // Dashboard still honours it (#64).
-        <IgnoredLabelMute value>
-          <Dashboard />
-        </IgnoredLabelMute>
-      )}
+      {/* On the dev server, `?dashboard=<slug>` names the Dashboard
+          (src/renderer/select.ts); inside Home Assistant the panel does. */}
+      <Renderer />
     </HassConnect>
   );
 }

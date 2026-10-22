@@ -6,7 +6,7 @@
  * every consumer above `src/ha/` speaks these types, so replacing the library
  * underneath changes `src/ha/` and nothing else.
  *
- * Vocabulary follows CONTEXT.md: Area, Domain, Label, Derived, Composed,
+ * Vocabulary follows CONTEXT.md: Area, Domain, Derived, Composed,
  * Aggregate, Individual, Singleton, Unavailable.
  */
 
@@ -18,9 +18,6 @@ export type Domain = string;
 
 /** An Area id as registered in Home Assistant's area registry. */
 export type AreaId = string;
-
-/** A Label as maintained in Home Assistant's label registry (CONTEXT.md). */
-export type Label = 'main' | 'vision' | 'gate' | 'security' | 'multiroom' | 'ignored' | (string & {});
 
 /** One entity as the dashboard sees it: registry facts plus live state. */
 export type Entity = {
@@ -36,7 +33,6 @@ export type Entity = {
    * it (CONTEXT.md, Derived).
    */
   deviceId: string | null;
-  labels: Label[];
   /** Raw Home Assistant state string, e.g. `on`, `off`, `unavailable`. */
   state: string;
   attributes: Record<string, unknown>;
@@ -53,20 +49,12 @@ export type Area = {
   id: AreaId;
   name: string;
   /**
-   * Labels applied to the Area itself, carrying half of every Placement
-   * (#12). These are label *ids*, not names: Home Assistant slugifies a
-   * label's name into its id, so the protocol's `page:main` is registered
-   * under `page_main` and arrives here in that spelling.
-   */
-  labels: Label[];
-  /**
    * The MDI icon Home Assistant's own area registry has for this Area (#13),
    * or null when the registry has none set. `RoomTile` falls back to a generic
-   * glyph when this is null -- see its own default. Carried through exactly
-   * like `labels` above: the area registry already has the right answer
-   * (`cucina` -> `mdi:stove`, `camera_chri` -> `mdi:bed`, ...), so a
-   * `PlacementView`-owned hardcoded map would just be restating what the
-   * house already declares, one Area at a time, forever out of sync with it.
+   * glyph when this is null -- see its own default. Carried straight through:
+   * the area registry already has the right answer (`cucina` -> `mdi:stove`,
+   * `camera_chri` -> `mdi:bed`, ...), so a hardcoded map would just be
+   * restating what the house already declares, forever out of sync with it.
    */
   icon: string | null;
   /** Every entity registered to this Area, denylist already applied. */

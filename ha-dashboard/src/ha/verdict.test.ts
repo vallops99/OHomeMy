@@ -14,7 +14,6 @@ const entity = (id: string, state: string, extra: Partial<Entity> = {}): Entity 
   name: id,
   areaId: null,
   deviceId: null,
-  labels: [],
   state,
   attributes: {},
   unavailable: state === 'unavailable' || state === 'unknown',
