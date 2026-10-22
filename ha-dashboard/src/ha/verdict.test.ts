@@ -24,6 +24,7 @@ const entity = (id: string, state: string, extra: Partial<Entity> = {}): Entity 
 const shows = (entities: string[], areas: Record<string, string[]> = {}): DashboardShows => ({
   entities: new Set(entities),
   areas: new Map(Object.entries(areas).map(([id, domains]) => [id, new Set(domains)])),
+  inAreas: new Map(),
 });
 
 const door = (id: string, state: string) => entity(id, state, { attributes: { device_class: 'door' } });

@@ -15,10 +15,21 @@ import type { Ask } from './Builder';
 import { DashboardSettings } from './DashboardSettings';
 import { randomId } from './draft';
 import { Inspector } from './Inspector';
-import { membersKey, moveMember, newWidget, removeMember, sizeFor, updateMember } from './inspector';
+import {
+  membersSetting,
+  moveAreaMember,
+  moveMember,
+  newWidget,
+  removeAreaMember,
+  removeMember,
+  sizeFor,
+  updateAreaMember,
+  updateMember,
+} from './inspector';
 import { addWidget, canPlace, deleteWidget, freeSpot, gridOf, placeWidget, placedOnGrid, updateWidget, type Box } from './layout';
+import { AreaInspector } from './AreaInspector';
 import { MemberInspector } from './MemberInspector';
-import { membersOf } from './members';
+import { memberOf, membersOf } from './members';
 import { addPage } from './pages';
 import { PageSettings } from './PageSettings';
 import { Preview, type Ghost, type PreviewHandle } from './Preview';
@@ -52,14 +63,14 @@ export function DashboardScreen({
   const page = dashboard.pages.find(p => p.id === pageId) ?? dashboard.pages.find(p => p.id === dashboard.home_page) ?? dashboard.pages[0];
   const [chosen, setSelected] = useState<Selection | null>(null);
   // A Widget deleted, or on another Page, is no longer selected; a Member
-  // removed from its Group leaves the Group selected.
+  // removed from its Group or Room Grid leaves that Widget selected.
   const selected = shownSelection(
     chosen,
     page.widgets.map(w => w.id),
-    id => membersOf(page.widgets.find(w => w.id === id)!).map(m => m.entity)
+    id => membersOf(page.widgets.find(w => w.id === id)!)
   );
   const widget = page.widgets.find(w => w.id === selected?.widget) ?? null;
-  const member = widget && selected?.member != null ? (membersOf(widget).find(m => m.entity === selected.member) ?? null) : null;
+  const member = widget && selected?.member != null ? memberOf(widget, selected.member) : null;
   const [end, setEnd] = useState<'min' | 'max'>('max');
   const screen = dashboard.settings.supported_range[end];
   const [notFitting, setNotFitting] = useState<string[]>([]);
@@ -91,19 +102,24 @@ export function DashboardScreen({
     if (selection !== null) setTab('widget');
   };
 
-  /** The Group's Members, edited through `f`, under its `members` setting. */
-  const editMembers = (group: Widget, f: (raw: unknown) => unknown) => {
+  /** The Widget's Members (a Group's or a Room Grid's Areas), edited through `f`, under their setting. */
+  const editMembers = (group: Widget, f: (raw: unknown, type: 'members' | 'areas') => unknown) => {
     const schema = widgetKind(group.kind)?.schema;
-    const key = schema ? membersKey(schema) : null;
-    if (key === null) return;
-    change(d => updateWidget(d, page.id, group.id, { settings: { ...group.settings, [key]: f(group.settings[key]) } }));
+    const found = schema ? membersSetting(schema) : null;
+    if (found === null) return;
+    change(d =>
+      updateWidget(d, page.id, group.id, { settings: { ...group.settings, [found.key]: f(group.settings[found.key], found.type) } })
+    );
   };
 
-  /** The Member out of its Group, and the selection back on the Group. */
-  const removeFrom = (group: Widget, entity: string) => {
-    editMembers(group, raw => removeMember(raw, entity));
+  /** The Member out of its Widget, and the selection back on the Widget. */
+  const removeFrom = (group: Widget, key: string) => {
+    editMembers(group, (raw, type) => (type === 'areas' ? removeAreaMember(raw, key) : removeMember(raw, key)));
     setSelected({ widget: group.id, member: null });
   };
+
+  const moveIn = (group: Widget, key: string, by: -1 | 1) =>
+    editMembers(group, (raw, type) => (type === 'areas' ? moveAreaMember(raw, key, by) : moveMember(raw, key, by)));
 
   const openPage = (id: string) => {
     setPageId(id);
@@ -258,8 +274,8 @@ export function DashboardScreen({
             // Each drag is a step of its own; a run of nudges of one Widget is one.
             onPlace={(id, box, how) => change(d => placeWidget(d, page.id, id, box), how === 'drag' ? null : `nudge:${id}`)}
             onDelete={id => change(d => deleteWidget(d, page.id, id))}
-            onRemoveMember={(group, entity) => removeFrom(group, entity)}
-            onMoveMember={(group, entity, by) => editMembers(group, raw => moveMember(raw, entity, by))}
+            onRemoveMember={removeFrom}
+            onMoveMember={moveIn}
             onOpenPage={openPage}
             onFit={setNotFitting}
             ghost={ghost}
@@ -277,14 +293,24 @@ export function DashboardScreen({
             ))}
           </div>
           {tab === 'widget' &&
-            (widget && member ? (
+            (widget && member && 'area' in member ? (
+              <AreaInspector
+                key={`${widget.id} ${member.area.area}`}
+                dashboard={dashboard}
+                grid={widget}
+                member={member.area}
+                onChange={patch => editMembers(widget, raw => updateAreaMember(raw, member.area.area, patch))}
+                onRemove={() => removeFrom(widget, member.area.area)}
+                onBack={() => select({ widget: widget.id, member: null })}
+              />
+            ) : widget && member && 'member' in member ? (
               <MemberInspector
-                key={`${widget.id} ${member.entity}`}
+                key={`${widget.id} ${member.member.entity}`}
                 dashboard={dashboard}
                 group={widget}
-                member={member}
-                onChange={patch => editMembers(widget, raw => updateMember(raw, member.entity, patch))}
-                onRemove={() => removeFrom(widget, member.entity)}
+                member={member.member}
+                onChange={patch => editMembers(widget, raw => updateMember(raw, member.member.entity, patch))}
+                onRemove={() => removeFrom(widget, member.member.entity)}
                 onBack={() => select({ widget: widget.id, member: null })}
               />
             ) : widget ? (
@@ -297,7 +323,7 @@ export function DashboardScreen({
                 fits={!notFitting.includes(widget.id)}
                 onChange={(patch: Partial<Omit<Widget, 'id'>>) => change(d => updateWidget(d, page.id, widget.id, patch))}
                 onDelete={() => change(d => deleteWidget(d, page.id, widget.id))}
-                onSelectMember={entity => select({ widget: widget.id, member: entity })}
+                onSelectMember={key => select({ widget: widget.id, member: key })}
               />
             ) : (
               <p className='b-empty'>{tr('builder.dashboard.widget.none')}</p>

@@ -4,6 +4,8 @@
  * the `main` Label; here nothing is Derived, so a tile shows exactly what the
  * admin chose and says so when that is nothing.
  *
+ * The light and temperature passed in are the Area's own (`inArea`).
+ *
  * Kept apart from the component, as `ui/lightState.ts` is, so the one place
  * a Dashboard words "how lit is this room" is checked rather than looked at.
  * No React, no @hakit: it runs under plain Node.
@@ -39,13 +41,23 @@ export type RoomTileState = {
 const isGroup = (light: Entity) => Array.isArray(light.attributes.entity_id);
 
 /**
- * The lights the meta line counts: the Area's, and the chosen one even when
- * the admin picked it from another Area, since it is the one the switch
- * drives.
+ * The entity a Room Tile shows as its light or temperature (ADR-0018):
+ * `id` if it is in this Area, otherwise `null`, as for no choice. One in
+ * another Area, or that Home Assistant no longer has, reads as unset: no
+ * switch, dimmer or temperature. The one rule for a Room Tile Widget and a
+ * Room Grid's Area alike; the document is not rewritten. The Builder reuses
+ * it to mark a chosen value as not in this Area.
  */
-function counted(area: Area, chosen: Entity | null): Entity[] {
+export function inArea(area: Area, id: string | null): Entity | null {
+  return id === null ? null : (area.entities.find(e => e.id === id) ?? null);
+}
+
+/**
+ * The lights the meta line counts: the Area's. The chosen light is one of
+ * them (`inArea`), since it is the one the switch drives.
+ */
+function counted(area: Area): Entity[] {
   const lights = area.entities.filter(e => e.domain === 'light');
-  if (chosen && !lights.some(e => e.id === chosen.id)) lights.push(chosen);
   const single = lights.filter(e => !isGroup(e));
   return single.length > 0 ? single : lights;
 }
@@ -59,7 +71,7 @@ function lightsMeta(lights: Entity[]): string {
 export function roomTile(area: Area, light: Entity | null, temperature: Entity | null): RoomTileState {
   const reading = temperatureReading(temperature);
   const withTemperature = (text: string) => (reading === null ? text : `${text} · ${reading}`);
-  const all = counted(area, light);
+  const all = counted(area);
   const lit = all.some(e => e.state === 'on');
 
   // No controls, but still lit while a light is on: the surface says what

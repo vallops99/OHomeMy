@@ -64,8 +64,7 @@ function Popup({ page, overflow, onClose, onActivity }: PopupProps) {
     // surface, and the same for a Group's Member or a Room Grid's.
     const opener = e.target instanceof Element ? e.target.closest('[data-opens]') : null;
     const box = opener?.closest('[data-widget]');
-    const memberOf = opener?.closest('[data-member], [data-area-member]');
-    const member = memberOf?.getAttribute('data-member') ?? memberOf?.getAttribute('data-area-member') ?? null;
+    const member = opener?.closest('[data-member]')?.getAttribute('data-member') ?? null;
     if (opensPage(page, box?.getAttribute('data-widget') ?? null, member)) onClose();
   };
 

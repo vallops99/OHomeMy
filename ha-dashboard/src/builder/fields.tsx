@@ -144,7 +144,13 @@ export function Picker({
 }
 
 const optionText = (o: Option) =>
-  o.missing ? tr('builder.dashboard.field.missing', { id: o.value }) : o.detail ? `${o.label} — ${o.detail}` : o.label;
+  o.missing
+    ? tr('builder.dashboard.field.missing', { id: o.value })
+    : o.elsewhere
+      ? tr('builder.dashboard.field.elsewhere', { label: o.detail ? `${o.label} — ${o.detail}` : o.label })
+      : o.detail
+        ? `${o.label} — ${o.detail}`
+        : o.label;
 
 /** A picker of icons, with the chosen one drawn beside it. */
 export function IconPicker(props: Parameters<typeof Picker>[0]) {

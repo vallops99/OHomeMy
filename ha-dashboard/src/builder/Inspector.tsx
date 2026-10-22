@@ -4,26 +4,17 @@
  * one control per setting, each offering only what the schema accepts and
  * the house has.
  */
-import { useMemo } from 'react';
 import { validateWidget } from '../document/schema';
 import type { Dashboard, Page, Size, Widget } from '../document/types';
-import { useAreas, useEntities, useHouse } from '../ha';
+import { useHouse } from '../ha';
 import { tr } from '../i18n';
 import { iconChoices } from '../ui/iconMap';
 import { widgetKind } from '../widgets/registry';
 import { Field, IconPicker, NumberInput, OrderedList, Picker, Switch } from './fields';
-import {
-  controlsFor,
-  updateAreaTap,
-  withAreaIds,
-  withMemberIds,
-  withSetting,
-  type Control,
-  type HouseLists,
-  type Option,
-} from './inspector';
+import { changeSetting, controlsFor, retiredLists, withAreaIds, withMemberIds, withoutRetiredLists, type Control } from './inspector';
 import { gridOf } from './layout';
 import { ordinaryPages } from './pages';
+import { useHouseLists } from './useHouseLists';
 import { kindName, settingName } from './words';
 
 const ICONS = iconChoices();
@@ -45,8 +36,8 @@ export function Inspector({
   fits: boolean;
   onChange: (patch: Partial<Omit<Widget, 'id'>>) => void;
   onDelete: () => void;
-  /** A Group's Member picked from its list, to edit it (#73). */
-  onSelectMember: (entity: string) => void;
+  /** A Group's Member or a Room Grid's Area picked from its list, to edit it (#73, #78). */
+  onSelectMember: (key: string) => void;
 }) {
   const lists = useHouseLists();
   const house = useHouse();
@@ -73,6 +64,11 @@ export function Inspector({
         <p className='b-note' data-tone='alert' role='status'>
           {tr('builder.dashboard.widget.notShown', { reason: problem })}
         </p>
+      )}
+      {schema && retiredLists(schema, widget.settings).length > 0 && (
+        <button type='button' className='b-button' onClick={() => onChange({ settings: withoutRetiredLists(schema, widget.settings) })}>
+          {tr('builder.dashboard.widget.retiredLists')}
+        </button>
       )}
       {problem === null && !fits && (
         <p className='b-note' data-tone='alert' role='status'>
@@ -151,8 +147,8 @@ export function Inspector({
             <SettingControl
               key={c.key}
               control={c}
-              pages={pages}
-              onChange={v => onChange({ settings: withSetting(widget.settings, c.key, v) })}
+              // One edit, so one Undo step: an Area changed clears what was chosen in the old one.
+              onChange={v => onChange({ settings: changeSetting(schema, widget.settings, c.key, v) })}
               onSelectMember={onSelectMember}
             />
           ))}
@@ -164,15 +160,12 @@ export function Inspector({
 
 function SettingControl({
   control: c,
-  pages,
   onChange,
   onSelectMember,
 }: {
   control: Control;
-  /** The ordinary Pages a Room Grid's Area may open (#75). */
-  pages: Option[];
   onChange: (value: unknown) => void;
-  onSelectMember: (entity: string) => void;
+  onSelectMember: (key: string) => void;
 }) {
   const label = settingName(c.key);
   return (
@@ -205,32 +198,16 @@ function SettingControl({
           case 'entities':
             return <OrderedList id={id} chosen={c.chosen} options={c.options} min={c.min} onChange={onChange} />;
           case 'areas':
-            // Each Area a Member with its own tap (#75), kept as it is
-            // reordered, and set from the same picker as a Widget's.
+            // Every Area written in full, its own choices kept, as it is reordered.
             return (
-              <>
-                <OrderedList
-                  id={id}
-                  chosen={c.chosen}
-                  options={c.options}
-                  min={c.min}
-                  onChange={ids => onChange(withAreaIds(c.value, ids))}
-                />
-                {c.value.map((m, i) => (
-                  <Field key={m.area} label={tr('builder.dashboard.area.onTap', { area: c.chosen[i].label })}>
-                    {tapId => (
-                      <Picker
-                        id={tapId}
-                        name={`${c.key}-${m.area}-on_tap`}
-                        value={m.on_tap}
-                        options={pages}
-                        none={tr('builder.dashboard.widget.onTapNone')}
-                        onChange={v => onChange(updateAreaTap(c.value, m.area, v))}
-                      />
-                    )}
-                  </Field>
-                ))}
-              </>
+              <OrderedList
+                id={id}
+                chosen={c.chosen}
+                options={c.options}
+                min={c.min}
+                onChange={ids => onChange(withAreaIds(c.value, ids))}
+                onSelect={onSelectMember}
+              />
             );
           case 'members':
             // Every Member written in full, its own settings kept, as it is reordered.
@@ -264,18 +241,5 @@ function SettingControl({
         }
       }}
     </Field>
-  );
-}
-
-/** The house as the pickers list it: every entity the renderer could show, and every Area. */
-function useHouseLists(): HouseLists {
-  const entities = useEntities();
-  const areas = useAreas();
-  return useMemo(
-    () => ({
-      entities: [...entities.values()].map(e => ({ id: e.id, name: e.name, domain: e.domain, areaId: e.areaId })),
-      areas: areas.map(a => ({ id: a.id, name: a.name })),
-    }),
-    [entities, areas]
   );
 }

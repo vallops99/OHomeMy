@@ -4,16 +4,24 @@ import { defineSchema, validateWidget } from '../document/schema';
 import {
   controlsFor,
   houseModeOptions,
+  changeSetting,
+  memberKeys,
   membersKey,
+  membersSetting,
+  moveAreaMember,
   moveItem,
   moveMember,
   newWidget,
+  removeAreaMember,
   removeMember,
+  retiredLists,
   sizeFor,
-  updateAreaTap,
+  tileOptions,
+  updateAreaMember,
   updateMember,
   withAreaIds,
   withMemberIds,
+  withoutRetiredLists,
   withSetting,
   type HouseLists,
 } from './inspector';
@@ -267,7 +275,7 @@ test('a Member is changed, moved and removed by its entity, and the rest are wri
 
 test('the settings key that holds Members, if the kind has one', () => {
   assert.equal(membersKey(groupSchema), 'members');
-  assert.equal(membersKey(schema), null);
+  assert.equal(membersKey(tileSchemaPlain), null);
 });
 
 test('a new Group starts with no Members', () => {
@@ -278,8 +286,8 @@ test("a Room Grid's Areas are listed with each one's tap", () => {
   const c = byKey({ rooms: ['cucina', { area: 'salone', on_tap: 'climate' }] }).rooms;
   assert.ok(c.type === 'areas');
   assert.deepEqual(c.value, [
-    { area: 'cucina', on_tap: null },
-    { area: 'salone', on_tap: 'climate' },
+    { area: 'cucina', light: null, temperature: null, on_tap: null },
+    { area: 'salone', light: null, temperature: null, on_tap: 'climate' },
   ]);
   assert.deepEqual(
     c.chosen.map(o => o.label),
@@ -290,15 +298,145 @@ test("a Room Grid's Areas are listed with each one's tap", () => {
 test("an Area's tap is kept as the list is reordered, and set or cleared on its own", () => {
   const raw = ['cucina', { area: 'salone', on_tap: 'climate' }];
   assert.deepEqual(withAreaIds(raw, ['salone', 'esterno']), [
-    { area: 'salone', on_tap: 'climate' },
-    { area: 'esterno', on_tap: null },
+    { area: 'salone', light: null, temperature: null, on_tap: 'climate' },
+    { area: 'esterno', light: null, temperature: null, on_tap: null },
   ]);
-  assert.deepEqual(updateAreaTap(raw, 'cucina', 'home'), [
-    { area: 'cucina', on_tap: 'home' },
-    { area: 'salone', on_tap: 'climate' },
+  assert.deepEqual(updateAreaMember(raw, 'cucina', { on_tap: 'home' }), [
+    { area: 'cucina', light: null, temperature: null, on_tap: 'home' },
+    { area: 'salone', light: null, temperature: null, on_tap: 'climate' },
   ]);
-  assert.deepEqual(updateAreaTap(raw, 'salone', null), [
-    { area: 'cucina', on_tap: null },
-    { area: 'salone', on_tap: null },
+  assert.deepEqual(updateAreaMember(raw, 'salone', { on_tap: null }), [
+    { area: 'cucina', light: null, temperature: null, on_tap: null },
+    { area: 'salone', light: null, temperature: null, on_tap: null },
   ]);
+});
+
+const gridSchema = defineSchema({
+  kind: 'grid',
+  variants: ['full'],
+  titled: false,
+  settings: { areas: { type: 'areas', min: 0 } },
+});
+
+const tileSchemaPlain = defineSchema({
+  kind: 'plain',
+  variants: ['full'],
+  titled: false,
+  settings: { dim: { type: 'boolean', default: true } },
+});
+
+test('the settings key and type of the Members: a Group’s entities or a Room Grid’s Areas', () => {
+  assert.deepEqual(membersSetting(groupSchema), { key: 'members', type: 'members' });
+  assert.deepEqual(membersSetting(gridSchema), { key: 'areas', type: 'areas' });
+  assert.equal(membersSetting(tileSchemaPlain), null);
+  assert.equal(membersKey(gridSchema), 'areas');
+});
+
+test('the Member keys, in order: entity ids for a Group, Area ids for a Room Grid', () => {
+  assert.deepEqual(memberKeys(gridSchema, { areas: ['cucina', { area: 'salone', on_tap: null }] }), ['cucina', 'salone']);
+  assert.deepEqual(memberKeys(groupSchema, { members: ['light.a', { entity: 'light.b' }] }), ['light.a', 'light.b']);
+  assert.deepEqual(memberKeys(tileSchemaPlain, {}), []);
+  assert.deepEqual(memberKeys(gridSchema, {}), []);
+});
+
+test("an Area is moved and removed as a Group's Member is, keeping the others' choices", () => {
+  const raw = ['cucina', { area: 'salone', light: 'light.salone', on_tap: 'home' }, 'esterno'];
+  assert.deepEqual(
+    moveAreaMember(raw, 'salone', -1).map(m => m.area),
+    ['salone', 'cucina', 'esterno']
+  );
+  assert.deepEqual(moveAreaMember(raw, 'salone', 1)[2], { area: 'salone', light: 'light.salone', temperature: null, on_tap: 'home' });
+  assert.deepEqual(
+    moveAreaMember(raw, 'cucina', -1).map(m => m.area),
+    ['cucina', 'salone', 'esterno']
+  );
+  assert.deepEqual(
+    removeAreaMember(raw, 'salone').map(m => m.area),
+    ['cucina', 'esterno']
+  );
+  assert.deepEqual(updateAreaMember(raw, 'salone', { temperature: 'sensor.t', light: null })[1], {
+    area: 'salone',
+    light: null,
+    temperature: 'sensor.t',
+    on_tap: 'home',
+  });
+});
+
+const tileHouse: HouseLists = {
+  entities: [
+    { id: 'light.luci_salone', name: 'Luci salone', domain: 'light', areaId: 'salone' },
+    { id: 'light.divano', name: 'Divano', domain: 'light', areaId: 'salone' },
+    { id: 'light.luci_cucina', name: 'Luci cucina', domain: 'light', areaId: 'cucina' },
+    { id: 'switch.salone', name: 'Presa', domain: 'switch', areaId: 'salone' },
+    { id: 'light.senza_area', name: 'Senza area', domain: 'light', areaId: null },
+  ],
+  areas: house.areas,
+};
+
+test('a tile’s light is chosen among the lights in its own Area only', () => {
+  const options = tileOptions(tileHouse, 'salone', ['light'], null);
+  assert.deepEqual(options.map(o => o.value).sort(), ['light.divano', 'light.luci_salone']);
+  assert.ok(options.every(o => !o.missing && !o.elsewhere));
+  assert.deepEqual(tileOptions(tileHouse, null, ['light'], null), [], 'no Area, nothing to choose from');
+});
+
+test('a chosen one in another Area stays listed and selected, marked as not in this Area', () => {
+  const options = tileOptions(tileHouse, 'salone', ['light'], 'light.luci_cucina');
+  assert.deepEqual(options[0], { value: 'light.luci_cucina', label: 'Luci cucina', detail: 'Cucina · light.luci_cucina', elsewhere: true });
+  assert.equal(options.length, 3);
+  const none = tileOptions(tileHouse, 'salone', ['light'], 'light.senza_area');
+  assert.equal(none[0].elsewhere, true);
+});
+
+test('a chosen one Home Assistant no longer has is listed too, marked missing and not in this Area', () => {
+  const options = tileOptions(tileHouse, 'salone', ['light'], 'light.gone');
+  assert.deepEqual(options[0], { value: 'light.gone', label: 'light.gone', missing: true, elsewhere: true });
+});
+
+const tileSchema = defineSchema({
+  kind: 'tile',
+  variants: ['full'],
+  titled: true,
+  settings: {
+    area: { type: 'area' },
+    light: { type: 'entity', domains: ['light'], optional: true, inArea: 'area' },
+    temperature: { type: 'entity', domains: ['climate', 'sensor'], optional: true, inArea: 'area' },
+  },
+});
+
+test('a Room Tile Widget’s light picker offers only its Area’s lights, and keeps a chosen one from elsewhere', () => {
+  const light = (settings: Record<string, unknown>) => {
+    const c = controlsFor(tileSchema, settings, tileHouse, ICONS).find(c => c.key === 'light')!;
+    assert.ok(c.type === 'entity');
+    return c.options;
+  };
+  assert.deepEqual(
+    light({ area: 'salone' })
+      .map(o => o.value)
+      .sort(),
+    ['light.divano', 'light.luci_salone']
+  );
+  const kept = light({ area: 'salone', light: 'light.luci_cucina' });
+  assert.equal(kept[0].value, 'light.luci_cucina');
+  assert.equal(kept[0].elsewhere, true);
+});
+
+test('changing a Room Tile Widget’s Area clears its light and temperature in the same edit', () => {
+  const settings = { area: 'salone', light: 'light.luci_salone', temperature: 'sensor.t' };
+  assert.deepEqual(changeSetting(tileSchema, settings, 'area', 'cucina'), { area: 'cucina' });
+  assert.deepEqual(changeSetting(tileSchema, settings, 'area', 'salone'), settings, 'the same Area changes nothing');
+  assert.deepEqual(changeSetting(tileSchema, settings, 'light', null), { area: 'salone', temperature: 'sensor.t' });
+  assert.deepEqual(changeSetting(tileSchema, { area: 'salone' }, 'area', 'cucina'), { area: 'cucina' });
+});
+
+test('the old light and temperature lists a Room Grid no longer takes, and their removal', () => {
+  const settings = { areas: [{ area: 'salone', on_tap: 'home' }], lights: ['light.a'], temperatures: [] };
+  assert.deepEqual(retiredLists(gridSchema, settings), ['lights', 'temperatures']);
+  assert.deepEqual(retiredLists(gridSchema, { areas: [] }), []);
+  assert.deepEqual(retiredLists(tileSchema, { lights: [] }), ['lights']);
+  assert.deepEqual(withoutRetiredLists(gridSchema, settings), { areas: [{ area: 'salone', on_tap: 'home' }] });
+  assert.equal(
+    validateWidget({ id: 'g', kind: 'grid', x: 0, y: 0, w: 1, h: 1, variant: 'full', title: null, on_tap: null, settings }, gridSchema).ok,
+    false
+  );
 });

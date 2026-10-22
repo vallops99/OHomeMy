@@ -47,8 +47,9 @@ export type RoomTileProps = {
   /** The ordinary Page the tile's surface opens, known to exist (`roomTileTap`), or `null`. */
   page: Id | null;
   /**
-   * Marks the tile as a Room Grid's Member (`data-area-member`), which the
-   * Popup layer reads to close on its tap.
+   * Marks the tile as a Room Grid's Member (`data-member`, the Area's id), as
+   * a Group's rows are marked: the Popup layer reads it to close on its tap,
+   * and the Builder's preview to measure and select it.
    */
   member?: boolean;
 };
@@ -63,7 +64,7 @@ export function RoomTile({ area, name, light, temperature, variant, page, member
   const on = chosen?.state === 'on';
 
   return (
-    <div className='ohm-room-tile' data-variant={variant} data-area-member={member ? area.id : undefined}>
+    <div className='ohm-room-tile' data-variant={variant} data-member={member ? area.id : undefined}>
       <div className='ohm-room-tile-body' data-look={look}>
         {page !== null && (
           <button

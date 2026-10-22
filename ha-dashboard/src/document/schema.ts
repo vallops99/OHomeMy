@@ -33,8 +33,14 @@ export type Variant = (typeof VARIANTS)[number];
  * `null`, a missing defaulted one as its default.
  */
 export type FieldSpec =
-  /** One entity, from these Domains (any Domain when empty). */
-  | { type: 'entity'; domains: readonly string[]; optional?: boolean }
+  /**
+   * One entity, from these Domains (any Domain when empty). `inArea` names
+   * the sibling `area` setting it must be in (ADR-0018): one from another
+   * Area, or that Home Assistant no longer has, reads as unset when shown,
+   * and counts as shown for Faults and Concerns only in that Area. The
+   * document is not rewritten.
+   */
+  | { type: 'entity'; domains: readonly string[]; optional?: boolean; inArea?: string }
   /**
    * An ordered set of entities, from these Domains. Members Home Assistant no
    * longer has are dropped, not fatal; the Widget is skipped only if fewer
@@ -72,7 +78,7 @@ export type FieldSpec =
    * An ordered set of Areas, dropped and counted as `entities` is, each a
    * Member with its own tap (`AreaMember`, #75): a Room Grid's. A plain id,
    * as a Room Grid saved before its Areas were Members wrote one, reads as a
-   * Member with no tap.
+   * Member with nothing set.
    */
   | { type: 'areas'; min?: number; shows?: readonly string[] }
   | { type: 'boolean'; default: boolean }
@@ -126,11 +132,19 @@ export type FieldValue<S extends FieldSpec> = S extends { type: 'entity' | 'area
  */
 export type Member = { entity: string; name: string | null; variant: Variant | null; on_tap: Id | null };
 
+/** The Domains of a Room Tile's light: the Room Tile Widget's and a Room Grid Area's. */
+export const TILE_LIGHT_DOMAINS: readonly string[] = ['light'];
+/** The Domains of a Room Tile's temperature: a thermostat or a sensor. */
+export const TILE_TEMPERATURE_DOMAINS: readonly string[] = ['climate', 'sensor'];
+
 /**
- * One Area in a Room Grid (CONTEXT.md "Member", #75): the ordinary Page a tap
- * on its tile opens, `null` while unset. No name or Variant of its own yet.
+ * One Area in a Room Grid (CONTEXT.md "Member", #75, #78), each `null` while
+ * unset: the light its tile's switch and dimmer drive, the thermostat or
+ * sensor it shows, and the ordinary Page a tap on it opens. The light and
+ * temperature count only while in this Area (ADR-0018). No name or Variant
+ * of its own yet.
  */
-export type AreaMember = { area: string; on_tap: Id | null };
+export type AreaMember = { area: string; light: string | null; temperature: string | null; on_tap: Id | null };
 
 /** A kind's settings, checked, defaults filled in: what its component receives. */
 export type SettingsOf<F extends Fields> = { -readonly [K in keyof F]: FieldValue<F[K]> };
@@ -297,14 +311,14 @@ function checkMember(spec: Extract<FieldSpec, { type: 'members' }>, value: unkno
   };
 }
 
-const AREA_MEMBER_KEYS: readonly string[] = ['area', 'on_tap'];
+const AREA_MEMBER_KEYS: readonly string[] = ['area', 'light', 'temperature', 'on_tap'];
 
-/** The Area as a Member, a plain id read as one with no tap, or why it is not one. */
+/** The Area as a Member, a plain id read as one with nothing set, or why it is not one. */
 function checkAreaMember(value: unknown): AreaMember | Checked {
   const one = { type: 'area' } as const;
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     const area = checkId(one, value);
-    return typeof area === 'string' ? { area, on_tap: null } : area;
+    return typeof area === 'string' ? { area, light: null, temperature: null, on_tap: null } : area;
   }
   const given = value as Record<string, unknown>;
   for (const key of Object.keys(given)) {
@@ -312,9 +326,19 @@ function checkAreaMember(value: unknown): AreaMember | Checked {
   }
   const area = checkId(one, given.area);
   if (typeof area !== 'string') return area;
+  const light = checkOptionalEntity(TILE_LIGHT_DOMAINS, given.light);
+  if (typeof light !== 'string' && light !== null) return light;
+  const temperature = checkOptionalEntity(TILE_TEMPERATURE_DOMAINS, given.temperature);
+  if (typeof temperature !== 'string' && temperature !== null) return temperature;
   const { on_tap = null } = given;
   if (on_tap !== null && typeof on_tap !== 'string') return no(tr('schema.notText'));
-  return { area, on_tap };
+  return { area, light, temperature, on_tap };
+}
+
+/** An entity of these Domains, `null` while unset, or why it is not one. */
+function checkOptionalEntity(domains: readonly string[], value: unknown): string | null | Checked {
+  if (value === undefined || value === null) return null;
+  return checkId({ type: 'entity', domains }, value);
 }
 
 const domainOf = (entityId: string) => entityId.slice(0, entityId.indexOf('.'));

@@ -7,14 +7,15 @@
  *
  * | Field      | Control                                                     |
  * | ---------- | ----------------------------------------------------------- |
- * | `entity`   | a picker of the house's entities in the field's Domains     |
+ * | `entity`   | a picker of the house's entities in the field's Domains; for |
+ * |            | an `inArea` field, only those in that Area (#78)            |
  * | `entities` | an ordered list, added to from the same picker; for a       |
  * |            | `sameDomain` field, once one is chosen, only its Domain     |
  * | `members`  | the same list; each Member's own settings are set from its  |
  * |            | own inspector (`MemberInspector.tsx`, #73)                  |
  * | `area`     | a picker of the house's Areas                               |
- * | `areas`    | an ordered list of Areas, each with the Page its tile opens |
- * |            | (#75), from the same picker as a Widget's tap                |
+ * | `areas`    | the same list of Areas; each Area's own settings are set    |
+ * |            | from its own inspector (`AreaInspector.tsx`, #78)           |
  * | `boolean`  | a switch                                                    |
  * | `choice`   | a picker of its options                                     |
  * | `number`   | a number between its `min` and `max`, whole if `integer`    |
@@ -23,7 +24,9 @@
  *
  * An optional field also offers "none". A value already in the Widget that
  * the house no longer has (an entity since deleted) is still listed, marked
- * `missing`, so opening the inspector never silently changes a Widget.
+ * `missing`, so opening the inspector never silently changes a Widget. The
+ * same for a chosen entity outside the Area an `inArea` field is bound to,
+ * marked `elsewhere`.
  *
  * No React, no @hakit: the house comes in as plain lists, and
  * `inspector.test.ts` runs this under plain Node.
@@ -39,7 +42,7 @@ export type HouseArea = { id: string; name: string };
 export type HouseLists = { entities: readonly HouseEntity[]; areas: readonly HouseArea[] };
 
 /** One choice in a picker: its value, what it reads as, and whether the house still has it. */
-export type Option = { value: string; label: string; detail?: string; missing?: boolean };
+export type Option = { value: string; label: string; detail?: string; missing?: boolean; elsewhere?: boolean };
 
 export type Control =
   | { key: string; type: 'entity' | 'area' | 'icon'; value: string | null; optional: boolean; options: Option[] }
@@ -63,13 +66,19 @@ export function controlsFor(
   house: HouseLists,
   icons: readonly string[]
 ): Control[] {
-  return Object.entries(schema.settings).map(([key, spec]) => controlFor(key, spec, settings[key], house, icons));
+  return Object.entries(schema.settings).map(([key, spec]) => controlFor(key, spec, settings, house, icons));
 }
 
-function controlFor(key: string, spec: FieldSpec, raw: unknown, house: HouseLists, icons: readonly string[]): Control {
+function controlFor(key: string, spec: FieldSpec, settings: Record<string, unknown>, house: HouseLists, icons: readonly string[]): Control {
+  const raw = settings[key];
   switch (spec.type) {
     case 'entity': {
       const value = typeof raw === 'string' ? raw : null;
+      if (spec.inArea !== undefined) {
+        const area = settings[spec.inArea];
+        const options = tileOptions(house, typeof area === 'string' ? area : null, spec.domains, value);
+        return { key, type: 'entity', value, optional: !!spec.optional, options };
+      }
       return { key, type: 'entity', value, optional: !!spec.optional, options: withCurrent(entityOptions(house, spec.domains), value) };
     }
     case 'entities':
@@ -153,6 +162,21 @@ function entityOptions(house: HouseLists, domains: readonly string[]): Option[] 
     .sort((a, b) => a.detail.localeCompare(b.detail) || a.label.localeCompare(b.label));
 }
 
+/**
+ * The choices for a light or temperature that must be in `area` (ADR-0018):
+ * the entities of these Domains in it. The `current` choice stays first and
+ * selected even when it is not in the Area (`elsewhere`), or Home Assistant
+ * no longer has it (`missing` too), so opening an inspector never changes
+ * the document. No Area, no choices.
+ */
+export function tileOptions(house: HouseLists, area: string | null, domains: readonly string[], current: string | null): Option[] {
+  const options =
+    area === null ? [] : entityOptions(house, domains).filter(o => house.entities.find(e => e.id === o.value)?.areaId === area);
+  if (current === null || options.some(o => o.value === current)) return options;
+  const known = entityOptions(house, []).find(o => o.value === current);
+  return [known ? { ...known, elsewhere: true } : { ...missing(current), elsewhere: true }, ...options];
+}
+
 function areaOptions(house: HouseLists): Option[] {
   return house.areas.map(a => ({ value: a.id, label: a.name })).sort((a, b) => a.label.localeCompare(b.label));
 }
@@ -189,9 +213,56 @@ export function withSetting(settings: Record<string, unknown>, key: string, valu
   return next;
 }
 
-/** The settings key of the kind's `members` field, or `null` for a kind with none. */
+/** Where a kind keeps its Members: a Group's `members` (entities) or a Room Grid's `areas`. `null` for a kind with none. */
+export function membersSetting(schema: WidgetSchema): { key: string; type: 'members' | 'areas' } | null {
+  const found = Object.entries(schema.settings).find(([, spec]) => spec.type === 'members' || spec.type === 'areas');
+  return found ? { key: found[0], type: found[1].type as 'members' | 'areas' } : null;
+}
+
+/** The settings key of the kind's Members, or `null` for a kind with none. */
 export function membersKey(schema: WidgetSchema): string | null {
-  return Object.entries(schema.settings).find(([, spec]) => spec.type === 'members')?.[0] ?? null;
+  return membersSetting(schema)?.key ?? null;
+}
+
+/** The kind's Members by key, in order: entity ids for a Group, Area ids for a Room Grid. */
+export function memberKeys(schema: WidgetSchema, settings: Record<string, unknown>): string[] {
+  const found = membersSetting(schema);
+  if (!found) return [];
+  return found.type === 'areas'
+    ? readAreaMembers(settings[found.key]).map(m => m.area)
+    : readMembers(settings[found.key]).map(m => m.entity);
+}
+
+/**
+ * The settings after `key` is set to `value`: as `withSetting`, and, when
+ * `key` is the Area a light or temperature is bound to (`inArea`) and it
+ * changes, those cleared in the same edit (ADR-0018), so one Undo step
+ * undoes both.
+ */
+export function changeSetting(
+  schema: WidgetSchema,
+  settings: Record<string, unknown>,
+  key: string,
+  value: unknown
+): Record<string, unknown> {
+  const next = withSetting(settings, key, value);
+  if ((settings[key] ?? null) === (value ?? null)) return next;
+  for (const [other, spec] of Object.entries(schema.settings)) {
+    if (spec.type === 'entity' && spec.inArea === key) delete next[other];
+  }
+  return next;
+}
+
+/** The old grid-wide lists (ADR-0018) a Room Grid still holds although its kind no longer takes them. */
+export function retiredLists(schema: WidgetSchema, settings: Record<string, unknown>): string[] {
+  return ['lights', 'temperatures'].filter(key => key in settings && !(key in schema.settings));
+}
+
+/** The settings without the old light and temperature lists, and nothing else changed. */
+export function withoutRetiredLists(schema: WidgetSchema, settings: Record<string, unknown>): Record<string, unknown> {
+  const next = { ...settings };
+  for (const key of retiredLists(schema, settings)) delete next[key];
+  return next;
 }
 
 /**
@@ -206,16 +277,31 @@ export function withMemberIds(raw: unknown, ids: readonly string[]): Member[] {
 
 /**
  * A Room Grid's Areas for the list's ids, in its order: each one kept keeps
- * its tap, each new one has none. Written in full, as `withMemberIds`.
+ * its choices, each new one has none. Written in full, as `withMemberIds`.
  */
 export function withAreaIds(raw: unknown, ids: readonly string[]): AreaMember[] {
   const members = readAreaMembers(raw);
-  return ids.map(id => members.find(m => m.area === id) ?? { area: id, on_tap: null });
+  return ids.map(id => members.find(m => m.area === id) ?? { area: id, light: null, temperature: null, on_tap: null });
 }
 
-/** A Room Grid's Areas with the tap of the one for `area` set, or cleared with `null`. */
-export function updateAreaTap(raw: unknown, area: string, on_tap: string | null): AreaMember[] {
-  return readAreaMembers(raw).map(m => (m.area === area ? { ...m, on_tap } : m));
+/** A Room Grid's Areas with the one for `area` changed. */
+export function updateAreaMember(raw: unknown, area: string, patch: Partial<Omit<AreaMember, 'area'>>): AreaMember[] {
+  return readAreaMembers(raw).map(m => (m.area === area ? { ...m, ...patch } : m));
+}
+
+/** A Room Grid's Areas with the one for `area` moved one place earlier (`-1`) or later (`1`). */
+export function moveAreaMember(raw: unknown, area: string, by: -1 | 1): AreaMember[] {
+  const members = readAreaMembers(raw);
+  return moveItem(
+    members,
+    members.findIndex(m => m.area === area),
+    by
+  );
+}
+
+/** A Room Grid's Areas without the one for `area`. */
+export function removeAreaMember(raw: unknown, area: string): AreaMember[] {
+  return readAreaMembers(raw).filter(m => m.area !== area);
 }
 
 /** The Members with the one for `entity` changed. */

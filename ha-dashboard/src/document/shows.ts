@@ -10,6 +10,9 @@
  *
  * - an `entity`, `entities` or `members` setting names its entities, which
  *   are shown;
+ * - an `entity` setting that is `inArea` (a Room Tile's light or
+ *   temperature), and a Room Grid Area's chosen light and temperature, are
+ *   shown while in that Area (`inAreas`, ADR-0018);
  * - an `area` or `areas` setting shows, from each Area, the entities of the
  *   Domains its field lists in `shows`, as a Room Tile counts its lights.
  *
@@ -31,6 +34,13 @@ export type DashboardShows = {
   entities: ReadonlySet<string>;
   /** Areas a Widget's setting names, each with the Domains shown from it. */
   areas: ReadonlyMap<string, ReadonlySet<string>>;
+  /**
+   * Entities a Room Tile chose as its light or temperature (ADR-0018), each
+   * with the Areas it was chosen for. Shown only in one of them: in another
+   * the tile reads it as unset. The Area is known only to the entity
+   * (`isShown`), so the rule is applied there and `House` is unchanged.
+   */
+  inAreas: ReadonlyMap<string, ReadonlySet<string>>;
 };
 
 /**
@@ -41,6 +51,10 @@ export type DashboardShows = {
 export function dashboardShows(dashboard: Dashboard, schemaOf: (kind: string) => WidgetSchema | undefined, house?: House): DashboardShows {
   const entities = new Set<string>();
   const areas = new Map<string, Set<string>>();
+  const inAreas = new Map<string, Set<string>>();
+  const addChosen = (id: string | null, area: string) => {
+    if (id !== null) inAreas.set(id, (inAreas.get(id) ?? new Set<string>()).add(area));
+  };
   const addArea = (id: string, domains: readonly string[] = []) => {
     const shown = areas.get(id) ?? new Set<string>();
     domains.forEach(d => shown.add(d));
@@ -57,7 +71,10 @@ export function dashboardShows(dashboard: Dashboard, schemaOf: (kind: string) =>
         const value = (valid.settings as Record<string, unknown>)[key];
         switch (spec.type) {
           case 'entity':
-            if (typeof value === 'string') entities.add(value);
+            if (typeof value !== 'string') break;
+            // A Room Tile's light or temperature: its Area's own.
+            if (spec.inArea) addChosen(value, String((valid.settings as Record<string, unknown>)[spec.inArea]));
+            else entities.add(value);
             break;
           case 'entities':
             (value as string[]).forEach(id => entities.add(id));
@@ -69,22 +86,30 @@ export function dashboardShows(dashboard: Dashboard, schemaOf: (kind: string) =>
             if (typeof value === 'string') addArea(value, spec.shows);
             break;
           case 'areas':
-            (value as AreaMember[]).forEach(m => addArea(m.area, spec.shows));
+            (value as AreaMember[]).forEach(m => {
+              addArea(m.area, spec.shows);
+              addChosen(m.light, m.area);
+              addChosen(m.temperature, m.area);
+            });
             break;
         }
       }
     }
   }
-  return { entities, areas };
+  return { entities, areas, inAreas };
 }
 
-/** Whether a setting names this entity itself, as a Room Tile names its light. */
-export function isNamed(shows: DashboardShows, id: string): boolean {
-  return shows.entities.has(id);
+/**
+ * Whether a setting names this entity itself, as a Room Tile names its
+ * light: a Group's Member, or a Room Tile's choice while in that tile's Area.
+ */
+export function isNamed(shows: DashboardShows, entity: { id: string; areaId: string | null }): boolean {
+  if (shows.entities.has(entity.id)) return true;
+  return entity.areaId !== null && (shows.inAreas.get(entity.id)?.has(entity.areaId) ?? false);
 }
 
 /** Whether the Dashboard shows this entity: named, or shown from its Area. */
 export function isShown(shows: DashboardShows, entity: { id: string; domain: string; areaId: string | null }): boolean {
-  if (shows.entities.has(entity.id)) return true;
+  if (isNamed(shows, entity)) return true;
   return entity.areaId !== null && (shows.areas.get(entity.areaId)?.has(entity.domain) ?? false);
 }

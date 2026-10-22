@@ -15,7 +15,7 @@
  *
  * Its Default title is the Area's own name.
  */
-import { defineSchema } from '../../document/schema';
+import { defineSchema, TILE_LIGHT_DOMAINS, TILE_TEMPERATURE_DOMAINS } from '../../document/schema';
 
 export const roomTileSchema = defineSchema({
   kind: 'room_tile',
@@ -24,8 +24,9 @@ export const roomTileSchema = defineSchema({
   settings: {
     // Its lights are counted on the meta line, so they are shown (`shows.ts`).
     area: { type: 'area', shows: ['light'] },
-    light: { type: 'entity', domains: ['light'], optional: true },
+    // Both only while in its Area (ADR-0018, `inArea`).
+    light: { type: 'entity', domains: TILE_LIGHT_DOMAINS, optional: true, inArea: 'area' },
     // A thermostat's own reading, or a temperature sensor's state.
-    temperature: { type: 'entity', domains: ['climate', 'sensor'], optional: true },
+    temperature: { type: 'entity', domains: TILE_TEMPERATURE_DOMAINS, optional: true, inArea: 'area' },
   },
 });

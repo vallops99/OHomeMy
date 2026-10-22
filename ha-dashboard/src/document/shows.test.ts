@@ -30,6 +30,17 @@ const SCHEMAS: Record<string, WidgetSchema> = {
     titled: true,
     settings: { area: { type: 'area', shows: ['light'] }, light: { type: 'entity', domains: ['light'], optional: true } },
   }),
+  tile: defineSchema({
+    kind: 'tile',
+    variants: ['full'],
+    titled: true,
+    settings: {
+      area: { type: 'area' },
+      light: { type: 'entity', domains: ['light'], optional: true, inArea: 'area' },
+      temperature: { type: 'entity', domains: ['climate', 'sensor'], optional: true, inArea: 'area' },
+    },
+  }),
+  tiles: defineSchema({ kind: 'tiles', variants: ['full'], titled: true, settings: { areas: { type: 'areas' } } }),
   rooms: defineSchema({
     kind: 'rooms',
     variants: ['full'],
@@ -152,8 +163,57 @@ test('an Area whose kind shows nothing from it adds no entity', () => {
 
 test('named is what a setting names, not what an Area shows', () => {
   const shows = dashboardShows(dashboard([page('home', [widget('room', { area: 'salone', light: 'light.lamp' })])]), schemaOf);
-  assert.ok(isNamed(shows, 'light.lamp'));
-  assert.ok(!isNamed(shows, 'light.ceiling'));
+  assert.ok(isNamed(shows, e('light.lamp')));
+  assert.ok(!isNamed(shows, e('light.ceiling', 'salone')));
+});
+
+test("an Area Member's chosen light and temperature are shown, in its Area", () => {
+  const shows = dashboardShows(
+    dashboard([
+      page('home', [
+        widget('tiles', {
+          areas: [
+            { area: 'salone', light: 'light.sala', temperature: 'sensor.sala_t' },
+            { area: 'cucina', light: 'light.cucina' },
+            'bagno',
+          ],
+        }),
+      ]),
+    ]),
+    schemaOf
+  );
+  assert.ok(isShown(shows, e('light.sala', 'salone')));
+  assert.ok(isShown(shows, e('sensor.sala_t', 'salone')));
+  assert.ok(isNamed(shows, e('light.sala', 'salone')));
+  assert.ok(isShown(shows, e('light.cucina', 'cucina')));
+  assert.ok(!isShown(shows, e('sensor.cucina_t', 'cucina')), 'not chosen');
+});
+
+test('a chosen entity in another Area, or in none, is not shown: the tile reads it as unset', () => {
+  const shows = dashboardShows(
+    dashboard([
+      page('home', [
+        widget('tiles', { areas: [{ area: 'salone', light: 'light.cucina', temperature: 'sensor.t' }] }),
+        widget('tile', { area: 'cucina', light: 'light.sala', temperature: 'sensor.t' }),
+      ]),
+    ]),
+    schemaOf
+  );
+  assert.ok(!isShown(shows, e('light.cucina', 'cucina')));
+  assert.ok(!isNamed(shows, e('light.cucina', 'cucina')));
+  assert.ok(!isShown(shows, e('light.sala', 'salone')));
+  assert.ok(!isShown(shows, e('sensor.t', 'bagno')));
+  assert.ok(!isShown(shows, e('sensor.t', null)));
+});
+
+test("a Room Tile Widget's chosen light and temperature are shown only in its Area", () => {
+  const shows = dashboardShows(
+    dashboard([page('home', [widget('tile', { area: 'salone', light: 'light.sala', temperature: 'climate.t' })])]),
+    schemaOf
+  );
+  assert.ok(isShown(shows, e('light.sala', 'salone')));
+  assert.ok(isShown(shows, e('climate.t', 'salone')));
+  assert.ok(!isShown(shows, e('climate.t', 'cucina')));
 });
 
 test('a Widget the renderer skips shows nothing', () => {

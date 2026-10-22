@@ -80,15 +80,20 @@ export const FULLEST: Record<string, Fullest> = {
     why: 'both numbers: lights on and the power',
   },
   room_tile: {
-    settings: { area: 'salone', light: 'light.luci_salone_2', temperature: 'climate.corridoio_termostato' },
-    why: 'the living room with its lights on, its dimmer, a temperature, and its chevron to a Page',
+    // A temperature must be in the tile's own Area (ADR-0018); the thermostat is in corridoio.
+    settings: { area: 'salone', light: 'light.luci_salone_2' },
+    why: 'the living room with its lights on, its dimmer, and its chevron to a Page',
   },
   room_grid: {
     settings: {
-      // Each opening a Page, so each tile has its chevron.
-      areas: ['salone', 'cucina', 'ingresso', 'corridoio', 'camera_chri', 'esterno'].map(area => ({ area, on_tap: FIT_PAGE })),
-      lights: ['light.luci_salone_2', 'light.luci_cucina_2'],
-      temperatures: ['climate.corridoio_termostato'],
+      // Each opening a Page, so each tile has its chevron; each lit Area
+      // chooses its own light, corridoio its own thermostat (ADR-0018).
+      areas: ['salone', 'cucina', 'ingresso', 'corridoio', 'camera_chri', 'esterno'].map(area => ({
+        area,
+        light: { salone: 'light.luci_salone_2', cucina: 'light.luci_cucina_2' }[area] ?? null,
+        temperature: area === 'corridoio' ? 'climate.corridoio_termostato' : null,
+        on_tap: FIT_PAGE,
+      })),
     },
     why: 'six Areas, each opening a Page, lights on in two of them, one with a temperature',
   },

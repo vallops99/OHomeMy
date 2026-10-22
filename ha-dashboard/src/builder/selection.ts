@@ -1,6 +1,7 @@
 /**
- * What is selected in the preview (#56, #73): a Widget, or one Member of a
- * Group, keyed by its entity (Members are unique within a Group).
+ * What is selected in the preview (#56, #73, #78): a Widget, or one Member of
+ * a Group or Room Grid, keyed by its entity or its Area id (Members are
+ * unique within their Widget).
  *
  * Selection goes in one level at a time. The first tap on a Group selects
  * the Group, as on any Widget; only then are its members tappable, and a
@@ -23,14 +24,14 @@ export function selectionTap(selection: Selection | null, widget: Id, member: st
 /**
  * What a key on the selected Widget does to the selection, or `null` when
  * it is the Widget's as before (move, resize, delete). `members` are the
- * selected Group's Members by entity, in order.
+ * selected Widget's Members by key, in order.
  */
 export function selectionKey(
   selection: Selection,
   key: string,
   shift: boolean,
   members: readonly string[]
-): { selection: Selection | null } | { removeMember: string } | { moveMember: { entity: string; by: -1 | 1 } } | { handled: true } | null {
+): { selection: Selection | null } | { removeMember: string } | { moveMember: { member: string; by: -1 | 1 } } | { handled: true } | null {
   const { widget, member } = selection;
   if (member === null) {
     if (key === 'Enter') return members.length > 0 ? { selection: { widget, member: members[0] } } : null;
@@ -39,8 +40,8 @@ export function selectionKey(
   }
   if (key === 'Escape') return { selection: { widget, member: null } };
   if (key === 'Delete' || key === 'Backspace') return { removeMember: member };
-  if (!shift && key === 'ArrowUp') return { moveMember: { entity: member, by: -1 } };
-  if (!shift && key === 'ArrowDown') return { moveMember: { entity: member, by: 1 } };
+  if (!shift && key === 'ArrowUp') return { moveMember: { member, by: -1 } };
+  if (!shift && key === 'ArrowDown') return { moveMember: { member, by: 1 } };
   // Sideways, and resizing, mean nothing for a Member; they must not move the Group either.
   if (key.startsWith('Arrow')) return { handled: true };
   return null;

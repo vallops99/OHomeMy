@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Area, Entity } from '../../ha';
-import { roomTile, temperatureReading } from './roomTile';
+import { inArea, roomTile, temperatureReading } from './roomTile';
 
 const DIMMABLE = { supported_color_modes: ['brightness'] };
 const ONOFF = { supported_color_modes: ['onoff'] };
@@ -66,11 +66,24 @@ test('an Area whose only light is the chosen one reads On or Off', () => {
   assert.equal(roomTile(area(off), off, null).meta, 'Off');
 });
 
-test('a chosen light from outside the Area is still counted', () => {
-  const light = { ...entity('light.elsewhere', 'on', DIMMABLE), areaId: 'cucina' };
-  const tile = roomTile(area(), light, null);
-  assert.equal(tile.meta, 'On');
-  assert.equal(tile.lit, true);
+test("a chosen entity counts only while it is in the tile's Area", () => {
+  const lamp = entity('light.salone', 'on', DIMMABLE);
+  const elsewhere = { ...entity('light.cucina', 'on', DIMMABLE), areaId: 'cucina' };
+  const salone = area(lamp);
+  assert.equal(inArea(salone, 'light.salone'), lamp);
+  assert.equal(inArea(salone, 'light.cucina'), null, 'in another Area');
+  assert.equal(inArea(salone, 'light.gone'), null, 'gone from Home Assistant');
+  assert.equal(inArea(salone, null), null);
+  assert.equal(inArea({ ...salone, entities: [lamp, elsewhere] }, elsewhere.id), elsewhere);
+});
+
+test("a chosen light from outside the Area is not the tile's: no controls, nothing counted from it", () => {
+  const elsewhere = { ...entity('light.cucina', 'on', DIMMABLE), areaId: 'cucina' };
+  const salone = area(entity('light.salone', 'off', DIMMABLE));
+  const tile = roomTile(salone, inArea(salone, elsewhere.id), null);
+  assert.equal(tile.lights, 'none');
+  assert.equal(tile.lit, false);
+  assert.equal(tile.meta, 'No light chosen');
 });
 
 test('an Unavailable chosen light is a fault, and says only that', () => {

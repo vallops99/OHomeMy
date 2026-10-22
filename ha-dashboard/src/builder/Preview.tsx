@@ -18,11 +18,11 @@
  * drawn at every size. Frames are drawn for every Widget, including one the
  * renderer skips (not yet valid), which shows why instead.
  *
- * ## A Group's Members
+ * ## A Group's Members, a Room Grid's Areas
  *
- * While a Group is selected, each of its Members gets a tap area of its
+ * While a Group or Room Grid is selected, each of its Members gets a tap area of its
  * own over the row the renderer draws for it, measured from the renderer's
- * DOM (`data-member`), so a Member is selected where it is seen (#73,
+ * DOM (`data-member`: a row's entity, a tile's Area id), so a Member is selected where it is seen (#73, #78,
  * `selection.ts`). A drag that starts on one still moves the Group.
  *
  * ## Size and zoom
@@ -87,8 +87,8 @@ type Props = {
   /** A Widget moved or resized: by a drag of the pointer, or a nudge of an arrow key. */
   onPlace: (id: string, box: Box, how: 'drag' | 'nudge') => void;
   onDelete: (id: string) => void;
-  onRemoveMember: (group: Widget, entity: string) => void;
-  onMoveMember: (group: Widget, entity: string, by: -1 | 1) => void;
+  onRemoveMember: (group: Widget, member: string) => void;
+  onMoveMember: (group: Widget, member: string, by: -1 | 1) => void;
   /** A Navbar item tapped on the preview: edit its Page. */
   onOpenPage: (pageId: string) => void;
   /** The Widgets that do not fit their boxes at this size, by id. */
@@ -237,13 +237,12 @@ export function Preview({
    */
   const keyFor = (widget: Widget) => (e: ReactKeyboardEvent) => {
     if (selected?.widget === widget.id) {
-      const members = membersOf(widget).map(m => m.entity);
-      const result = selectionKey(selected, e.key, e.shiftKey, members);
+      const result = selectionKey(selected, e.key, e.shiftKey, membersOf(widget));
       if (result !== null) {
         e.preventDefault();
         if ('selection' in result) onSelect(result.selection);
         else if ('removeMember' in result) onRemoveMember(widget, result.removeMember);
-        else if ('moveMember' in result) onMoveMember(widget, result.moveMember.entity, result.moveMember.by);
+        else if ('moveMember' in result) onMoveMember(widget, result.moveMember.member, result.moveMember.by);
         return;
       }
     }
@@ -402,10 +401,10 @@ function WidgetFrame({
       {problem !== null && <span className='b-frame-problem'>{problem}</span>}
       {members.map(m => (
         <span
-          key={m.entity}
+          key={m.key}
           className='b-member'
-          data-member-area={m.entity}
-          data-selected={m.entity === member}
+          data-member-area={m.key}
+          data-selected={m.key === member}
           style={{ left: m.left, top: m.top, width: m.width, height: m.height }}
         />
       ))}
@@ -504,7 +503,7 @@ function useFitReport(screen: { current: HTMLDivElement | null }, report: (ids: 
 }
 
 /** Where a Member's row is drawn, in the frame's own pixels. */
-type MemberArea = { entity: string; left: number; top: number; width: number; height: number };
+type MemberArea = { key: string; left: number; top: number; width: number; height: number };
 
 /** The frame's border, which its absolutely placed children sit inside. */
 const FRAME_BORDER = 2;
@@ -538,7 +537,7 @@ function useMemberAreas(screen: { current: HTMLDivElement | null }, widgetId: st
         if (bottom <= top) return [];
         return [
           {
-            entity: el.dataset.member!,
+            key: el.dataset.member!,
             left: (r.left - c.left) / zoom - FRAME_BORDER,
             top: (top - c.top) / zoom - FRAME_BORDER,
             width: r.width / zoom,

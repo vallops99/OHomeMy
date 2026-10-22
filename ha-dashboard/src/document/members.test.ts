@@ -13,7 +13,13 @@ const group = defineSchema({
   titled: true,
   settings: { members: { type: 'members', domains: [], variantDomains: [] } },
 });
-const schemaOf = (kind: string) => (kind === 'group' ? group : undefined);
+const grid = defineSchema({
+  kind: 'room_grid',
+  variants: ['full'],
+  titled: true,
+  settings: { areas: { type: 'areas' } },
+});
+const schemaOf = (kind: string) => (kind === 'group' ? group : kind === 'room_grid' ? grid : undefined);
 
 const widget = (kind: string, settings: Record<string, unknown>): Widget => ({
   id: kind,
@@ -68,9 +74,35 @@ test("a Room Grid's Members carry taps as a Group's do", () => {
 });
 
 test("a Room Grid's Areas read in full for the Builder, a plain id with no tap", () => {
-  assert.deepEqual(readAreaMembers(['salone', { area: 'cucina', on_tap: 'rooms' }, { area: 'bagno', on_tap: 3 }, 7]), [
-    { area: 'salone', on_tap: null },
-    { area: 'cucina', on_tap: 'rooms' },
-    { area: 'bagno', on_tap: null },
+  assert.deepEqual(
+    readAreaMembers([
+      'salone',
+      { area: 'cucina', on_tap: 'rooms' },
+      { area: 'bagno', on_tap: 3, light: 'light.b', temperature: 4 },
+      { area: 'studio', light: 'light.s', temperature: 'sensor.s', on_tap: 'rooms' },
+      7,
+    ]),
+    [
+      { area: 'salone', light: null, temperature: null, on_tap: null },
+      { area: 'cucina', light: null, temperature: null, on_tap: 'rooms' },
+      { area: 'bagno', light: 'light.b', temperature: null, on_tap: null },
+      { area: 'studio', light: 'light.s', temperature: 'sensor.s', on_tap: 'rooms' },
+    ]
+  );
+});
+
+test("rewriting an Area's tap keeps its light and temperature", () => {
+  const grid = widget('room_grid', { areas: [{ area: 'salone', light: 'light.sala', temperature: 'sensor.t', on_tap: 'rooms' }] });
+  const moved = mapMemberTaps(grid, () => 'rooms-2');
+  assert.deepEqual(moved.settings.areas, [{ area: 'salone', light: 'light.sala', temperature: 'sensor.t', on_tap: 'rooms-2' }]);
+});
+
+test("a Room Grid's Areas are published in full, light, temperature and tap kept", () => {
+  const before = doc(widget('room_grid', { areas: ['cucina', { area: 'salone', light: 'light.s', on_tap: 'rooms' }] }));
+  const after = membersInFull(before, schemaOf);
+  assert.deepEqual(after.dashboards[0].pages[0].widgets[0].settings.areas, [
+    { area: 'cucina', light: null, temperature: null, on_tap: null },
+    { area: 'salone', light: 'light.s', temperature: null, on_tap: 'rooms' },
   ]);
+  assert.equal(membersInFull(after, schemaOf), after);
 });

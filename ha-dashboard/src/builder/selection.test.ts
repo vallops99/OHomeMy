@@ -42,8 +42,8 @@ test('Delete and Backspace on a Member remove it, never the Group', () => {
 });
 
 test('Up and Down move a Member in the order; sideways, and Shift, do nothing', () => {
-  assert.deepEqual(selectionKey(gate, 'ArrowDown', false, members), { moveMember: { entity: 'lock.gate', by: 1 } });
-  assert.deepEqual(selectionKey(gate, 'ArrowUp', false, members), { moveMember: { entity: 'lock.gate', by: -1 } });
+  assert.deepEqual(selectionKey(gate, 'ArrowDown', false, members), { moveMember: { member: 'lock.gate', by: 1 } });
+  assert.deepEqual(selectionKey(gate, 'ArrowUp', false, members), { moveMember: { member: 'lock.gate', by: -1 } });
   assert.deepEqual(selectionKey(gate, 'ArrowLeft', false, members), { handled: true });
   assert.deepEqual(selectionKey(gate, 'ArrowRight', false, members), { handled: true });
   assert.deepEqual(selectionKey(gate, 'ArrowUp', true, members), { handled: true });
@@ -71,5 +71,19 @@ test('a Member no longer in the Group is not selected: the Group is', () => {
   assert.equal(
     shownSelection(null, ['g'], () => members),
     null
+  );
+});
+
+test('a Room Grid’s Areas are selected and keyed by their Area id, as a Group’s Members', () => {
+  const areas = ['salone', 'cucina'];
+  const salone: Selection = { widget: 'r', member: 'salone' };
+  assert.deepEqual(selectionTap({ widget: 'r', member: null }, 'r', 'cucina'), { widget: 'r', member: 'cucina' });
+  assert.deepEqual(selectionKey({ widget: 'r', member: null }, 'Enter', false, areas), { selection: salone });
+  assert.deepEqual(selectionKey(salone, 'Escape', false, areas), { selection: { widget: 'r', member: null } });
+  assert.deepEqual(selectionKey(salone, 'Delete', false, areas), { removeMember: 'salone' });
+  assert.deepEqual(selectionKey(salone, 'ArrowDown', false, areas), { moveMember: { member: 'salone', by: 1 } });
+  assert.deepEqual(
+    shownSelection(salone, ['r'], () => ['cucina']),
+    { widget: 'r', member: null }
   );
 });

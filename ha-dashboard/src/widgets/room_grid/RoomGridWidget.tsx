@@ -13,9 +13,10 @@
  * it does (ADR-0007). How many columns is the old Region's table
  * (`roomGridShape`), cut down in a narrow box (`index.ts`).
  *
- * Each of its Areas is a Member (#75) with its own tap: a tile with a Page
- * opens it from its surface, but for its switch and dimmer, as a Room Tile
- * Widget does (ADR-0016, `renderer/tap.ts` `roomTileTap`). The grid's own
+ * Each of its Areas is a Member (#75, #78) with its own light, temperature
+ * and tap, the light and temperature only from its own Area (ADR-0018): a
+ * tile with a Page opens it from its surface, but for its switch and dimmer, as a
+ * Room Tile Widget does (ADR-0016, `renderer/tap.ts` `roomTileTap`). The grid's own
  * `on_tap` is unchanged: it gets one Open button beside the whole grid.
  */
 import { useMemo, useRef } from 'react';
@@ -29,8 +30,8 @@ import { lightsOn, roomGridShape } from '../../ui/roomGrid';
 import { SectionLabel } from '../../ui/SectionLabel';
 import { useHasMoreBelow } from '../../ui/useHasMoreBelow';
 import { RoomTile } from '../room_tile/RoomTile';
+import { inArea } from '../room_tile/roomTile';
 import type { WidgetProps } from '../types';
-import { chosenIn } from './roomGrid';
 import type { roomGridSchema } from './schema';
 
 function AllOff({ areas }: { areas: Area[] }) {
@@ -49,7 +50,7 @@ export function RoomGridWidget({ widget, settings }: WidgetProps<(typeof roomGri
   const all = useAreas();
   const navigation = useDashboardNavigation();
   const members = useMemo(
-    () => settings.areas.flatMap(member => all.flatMap(area => (area.id === member.area ? [{ area, on_tap: member.on_tap }] : []))),
+    () => settings.areas.flatMap(member => all.flatMap(area => (area.id === member.area ? [{ area, member }] : []))),
     [all, settings.areas]
   );
   const areas = useMemo(() => members.map(m => m.area), [members]);
@@ -67,15 +68,15 @@ export function RoomGridWidget({ widget, settings }: WidgetProps<(typeof roomGri
         data-columns={roomGridShape(areas.length).columns}
         data-more={hasMore}
       >
-        {members.map(({ area, on_tap }) => {
-          const tap = roomTileTap(on_tap, p => navigation.pageName(p) !== undefined);
+        {members.map(({ area, member }) => {
+          const tap = roomTileTap(member.on_tap, p => navigation.pageName(p) !== undefined);
           return (
             <RoomTile
               key={area.id}
               area={area}
               name={area.name}
-              light={chosenIn(area, settings.lights)}
-              temperature={chosenIn(area, settings.temperatures)}
+              light={inArea(area, member.light)}
+              temperature={inArea(area, member.temperature)}
               variant={widget.variant}
               page={tap.as === 'surface' ? tap.page : null}
               member

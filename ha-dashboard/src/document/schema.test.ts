@@ -245,8 +245,8 @@ test('a Room Grid saved before its Areas were Members reads each plain id as a M
   assert.equal(v.ok, true);
   if (!v.ok) return;
   assert.deepEqual(v.settings.areas, [
-    { area: 'salone', on_tap: null },
-    { area: 'cucina', on_tap: null },
+    { area: 'salone', light: null, temperature: null, on_tap: null },
+    { area: 'cucina', light: null, temperature: null, on_tap: null },
   ]);
 });
 
@@ -255,10 +255,42 @@ test("a Room Grid's Member reads with its tap, beside plain ids", () => {
   assert.equal(v.ok, true);
   if (!v.ok) return;
   assert.deepEqual(v.settings.areas, [
-    { area: 'salone', on_tap: 'rooms' },
-    { area: 'cucina', on_tap: null },
-    { area: 'bagno', on_tap: null },
+    { area: 'salone', light: null, temperature: null, on_tap: 'rooms' },
+    { area: 'cucina', light: null, temperature: null, on_tap: null },
+    { area: 'bagno', light: null, temperature: null, on_tap: null },
   ]);
+});
+
+test("a Room Grid's Member reads its light and temperature, each optional", () => {
+  const v = validateWidget(
+    grid([
+      { area: 'salone', light: 'light.sala', temperature: 'climate.t', on_tap: 'rooms' },
+      { area: 'cucina', light: 'light.cucina' },
+      { area: 'bagno', temperature: 'sensor.bagno_t', light: null },
+    ]),
+    gridOf
+  );
+  assert.equal(v.ok, true);
+  if (!v.ok) return;
+  assert.deepEqual(v.settings.areas, [
+    { area: 'salone', light: 'light.sala', temperature: 'climate.t', on_tap: 'rooms' },
+    { area: 'cucina', light: 'light.cucina', temperature: null, on_tap: null },
+    { area: 'bagno', light: null, temperature: 'sensor.bagno_t', on_tap: null },
+  ]);
+});
+
+test("a Room Grid's Member light is a light, its temperature a thermostat or sensor", () => {
+  assert.match(reason(validateWidget(grid([{ area: 'salone', light: 'switch.sala' }]), gridOf)), /areas: .*light/);
+  assert.match(reason(validateWidget(grid([{ area: 'salone', light: 'sala' }]), gridOf)), /areas: not an entity/);
+  assert.match(reason(validateWidget(grid([{ area: 'salone', temperature: 'light.sala' }]), gridOf)), /areas: .*climate or sensor/);
+  assert.match(reason(validateWidget(grid([{ area: 'salone', temperature: 7 }]), gridOf)), /areas: not an entity/);
+});
+
+test("a Room Grid's Member keeps a light that is not in the house; the tile decides", () => {
+  const none: House = { hasEntity: () => false, hasArea: () => true };
+  const v = validateWidget(grid([{ area: 'salone', light: 'light.gone' }]), gridOf, { house: none });
+  assert.equal(v.ok, true);
+  if (v.ok) assert.equal(v.settings.areas[0].light, 'light.gone');
 });
 
 test("a Room Grid's Member must be well formed, and keeps the list's rules", () => {
@@ -277,5 +309,5 @@ test("a Room Grid's Member must be well formed, and keeps the list's rules", () 
     { house: one }
   );
   assert.equal(v.ok, true);
-  if (v.ok) assert.deepEqual(v.settings.areas, [{ area: 'salone', on_tap: 'rooms' }]);
+  if (v.ok) assert.deepEqual(v.settings.areas, [{ area: 'salone', light: null, temperature: null, on_tap: 'rooms' }]);
 });

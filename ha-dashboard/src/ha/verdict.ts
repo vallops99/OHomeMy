@@ -59,7 +59,7 @@ export function dashboardConcerns(entities: Iterable<Entity>, shows: DashboardSh
     // reach: its last state is not one the house can vouch for.
     if (isFault(e)) faults.push(e);
     else if (isOpenDoor(e) || isOpenGate(e)) open.push(e);
-    else if (e.domain === 'light' && e.state === 'on' && isNamed(shows, e.id)) lit.push(e);
+    else if (e.domain === 'light' && e.state === 'on' && isNamed(shows, e)) lit.push(e);
   }
   const found: Concern[] = [
     { level: 'fault', entities: faults },

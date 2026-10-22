@@ -82,21 +82,28 @@ export function readMembers(raw: unknown): Member[] {
 
 /**
  * A Room Grid's `areas` setting as written, each Area a Member in full, for
- * the Builder to edit: a plain id reads as a Member with no tap, and a
- * mistyped tap as none. Nothing is checked or dropped, as `readMembers`.
+ * the Builder to edit: a plain id reads as a Member with nothing set, and a
+ * missing or mistyped light, temperature or tap as none. Nothing is checked or dropped, as `readMembers`.
  */
 export function readAreaMembers(raw: unknown): AreaMember[] {
   if (!Array.isArray(raw)) return [];
   return raw.flatMap((item): AreaMember[] => {
-    if (typeof item === 'string') return [{ area: item, on_tap: null }];
+    if (typeof item === 'string') return [{ area: item, light: null, temperature: null, on_tap: null }];
     if (typeof item !== 'object' || item === null || typeof item.area !== 'string') return [];
-    const { area, on_tap } = item as Record<string, unknown>;
-    return [{ area: area as string, on_tap: typeof on_tap === 'string' ? on_tap : null }];
+    const { area, light, temperature, on_tap } = item as Record<string, unknown>;
+    return [
+      {
+        area: area as string,
+        light: typeof light === 'string' ? light : null,
+        temperature: typeof temperature === 'string' ? temperature : null,
+        on_tap: typeof on_tap === 'string' ? on_tap : null,
+      },
+    ];
   });
 }
 
 /**
- * The document with every `members` setting written in full, as a Publish
+ * The document with every `members` and `areas` setting written in full, as a Publish
  * sends it: a Group saved before Members takes the new shape the next time
  * it is Published, edited or not. The same document when nothing changes.
  */
@@ -106,8 +113,8 @@ export function membersInFull(document: OHomeMyDocument, schemaOf: (kind: string
     if (!schema) return widget;
     let settings = widget.settings;
     for (const [key, spec] of Object.entries(schema.settings)) {
-      if (spec.type !== 'members' || !(key in settings)) continue;
-      const full = readMembers(settings[key]);
+      if ((spec.type !== 'members' && spec.type !== 'areas') || !(key in settings)) continue;
+      const full = spec.type === 'areas' ? readAreaMembers(settings[key]) : readMembers(settings[key]);
       if (!sameJson(full, settings[key])) settings = { ...settings, [key]: full };
     }
     return settings === widget.settings ? widget : { ...widget, settings };
