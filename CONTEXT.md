@@ -144,8 +144,7 @@ _Avoid_: Section, card, category
 **Member**:
 One item in a Widget's chosen set, with settings of its own: an entity in a
 Group, with its own name, Variant and tap, or an Area in a Room Grid, with its
-own tap. It is not a
-Widget: it has no place on the grid.
+own tap. It is not a Widget: it has no place on the grid.
 _Avoid_: Item, row, child
 
 **Clock**:
