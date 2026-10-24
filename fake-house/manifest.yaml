@@ -10,10 +10,15 @@
 #
 # kind:  light | switch | lock | alarm | vacuum | select | sensor |
 #        binary_sensor | climate | media_player | camera | siren |
-#        event | button | button_lock | group | external
+#        event | button | button_lock | group | script | external
 #        (`external`: a real entity from a real integration, not a fake --
 #        generate.py skips it, apply-registry.py only gives it its Area)
 # members: (group only) the entity ids the Group helper holds, in order.
+# options: (sensor only) makes it an enum sensor, settable from HA.
+#        `device_class: timestamp` makes a timestamp sensor; its
+#        `initial_in_minutes` is resolved when generate.py runs.
+# sets:  (script only) {entity, option}: the script moves that enum
+#        entity's state to that option. Scripts get no Area.
 # dimmable: (light only) false for an on/off light with no brightness.
 #        Defaults to true.
 # device_of: (binary_sensor only) the entity whose device this one joins.
@@ -278,25 +283,63 @@ entities:
     device_class: problem
     initial: 'off'
 
-  # ---------------- dishwasher ----------------
-  - id: binary_sensor.cucina_lavastoviglie_door_status
+  # ---------------- dishwasher (Home Connect shaped) ----------------
+  - id: sensor.cucina_lavastoviglie_operation_state
+    name: Stato Lavastoviglie
+    kind: sensor
+    area: cucina
+    options: [inactive, ready, delayedstart, run, pause, actionrequired, finished, error, aborting]
+    initial: run
+  - id: sensor.cucina_lavastoviglie_program_finish_time
+    name: Fine Programma Lavastoviglie
+    kind: sensor
+    area: cucina
+    device_class: timestamp
+    initial_in_minutes: 95
+  - id: sensor.cucina_lavastoviglie_program_progress
+    name: Avanzamento Lavastoviglie
+    kind: sensor
+    area: cucina
+    unit: '%'
+    initial: 40
+  - id: sensor.cucina_lavastoviglie_door
     name: Sportello Lavastoviglie
-    kind: binary_sensor
+    kind: sensor
     area: cucina
-    device_class: door
-    initial: 'off'
-  - id: binary_sensor.cucina_lavastoviglie_salt
+    options: [closed, locked, open]
+    initial: closed
+  - id: sensor.cucina_lavastoviglie_salt_nearly_empty
     name: Sale Lavastoviglie
-    kind: binary_sensor
+    kind: sensor
     area: cucina
-    device_class: problem
+    options: [off, present, confirmed]
     initial: 'off'
-  - id: binary_sensor.cucina_lavastoviglie_rinse_aid
+  - id: sensor.cucina_lavastoviglie_rinse_aid_nearly_empty
     name: Brillantante Lavastoviglie
+    kind: sensor
+    area: cucina
+    options: [off, present, confirmed]
+    initial: present
+  - id: binary_sensor.cucina_lavastoviglie_remote_start
+    name: Avvio Remoto Lavastoviglie
     kind: binary_sensor
     area: cucina
-    device_class: problem
     initial: 'on'
+  - id: button.cucina_lavastoviglie_stop_program
+    name: Ferma Lavastoviglie
+    kind: button
+    area: cucina
+  - id: button.cucina_lavastoviglie_resume_program
+    name: Riprendi Lavastoviglie
+    kind: button
+    area: cucina
+  - id: script.cucina_lavastoviglie_avvia
+    name: Avvia Lavastoviglie
+    kind: script
+    area: null
+    sets:
+      entity: sensor.cucina_lavastoviglie_operation_state
+      option: run
 
   # ---------------- doors & motion ----------------
   - id: binary_sensor.portone_ingresso

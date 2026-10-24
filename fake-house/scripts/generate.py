@@ -12,6 +12,7 @@ Each fake entity is backed by helpers that hold its state:
     input_boolean.fake_state__<slug>    on/off state
     input_number.fake_level__<slug>     brightness / position
     input_select.fake_mode__<slug>      enumerated state
+    input_datetime.fake_time__<slug>    timestamp sensor value
     input_number.fake_value__<slug>     numeric sensor value
     input_button.fake_fire__<slug>      fires an `event` entity by hand
 
@@ -22,6 +23,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import datetime
 import pathlib
 import sys
 
@@ -62,6 +64,8 @@ class Builder:
         self.input_number: dict = {}
         self.input_select: dict = {}
         self.input_button: dict = {}
+        self.input_datetime: dict = {}
+        self.script: dict = {}
         self.template: list = []
         self.media_player: list = []
         self.camera: list = []
@@ -102,6 +106,15 @@ class Builder:
             "initial": str(initial),
         }
         return f"input_select.{name}"
+
+    def datetime_helper(self, e: dict, initial: str) -> str:
+        name = helper("time", e["id"])
+        self.input_datetime[name] = {
+            "name": f"[time] {e['id']}",
+            "has_date": True, "has_time": True,
+            "initial": initial,
+        }
+        return f"input_datetime.{name}"
 
     def fire_helper(self, e: dict) -> str:
         name = helper("fire", e["id"])
@@ -255,6 +268,10 @@ class Builder:
         }]})
 
     def _sensor(self, e: dict) -> None:
+        if e.get("options"):
+            return self._enum_sensor(e)
+        if e.get("device_class") == "timestamp":
+            return self._timestamp_sensor(e)
         online = self.online_helper(e)
         init = float(e.get("initial", 0))
         lo, hi = (0, 100) if e.get("device_class") in ("battery", "humidity") else (-50, 10000)
@@ -272,6 +289,52 @@ class Builder:
             cfg["device_class"] = e["device_class"]
         cfg["state_class"] = e.get("state_class", "measurement")
         self.template.append({"sensor": [cfg]})
+
+    def _enum_sensor(self, e: dict) -> None:
+        # An enum sensor (Home Connect's operation state and door). The state
+        # lives in an input_select, so it can be set by hand in Home Assistant.
+        online = self.online_helper(e)
+        opts = e["options"]
+        mode = self.select_helper(e, opts, e.get("initial", opts[0]))
+        self.template.append({"sensor": [{
+            "name": e["name"],
+            "default_entity_id": e["id"],
+            "unique_id": slug(e["id"]),
+            "device_class": "enum",
+            "state": f"{{{{ states('{mode}') }}}}",
+            "availability": f"{{{{ is_state('{online}','on') }}}}",
+            "attributes": {"options": f"{{{{ state_attr('{mode}','options') }}}}"},
+        }]})
+
+    def _timestamp_sensor(self, e: dict) -> None:
+        # `initial_in_minutes` is resolved when the package is generated, so a
+        # fresh house starts with an end time ahead of it. Editing the
+        # input_datetime in Home Assistant moves it.
+        online = self.online_helper(e)
+        when = (datetime.datetime.now().replace(second=0, microsecond=0)
+                + datetime.timedelta(minutes=e.get("initial_in_minutes", 60)))
+        val = self.datetime_helper(e, when.strftime("%Y-%m-%d %H:%M:%S"))
+        self.template.append({"sensor": [{
+            "name": e["name"],
+            "default_entity_id": e["id"],
+            "unique_id": slug(e["id"]),
+            "device_class": "timestamp",
+            "state": f"{{{{ as_datetime(states('{val}')) | as_local }}}}",
+            "availability": f"{{{{ is_state('{online}','on') }}}}",
+        }]})
+
+    def _script(self, e: dict) -> None:
+        # A stand-in for a script the real house writes (Home Connect has no
+        # start button: the script calls home_connect.start_selected_program).
+        # Here it moves the entity `sets.entity` to `sets.option`.
+        target = e["sets"]["entity"]
+        mode = f"input_select.{helper('mode', target)}"
+        self.script[e["id"].split(".", 1)[1]] = {
+            "alias": e["name"],
+            "sequence": [{"action": "input_select.select_option",
+                          "target": {"entity_id": mode},
+                          "data": {"option": e["sets"]["option"]}}],
+        }
 
     def _binary_sensor(self, e: dict) -> None:
         online = self.online_helper(e)
@@ -499,6 +562,7 @@ def main() -> int:
         "input_number": b.input_number,
         "input_select": b.input_select,
         "input_button": b.input_button,
+        "input_datetime": b.input_datetime,
     })
     write("entities", {"template": b.template})
     if b.media_player:
@@ -509,10 +573,12 @@ def main() -> int:
         write("camera", {"camera": b.camera})
     if b.group:
         write("group", b.group)
+    if b.script:
+        write("script", {"script": b.script})
 
     total = len(manifest["entities"])
     helpers = (len(b.input_boolean) + len(b.input_number) + len(b.input_select)
-               + len(b.input_button))
+               + len(b.input_button) + len(b.input_datetime))
     for p in written:
         print(f"wrote {p}")
     print(f"\n{total} fake entities, {helpers} backing helpers")
