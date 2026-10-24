@@ -151,6 +151,11 @@ test('the door is said when chosen: open, or closed', () => {
   assert.equal(dishwasher(input('ready'), NOW).door, null);
 });
 
+test('a door in any other state says nothing', () => {
+  for (const state of ['opening', 'unknown', 'on_fire', ''])
+    assert.equal(dishwasher(input('ready', { door: entity('sensor.d', state) }), NOW).door, null);
+});
+
 test('salt and rinse aid warn while their state is not off, and never otherwise', () => {
   const warn = (salt: string | null, rinse: string | null) =>
     dishwasher(

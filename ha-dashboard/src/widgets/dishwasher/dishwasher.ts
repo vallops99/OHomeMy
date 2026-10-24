@@ -111,7 +111,7 @@ export type DishwasherView = {
   countdown: string | null;
   /** Whole percent, or null when there is none to show. */
   progress: number | null;
-  /** "Door open", or null when no Door is chosen or it is Unavailable. */
+  /** "Door open" or "Door closed", or null when no Door is chosen or it is in another state. */
   door: string | null;
   warnings: string[];
   controls: Controls;
@@ -126,7 +126,9 @@ function dateOf(entity: Entity | null): Date | null {
 
 function doorText(door: Entity | null): string | null {
   if (!door || door.unavailable) return null;
-  return door.state === 'open' || door.state === 'on' ? tr('dishwasher.doorOpen') : tr('dishwasher.doorClosed');
+  if (door.state === 'open' || door.state === 'on') return tr('dishwasher.doorOpen');
+  if (door.state === 'closed' || door.state === 'locked' || door.state === 'off') return tr('dishwasher.doorClosed');
+  return null;
 }
 
 /** A salt or rinse-aid warning: while the sensor is neither off, nor unreadable. */
