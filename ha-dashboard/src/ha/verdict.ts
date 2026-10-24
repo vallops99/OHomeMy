@@ -5,11 +5,11 @@
  * The ranking is the one `./health` has always had, ranked by what would
  * stop someone leaving the house: a Fault the Dashboard cannot see past,
  * then a Malfunction (a device that says it is in error, which can mean
- * water on the floor), then an open way in, then a light left on. What changed is what is counted.
- * The old rule asked the registries (an Area, a Label, a Group helper)
- * whether an entity was rendered anywhere; now the Dashboard's document says
- * exactly what it shows, on any of its Pages (`../document/shows`), and only
- * that counts. Nothing here reads a Label.
+ * water on the floor), then an open way in, then a light left on. What
+ * changed is what is counted. The old rule asked the registries (an Area, a
+ * Label, a Group helper) whether an entity was rendered anywhere; now the
+ * Dashboard's document says exactly what it shows, on any of its Pages
+ * (`../document/shows`), and only that counts. Nothing here reads a Label.
  *
  * - **Fault**: an Unavailable entity the Dashboard shows.
  * - **Malfunction**: a shown entity in a state its Widget's schema declares
@@ -71,10 +71,7 @@ export function dashboardConcerns(entities: Iterable<Entity>, shows: DashboardSh
     else if (shows.malfunctions.get(e.id)?.has(e.state)) malfunctions.push(e);
     else if (isOpenDoor(e) || isOpenGate(e)) open.push(e);
   }
-  const lit = countedLights(
-    shown.filter(e => e.domain === 'light'),
-    lightFinder(all)
-  ).filter(e => e.state === 'on');
+  const lit = countedLights(shown.filter(e => e.domain === 'light'), lightFinder(all)).filter(e => e.state === 'on');
   const found: Concern[] = [
     { level: 'fault', entities: faults },
     { level: 'malfunction', entities: malfunctions },

@@ -72,3 +72,13 @@ test('an Area named after "Senza stanza" still sorts before the rows with none',
     ['Zona Giorno', NO_AREA]
   );
 });
+
+// ---- the state a Malfunction row shows (#80) ---------------------------------
+
+test('a Malfunction row says the state the device is in, and other levels say nothing', () => {
+  const dishwasher: Entity = { ...entity('vacuum.dw', 'Dishwasher', 'cucina'), state: 'error', unavailable: false };
+  const malfunction = concernRows({ level: 'malfunction', entities: [dishwasher] }, areas);
+  assert.equal(malfunction[0].stateText, 'Errore');
+  const fault = concernRows({ level: 'fault', entities: [dishwasher] }, areas);
+  assert.equal(fault[0].stateText, null);
+});

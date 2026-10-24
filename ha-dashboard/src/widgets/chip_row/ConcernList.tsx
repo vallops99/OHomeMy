@@ -52,7 +52,7 @@ export function ConcernList({ concern, onClose }: { concern: Concern; onClose: (
           </button>
         </header>
         <ul className='ohm-chip_row-list-rows'>
-          {rows.map(({ entity, areaName }) => (
+          {rows.map(({ entity, areaName, stateText }) => (
             <li key={entity.id} className='ohm-chip_row-list-row'>
               <span className='ohm-chip_row-list-icon'>
                 <Icon name={DOMAIN_ICON[entity.domain] ?? 'mdi:help-circle-outline'} size={26} />
@@ -61,7 +61,7 @@ export function ConcernList({ concern, onClose }: { concern: Concern; onClose: (
                 <span className='ohm-chip_row-list-name' dir='auto'>
                   {entity.name}
                 </span>
-                <span className='ohm-chip_row-list-area'>{areaName}</span>
+                <span className='ohm-chip_row-list-area'>{stateText === null ? areaName : `${areaName} · ${stateText}`}</span>
               </span>
             </li>
           ))}

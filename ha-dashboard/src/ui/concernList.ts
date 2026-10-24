@@ -11,18 +11,27 @@
  */
 import type { Area, Entity } from '../ha';
 import { fmt, tr } from '../i18n';
+import { stateLabel } from './stateLabel';
 
-/** One row of a Concern list: the entity, and its Area's name (or the words for none). */
-export type ConcernRow = { entity: Entity; areaName: string };
+/**
+ * One row of a Concern list: the entity, its Area's name (or the words for
+ * none) and, for a Malfunction, the state it is in (`null` for the rest).
+ */
+export type ConcernRow = { entity: Entity; areaName: string; stateText: string | null };
 
 const byName = fmt.compare;
 
 /**
  * A Concern's entities as rows: by Area name, then entity name, with the
  * rows in no Area last whatever their name sorts as. The same order for
- * every Concern. `noArea` names the rows in no Area.
+ * every Concern. `noArea` names the rows in no Area. A Malfunction's rows
+ * also carry the state, in the viewer's language.
  */
-export function concernRows(concern: { entities: readonly Entity[] }, areas: Area[], noArea: string = tr('chips.noArea')): ConcernRow[] {
+export function concernRows(
+  concern: { level?: string; entities: readonly Entity[] },
+  areas: Area[],
+  noArea: string = tr('chips.noArea')
+): ConcernRow[] {
   const names = new Map(areas.map(a => [a.id, a.name]));
   const rows = concern.entities.map(entity => ({
     entity,
@@ -33,5 +42,9 @@ export function concernRows(concern: { entities: readonly Entity[] }, areas: Are
     if (a.inArea !== b.inArea) return a.inArea ? -1 : 1;
     return byName(a.areaName ?? '', b.areaName ?? '') || byName(a.entity.name, b.entity.name);
   });
-  return rows.map(r => ({ entity: r.entity, areaName: r.areaName ?? noArea }));
+  return rows.map(r => ({
+    entity: r.entity,
+    areaName: r.areaName ?? noArea,
+    stateText: concern.level === 'malfunction' ? stateLabel(r.entity) : null,
+  }));
 }

@@ -209,19 +209,20 @@ way in, a light left on, or nothing to report) rather than a list of readings.
 _Avoid_: Status, summary, overview
 
 **Concern**:
-One ranked kind of thing worth reporting (Faults, Malfunctions, open ways in, lights on)
-and the entities behind it, counted over what one Dashboard shows. The Verdict
-is the highest-ranked Concern. Concerns are never capped: hiding one to keep
-things short would be a lie. They rank fault, then malfunction, then open,
-then lit: a Fault first because the Dashboard cannot see part of the house,
-a Malfunction above an open way in because it can mean water on the floor. Lights on are counted light by light, every one
-the Dashboard shows, never by the Widget or Area that shows them.
+One ranked kind of thing worth reporting (Faults, Malfunctions, open ways in,
+lights on) and the entities behind it, counted over what one Dashboard shows.
+The Verdict is the highest-ranked Concern. Concerns are never capped: hiding
+one to keep things short would be a lie. They rank fault, then malfunction,
+then open, then lit: a Fault first because the Dashboard cannot see part of
+the house, a Malfunction above an open way in because it can mean water on
+the floor. Lights on are counted light by light, every one the Dashboard
+shows, never by the Widget or Area that shows them.
 _Avoid_: Issue, alert, warning, health
 
 **Chip Row**:
 A Widget holding a row of chips: one for each Concern worth shouting about
-(Faults, Malfunctions, open ways in), one for the cameras and one for the alarm. Tapping a
-Concern's chip opens its Concern list. Lights on get no chip.
+(Faults, Malfunctions, open ways in), one for the cameras and one for the
+alarm. Tapping a Concern's chip opens its Concern list. Lights on get no chip.
 _Avoid_: Status chips, status bar
 
 **Concern list**:
