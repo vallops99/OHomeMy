@@ -67,9 +67,9 @@ export function dashboardConcerns(entities: Iterable<Entity>, shows: DashboardSh
   for (const e of shown) {
     // A Fault is all that can be said of an entity Home Assistant cannot
     // reach: its last state is not one the house can vouch for.
-    if (isFault(e)) faults.push(e);
+    if (isFault(e) && !shows.neverFault.has(e.id)) faults.push(e);
     else if (shows.malfunctions.get(e.id)?.has(e.state)) malfunctions.push(e);
-    else if (isOpenDoor(e) || isOpenGate(e)) open.push(e);
+    else if ((isOpenDoor(e) || isOpenGate(e)) && !shows.notWaysIn.has(e.id)) open.push(e);
   }
   const lit = countedLights(shown.filter(e => e.domain === 'light'), lightFinder(all)).filter(e => e.state === 'on');
   const found: Concern[] = [

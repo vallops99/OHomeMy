@@ -40,8 +40,20 @@ export type FieldSpec =
    * and counts as shown for Faults and Concerns only in that Area. The
    * document is not rewritten. `malfunction` is the states of the entity
    * that are a Malfunction (CONTEXT.md, #80), gathered by `./shows`.
+   * `neverFault` marks an entity Home Assistant makes Unavailable on purpose
+   * (a Dishwasher's finish time, #81): it is no Fault. `notWayIn` marks one
+   * that is never an open way in, whatever its device class: a door of an
+   * appliance, not of the house.
    */
-  | { type: 'entity'; domains: readonly string[]; optional?: boolean; inArea?: string; malfunction?: readonly string[] }
+  | {
+      type: 'entity';
+      domains: readonly string[];
+      optional?: boolean;
+      inArea?: string;
+      malfunction?: readonly string[];
+      neverFault?: true;
+      notWayIn?: true;
+    }
   /**
    * An ordered set of entities, from these Domains. Members Home Assistant no
    * longer has are dropped, not fatal; the Widget is skipped only if fewer

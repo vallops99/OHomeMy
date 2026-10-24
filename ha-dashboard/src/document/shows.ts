@@ -52,6 +52,13 @@ export type DashboardShows = {
    * kind.
    */
   malfunctions: ReadonlyMap<string, ReadonlySet<string>>;
+  /**
+   * Entities no Fault is made of (#81): every setting that names one marks
+   * it `neverFault`. One another Widget names plainly is not here.
+   */
+  neverFault: ReadonlySet<string>;
+  /** Entities that are never an open way in (#81), by the same rule. */
+  notWaysIn: ReadonlySet<string>;
 };
 
 /**
@@ -64,6 +71,10 @@ export function dashboardShows(dashboard: Dashboard, schemaOf: (kind: string) =>
   const areas = new Map<string, Set<string>>();
   const inAreas = new Map<string, Set<string>>();
   const malfunctions = new Map<string, Set<string>>();
+  const exemptFault = new Set<string>();
+  const plainFault = new Set<string>();
+  const exemptWayIn = new Set<string>();
+  const plainWayIn = new Set<string>();
   const addMalfunction = (id: string, states: readonly string[] = []) => {
     if (states.length === 0) return;
     const known = malfunctions.get(id) ?? new Set<string>();
@@ -94,13 +105,21 @@ export function dashboardShows(dashboard: Dashboard, schemaOf: (kind: string) =>
             if (spec.inArea) addChosen(value, String((valid.settings as Record<string, unknown>)[spec.inArea]));
             else entities.add(value);
             addMalfunction(value, spec.malfunction);
+            (spec.neverFault ? exemptFault : plainFault).add(value);
+            (spec.notWayIn ? exemptWayIn : plainWayIn).add(value);
             break;
           case 'entities':
-            (value as string[]).forEach(id => entities.add(id));
+            (value as string[]).forEach(id => {
+              entities.add(id);
+              plainFault.add(id);
+              plainWayIn.add(id);
+            });
             break;
           case 'members':
             (value as Member[]).forEach(m => {
               entities.add(m.entity);
+              plainFault.add(m.entity);
+              plainWayIn.add(m.entity);
               addMalfunction(m.entity, spec.malfunction?.[m.entity.slice(0, m.entity.indexOf('.'))]);
             });
             break;
@@ -118,7 +137,15 @@ export function dashboardShows(dashboard: Dashboard, schemaOf: (kind: string) =>
       }
     }
   }
-  return { entities, areas, inAreas, malfunctions };
+  const only = (exempt: Set<string>, plain: Set<string>) => new Set([...exempt].filter(id => !plain.has(id)));
+  return {
+    entities,
+    areas,
+    inAreas,
+    malfunctions,
+    neverFault: only(exemptFault, plainFault),
+    notWaysIn: only(exemptWayIn, plainWayIn),
+  };
 }
 
 /**

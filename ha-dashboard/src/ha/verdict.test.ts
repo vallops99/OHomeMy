@@ -25,6 +25,8 @@ const shows = (entities: string[], areas: Record<string, string[]> = {}): Dashbo
   areas: new Map(Object.entries(areas).map(([id, domains]) => [id, new Set(domains)])),
   inAreas: new Map(),
   malfunctions: new Map(),
+  neverFault: new Set(),
+  notWaysIn: new Set(),
 });
 
 const door = (id: string, state: string) => entity(id, state, { attributes: { device_class: 'door' } });
@@ -178,5 +180,23 @@ test('the ranking is fault, malfunction, open, lit', () => {
   assert.deepEqual(
     dashboardConcerns(house, s).map(c => c.level),
     ['fault', 'malfunction', 'open', 'lit']
+  );
+});
+
+test('an Unavailable entity a setting marks never-Fault is no Fault, while any other is', () => {
+  const house = [entity('sensor.ends', 'unavailable'), entity('sensor.state', 'unavailable')];
+  const concerns = dashboardConcerns(house, { ...shows(house.map(e => e.id)), neverFault: new Set(['sensor.ends']) });
+  assert.deepEqual(
+    concerns.map(c => [c.level, c.entities.map(e => e.id)]),
+    [['fault', ['sensor.state']]]
+  );
+});
+
+test('a door chosen as an appliance’s Door and standing open is not an open way in', () => {
+  const house = [door('binary_sensor.dishwasher_door', 'on'), door('binary_sensor.front', 'on')];
+  const concerns = dashboardConcerns(house, { ...shows(house.map(e => e.id)), notWaysIn: new Set(['binary_sensor.dishwasher_door']) });
+  assert.deepEqual(
+    concerns.map(c => [c.level, c.entities.map(e => e.id)]),
+    [['open', ['binary_sensor.front']]]
   );
 });

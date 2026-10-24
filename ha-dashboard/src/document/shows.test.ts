@@ -65,6 +65,16 @@ const SCHEMAS: Record<string, WidgetSchema> = {
     titled: 'own',
     settings: { members: { type: 'members', domains: ['lock', 'vacuum'], variantDomains: [], malfunction: { vacuum: ['error'] } } },
   }),
+  oven: defineSchema({
+    kind: 'oven',
+    variants: ['full'],
+    titled: true,
+    settings: {
+      state: { type: 'entity', domains: ['sensor'] },
+      ends: { type: 'entity', domains: ['sensor'], optional: true, neverFault: true },
+      door: { type: 'entity', domains: ['sensor', 'binary_sensor'], optional: true, notWayIn: true },
+    },
+  }),
   bare_area: defineSchema({ kind: 'bare_area', variants: ['full'], titled: false, settings: { area: { type: 'area' } } }),
   nothing: defineSchema({ kind: 'nothing', variants: ['full'], titled: false, settings: {} }),
 };
@@ -283,4 +293,22 @@ test('a Group Member of a Domain the setting declares counts too', () => {
     [...shows.malfunctions].map(([id, states]) => [id, [...states]]),
     [['vacuum.rocky', ['error']]]
   );
+});
+
+test('a setting marked never-Fault or not-a-way-in is gathered apart from the rest', () => {
+  const shows = dashboardShows(
+    dashboard([page('home', [widget('oven', { state: 'sensor.s', ends: 'sensor.e', door: 'binary_sensor.d' })])]),
+    schemaOf
+  );
+  assert.deepEqual([...shows.entities].sort(), ['binary_sensor.d', 'sensor.e', 'sensor.s']);
+  assert.deepEqual([...shows.neverFault], ['sensor.e']);
+  assert.deepEqual([...shows.notWaysIn], ['binary_sensor.d']);
+});
+
+test('an entity another Widget names plainly is not exempt', () => {
+  const shows = dashboardShows(
+    dashboard([page('home', [widget('oven', { state: 'sensor.s', ends: 'sensor.e' }), widget('one', { entity: 'sensor.e' })])]),
+    schemaOf
+  );
+  assert.deepEqual([...shows.neverFault], []);
 });
