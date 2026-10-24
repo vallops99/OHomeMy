@@ -40,25 +40,24 @@ export async function drive() {
   await call('vacuum', 'start', { entity_id: 'vacuum.roborock_s5_max' });
   await call('climate', 'set_temperature', { entity_id: 'climate.corridoio_termostato', temperature: 28, hvac_mode: 'heat' });
   // The dishwasher running with an open door and both warnings: its fullest.
-  // Its sensors are set in the state machine directly, as it has no service.
-  const finish = new Date(Date.now() + 320 * 60_000).toISOString();
-  for (const [id, state] of DISHWASHER_FULLEST(finish)) await setState(id, state);
+  // Its sensors are template sensors over helpers, so the helpers are set.
+  const finish = new Date(Date.now() + 320 * 60_000);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const local = `${finish.getFullYear()}-${pad(finish.getMonth() + 1)}-${pad(finish.getDate())} ${pad(finish.getHours())}:${pad(finish.getMinutes())}:00`;
+  const select = (sensor: string, option: string) =>
+    call('input_select', 'select_option', { entity_id: `input_select.fake_mode_sensor_${DISHWASHER}_${sensor}`, option });
+  await select('operation_state', 'run');
+  await select('door', 'open');
+  await select('salt_nearly_empty', 'present');
+  await select('rinse_aid_nearly_empty', 'present');
+  await call('input_datetime', 'set_datetime', {
+    entity_id: `input_datetime.fake_time_sensor_${DISHWASHER}_program_finish_time`,
+    datetime: local,
+  });
+  await call('input_number', 'set_value', { entity_id: `input_number.fake_value_sensor_${DISHWASHER}_program_progress`, value: 60 });
 }
 
-const DISHWASHER = 'sensor.cucina_lavastoviglie';
-const DISHWASHER_FULLEST = (finish: string): [string, string][] => [
-  [`${DISHWASHER}_operation_state`, 'run'],
-  [`${DISHWASHER}_program_finish_time`, finish],
-  [`${DISHWASHER}_program_progress`, '60'],
-  [`${DISHWASHER}_door`, 'open'],
-  [`${DISHWASHER}_salt_nearly_empty`, 'present'],
-  [`${DISHWASHER}_rinse_aid_nearly_empty`, 'present'],
-  ['binary_sensor.cucina_lavastoviglie_remote_start', 'on'],
-];
-const setState = async (entityId: string, state: string, attributes: Record<string, unknown> = {}) => {
-  const r = await fetch(`${HA}/api/states/${entityId}`, { method: 'POST', headers, body: JSON.stringify({ state, attributes }) });
-  if (!r.ok) console.warn(`  ! set ${entityId} to ${state}: HTTP ${r.status}`);
-};
+const DISHWASHER = 'cucina_lavastoviglie';
 
 /** Puts back every fake helper, and the thermostat, as they were. */
 export async function restore(before: State[]) {
@@ -68,11 +67,8 @@ export async function restore(before: State[]) {
     if (!object.startsWith('fake_') || now.get(s.entity_id)?.state === s.state) continue;
     if (domain === 'input_boolean') await call(domain, s.state === 'on' ? 'turn_on' : 'turn_off', { entity_id: s.entity_id });
     else if (domain === 'input_number') await call(domain, 'set_value', { entity_id: s.entity_id, value: Number(s.state) });
+    else if (domain === 'input_datetime') await call(domain, 'set_datetime', { entity_id: s.entity_id, datetime: s.state });
     else if (domain === 'input_select') await call(domain, 'select_option', { entity_id: s.entity_id, option: s.state });
-  }
-  for (const [id] of DISHWASHER_FULLEST('')) {
-    const was = before.find(s => s.entity_id === id);
-    if (was) await setState(id, was.state, was.attributes);
   }
   const thermostat = before.find(s => s.entity_id === 'climate.corridoio_termostato');
   if (thermostat)
