@@ -95,7 +95,11 @@ test('a control is shown only when its entity is chosen', () => {
 test('Start is disabled, with its hint, while the chosen Remote start is off', () => {
   const off = entity('binary_sensor.d_remote_start', 'off');
   const on = entity('binary_sensor.d_remote_start', 'on');
-  assert.deepEqual(controlsFor(input('ready', { remoteStart: off })).start, { disabled: true, hint: 'Allow remote start on the dishwasher', held: false });
+  assert.deepEqual(controlsFor(input('ready', { remoteStart: off })).start, {
+    disabled: true,
+    hint: 'Allow remote start on the dishwasher',
+    held: false,
+  });
   assert.deepEqual(controlsFor(input('ready', { remoteStart: on })).start, { disabled: false, hint: null, held: false });
   assert.deepEqual(controlsFor(input('ready')).start, { disabled: false, hint: null, held: false });
 });
@@ -113,10 +117,7 @@ test('an Unavailable State is a fault with no line, countdown or controls', () =
 });
 
 test('while running it counts down to Ends at, and shows progress', () => {
-  const view = dishwasher(
-    input('run', { endsAt: entity('sensor.e', inMinutes(35)), progress: entity('sensor.p', '42.4') }),
-    NOW
-  );
+  const view = dishwasher(input('run', { endsAt: entity('sensor.e', inMinutes(35)), progress: entity('sensor.p', '42.4') }), NOW);
   assert.equal(view.fault, false);
   assert.equal(view.line.text, 'Running');
   assert.equal(view.countdown, '35 min');

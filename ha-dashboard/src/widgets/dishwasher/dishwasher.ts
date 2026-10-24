@@ -93,10 +93,7 @@ export function controlsFor(input: DishwasherInput): Controls {
   const idle = state.state === 'ready' || state.state === 'inactive';
   const blocked = input.remoteStart?.state === 'off';
   return {
-    start:
-      chosen.start && idle
-        ? { disabled: blocked, hint: blocked ? tr('dishwasher.remoteStartHint') : null, held: false }
-        : null,
+    start: chosen.start && idle ? { disabled: blocked, hint: blocked ? tr('dishwasher.remoteStartHint') : null, held: false } : null,
     stop:
       chosen.stop && (state.state === 'run' || state.state === 'pause' || state.state === 'delayedstart')
         ? { disabled: false, hint: null, held: true }

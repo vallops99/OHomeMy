@@ -103,6 +103,21 @@ export const FULLEST: Record<string, Fullest> = {
     settings: { temperature: 'climate.corridoio_termostato', humidity: 'sensor.corridoio_termostato_umidita' },
     why: 'a temperature with its humidity line',
   },
+  dishwasher: {
+    settings: {
+      state: 'sensor.cucina_lavastoviglie_operation_state',
+      ends_at: 'sensor.cucina_lavastoviglie_program_finish_time',
+      progress: 'sensor.cucina_lavastoviglie_program_progress',
+      door: 'sensor.cucina_lavastoviglie_door',
+      salt: 'sensor.cucina_lavastoviglie_salt_nearly_empty',
+      rinse_aid: 'sensor.cucina_lavastoviglie_rinse_aid_nearly_empty',
+      start: 'script.cucina_lavastoviglie_start_program',
+      stop: 'button.cucina_lavastoviglie_stop_program',
+      resume: 'button.cucina_lavastoviglie_resume_program',
+      remote_start: 'binary_sensor.cucina_lavastoviglie_remote_start',
+    },
+    why: 'running: the countdown, the progress bar, the open door and both warnings, with Stop beside Pause',
+  },
 };
 
 /** The six shipped catalogues: the check runs in each. */

@@ -39,7 +39,26 @@ export async function drive() {
   await call('alarm_control_panel', 'alarm_arm_away', { entity_id: 'alarm_control_panel.ezviz_alarm' });
   await call('vacuum', 'start', { entity_id: 'vacuum.roborock_s5_max' });
   await call('climate', 'set_temperature', { entity_id: 'climate.corridoio_termostato', temperature: 28, hvac_mode: 'heat' });
+  // The dishwasher running with an open door and both warnings: its fullest.
+  // Its sensors are set in the state machine directly, as it has no service.
+  const finish = new Date(Date.now() + 320 * 60_000).toISOString();
+  for (const [id, state] of DISHWASHER_FULLEST(finish)) await setState(id, state);
 }
+
+const DISHWASHER = 'sensor.cucina_lavastoviglie';
+const DISHWASHER_FULLEST = (finish: string): [string, string][] => [
+  [`${DISHWASHER}_operation_state`, 'run'],
+  [`${DISHWASHER}_program_finish_time`, finish],
+  [`${DISHWASHER}_program_progress`, '60'],
+  [`${DISHWASHER}_door`, 'open'],
+  [`${DISHWASHER}_salt_nearly_empty`, 'present'],
+  [`${DISHWASHER}_rinse_aid_nearly_empty`, 'present'],
+  ['binary_sensor.cucina_lavastoviglie_remote_start', 'on'],
+];
+const setState = async (entityId: string, state: string, attributes: Record<string, unknown> = {}) => {
+  const r = await fetch(`${HA}/api/states/${entityId}`, { method: 'POST', headers, body: JSON.stringify({ state, attributes }) });
+  if (!r.ok) console.warn(`  ! set ${entityId} to ${state}: HTTP ${r.status}`);
+};
 
 /** Puts back every fake helper, and the thermostat, as they were. */
 export async function restore(before: State[]) {
@@ -50,6 +69,10 @@ export async function restore(before: State[]) {
     if (domain === 'input_boolean') await call(domain, s.state === 'on' ? 'turn_on' : 'turn_off', { entity_id: s.entity_id });
     else if (domain === 'input_number') await call(domain, 'set_value', { entity_id: s.entity_id, value: Number(s.state) });
     else if (domain === 'input_select') await call(domain, 'select_option', { entity_id: s.entity_id, option: s.state });
+  }
+  for (const [id] of DISHWASHER_FULLEST('')) {
+    const was = before.find(s => s.entity_id === id);
+    if (was) await setState(id, was.state, was.attributes);
   }
   const thermostat = before.find(s => s.entity_id === 'climate.corridoio_termostato');
   if (thermostat)

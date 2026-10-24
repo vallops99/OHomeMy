@@ -373,6 +373,7 @@ export const DEFAULT_SIZE: Readonly<Record<string, { w: number; h: number }>> = 
   room_grid: { w: 8, h: 4 },
   link: { w: 3, h: 1 },
   indoor_reading: { w: 4, h: 4 },
+  dishwasher: { w: 4, h: 3 },
 };
 
 export const sizeFor = (kind: string) => DEFAULT_SIZE[kind] ?? { w: 3, h: 2 };
