@@ -111,7 +111,7 @@ export const FULLEST: Record<string, Fullest> = {
       door: 'sensor.cucina_lavastoviglie_door',
       salt: 'sensor.cucina_lavastoviglie_salt_nearly_empty',
       rinse_aid: 'sensor.cucina_lavastoviglie_rinse_aid_nearly_empty',
-      start: 'script.cucina_lavastoviglie_start_program',
+      start: 'script.cucina_lavastoviglie_avvia',
       stop: 'button.cucina_lavastoviglie_stop_program',
       resume: 'button.cucina_lavastoviglie_resume_program',
       remote_start: 'binary_sensor.cucina_lavastoviglie_remote_start',
