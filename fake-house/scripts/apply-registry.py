@@ -223,6 +223,10 @@ async def run(url: str, token: str, dry_run: bool) -> int:
             missing = []
             for e in manifest["entities"]:
                 want_id = e["id"]
+                # A YAML script has no unique_id, so no registry entry and no
+                # Area to assign.
+                if e["kind"] == "script":
+                    continue
                 entry = find(e, entry_by_title, registry)
                 if entry is None:
                     missing.append(want_id)
