@@ -53,6 +53,18 @@ const SCHEMAS: Record<string, WidgetSchema> = {
     titled: true,
     settings: { members: { type: 'members', domains: ['lock'], variantDomains: [] } },
   }),
+  robot: defineSchema({
+    kind: 'robot',
+    variants: ['full'],
+    titled: true,
+    settings: { entity: { type: 'entity', domains: ['vacuum'], malfunction: ['error'] } },
+  }),
+  mixed: defineSchema({
+    kind: 'mixed',
+    variants: ['full'],
+    titled: 'own',
+    settings: { members: { type: 'members', domains: ['lock', 'vacuum'], variantDomains: [], malfunction: { vacuum: ['error'] } } },
+  }),
   bare_area: defineSchema({ kind: 'bare_area', variants: ['full'], titled: false, settings: { area: { type: 'area' } } }),
   nothing: defineSchema({ kind: 'nothing', variants: ['full'], titled: false, settings: {} }),
 };
@@ -251,4 +263,24 @@ test('another Dashboard’s Widgets are not this one’s', () => {
   const theirs = dashboard([page('home', [widget('one', { entity: 'camera.yard' })])]);
   assert.ok(!isShown(dashboardShows(mine, schemaOf), e('camera.yard')));
   assert.ok(isShown(dashboardShows(theirs, schemaOf), e('camera.yard')));
+});
+
+test('the Malfunction states a schema setting declares are gathered for its entity', () => {
+  const shows = dashboardShows(
+    dashboard([page('home', [widget('robot', { entity: 'vacuum.rocky' }), widget('one', { entity: 'lock.gate' })])]),
+    schemaOf
+  );
+  assert.deepEqual(
+    [...shows.malfunctions].map(([id, states]) => [id, [...states]]),
+    [['vacuum.rocky', ['error']]]
+  );
+});
+
+test('a Group Member of a Domain the setting declares counts too', () => {
+  const members = [{ entity: 'vacuum.rocky', name: null, variant: null, on_tap: null }, 'lock.gate'];
+  const shows = dashboardShows(dashboard([page('home', [widget('mixed', { members })])]), schemaOf);
+  assert.deepEqual(
+    [...shows.malfunctions].map(([id, states]) => [id, [...states]]),
+    [['vacuum.rocky', ['error']]]
+  );
 });

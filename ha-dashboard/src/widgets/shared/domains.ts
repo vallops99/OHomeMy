@@ -49,13 +49,17 @@ export const TAPLESS_DOMAINS: readonly string[] = [...KIND_DOMAINS.weather, ...K
  * A per-Domain kind's schema: titled, and one entity of the kind's own
  * Domains, which is all such a kind takes. Only its Variants differ.
  */
-export function entityKindSchema<const K extends keyof typeof KIND_DOMAINS>(kind: K, variants: readonly Variant[]) {
+export function entityKindSchema<const K extends keyof typeof KIND_DOMAINS>(
+  kind: K,
+  variants: readonly Variant[],
+  malfunction?: readonly string[]
+) {
   return defineSchema({
     kind,
     variants,
     titled: true,
     settings: {
-      entity: { type: 'entity', domains: KIND_DOMAINS[kind] },
+      entity: { type: 'entity', domains: KIND_DOMAINS[kind], ...(malfunction && { malfunction }) },
     },
   });
 }

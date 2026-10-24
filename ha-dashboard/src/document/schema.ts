@@ -38,9 +38,10 @@ export type FieldSpec =
    * the sibling `area` setting it must be in (ADR-0018): one from another
    * Area, or that Home Assistant no longer has, reads as unset when shown,
    * and counts as shown for Faults and Concerns only in that Area. The
-   * document is not rewritten.
+   * document is not rewritten. `malfunction` is the states of the entity
+   * that are a Malfunction (CONTEXT.md, #80), gathered by `./shows`.
    */
-  | { type: 'entity'; domains: readonly string[]; optional?: boolean; inArea?: string }
+  | { type: 'entity'; domains: readonly string[]; optional?: boolean; inArea?: string; malfunction?: readonly string[] }
   /**
    * An ordered set of entities, from these Domains. Members Home Assistant no
    * longer has are dropped, not fatal; the Widget is skipped only if fewer
@@ -52,13 +53,15 @@ export type FieldSpec =
    * `entities` is, with the same rules, each with its own name, Variant and
    * tap (`Member`). A plain id, as a Group saved before Members wrote one,
    * reads as a Member with nothing set. Only Members of `variantDomains`
-   * take a Variant; on any other it is ignored.
+   * take a Variant; on any other it is ignored. `malfunction` names, per
+   * Domain, the states of a Member of it that are a Malfunction (#80).
    */
   | {
       type: 'members';
       domains: readonly string[];
       min?: number;
       variantDomains: readonly string[];
+      malfunction?: Readonly<Record<string, readonly string[]>>;
     }
   /**
    * One Area, by its id in Home Assistant's area registry. `shows` is the

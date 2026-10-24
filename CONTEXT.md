@@ -204,21 +204,23 @@ _Avoid_: Activity, detection
 ### State
 
 **Verdict**:
-The house's state as one ranked judgement (a fault, an open way in, a light
-left on, or nothing to report) rather than a list of readings.
+The house's state as one ranked judgement (a fault, a malfunction, an open
+way in, a light left on, or nothing to report) rather than a list of readings.
 _Avoid_: Status, summary, overview
 
 **Concern**:
-One ranked kind of thing worth reporting (Faults, open ways in, lights on)
+One ranked kind of thing worth reporting (Faults, Malfunctions, open ways in, lights on)
 and the entities behind it, counted over what one Dashboard shows. The Verdict
 is the highest-ranked Concern. Concerns are never capped: hiding one to keep
-things short would be a lie. Lights on are counted light by light, every one
+things short would be a lie. They rank fault, then malfunction, then open,
+then lit: a Fault first because the Dashboard cannot see part of the house,
+a Malfunction above an open way in because it can mean water on the floor. Lights on are counted light by light, every one
 the Dashboard shows, never by the Widget or Area that shows them.
 _Avoid_: Issue, alert, warning, health
 
 **Chip Row**:
 A Widget holding a row of chips: one for each Concern worth shouting about
-(Faults, open ways in), one for the cameras and one for the alarm. Tapping a
+(Faults, Malfunctions, open ways in), one for the cameras and one for the alarm. Tapping a
 Concern's chip opens its Concern list. Lights on get no chip.
 _Avoid_: Status chips, status bar
 
@@ -235,6 +237,12 @@ An Unavailable entity that a Dashboard actually shows. It is narrower than
 Unavailable: Home Assistant's own housekeeping goes unreachable routinely, and
 a Dashboard that counted it would cry wolf. Only a Fault is reportable.
 _Avoid_: Error, problem, issue
+
+**Malfunction**:
+A device Home Assistant can reach that says it is in error, such as a
+Dishwasher whose state is `error`. Narrower than a warning: needing salt or
+attention is not one.
+_Avoid_: Fault (that is unreachable), error, alert
 
 **Unavailable**:
 The visible state of an entity Home Assistant cannot reach. Always shown,

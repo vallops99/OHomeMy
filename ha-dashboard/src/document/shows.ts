@@ -46,6 +46,12 @@ export type DashboardShows = {
    * (`isShown`), so the rule is applied there and `House` is unchanged.
    */
   inAreas: ReadonlyMap<string, ReadonlySet<string>>;
+  /**
+   * The states of an entity that are a Malfunction (#80), as the schema
+   * setting naming it declares them; the Verdict reads these and never a
+   * kind.
+   */
+  malfunctions: ReadonlyMap<string, ReadonlySet<string>>;
 };
 
 /**
@@ -57,6 +63,13 @@ export function dashboardShows(dashboard: Dashboard, schemaOf: (kind: string) =>
   const entities = new Set<string>();
   const areas = new Map<string, Set<string>>();
   const inAreas = new Map<string, Set<string>>();
+  const malfunctions = new Map<string, Set<string>>();
+  const addMalfunction = (id: string, states: readonly string[] = []) => {
+    if (states.length === 0) return;
+    const known = malfunctions.get(id) ?? new Set<string>();
+    states.forEach(s => known.add(s));
+    malfunctions.set(id, known);
+  };
   const addChosen = (id: string | null, area: string) => {
     if (id !== null) inAreas.set(id, (inAreas.get(id) ?? new Set<string>()).add(area));
   };
@@ -80,12 +93,16 @@ export function dashboardShows(dashboard: Dashboard, schemaOf: (kind: string) =>
             // A Room Tile's light or temperature: its Area's own.
             if (spec.inArea) addChosen(value, String((valid.settings as Record<string, unknown>)[spec.inArea]));
             else entities.add(value);
+            addMalfunction(value, spec.malfunction);
             break;
           case 'entities':
             (value as string[]).forEach(id => entities.add(id));
             break;
           case 'members':
-            (value as Member[]).forEach(m => entities.add(m.entity));
+            (value as Member[]).forEach(m => {
+              entities.add(m.entity);
+              addMalfunction(m.entity, spec.malfunction?.[m.entity.slice(0, m.entity.indexOf('.'))]);
+            });
             break;
           case 'area':
             if (typeof value === 'string') addArea(value, spec.shows);
@@ -101,7 +118,7 @@ export function dashboardShows(dashboard: Dashboard, schemaOf: (kind: string) =>
       }
     }
   }
-  return { entities, areas, inAreas };
+  return { entities, areas, inAreas, malfunctions };
 }
 
 /**

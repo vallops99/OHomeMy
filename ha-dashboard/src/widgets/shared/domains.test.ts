@@ -61,7 +61,14 @@ test('each per-Domain kind is titled and takes its one entity, as entityKindSche
       kind,
       variants: schema.variants,
       titled: true,
-      settings: { entity: { type: 'entity', domains: KIND_DOMAINS[kind as keyof typeof KIND_DOMAINS] } },
+      settings: {
+        entity: {
+          type: 'entity',
+          domains: KIND_DOMAINS[kind as keyof typeof KIND_DOMAINS],
+          // A vacuum in `error` is a Malfunction (#80); no other kind declares one.
+          ...(kind === 'vacuum' && { malfunction: ['error'] }),
+        },
+      },
     });
   }
   assert.deepEqual(entityKindSchema('climate', ['full', 'compact']), climateSchema);

@@ -168,6 +168,7 @@ export const it: Catalogue = {
   'indoorReading.humidity': '{percent} umidità',
 
   'chips.fault': { one: '{count} guasto', other: '{count} guasti' },
+  'chips.malfunction': { one: '{count} malfunzionamento', other: '{count} malfunzionamenti' },
   'chips.open': { one: '{count} accesso aperto', other: '{count} accessi aperti' },
   'chips.lit': { one: '{count} luce accesa', other: '{count} luci accese' },
   'chips.cameras': { one: '{count} telecamera', other: '{count} telecamere' },

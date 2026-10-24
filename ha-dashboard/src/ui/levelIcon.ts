@@ -6,6 +6,7 @@ import type { ConcernLevel } from '../ha/verdict';
 
 export const LEVEL_ICON: Record<ConcernLevel, string> = {
   fault: 'mdi:alert-circle',
+  malfunction: 'mdi:alert',
   open: 'mdi:door-open',
   lit: 'mdi:lightbulb-on',
 };

@@ -4,13 +4,17 @@
  *
  * The ranking is the one `./health` has always had, ranked by what would
  * stop someone leaving the house: a Fault the Dashboard cannot see past,
- * then an open way in, then a light left on. What changed is what is counted.
+ * then a Malfunction (a device that says it is in error, which can mean
+ * water on the floor), then an open way in, then a light left on. What changed is what is counted.
  * The old rule asked the registries (an Area, a Label, a Group helper)
  * whether an entity was rendered anywhere; now the Dashboard's document says
  * exactly what it shows, on any of its Pages (`../document/shows`), and only
  * that counts. Nothing here reads a Label.
  *
  * - **Fault**: an Unavailable entity the Dashboard shows.
+ * - **Malfunction**: a shown entity in a state its Widget's schema declares
+ *   a Malfunction (`../document/shows`), such as a vacuum in `error` (#80).
+ *   Never a Fault too, and never named per kind here.
  * - **Open**: a door, window or gate the Dashboard shows, standing open.
  * - **Lit**: a light the Dashboard shows, on, counted light by light (#77,
  *   `./lights`): a Light group is never counted itself but as its members
@@ -26,7 +30,7 @@ import { countedLights, isLightGroup, lightFinder } from './lights';
 import type { Entity } from './types';
 
 /** Worst first. */
-export const CONCERN_LEVELS = ['fault', 'open', 'lit'] as const;
+export const CONCERN_LEVELS = ['fault', 'malfunction', 'open', 'lit'] as const;
 export type ConcernLevel = (typeof CONCERN_LEVELS)[number];
 
 export type Concern = {
@@ -58,16 +62,22 @@ export function dashboardConcerns(entities: Iterable<Entity>, shows: DashboardSh
   const shown = all.filter(e => isShown(shows, e, groups));
 
   const faults: Entity[] = [];
+  const malfunctions: Entity[] = [];
   const open: Entity[] = [];
   for (const e of shown) {
     // A Fault is all that can be said of an entity Home Assistant cannot
     // reach: its last state is not one the house can vouch for.
     if (isFault(e)) faults.push(e);
+    else if (shows.malfunctions.get(e.id)?.has(e.state)) malfunctions.push(e);
     else if (isOpenDoor(e) || isOpenGate(e)) open.push(e);
   }
-  const lit = countedLights(shown.filter(e => e.domain === 'light'), lightFinder(all)).filter(e => e.state === 'on');
+  const lit = countedLights(
+    shown.filter(e => e.domain === 'light'),
+    lightFinder(all)
+  ).filter(e => e.state === 'on');
   const found: Concern[] = [
     { level: 'fault', entities: faults },
+    { level: 'malfunction', entities: malfunctions },
     { level: 'open', entities: open },
     { level: 'lit', entities: lit },
   ];

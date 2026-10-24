@@ -81,3 +81,27 @@ test('the camera chip says Unavailable ahead of motion, and opens nothing', () =
 test('nothing to say, no chips', () => {
   assert.deepEqual(chipRow({ concerns: [], cameras: [], moving: [], alarm: null }), []);
 });
+
+test('the Malfunction chip is in the alert tone, after Fault, and opens its Concern list', () => {
+  const row = chipRow({
+    concerns: [
+      concern('fault', down('light.a')),
+      concern('malfunction', entity('vacuum.rocky', { state: 'error' })),
+      concern('open', entity('lock.gate')),
+    ],
+    cameras,
+    moving: [],
+    alarm: null,
+  });
+  assert.deepEqual(
+    row.map(c => [c.key, c.tone]),
+    [
+      ['fault', 'alert'],
+      ['malfunction', 'alert'],
+      ['open', 'neutral'],
+      ['cameras', 'neutral'],
+    ]
+  );
+  assert.equal(row[1].text, '1 malfunction');
+  assert.deepEqual(row[1].opens, { kind: 'concern', level: 'malfunction' });
+});

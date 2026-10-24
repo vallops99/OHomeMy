@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { DashboardShows } from '../document/shows';
 import type { Entity } from './types';
-import { concernAt, dashboardConcerns, verdictOf } from './verdict';
+import { CONCERN_LEVELS, concernAt, dashboardConcerns, verdictOf } from './verdict';
 
 const entity = (id: string, state: string, extra: Partial<Entity> = {}): Entity => ({
   id,
@@ -24,6 +24,7 @@ const shows = (entities: string[], areas: Record<string, string[]> = {}): Dashbo
   entities: new Set(entities),
   areas: new Map(Object.entries(areas).map(([id, domains]) => [id, new Set(domains)])),
   inAreas: new Map(),
+  malfunctions: new Map(),
 });
 
 const door = (id: string, state: string) => entity(id, state, { attributes: { device_class: 'door' } });
@@ -136,4 +137,46 @@ test('a button resting at unknown is no Fault, but one Home Assistant cannot rea
 test('a sensor at unknown is a Fault: it is shown and says nothing', () => {
   const concerns = dashboardConcerns([entity('sensor.power', 'unknown')], shows(['sensor.power']));
   assert.equal(verdictOf(concerns)?.level, 'fault');
+});
+
+const vacuumShows = (...ids: string[]): DashboardShows => ({
+  ...shows(ids),
+  malfunctions: new Map(ids.map(id => [id, new Set(['error'])])),
+});
+
+test('a shown vacuum in error is a Malfunction', () => {
+  const concerns = dashboardConcerns([entity('vacuum.rocky', 'error')], vacuumShows('vacuum.rocky'));
+  assert.deepEqual(
+    concerns.map(c => [c.level, c.entities.map(e => e.id)]),
+    [['malfunction', ['vacuum.rocky']]]
+  );
+});
+
+test('a vacuum in error that is Unavailable is a Fault only', () => {
+  const rocky = entity('vacuum.rocky', 'error', { unavailable: true });
+  const concerns = dashboardConcerns([rocky], vacuumShows('vacuum.rocky'));
+  assert.deepEqual(
+    concerns.map(c => c.level),
+    ['fault']
+  );
+});
+
+test('a vacuum no Widget shows, or one in another state, is never a Malfunction', () => {
+  assert.deepEqual(dashboardConcerns([entity('vacuum.rocky', 'error')], shows([])), []);
+  assert.deepEqual(dashboardConcerns([entity('vacuum.rocky', 'docked')], vacuumShows('vacuum.rocky')), []);
+});
+
+test('the ranking is fault, malfunction, open, lit', () => {
+  assert.deepEqual([...CONCERN_LEVELS], ['fault', 'malfunction', 'open', 'lit']);
+  const house = [
+    entity('light.salone', 'on'),
+    door('binary_sensor.front', 'on'),
+    entity('vacuum.rocky', 'error'),
+    entity('camera.door', 'unavailable'),
+  ];
+  const s = { ...vacuumShows('vacuum.rocky'), entities: new Set(['light.salone', 'binary_sensor.front', 'vacuum.rocky', 'camera.door']) };
+  assert.deepEqual(
+    dashboardConcerns(house, s).map(c => c.level),
+    ['fault', 'malfunction', 'open', 'lit']
+  );
 });

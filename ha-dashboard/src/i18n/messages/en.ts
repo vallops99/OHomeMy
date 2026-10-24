@@ -182,6 +182,7 @@ export const en = {
   'indoorReading.humidity': '{percent} humidity',
 
   'chips.fault': { one: '{count} fault', other: '{count} faults' },
+  'chips.malfunction': { one: '{count} malfunction', other: '{count} malfunctions' },
   'chips.open': { one: '{count} way in open', other: '{count} ways in open' },
   'chips.lit': { one: '{count} light on', other: '{count} lights on' },
   'chips.cameras': { one: '{count} camera', other: '{count} cameras' },

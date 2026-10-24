@@ -1,6 +1,6 @@
 /**
  * The Chip Row's chips, decided (#53): in this
- * order a Fault, an open way in, the cameras, the alarm, each only when there
+ * order a Fault, a Malfunction, an open way in, the cameras, the alarm, each only when there
  * is one to show. Never capped: a Concern hidden to keep the row short would be a
  * lie (CONTEXT.md, Concern).
  *
@@ -23,7 +23,10 @@ import { LEVEL_ICON } from '../../ui/levelIcon';
 import { stateLabel } from '../../ui/stateLabel';
 import { tr } from '../../i18n';
 
-const HEADLINE = { fault: 'chips.fault', open: 'chips.open', lit: 'chips.lit' } as const satisfies Record<ConcernLevel, string>;
+const HEADLINE = { fault: 'chips.fault', malfunction: 'chips.malfunction', open: 'chips.open', lit: 'chips.lit' } as const satisfies Record<
+  ConcernLevel,
+  string
+>;
 
 /** What a Concern's chip, and its Concern list's heading, say. */
 export const concernHeadline = (concern: Concern) => tr(HEADLINE[concern.level], { count: concern.entities.length });
@@ -32,8 +35,8 @@ export const concernHeadline = (concern: Concern) => tr(HEADLINE[concern.level],
 export type ChipOpens = { kind: 'concern'; level: ConcernLevel } | { kind: 'alarm' } | null;
 
 export type Chip = {
-  key: 'fault' | 'open' | 'cameras' | 'alarm';
-  /** `alert` only for a Fault (Casa Panel's StatusChip); everything else is calm. */
+  key: 'fault' | 'malfunction' | 'open' | 'cameras' | 'alarm';
+  /** `alert` for a Fault or a Malfunction (Casa Panel's StatusChip); everything else is calm. */
   tone: 'alert' | 'neutral';
   /** An MDI name, as `Icon` takes it. */
   icon: string;
@@ -68,7 +71,7 @@ export function chipRow({ concerns, cameras, moving, alarm }: ChipRowInput): Chi
     if (concern.level === 'lit') continue;
     chips.push({
       key: concern.level,
-      tone: concern.level === 'fault' ? 'alert' : 'neutral',
+      tone: concern.level === 'fault' || concern.level === 'malfunction' ? 'alert' : 'neutral',
       icon: LEVEL_ICON[concern.level],
       text: concernHeadline(concern),
       opens: { kind: 'concern', level: concern.level },

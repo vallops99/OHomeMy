@@ -197,6 +197,14 @@ export const ar: Catalogue = {
     many: '{count} عطلًا',
     other: '{count} عطل',
   },
+  'chips.malfunction': {
+    zero: 'لا أجهزة معطلة',
+    one: 'جهاز معطل واحد',
+    two: 'جهازان معطلان',
+    few: '{count} أجهزة معطلة',
+    many: '{count} جهازًا معطلًا',
+    other: '{count} جهاز معطل',
+  },
   'chips.open': {
     zero: 'لا مداخل مفتوحة',
     one: 'مدخل واحد مفتوح',

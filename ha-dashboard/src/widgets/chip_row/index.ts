@@ -92,6 +92,7 @@ export default defineWidget({
       border: 1px solid var(--line-strong);
     }
     .ohm-chip_row-list-card[data-level='fault'] { border-color: var(--alert-line); }
+    .ohm-chip_row-list-card[data-level='malfunction'] { border-color: var(--alert-line); }
     .ohm-chip_row-list-header {
       flex-shrink: 0;
       display: flex;
@@ -109,6 +110,7 @@ export default defineWidget({
       letter-spacing: var(--type-row-title-tracking);
     }
     .ohm-chip_row-list-card[data-level='fault'] .ohm-chip_row-list-title { color: var(--alert); }
+    .ohm-chip_row-list-card[data-level='malfunction'] .ohm-chip_row-list-title { color: var(--alert); }
     .ohm-chip_row-list-close {
       flex-shrink: 0;
       width: var(--target-min);
@@ -134,6 +136,7 @@ export default defineWidget({
     }
     .ohm-chip_row-list-icon { display: flex; flex-shrink: 0; color: var(--ink-secondary); }
     .ohm-chip_row-list-card[data-level='fault'] .ohm-chip_row-list-icon { color: var(--alert); }
+    .ohm-chip_row-list-card[data-level='malfunction'] .ohm-chip_row-list-icon { color: var(--alert); }
     .ohm-chip_row-list-text { display: flex; flex-direction: column; min-width: 0; }
     .ohm-chip_row-list-name {
      

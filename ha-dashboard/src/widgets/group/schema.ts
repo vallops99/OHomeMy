@@ -23,6 +23,7 @@ export const groupSchema = defineSchema({
   variants: ['full', 'compact'],
   titled: 'own',
   settings: {
-    members: { type: 'members', domains: GROUP_DOMAINS, variantDomains: VARIANT_DOMAINS },
+    // The Group draws a vacuum in the Vacuum's shape, so its error counts too (#80).
+    members: { type: 'members', domains: GROUP_DOMAINS, variantDomains: VARIANT_DOMAINS, malfunction: { vacuum: ['error'] } },
   },
 });

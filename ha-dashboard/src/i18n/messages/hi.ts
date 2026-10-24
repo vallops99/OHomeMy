@@ -165,6 +165,7 @@ export const hi: Catalogue = {
   'indoorReading.humidity': '{percent} नमी',
 
   'chips.fault': { one: '{count} खराबी', other: '{count} खराबियाँ' },
+  'chips.malfunction': { one: '{count} विफलता', other: '{count} विफलताएँ' },
   'chips.open': { one: '{count} प्रवेश खुला', other: '{count} प्रवेश खुले' },
   'chips.lit': { one: '{count} लाइट चालू', other: '{count} लाइटें चालू' },
   'chips.cameras': { one: '{count} कैमरा', other: '{count} कैमरे' },

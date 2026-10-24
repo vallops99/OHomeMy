@@ -165,6 +165,7 @@ export const zhHans: Catalogue = {
   'indoorReading.humidity': '湿度 {percent}',
 
   'chips.fault': { other: '{count} 个故障' },
+  'chips.malfunction': { other: '{count} 个故障设备' },
   'chips.open': { other: '{count} 个出入口开着' },
   'chips.lit': { other: '{count} 盏灯亮着' },
   'chips.cameras': { other: '{count} 个摄像头' },
