@@ -171,6 +171,14 @@ humidity under it. The admin chooses the entity behind each, a thermostat or
 a sensor; with no humidity chosen there is no humidity line.
 _Avoid_: Hero, temperature card, glance
 
+**Dishwasher**:
+A Widget standing for a device, not an entity: Home Assistant has no
+dishwasher Domain. The admin chooses one entity per role (its state, end
+time, progress, door, salt, rinse aid and buttons), and only the state is
+required. The state says what it is doing; a countdown says when it ends.
+_Avoid_: Appliance card, Home Connect (the integration it is built around,
+never named)
+
 **Popup**:
 A Page shown over whatever Page is current, opened and closed by Home
 Assistant rather than by a tap. It is opened by name. It is house-wide: every
@@ -216,7 +224,8 @@ one to keep things short would be a lie. They rank fault, then malfunction,
 then open, then lit: a Fault first because the Dashboard cannot see part of
 the house, a Malfunction above an open way in because it can mean water on
 the floor. Lights on are counted light by light, every one the Dashboard
-shows, never by the Widget or Area that shows them.
+shows, never by the Widget or Area that shows them. An open way in is a door
+of the house, not of an appliance: a Dishwasher's door is never one.
 _Avoid_: Issue, alert, warning, health
 
 **Chip Row**:
@@ -236,7 +245,9 @@ _Avoid_: Popup, modal, drawer, error list
 **Fault**:
 An Unavailable entity that a Dashboard actually shows. It is narrower than
 Unavailable: Home Assistant's own housekeeping goes unreachable routinely, and
-a Dashboard that counted it would cry wolf. Only a Fault is reportable.
+a Dashboard that counted it would cry wolf. Only a Fault is reportable. A
+setting that is Unavailable by design (a Dishwasher's end time while nothing
+runs) is not one.
 _Avoid_: Error, problem, issue
 
 **Malfunction**:
