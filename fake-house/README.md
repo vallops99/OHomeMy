@@ -25,6 +25,8 @@ the real house.
 
 Everything else is generated from it. To add a device to the fake house, add it
 to the manifest and re-run the two scripts -- never edit the generated packages.
+A timestamp sensor (`initial_in_minutes`, the dishwasher's finish time) is fixed
+when the packages are generated and goes stale: regenerate the house to refresh it.
 
 ## How each domain is faked
 

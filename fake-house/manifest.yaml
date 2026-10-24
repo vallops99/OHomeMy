@@ -295,6 +295,8 @@ entities:
     kind: sensor
     area: cucina
     device_class: timestamp
+    # Fixed when the house is generated, so it goes stale: regenerate the
+    # house to refresh it (or set its input_datetime by hand).
     initial_in_minutes: 95
   - id: sensor.cucina_lavastoviglie_program_progress
     name: Avanzamento Lavastoviglie
