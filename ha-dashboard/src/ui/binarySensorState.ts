@@ -27,9 +27,8 @@ const CLASSES: Record<string, { on: () => string; off: () => string; iconOn: str
   window: { on: () => tr('binary.open'), off: () => tr('binary.closed'), iconOn: 'mdi:window-open', iconOff: 'mdi:window-closed' },
   opening: { on: () => tr('binary.open'), off: () => tr('binary.closed'), iconOn: 'mdi:square-outline', iconOff: 'mdi:square' },
   // "Needs refilling", not "Problem" (#36): this house's problem sensors are
-  // the dishwasher's salt and rinse aid and the Roborock's water, each of
-  // them something to refill. A house whose problems are not refills will
-  // want this word changed.
+  // the Roborock's water and the like, each of them something to refill. A
+  // house whose problems are not refills will want this word changed.
   problem: {
     on: () => tr('binary.problem.on'),
     off: () => tr('binary.problem.off'),

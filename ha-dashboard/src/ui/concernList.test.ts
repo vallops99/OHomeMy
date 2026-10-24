@@ -76,9 +76,9 @@ test('an Area named after "Senza stanza" still sorts before the rows with none',
 // ---- the state a Malfunction row shows (#80) ---------------------------------
 
 test('a Malfunction row says the state the device is in, and other levels say nothing', () => {
-  const dishwasher: Entity = { ...entity('vacuum.dw', 'Dishwasher', 'cucina'), state: 'error', unavailable: false };
-  const malfunction = concernRows({ level: 'malfunction', entities: [dishwasher] }, areas);
+  const device: Entity = { ...entity('vacuum.dw', 'Roborock', 'cucina'), state: 'error', unavailable: false };
+  const malfunction = concernRows({ level: 'malfunction', entities: [device] }, areas);
   assert.equal(malfunction[0].stateText, 'Errore');
-  const fault = concernRows({ level: 'fault', entities: [dishwasher] }, areas);
+  const fault = concernRows({ level: 'fault', entities: [device] }, areas);
   assert.equal(fault[0].stateText, null);
 });
