@@ -314,13 +314,13 @@ entities:
     name: Sale Lavastoviglie
     kind: sensor
     area: cucina
-    options: [off, present, confirmed]
+    options: ['off', present, confirmed]
     initial: 'off'
   - id: sensor.cucina_lavastoviglie_rinse_aid_nearly_empty
     name: Brillantante Lavastoviglie
     kind: sensor
     area: cucina
-    options: [off, present, confirmed]
+    options: ['off', present, confirmed]
     initial: present
   - id: binary_sensor.cucina_lavastoviglie_remote_start
     name: Avvio Remoto Lavastoviglie

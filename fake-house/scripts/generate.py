@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import json
 import pathlib
 import sys
 
@@ -31,6 +32,9 @@ import yaml
 
 HERE = pathlib.Path(__file__).resolve().parent
 MANIFEST = HERE.parent / "manifest.yaml"
+# Each entity's backing helpers by role, for tools that drive the house
+# (ha-dashboard/scripts/fit-house.ts). Committed, and rewritten on every run.
+HELPERS_MAP = HERE.parent / "helpers.json"
 
 # Package files are written with this prefix so `clean` can remove exactly what
 # this script created and nothing else.
@@ -71,6 +75,11 @@ class Builder:
         self.camera: list = []
         self.climate: list = []
         self.group: dict = {}
+        self.helpers: dict = {}  # entity id -> {role: helper entity id}
+
+    def record(self, e: dict, role: str, entity_id: str) -> str:
+        self.helpers.setdefault(e["id"], {})[role] = entity_id
+        return entity_id
 
     # -- helper plumbing -------------------------------------------------
     def online_helper(self, e: dict) -> str:
@@ -78,12 +87,12 @@ class Builder:
         driven to `unavailable` on demand -- the design renders a visible fault."""
         name = helper("online", e["id"])
         self.input_boolean[name] = {"name": f"[online] {e['id']}", "initial": True}
-        return f"input_boolean.{name}"
+        return self.record(e, "online", f"input_boolean.{name}")
 
     def bool_helper(self, e: dict, initial: bool) -> str:
         name = helper("state", e["id"])
         self.input_boolean[name] = {"name": f"[state] {e['id']}", "initial": initial}
-        return f"input_boolean.{name}"
+        return self.record(e, "state", f"input_boolean.{name}")
 
     def num_helper(self, e: dict, kind: str, lo: float, hi: float,
                    step: float, initial: float, unit: str | None = None) -> str:
@@ -96,7 +105,7 @@ class Builder:
         if unit:
             cfg["unit_of_measurement"] = unit
         self.input_number[name] = cfg
-        return f"input_number.{name}"
+        return self.record(e, kind, f"input_number.{name}")
 
     def select_helper(self, e: dict, options: list, initial) -> str:
         name = helper("mode", e["id"])
@@ -105,7 +114,7 @@ class Builder:
             "options": [str(o) for o in options],
             "initial": str(initial),
         }
-        return f"input_select.{name}"
+        return self.record(e, "mode", f"input_select.{name}")
 
     def datetime_helper(self, e: dict, initial: str) -> str:
         name = helper("time", e["id"])
@@ -114,12 +123,12 @@ class Builder:
             "has_date": True, "has_time": True,
             "initial": initial,
         }
-        return f"input_datetime.{name}"
+        return self.record(e, "time", f"input_datetime.{name}")
 
     def fire_helper(self, e: dict) -> str:
         name = helper("fire", e["id"])
         self.input_button[name] = {"name": f"[fire] {e['id']}", "icon": "mdi:gesture-tap-button"}
-        return f"input_button.{name}"
+        return self.record(e, "fire", f"input_button.{name}")
 
     # -- per-domain builders ---------------------------------------------
     def build(self, e: dict) -> None:
@@ -295,6 +304,10 @@ class Builder:
         # lives in an input_select, so it can be set by hand in Home Assistant.
         online = self.online_helper(e)
         opts = e["options"]
+        # YAML reads a bare off/on as a boolean; Home Assistant then rejects
+        # the input_select. Quote them in the manifest.
+        if not all(isinstance(o, str) for o in opts):
+            sys.exit(f"{e['id']}: quote every option in the manifest, got {opts}")
         mode = self.select_helper(e, opts, e.get("initial", opts[0]))
         self.template.append({"sensor": [{
             "name": e["name"],
@@ -525,6 +538,14 @@ class Builder:
         })
 
 
+def helpers_map(manifest: dict) -> dict:
+    """Each entity's backing helpers by role, as `HELPERS_MAP` holds them."""
+    b = Builder(manifest)
+    for e in manifest["entities"]:
+        b.build(e)
+    return b.helpers
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--config-dir", required=True, type=pathlib.Path)
@@ -579,6 +600,9 @@ def main() -> int:
     total = len(manifest["entities"])
     helpers = (len(b.input_boolean) + len(b.input_number) + len(b.input_select)
                + len(b.input_button) + len(b.input_datetime))
+    HELPERS_MAP.write_text(json.dumps(b.helpers, indent=2, sort_keys=True) + "\n")
+    written.append(HELPERS_MAP)
+
     for p in written:
         print(f"wrote {p}")
     print(f"\n{total} fake entities, {helpers} backing helpers")

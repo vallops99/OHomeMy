@@ -5,9 +5,7 @@ import { dishwasherSchema } from './schema';
 export default defineWidget({
   schema: dishwasherSchema,
   Component: DishwasherWidget,
-  // ESTIMATED from the Indoor Reading's boxes, not yet measured: run
-  // `npm run fit -- --least` against the fake house and write the result here.
-  smallest: { full: { width: 220, height: 170 }, compact: { width: 150, height: 46 } },
+  smallest: { full: { width: 131, height: 251 }, compact: { width: 241, height: 29 } },
   // A tap outside its controls does nothing; with an `on_tap` the whole
   // Widget becomes a way to its Page (#32).
   tap: 'none',
@@ -50,7 +48,7 @@ export default defineWidget({
     .ohm-dishwasher-state[data-tone='accent'] { color: var(--accent); }
     .ohm-dishwasher-state[data-tone='warning'] { color: var(--alert); }
     .ohm-dishwasher-state[data-tone='success'] { color: var(--ink); }
-    .ohm-dishwasher-countdown { color: var(--ink-secondary); flex-shrink: 0; }
+    .ohm-dishwasher-countdown { color: var(--ink-secondary); flex-shrink: 0; font-variant-numeric: tabular-nums; }
     .ohm-dishwasher-bar {
       display: block;
       height: 6px;

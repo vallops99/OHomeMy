@@ -25,6 +25,10 @@ the real house.
 
 Everything else is generated from it. To add a device to the fake house, add it
 to the manifest and re-run the two scripts -- never edit the generated packages.
+The generator also rewrites `helpers.json` (each entity's backing helpers by
+role, read by `ha-dashboard/scripts/fit-house.ts`): commit it with the manifest.
+`scripts/check-config.sh` runs Home Assistant's config check over the generated
+packages; `pytest fake-house/tests` tests the generator.
 A timestamp sensor (`initial_in_minutes`, the dishwasher's finish time) is fixed
 when the packages are generated and goes stale: regenerate the house to refresh it.
 

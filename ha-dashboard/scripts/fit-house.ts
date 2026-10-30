@@ -19,6 +19,14 @@ const { VITE_HA_TOKEN } = env('.env.development');
 const HA = (VITE_HA_URL ?? 'http://localhost:8123').replace(/\/$/, '');
 const headers = { Authorization: `Bearer ${VITE_HA_TOKEN}`, 'Content-Type': 'application/json' };
 
+/** Each fake entity's backing helpers by role, written by `fake-house/scripts/generate.py`. */
+const HELPERS: Record<string, Record<string, string>> = JSON.parse(readFileSync('../fake-house/helpers.json', 'utf8'));
+const helperOf = (entity: string, role: string) => {
+  const id = HELPERS[entity]?.[role];
+  if (!id) throw new Error(`fake-house/helpers.json has no ${role} helper for ${entity}: re-run generate.py`);
+  return id;
+};
+
 export type State = { entity_id: string; state: string; attributes: Record<string, unknown> };
 
 export const states = async (): Promise<State[]> => {
@@ -45,16 +53,16 @@ export async function drive() {
   const pad = (n: number) => String(n).padStart(2, '0');
   const local = `${finish.getFullYear()}-${pad(finish.getMonth() + 1)}-${pad(finish.getDate())} ${pad(finish.getHours())}:${pad(finish.getMinutes())}:00`;
   const select = (sensor: string, option: string) =>
-    call('input_select', 'select_option', { entity_id: `input_select.fake_mode_sensor_${DISHWASHER}_${sensor}`, option });
+    call('input_select', 'select_option', { entity_id: helperOf(`sensor.${DISHWASHER}_${sensor}`, 'mode'), option });
   await select('operation_state', 'run');
   await select('door', 'open');
   await select('salt_nearly_empty', 'present');
   await select('rinse_aid_nearly_empty', 'present');
   await call('input_datetime', 'set_datetime', {
-    entity_id: `input_datetime.fake_time_sensor_${DISHWASHER}_program_finish_time`,
+    entity_id: helperOf(`sensor.${DISHWASHER}_program_finish_time`, 'time'),
     datetime: local,
   });
-  await call('input_number', 'set_value', { entity_id: `input_number.fake_value_sensor_${DISHWASHER}_program_progress`, value: 60 });
+  await call('input_number', 'set_value', { entity_id: helperOf(`sensor.${DISHWASHER}_program_progress`, 'value'), value: 60 });
 }
 
 const DISHWASHER = 'cucina_lavastoviglie';

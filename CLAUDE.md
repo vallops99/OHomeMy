@@ -2,6 +2,8 @@
 
 Home Assistant frontend dashboard built on [@hakit](https://github.com/shannonhochkins/ha-component-kit) (ha-component-kit).
 
+**Live house**: `ha-local` runs the fake house; use it for `npm run fit` and fake-house changes. See `docs/agents/live-house.md`.
+
 ## Agent skills
 
 ### Issue tracker

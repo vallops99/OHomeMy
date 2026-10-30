@@ -1,0 +1,271 @@
+{
+  "alarm_control_panel.ezviz_alarm": {
+    "mode": "input_select.fake_mode_alarm_control_panel_ezviz_alarm",
+    "online": "input_boolean.fake_online_alarm_control_panel_ezviz_alarm"
+  },
+  "binary_sensor.cucina_lavastoviglie_remote_start": {
+    "online": "input_boolean.fake_online_binary_sensor_cucina_lavastoviglie_remote_start",
+    "state": "input_boolean.fake_state_binary_sensor_cucina_lavastoviglie_remote_start"
+  },
+  "binary_sensor.echo_di_christian_movimento": {
+    "online": "input_boolean.fake_online_binary_sensor_echo_di_christian_movimento",
+    "state": "input_boolean.fake_state_binary_sensor_echo_di_christian_movimento"
+  },
+  "binary_sensor.ingresso_echo_spot_di_christian_movimento": {
+    "online": "input_boolean.fake_online_binary_sensor_ingresso_echo_spot_di_christian_movimento",
+    "state": "input_boolean.fake_state_binary_sensor_ingresso_echo_spot_di_christian_movimento"
+  },
+  "binary_sensor.porta_verandina": {
+    "online": "input_boolean.fake_online_binary_sensor_porta_verandina",
+    "state": "input_boolean.fake_state_binary_sensor_porta_verandina"
+  },
+  "binary_sensor.portone_ingresso": {
+    "online": "input_boolean.fake_online_binary_sensor_portone_ingresso",
+    "state": "input_boolean.fake_state_binary_sensor_portone_ingresso"
+  },
+  "binary_sensor.roborock_s5_max_panno_attaccato": {
+    "online": "input_boolean.fake_online_binary_sensor_roborock_s5_max_panno_attaccato",
+    "state": "input_boolean.fake_state_binary_sensor_roborock_s5_max_panno_attaccato"
+  },
+  "binary_sensor.soggiorno_roborock_s5_max_mancanza_d_acqua": {
+    "online": "input_boolean.fake_online_binary_sensor_soggiorno_roborock_s5_max_mancanza_d_acqua",
+    "state": "input_boolean.fake_state_binary_sensor_soggiorno_roborock_s5_max_mancanza_d_acqua"
+  },
+  "binary_sensor.telecamera_cancelletto_movimento": {
+    "online": "input_boolean.fake_online_binary_sensor_telecamera_cancelletto_movimento",
+    "state": "input_boolean.fake_state_binary_sensor_telecamera_cancelletto_movimento"
+  },
+  "binary_sensor.telecamera_cancello_movimento": {
+    "online": "input_boolean.fake_online_binary_sensor_telecamera_cancello_movimento",
+    "state": "input_boolean.fake_state_binary_sensor_telecamera_cancello_movimento"
+  },
+  "binary_sensor.telecamera_esterno_giardino_movimento": {
+    "online": "input_boolean.fake_online_binary_sensor_telecamera_esterno_giardino_movimento",
+    "state": "input_boolean.fake_state_binary_sensor_telecamera_esterno_giardino_movimento"
+  },
+  "button.citofono_open_door": {
+    "online": "input_boolean.fake_online_button_citofono_open_door"
+  },
+  "button.cucina_lavastoviglie_resume_program": {
+    "online": "input_boolean.fake_online_button_cucina_lavastoviglie_resume_program"
+  },
+  "button.cucina_lavastoviglie_stop_program": {
+    "online": "input_boolean.fake_online_button_cucina_lavastoviglie_stop_program"
+  },
+  "climate.corridoio_termostato": {
+    "online": "input_boolean.fake_online_climate_corridoio_termostato",
+    "state": "input_boolean.fake_state_climate_corridoio_termostato",
+    "value": "input_number.fake_value_climate_corridoio_termostato"
+  },
+  "event.campanello_ding": {
+    "fire": "input_button.fake_fire_event_campanello_ding",
+    "online": "input_boolean.fake_online_event_campanello_ding"
+  },
+  "light.cucina_faretti_cucina": {
+    "level": "input_number.fake_level_light_cucina_faretti_cucina",
+    "online": "input_boolean.fake_online_light_cucina_faretti_cucina",
+    "state": "input_boolean.fake_state_light_cucina_faretti_cucina"
+  },
+  "light.esterno_luce_casetta_2": {
+    "online": "input_boolean.fake_online_light_esterno_luce_casetta_2",
+    "state": "input_boolean.fake_state_light_esterno_luce_casetta_2"
+  },
+  "light.ingresso_interruttore_ing_salone_lampadario": {
+    "level": "input_number.fake_level_light_ingresso_interruttore_ing_salone_lampadario",
+    "online": "input_boolean.fake_online_light_ingresso_interruttore_ing_salone_lampadario",
+    "state": "input_boolean.fake_state_light_ingresso_interruttore_ing_salone_lampadario"
+  },
+  "light.ingresso_interruttore_ing_salone_luce_ingresso": {
+    "level": "input_number.fake_level_light_ingresso_interruttore_ing_salone_luce_ingresso",
+    "online": "input_boolean.fake_online_light_ingresso_interruttore_ing_salone_luce_ingresso",
+    "state": "input_boolean.fake_state_light_ingresso_interruttore_ing_salone_luce_ingresso"
+  },
+  "light.ingresso_interruttore_ing_salone_luci_sala_2": {
+    "level": "input_number.fake_level_light_ingresso_interruttore_ing_salone_luci_sala_2",
+    "online": "input_boolean.fake_online_light_ingresso_interruttore_ing_salone_luci_sala_2",
+    "state": "input_boolean.fake_state_light_ingresso_interruttore_ing_salone_luci_sala_2"
+  },
+  "light.led_cucina": {
+    "level": "input_number.fake_level_light_led_cucina",
+    "online": "input_boolean.fake_online_light_led_cucina",
+    "state": "input_boolean.fake_state_light_led_cucina"
+  },
+  "light.luce_camera_chri": {
+    "level": "input_number.fake_level_light_luce_camera_chri",
+    "online": "input_boolean.fake_online_light_luce_camera_chri",
+    "state": "input_boolean.fake_state_light_luce_camera_chri"
+  },
+  "light.luce_corridoio": {
+    "level": "input_number.fake_level_light_luce_corridoio",
+    "online": "input_boolean.fake_online_light_luce_corridoio",
+    "state": "input_boolean.fake_state_light_luce_corridoio"
+  },
+  "light.luce_cucina": {
+    "level": "input_number.fake_level_light_luce_cucina",
+    "online": "input_boolean.fake_online_light_luce_cucina",
+    "state": "input_boolean.fake_state_light_luce_cucina"
+  },
+  "light.luci_cucina": {
+    "level": "input_number.fake_level_light_luci_cucina",
+    "online": "input_boolean.fake_online_light_luci_cucina",
+    "state": "input_boolean.fake_state_light_luci_cucina"
+  },
+  "light.luci_salone": {
+    "level": "input_number.fake_level_light_luci_salone",
+    "online": "input_boolean.fake_online_light_luci_salone",
+    "state": "input_boolean.fake_state_light_luci_salone"
+  },
+  "light.soggiorno_luce_sala_3": {
+    "level": "input_number.fake_level_light_soggiorno_luce_sala_3",
+    "online": "input_boolean.fake_online_light_soggiorno_luce_sala_3",
+    "state": "input_boolean.fake_state_light_soggiorno_luce_sala_3"
+  },
+  "light.soggiorno_luce_sala_4": {
+    "level": "input_number.fake_level_light_soggiorno_luce_sala_4",
+    "online": "input_boolean.fake_online_light_soggiorno_luce_sala_4",
+    "state": "input_boolean.fake_state_light_soggiorno_luce_sala_4"
+  },
+  "lock.esterno_cancelletto": {
+    "online": "input_boolean.fake_online_lock_esterno_cancelletto",
+    "state": "input_boolean.fake_state_lock_esterno_cancelletto"
+  },
+  "lock.esterno_cancello": {
+    "online": "input_boolean.fake_online_lock_esterno_cancello",
+    "state": "input_boolean.fake_state_lock_esterno_cancello"
+  },
+  "media_player.christian_s_echo_auto": {
+    "level": "input_number.fake_level_media_player_christian_s_echo_auto",
+    "online": "input_boolean.fake_online_media_player_christian_s_echo_auto",
+    "state": "input_boolean.fake_state_media_player_christian_s_echo_auto"
+  },
+  "media_player.christian_s_lg_webos_2021_tv": {
+    "level": "input_number.fake_level_media_player_christian_s_lg_webos_2021_tv",
+    "online": "input_boolean.fake_online_media_player_christian_s_lg_webos_2021_tv",
+    "state": "input_boolean.fake_state_media_player_christian_s_lg_webos_2021_tv"
+  },
+  "media_player.echo_di_christian": {
+    "level": "input_number.fake_level_media_player_echo_di_christian",
+    "online": "input_boolean.fake_online_media_player_echo_di_christian",
+    "state": "input_boolean.fake_state_media_player_echo_di_christian"
+  },
+  "media_player.echo_pop_di_christian": {
+    "level": "input_number.fake_level_media_player_echo_pop_di_christian",
+    "online": "input_boolean.fake_online_media_player_echo_pop_di_christian",
+    "state": "input_boolean.fake_state_media_player_echo_pop_di_christian"
+  },
+  "media_player.echo_show_di_christian": {
+    "level": "input_number.fake_level_media_player_echo_show_di_christian",
+    "online": "input_boolean.fake_online_media_player_echo_show_di_christian",
+    "state": "input_boolean.fake_state_media_player_echo_show_di_christian"
+  },
+  "media_player.echo_spot_di_christian": {
+    "level": "input_number.fake_level_media_player_echo_spot_di_christian",
+    "online": "input_boolean.fake_online_media_player_echo_spot_di_christian",
+    "state": "input_boolean.fake_state_media_player_echo_spot_di_christian"
+  },
+  "media_player.ovunque": {
+    "level": "input_number.fake_level_media_player_ovunque",
+    "online": "input_boolean.fake_online_media_player_ovunque",
+    "state": "input_boolean.fake_state_media_player_ovunque"
+  },
+  "select.roborock_s5_max_mappa_selezionata": {
+    "mode": "input_select.fake_mode_select_roborock_s5_max_mappa_selezionata",
+    "online": "input_boolean.fake_online_select_roborock_s5_max_mappa_selezionata"
+  },
+  "select.roborock_s5_max_modalita_panno": {
+    "mode": "input_select.fake_mode_select_roborock_s5_max_modalita_panno",
+    "online": "input_boolean.fake_online_select_roborock_s5_max_modalita_panno"
+  },
+  "select.soggiorno_roborock_s5_max_cleaning_mode": {
+    "mode": "input_select.fake_mode_select_soggiorno_roborock_s5_max_cleaning_mode",
+    "online": "input_boolean.fake_online_select_soggiorno_roborock_s5_max_cleaning_mode"
+  },
+  "sensor.corridoio_termostato_umidita": {
+    "online": "input_boolean.fake_online_sensor_corridoio_termostato_umidita",
+    "value": "input_number.fake_value_sensor_corridoio_termostato_umidita"
+  },
+  "sensor.cucina_lavastoviglie_door": {
+    "mode": "input_select.fake_mode_sensor_cucina_lavastoviglie_door",
+    "online": "input_boolean.fake_online_sensor_cucina_lavastoviglie_door"
+  },
+  "sensor.cucina_lavastoviglie_operation_state": {
+    "mode": "input_select.fake_mode_sensor_cucina_lavastoviglie_operation_state",
+    "online": "input_boolean.fake_online_sensor_cucina_lavastoviglie_operation_state"
+  },
+  "sensor.cucina_lavastoviglie_program_finish_time": {
+    "online": "input_boolean.fake_online_sensor_cucina_lavastoviglie_program_finish_time",
+    "time": "input_datetime.fake_time_sensor_cucina_lavastoviglie_program_finish_time"
+  },
+  "sensor.cucina_lavastoviglie_program_progress": {
+    "online": "input_boolean.fake_online_sensor_cucina_lavastoviglie_program_progress",
+    "value": "input_number.fake_value_sensor_cucina_lavastoviglie_program_progress"
+  },
+  "sensor.cucina_lavastoviglie_rinse_aid_nearly_empty": {
+    "mode": "input_select.fake_mode_sensor_cucina_lavastoviglie_rinse_aid_nearly_empty",
+    "online": "input_boolean.fake_online_sensor_cucina_lavastoviglie_rinse_aid_nearly_empty"
+  },
+  "sensor.cucina_lavastoviglie_salt_nearly_empty": {
+    "mode": "input_select.fake_mode_sensor_cucina_lavastoviglie_salt_nearly_empty",
+    "online": "input_boolean.fake_online_sensor_cucina_lavastoviglie_salt_nearly_empty"
+  },
+  "sensor.echo_di_christian_temperatura": {
+    "online": "input_boolean.fake_online_sensor_echo_di_christian_temperatura",
+    "value": "input_number.fake_value_sensor_echo_di_christian_temperatura"
+  },
+  "sensor.generale_quadro_sonoff_100285d3f0_energy_month": {
+    "online": "input_boolean.fake_online_sensor_generale_quadro_sonoff_100285d3f0_energy_month",
+    "value": "input_number.fake_value_sensor_generale_quadro_sonoff_100285d3f0_energy_month"
+  },
+  "sensor.generale_quadro_sonoff_100285d3f0_power": {
+    "online": "input_boolean.fake_online_sensor_generale_quadro_sonoff_100285d3f0_power",
+    "value": "input_number.fake_value_sensor_generale_quadro_sonoff_100285d3f0_power"
+  },
+  "sensor.pixel_9_pro_battery_level": {
+    "online": "input_boolean.fake_online_sensor_pixel_9_pro_battery_level",
+    "value": "input_number.fake_value_sensor_pixel_9_pro_battery_level"
+  },
+  "sensor.porta_finestra_verandina_sonoff_acc80139a2_battery": {
+    "online": "input_boolean.fake_online_sensor_porta_finestra_verandina_sonoff_acc80139a2_battery",
+    "value": "input_number.fake_value_sensor_porta_finestra_verandina_sonoff_acc80139a2_battery"
+  },
+  "sensor.portone_ingresso_batteria": {
+    "online": "input_boolean.fake_online_sensor_portone_ingresso_batteria",
+    "value": "input_number.fake_value_sensor_portone_ingresso_batteria"
+  },
+  "sensor.portone_ingresso_sonoff_acc800b914_battery": {
+    "online": "input_boolean.fake_online_sensor_portone_ingresso_sonoff_acc800b914_battery",
+    "value": "input_number.fake_value_sensor_portone_ingresso_sonoff_acc800b914_battery"
+  },
+  "sensor.pulsante_cancelletto_2_sonoff_acc800a92e_battery": {
+    "online": "input_boolean.fake_online_sensor_pulsante_cancelletto_2_sonoff_acc800a92e_battery",
+    "value": "input_number.fake_value_sensor_pulsante_cancelletto_2_sonoff_acc800a92e_battery"
+  },
+  "sensor.pulsante_cancelletto_sonoff_acc800a92a_battery": {
+    "online": "input_boolean.fake_online_sensor_pulsante_cancelletto_sonoff_acc800a92a_battery",
+    "value": "input_number.fake_value_sensor_pulsante_cancelletto_sonoff_acc800a92a_battery"
+  },
+  "sensor.roborock_s5_max_batteria": {
+    "online": "input_boolean.fake_online_sensor_roborock_s5_max_batteria",
+    "value": "input_number.fake_value_sensor_roborock_s5_max_batteria"
+  },
+  "sensor.valerio_battery_level": {
+    "online": "input_boolean.fake_online_sensor_valerio_battery_level",
+    "value": "input_number.fake_value_sensor_valerio_battery_level"
+  },
+  "siren.telecamera_cancello_sirena": {
+    "online": "input_boolean.fake_online_siren_telecamera_cancello_sirena",
+    "state": "input_boolean.fake_state_siren_telecamera_cancello_sirena"
+  },
+  "siren.telecamera_esterno_giardino_sirena": {
+    "online": "input_boolean.fake_online_siren_telecamera_esterno_giardino_sirena",
+    "state": "input_boolean.fake_state_siren_telecamera_esterno_giardino_sirena"
+  },
+  "switch.generale_quadro_sonoff_100285d3f0_1": {
+    "online": "input_boolean.fake_online_switch_generale_quadro_sonoff_100285d3f0_1",
+    "state": "input_boolean.fake_state_switch_generale_quadro_sonoff_100285d3f0_1"
+  },
+  "vacuum.roborock_s5_max": {
+    "mode": "input_select.fake_mode_vacuum_roborock_s5_max",
+    "online": "input_boolean.fake_online_vacuum_roborock_s5_max"
+  }
+}

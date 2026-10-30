@@ -1,0 +1,20 @@
+# Home Assistant's own config check over the generated fake house, run only
+# when the fake house changes: it pulls the Home Assistant image.
+name: Fake house
+
+on:
+  push:
+    branches: [master]
+    paths: ["fake-house/**"]
+  pull_request:
+    paths: ["fake-house/**"]
+
+jobs:
+  check-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install pyyaml
+      - run: fake-house/scripts/check-config.sh
+      # check-config.sh rewrites helpers.json; a diff means it was not regenerated.
+      - run: git diff --exit-code fake-house/helpers.json

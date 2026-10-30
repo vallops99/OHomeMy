@@ -1,0 +1,41 @@
+# The checks every push and pull request must pass: the dashboard's types,
+# lint and tests, and the Python tests (the integration's and the fake-house
+# generator's). The fit check needs a live Home Assistant and stays local
+# (docs/agents/live-house.md).
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  dashboard:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ha-dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ha-dashboard/.nvmrc
+          cache: npm
+          cache-dependency-path: ha-dashboard/package-lock.json
+
+      - run: npm ci
+      - run: npx tsc -b
+      # `lint` holds the warnings at today's count, so a new one fails.
+      - run: npm run lint
+      - run: npm test
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      # As in requirements_test.txt's header.
+      - run: uv venv --python 3.14 .venv
+      - run: uv pip install --python .venv/bin/python -r requirements_test.txt
+      - run: .venv/bin/python -m pytest

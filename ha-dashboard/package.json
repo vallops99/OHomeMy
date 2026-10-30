@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "build:panel": "tsc -b && vite build --config vite.panel.config.ts --mode panel",
     "build:builder": "tsc -b && vite build --config vite.builder.config.ts --mode panel",
-    "lint": "oxlint",
+    "lint": "oxlint --max-warnings=6",
     "test": "npx tsx --test 'src/**/*.test.ts'",
     "preview": "vite preview",
     "prettier": "prettier --write .",
