@@ -5,35 +5,46 @@ import { dishwasherSchema } from './schema';
 export default defineWidget({
   schema: dishwasherSchema,
   Component: DishwasherWidget,
-  smallest: { full: { width: 131, height: 251 }, compact: { width: 241, height: 29 } },
+  smallest: { full: { width: 165, height: 295 }, compact: { width: 307, height: 67 } },
   // A tap outside its controls does nothing; with an `on_tap` the whole
   // Widget becomes a way to its Page (#32).
   tap: 'none',
   // `full` stacks the title, the state with its countdown, the bar, the
   // meta line and the controls; `compact` is the title and one line beside
-  // it. Tones: `accent` is "on" (ADR-0013); a warning is the alert colour;
+  // it. Both sit on Casa Panel's tile, as a Room Tile or a Link does: it is
+  // a device, not a reading on the ground. Its controls take `target-min`.
+  // Tones: `accent` is "on" (ADR-0013); a warning is the alert colour;
   // `success` has no colour of its own, so Done reads in the plain ink.
   css: `
     .ohm-dishwasher {
       height: 100%;
+      box-sizing: border-box;
       display: flex;
       flex-direction: column;
       justify-content: center;
       gap: var(--space-2);
+      padding: var(--space-4);
+      border: 1px solid var(--line-tile);
+      border-radius: var(--radius-tile);
+      background: var(--surface-tile);
       color: var(--ink);
       min-width: 0;
     }
-    .ohm-dishwasher[data-fault] { display: block; }
+    /* The Fault tile is a card of its own. */
+    .ohm-dishwasher[data-fault] { display: block; padding: 0; border: none; background: none; }
     .ohm-dishwasher-head {
       display: flex;
       align-items: center;
       gap: var(--space-2);
       min-width: 0;
-      font-size: var(--type-body-size);
-      color: var(--ink-muted);
+      font-size: var(--type-tile-title-size);
+      line-height: var(--type-tile-title-line);
+      font-weight: var(--type-tile-title-weight);
+      letter-spacing: var(--type-tile-title-tracking);
+      color: var(--ink);
       white-space: nowrap;
     }
-    .ohm-dishwasher-icon { display: flex; flex-shrink: 0; }
+    .ohm-dishwasher-icon { display: flex; flex-shrink: 0; color: var(--ink-secondary); }
     .ohm-dishwasher-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
     .ohm-dishwasher-line {
       display: flex;
@@ -71,7 +82,7 @@ export default defineWidget({
     .ohm-dishwasher-button {
       position: relative;
       overflow: hidden;
-      min-height: 44px;
+      min-height: var(--target-min);
       padding: 0 var(--space-4);
       border: none;
       border-radius: var(--radius-pill);
@@ -87,7 +98,7 @@ export default defineWidget({
       -webkit-touch-callout: none;
     }
     .ohm-dishwasher-button[data-primary] { background: var(--primary); color: var(--on-primary); }
-    .ohm-dishwasher-button:disabled { opacity: 0.5; }
+    .ohm-dishwasher-button:disabled { opacity: 0.38; }
     .ohm-dishwasher-button-face { position: relative; display: inline-flex; align-items: center; gap: var(--space-2); }
     .ohm-dishwasher-sweep { position: absolute; top: 0; bottom: 0; inset-inline-start: 0; background: var(--accent-soft); }
     .ohm-dishwasher[data-variant='compact'] {

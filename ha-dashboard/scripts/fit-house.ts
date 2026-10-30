@@ -54,15 +54,17 @@ export async function drive() {
   const local = `${finish.getFullYear()}-${pad(finish.getMonth() + 1)}-${pad(finish.getDate())} ${pad(finish.getHours())}:${pad(finish.getMinutes())}:00`;
   const select = (sensor: string, option: string) =>
     call('input_select', 'select_option', { entity_id: helperOf(`sensor.${DISHWASHER}_${sensor}`, 'mode'), option });
-  await select('operation_state', 'run');
-  await select('door', 'open');
-  await select('salt_nearly_empty', 'present');
-  await select('rinse_aid_nearly_empty', 'present');
+  // The finish time goes first: a start with the finish already past begins
+  // a fresh, shorter wash in the fake house (generate.py, `wash`).
   await call('input_datetime', 'set_datetime', {
     entity_id: helperOf(`sensor.${DISHWASHER}_program_finish_time`, 'time'),
     datetime: local,
   });
   await call('input_number', 'set_value', { entity_id: helperOf(`sensor.${DISHWASHER}_program_progress`, 'value'), value: 60 });
+  await select('operation_state', 'run');
+  await select('door', 'open');
+  await select('salt_nearly_empty', 'present');
+  await select('rinse_aid_nearly_empty', 'present');
 }
 
 const DISHWASHER = 'cucina_lavastoviglie';

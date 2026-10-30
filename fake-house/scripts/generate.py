@@ -70,6 +70,7 @@ class Builder:
         self.input_button: dict = {}
         self.input_datetime: dict = {}
         self.script: dict = {}
+        self.automation: list = []
         self.template: list = []
         self.media_player: list = []
         self.camera: list = []
@@ -298,6 +299,53 @@ class Builder:
             cfg["device_class"] = e["device_class"]
         cfg["state_class"] = e.get("state_class", "measurement")
         self.template.append({"sensor": [cfg]})
+        if e.get("runs"):
+            self.wash(e, val)
+
+    def wash(self, e: dict, progress: str) -> None:
+        # A progress that `runs` moves by itself, as a real program's does:
+        # once a minute while its state is `run`, a step that lands it on 100
+        # at the finish time, and then the state goes to `finished`. A start
+        # with the finish time already past begins a fresh program of
+        # `program_minutes`; one with a finish ahead (the fit check's, set
+        # first) keeps it. Pausing stops the ticks, as the state does.
+        runs = e["runs"]
+        state = f"input_select.{helper('mode', runs['state'])}"
+        end = f"input_datetime.{helper('time', runs['ends_at'])}"
+        minutes = runs.get("program_minutes", 60)
+        left = f"(state_attr('{end}','timestamp') - as_timestamp(now())) / 60"
+        # A function, not a dict: a dict used twice is dumped as a YAML anchor.
+        over = lambda: {"condition": "template", "value_template": f"{{{{ {left} <= 0 }}}}"}
+        set_progress = lambda value: {"action": "input_number.set_value",
+                                      "target": {"entity_id": progress},
+                                      "data": {"value": value}}
+        self.automation.append({
+            "id": helper("wash", e["id"]),
+            "alias": f"[wash] {e['id']}",
+            "mode": "queued",
+            "triggers": [
+                {"trigger": "time_pattern", "minutes": "/1"},
+                {"trigger": "state", "entity_id": state, "to": "run", "id": "start"},
+            ],
+            "conditions": [{"condition": "state", "entity_id": state, "state": "run"}],
+            "actions": [{"choose": [
+                {"conditions": [{"condition": "trigger", "id": "start"}, over()],
+                 "sequence": [
+                     {"action": "input_datetime.set_datetime", "target": {"entity_id": end},
+                      "data": {"timestamp": f"{{{{ as_timestamp(now()) + {minutes * 60} }}}}"}},
+                     set_progress(0),
+                 ]},
+                {"conditions": [over()],
+                 "sequence": [
+                     set_progress(100),
+                     {"action": "input_select.select_option", "target": {"entity_id": state},
+                      "data": {"option": "finished"}},
+                 ]},
+            ], "default": [set_progress(
+                f"{{% set p = states('{progress}') | float(0) %}}"
+                f"{{{{ [100, p + (100 - p) / ([{left}, 1] | max)] | min | round(1) }}}}"
+            )]}],
+        })
 
     def _enum_sensor(self, e: dict) -> None:
         # An enum sensor (Home Connect's operation state and door). The state
@@ -596,6 +644,8 @@ def main() -> int:
         write("group", b.group)
     if b.script:
         write("script", {"script": b.script})
+    if b.automation:
+        write("automation", {"automation": b.automation})
 
     total = len(manifest["entities"])
     helpers = (len(b.input_boolean) + len(b.input_number) + len(b.input_select)

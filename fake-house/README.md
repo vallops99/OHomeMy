@@ -29,8 +29,12 @@ The generator also rewrites `helpers.json` (each entity's backing helpers by
 role, read by `ha-dashboard/scripts/fit-house.ts`): commit it with the manifest.
 `scripts/check-config.sh` runs Home Assistant's config check over the generated
 packages; `pytest fake-house/tests` tests the generator.
-A timestamp sensor (`initial_in_minutes`, the dishwasher's finish time) is fixed
-when the packages are generated and goes stale: regenerate the house to refresh it.
+A timestamp sensor (`initial_in_minutes`, the dishwasher's finish time) is set
+when the packages are generated. A numeric sensor with `runs` (the dishwasher's
+progress) is moved by a generated automation: once a minute while its state is
+`run` it steps toward 100 at the finish time, then the state goes to `finished`.
+Starting it with the finish time past begins a fresh program of
+`program_minutes`.
 
 ## How each domain is faked
 

@@ -100,3 +100,35 @@ def test_the_committed_helpers_map_matches_the_manifest():
     manifest = yaml.safe_load((FAKE_HOUSE / "manifest.yaml").read_text())
     committed = json.loads((FAKE_HOUSE / "helpers.json").read_text())
     assert committed == generate.helpers_map(manifest), "re-run generate.py"
+
+
+STATE = {"id": "sensor.dw_state", "name": "Stato", "kind": "sensor",
+         "options": ["ready", "run", "finished"], "initial": "run"}
+END = {"id": "sensor.dw_end", "name": "Fine", "kind": "sensor", "device_class": "timestamp"}
+PROGRESS = {"id": "sensor.dw_progress", "name": "Avanzamento", "kind": "sensor", "unit": "%",
+            "initial": 40, "runs": {"state": "sensor.dw_state", "ends_at": "sensor.dw_end",
+                                    "program_minutes": 95}}
+
+
+def test_a_progress_that_runs_ticks_each_minute_while_its_state_is_run():
+    b = build(STATE, END, PROGRESS)
+    [wash] = b.automation
+    assert {"trigger": "time_pattern", "minutes": "/1"} in wash["triggers"]
+    [running] = wash["conditions"]
+    assert running == {"condition": "state", "entity_id": "input_select.fake_mode_sensor_dw_state",
+                       "state": "run"}
+
+
+def test_a_wash_reads_and_moves_the_helpers_of_its_state_end_and_progress():
+    text = yaml.safe_dump(build(STATE, END, PROGRESS).automation)
+    for helper in ("input_select.fake_mode_sensor_dw_state", "input_datetime.fake_time_sensor_dw_end",
+                   "input_number.fake_value_sensor_dw_progress"):
+        assert helper in text
+    assert "finished" in text
+    assert "5700" in text  # a fresh program: 95 minutes, in seconds
+    assert "&id" not in text
+
+
+def test_a_progress_with_no_runs_does_not_tick():
+    b = build({k: v for k, v in PROGRESS.items() if k != "runs"})
+    assert b.automation == []
